@@ -1,0 +1,41 @@
+# Directories
+/bin/*
+/build/*
+/.vscode/*
+
+# Prerequisites
+*.d
+
+# Precompiled headers
+*.gch
+*.pch
+
+# Compiled object files
+*.slo
+*.lo
+*.o
+*.os
+*.obj
+
+# Compiled dynamic libraries
+*.so
+*.dylib
+*.dll
+*.wasm
+
+# Compiled static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.bundle
+*.framework
+*.plugin
+
+# Log files
+*.log
