@@ -54,11 +54,14 @@ public:
 		curve.interpolation = static_cast<CurveInterpolation>(interpolation);
 		curve.points.clear();
 
-		while(!is.eof()) {		
-			is >> bracket;		
-			is >> point.position;
-			is >> point.value;			
+		while(is) {
 			is >> bracket;
+			is >> point.position;
+			is >> point.value;
+			is >> bracket;
+			if(!is) {
+				break;
+			}
 
 			curve.points.emplace_back(point);
 		}
