@@ -448,10 +448,10 @@ void ParticleEngine::createParticle(uint32_t emitterIndex, uint32_t p, floatd t,
 
 	switch(emitter.spawnMode) {
 		case ParticleEmitter::SpawnMode::out:
-			emitterParticles.velocity[p] = glm::rotate((emitterParticles.position[p] != spawnPosition) ? glm::normalize(emitterParticles.position[p] - spawnPosition) : vec2d(0.0, initialSpeed), glm::radians(initialDirection)) * initialSpeed;
+			emitterParticles.velocity[p] = glm::rotate((emitterParticles.position[p] != spawnPosition) ? glm::normalize(emitterParticles.position[p] - spawnPosition) : vec2d(0.0, 1.0), glm::radians(initialDirection)) * initialSpeed;
 			break;
 		case ParticleEmitter::SpawnMode::in:
-			emitterParticles.velocity[p] = glm::rotate((emitterParticles.position[p] != spawnPosition) ? glm::normalize(spawnPosition - emitterParticles.position[p]) : vec2d(0.0, initialSpeed), glm::radians(initialDirection)) * initialSpeed;
+			emitterParticles.velocity[p] = glm::rotate((emitterParticles.position[p] != spawnPosition) ? glm::normalize(spawnPosition - emitterParticles.position[p]) : vec2d(0.0, 1.0), glm::radians(initialDirection)) * initialSpeed;
 			break;
 		default:
 			emitterParticles.velocity[p] = glm::rotate(vec2d(0.0, 1.0), glm::radians(initialDirection)) * initialSpeed;
