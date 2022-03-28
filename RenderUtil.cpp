@@ -98,7 +98,7 @@ void generateParticleTrail(std::vector<vec2d>& trailPosition, std::vector<vec2d>
 }
 
 uint32_t getNumParticleIndices(const ParticleEmitter& emitter, uint32_t numParticles) {
-	if(emitter.renderer == pixelpart::ParticleEmitter::RendererType::sprite) {
+	if(emitter.renderer == pixelpart::ParticleEmitter::RendererType::sprite || numParticles <= 1) {
 		return numParticles * 6;
 	}
 	else if(emitter.renderer == pixelpart::ParticleEmitter::RendererType::trail) {
@@ -113,7 +113,7 @@ uint32_t getNumParticleIndices(const ParticleEmitter& emitter, uint32_t numParti
 	return 0;
 }
 uint32_t getNumParticleVertices(const ParticleEmitter& emitter, uint32_t numParticles) {
-	if(emitter.renderer == pixelpart::ParticleEmitter::RendererType::sprite) {
+	if(emitter.renderer == pixelpart::ParticleEmitter::RendererType::sprite || numParticles <= 1) {
 		return numParticles * 4;
 	}
 	else if(emitter.renderer == pixelpart::ParticleEmitter::RendererType::trail) {
