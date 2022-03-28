@@ -10,7 +10,7 @@ ParticleEngine::ParticleEngine() : ParticleEngine(nullptr, 1000) {
 
 }
 ParticleEngine::ParticleEngine(const Effect* effectPtr, uint32_t capacity) : effect(effectPtr), particleCapacity(capacity) {
-	particleSimulation = std::make_unique<ParticleSimulationCPU>();
+	particleSimulation = std::unique_ptr<ParticleSimulationCPU>(new ParticleSimulationCPU());
 
 	resetSeed();
 	onEffectUpdate();

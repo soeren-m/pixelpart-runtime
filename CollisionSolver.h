@@ -4,7 +4,6 @@
 #include "Grid.h"
 #include "ParticleData.h"
 #include <unordered_set>
-#include <optional>
 
 namespace pixelpart {
 class CollisionSolver {
@@ -21,8 +20,8 @@ public:
 	};
 
 	static bool onSegment(const vec2d& l1, const vec2d& l2, const vec2d& p);
-	static std::optional<vec2d> closestPointOnSegment(const vec2d& l1, const vec2d& l2, const vec2d& p);
-	static std::optional<vec2d> intersectionSegmentSegment(const vec2d& p1, const vec2d& p2, const vec2d& q1, const vec2d& q2);
+	static bool closestPointOnSegment(const vec2d& l1, const vec2d& l2, const vec2d& p, vec2d& result);
+	static bool intersectionSegmentSegment(const vec2d& p1, const vec2d& p2, const vec2d& q1, const vec2d& q2, vec2d& result);
 
 	CollisionSolver();
 

@@ -1,6 +1,8 @@
 #include "Types.h"
 
 namespace pixelpart {
+const uint32_t NullId = 0xFFFFFFFF;
+
 std::ostream& operator<<(std::ostream& os, const vec2d& v) {
 	os << v.x << " " << v.y;
 

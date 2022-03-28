@@ -11,7 +11,7 @@
 #include "json/single_include/nlohmann/json.hpp"
 
 namespace pixelpart {
-inline constexpr uint32_t NullId = 0xFFFFFFFF;
+extern const uint32_t NullId;
 
 using floatd = double;
 using vec2d = glm::vec<2, floatd, glm::highp>;

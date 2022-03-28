@@ -1,5 +1,4 @@
 #include "CollisionSolver.h"
-#include <algorithm>
 
 namespace pixelpart {
 bool CollisionSolver::onSegment(const vec2d& l1, const vec2d& l2, const vec2d& p) {
@@ -8,25 +7,21 @@ bool CollisionSolver::onSegment(const vec2d& l1, const vec2d& l2, const vec2d& p
 
 	return (A >= 0.0) && (A < B);
 }
-std::optional<vec2d> CollisionSolver::closestPointOnSegment(const vec2d& l1, const vec2d& l2, const vec2d& p) { 
-	floatd A1 = l2.y - l1.y; 
-	floatd B1 = l1.x - l2.x; 
-	floatd C1 = (l2.y - l1.y) * l1.x + (l1.x - l2.x) * l1.y; 
-	floatd C2 = -B1 * p.x + A1 * p.y; 
-	floatd det = A1 * A1 - -B1 * B1; 
-	vec2d result = (det != 0.0) ?
-		vec2d(
+bool CollisionSolver::closestPointOnSegment(const vec2d& l1, const vec2d& l2, const vec2d& p, vec2d& result) { 
+	floatd A1 = l2.y - l1.y;
+	floatd B1 = l1.x - l2.x;
+	floatd C1 = (l2.y - l1.y) * l1.x + (l1.x - l2.x) * l1.y;
+	floatd C2 = -B1 * p.x + A1 * p.y;
+	floatd det = A1 * A1 - -B1 * B1;
+	result = (det != 0.0)
+		? vec2d(
 			(A1 * C1 - B1 * C2) / det,
 			(A1 * C2 - -B1 * C1) / det)
 		: p;
 
-	if(onSegment(l1, l2, result)) {
-		return std::optional<vec2d>(result);
-	}
-
-	return std::optional<vec2d>();
+	return onSegment(l1, l2, result);
 }
-std::optional<vec2d> CollisionSolver::intersectionSegmentSegment(const vec2d& p1, const vec2d& p2, const vec2d& q1, const vec2d& q2) {
+bool CollisionSolver::intersectionSegmentSegment(const vec2d& p1, const vec2d& p2, const vec2d& q1, const vec2d& q2, vec2d& result) {
 	floatd A1 = p2.y - p1.y;
 	floatd B1 = p1.x - p2.x;
 	floatd C1 = A1 * p1.x + B1 * p1.y;
@@ -36,16 +31,14 @@ std::optional<vec2d> CollisionSolver::intersectionSegmentSegment(const vec2d& p1
 	floatd det = A1 * B2 - A2 * B1;
 
 	if(det != 0.0) {
-		vec2d result = vec2d(
+		result = vec2d(
 			(B2 * C1 - B1 * C2) / det,
 			(A1 * C2 - A2 * C1) / det);
 
-		if(onSegment(p1, p2, result) && onSegment(q1, q2, result)) {
-			return std::optional<vec2d>(result);
-		}
+		return onSegment(p1, p2, result) && onSegment(q1, q2, result);
 	}
 
-	return std::optional<vec2d>();
+	return false;
 }
 
 CollisionSolver::CollisionSolver() : grid(1, 1) {
@@ -55,8 +48,8 @@ CollisionSolver::CollisionSolver() : grid(1, 1) {
 void CollisionSolver::solve(uint32_t emitterId, ParticleDataPointer& particles, uint32_t p, floatd particleBounce, floatd particleFriction, floatd t, floatd dt) const {
 	const auto toGridIndex = [this](const vec2d& position) -> GridIndex<int32_t> {
 		return GridIndex<int32_t>{
-			std::clamp(static_cast<int32_t>(std::floor((position.x - gridBottom.x) / gridCellDimension.x)), 0, static_cast<int32_t>(grid.getWidth()) - 1),
-			std::clamp(static_cast<int32_t>(std::floor((position.y - gridBottom.y) / gridCellDimension.y)), 0, static_cast<int32_t>(grid.getHeight()) - 1) };
+			std::min(std::max(static_cast<int32_t>(std::floor((position.x - gridBottom.x) / gridCellDimension.x)), 0), static_cast<int32_t>(grid.getWidth()) - 1),
+			std::min(std::max(static_cast<int32_t>(std::floor((position.y - gridBottom.y) / gridCellDimension.y)), 0), static_cast<int32_t>(grid.getHeight()) - 1) };
 	};
 	
 	GridIndex<int32_t> startIndex = toGridIndex(particles.globalPosition[p]);
@@ -86,14 +79,15 @@ void CollisionSolver::solve(uint32_t emitterId, ParticleDataPointer& particles, 
 	}
 }
 void CollisionSolver::solve(ParticleDataPointer& particles, uint32_t p, floatd particleBounce, floatd particleFriction, floatd t, floatd dt, const LineCollider& collider) const {
-	const std::optional<vec2d> closestPoint = closestPointOnSegment(collider.p1, collider.p2, particles.globalPosition[p]);
-	if(!closestPoint) {
+	vec2d closestPoint = vec2d(0.0);
+	if(!closestPointOnSegment(collider.p1, collider.p2, particles.globalPosition[p], closestPoint)) {
 		return;
 	}
 
-	const vec2d colliderToParticle = particles.globalPosition[p] - *closestPoint;
+	const vec2d colliderToParticle = particles.globalPosition[p] - closestPoint;
 	const floatd distanceSqr = glm::length2(colliderToParticle);
 	const floatd particleRadius = std::max(std::min(particles.size[p].x, particles.size[p].y) * 0.5, 0.01);
+	vec2d intersectionPoint = vec2d(0.0);
 
 	if(distanceSqr <= particleRadius * particleRadius) {
 		const floatd distance = std::sqrt(distanceSqr);
@@ -109,7 +103,7 @@ void CollisionSolver::solve(ParticleDataPointer& particles, uint32_t p, floatd p
 		particles.velocity[p] += segmentVector * slideFactor * (1.0 - friction);
 		particles.position[p] += reflectedVelocity * (particleRadius - distance);
 	}
-	else if(std::optional<vec2d> intersectionPoint = intersectionSegmentSegment(collider.p1, collider.p2, particles.globalPosition[p], particles.globalPosition[p] + particles.velocity[p] * dt + particles.force[p] * dt * dt)) {
+	else if(intersectionSegmentSegment(collider.p1, collider.p2, particles.globalPosition[p], particles.globalPosition[p] + particles.velocity[p] * dt + particles.force[p] * dt * dt, intersectionPoint)) {
 		const vec2d normal = glm::normalize(colliderToParticle);
 		const vec2d reflectedVelocity = glm::reflect(particles.velocity[p], normal);
 		const floatd alpha = std::fmod(t - collider.lifetimeStart, collider.lifetimeDuration) / collider.lifetimeDuration;
@@ -180,10 +174,10 @@ void CollisionSolver::update(const std::vector<Collider>& allColliders) {
 			tY = ((std::floor(p1Grid.y / gridCellDimension.y) + 1) * gridCellDimension.y - p1Grid.y) / direction.y; 
 		}
 		
-		int32_t cX = std::clamp(static_cast<int32_t>(std::floor(p1Grid.x / gridCellDimension.x)), 0, static_cast<int32_t>(gridNumColumns) - 1); 
-		int32_t cY = std::clamp(static_cast<int32_t>(std::floor(p1Grid.y / gridCellDimension.y)), 0, static_cast<int32_t>(gridNumRows) - 1);
-		int32_t exitCX = std::clamp(static_cast<int32_t>(std::floor(p2Grid.x / gridCellDimension.x)), 0, static_cast<int32_t>(gridNumColumns) - 1); 
-		int32_t exitCY = std::clamp(static_cast<int32_t>(std::floor(p2Grid.y / gridCellDimension.y)), 0, static_cast<int32_t>(gridNumRows) - 1);
+		int32_t cX = std::min(std::max(static_cast<int32_t>(std::floor(p1Grid.x / gridCellDimension.x)), 0), static_cast<int32_t>(gridNumColumns) - 1); 
+		int32_t cY = std::min(std::max(static_cast<int32_t>(std::floor(p1Grid.y / gridCellDimension.y)), 0), static_cast<int32_t>(gridNumRows) - 1);
+		int32_t exitCX = std::min(std::max(static_cast<int32_t>(std::floor(p2Grid.x / gridCellDimension.x)), 0), static_cast<int32_t>(gridNumColumns) - 1); 
+		int32_t exitCY = std::min(std::max(static_cast<int32_t>(std::floor(p2Grid.y / gridCellDimension.y)), 0), static_cast<int32_t>(gridNumRows) - 1);
 		
 		while(grid.contains(cX, cY)) {
 			grid(cX, cY).push_back(i);

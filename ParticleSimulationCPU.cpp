@@ -102,13 +102,13 @@ vec4d applyColorOffset(const vec4d& colorRGBA, const vec4d& offset) {
 
 ParticleSimulationCPU::ParticleSimulationCPU(uint32_t numThreads) {
 #ifndef __EMSCRIPTEN__
-	threadPool = std::make_unique<ThreadPool>((numThreads > 0) ? numThreads : std::thread::hardware_concurrency());
+	threadPool = std::unique_ptr<ThreadPool>(new ThreadPool((numThreads > 0) ? numThreads : std::thread::hardware_concurrency()));
 #endif
 }
 
 void ParticleSimulationCPU::simulate(const ParticleEmitter& emitter, ParticleData& particles, uint32_t numParticles, const ForceSolver& forceSolver, const CollisionSolver& collisionSolver, floatd t, floatd dt) {
 #ifndef __EMSCRIPTEN__
-	numActiveThreads = std::clamp(numParticles / numParticlesPerThread, 1U, static_cast<uint32_t>(threadPool->getNumThreads()));
+	numActiveThreads = std::min(std::max(numParticles / numParticlesPerThread, 1U), static_cast<uint32_t>(threadPool->getNumThreads()));
 
 	if(numActiveThreads > 1) {
 		const uint32_t numParticlesPerThread = numParticles / numActiveThreads;

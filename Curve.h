@@ -76,7 +76,7 @@ public:
 	}
 
 	T get(floatd position = 0.0) const {
-		return cache[static_cast<std::size_t>(std::clamp(position, 0.0, 1.0) * static_cast<floatd>(cache.size() - 1))];
+		return cache[static_cast<std::size_t>(std::min(std::max(position, 0.0), 1.0) * static_cast<floatd>(cache.size() - 1))];
 	}
 
 	void setPoints(const std::vector<Point>& pointList) {
@@ -102,7 +102,7 @@ public:
 	}
 
 	void addPoint(floatd position, const T& value) {
-		points.push_back(Point{ std::clamp(position, 0.0, 1.0), value });
+		points.push_back(Point{ std::min(std::max(position, 0.0), 1.0), value });
 		refreshCache();
 	}
 	void removePoint(floatd position) {
@@ -146,7 +146,7 @@ public:
 	}
 	floatd shiftPoint(std::size_t index, floatd delta) {
 		if(index < points.size()) {
-			floatd result = std::clamp(points[index].position + delta, 0.0, 1.0);
+			floatd result = std::min(std::max(points[index].position + delta, 0.0), 1.0);		
 			points[index].position = result;
 			refreshCache();
 
@@ -170,13 +170,13 @@ public:
 	}
 	void shift(floatd delta) {
 		for(Point& point : points) {
-			point.position = std::clamp(point.position + delta, 0.0, 1.0);
+			point.position = std::min(std::max(point.position + delta, 0.0), 1.0);
 		}
 		refreshCache();
 	}
 	void shiftByFactor(floatd factor) {
 		for(Point& point : points) {
-			point.position = std::clamp(point.position * factor, 0.0, 1.0);
+			point.position = std::min(std::max(point.position * factor, 0.0), 1.0);
 		}
 		refreshCache();
 	}	
