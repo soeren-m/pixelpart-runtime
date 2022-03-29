@@ -173,6 +173,7 @@ void ParticleEngine::setParticleCapacity(uint32_t capacity) {
 		ParticleData& emitterParticles = particles[emitterIndex];
 
 		emitterParticles.spawnId.resize(capacity);
+		emitterParticles.parentId.resize(capacity);
 		emitterParticles.numParticlesToEmit.resize(capacity);
 		emitterParticles.life.resize(capacity);
 		emitterParticles.lifespan.resize(capacity);
@@ -423,6 +424,7 @@ void ParticleEngine::createParticle(uint32_t emitterIndex, uint32_t p, floatd t,
 	const floatd initialSpeed = emitter.particleInitialVelocity.get(alpha) + sampleUniform(-emitter.particleInitialVelocityVariance, +emitter.particleInitialVelocityVariance);
 
 	emitterParticles.spawnId[p] = particleId++;
+	emitterParticles.parentId[p] = (parentParticle != NullId) ? particles[parentEmitterIndex].spawnId[parentParticle] : NullId;
 	emitterParticles.numParticlesToEmit[p] = 0.0;
 	emitterParticles.life[p] = 0.0;
 	emitterParticles.lifespan[p] = std::max(emitter.particleLifespan.get(alpha) + sampleUniform(-emitter.particleLifespanVariance, +emitter.particleLifespanVariance), 0.0);
@@ -481,6 +483,7 @@ void ParticleEngine::destroyParticle(uint32_t emitterIndex, int32_t& p) {
 	n--;
 
 	std::swap(emitterParticles.spawnId[p], emitterParticles.spawnId[n]);
+	std::swap(emitterParticles.parentId[p], emitterParticles.parentId[n]);
 	std::swap(emitterParticles.numParticlesToEmit[p], emitterParticles.numParticlesToEmit[n]);
 	std::swap(emitterParticles.life[p], emitterParticles.life[n]);
 	std::swap(emitterParticles.lifespan[p], emitterParticles.lifespan[n]);

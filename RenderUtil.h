@@ -5,19 +5,31 @@
 #include "Sprite.h"
 
 namespace pixelpart {
+struct ParticleMeshBuildInfo {
+	const ParticleEmitter& emitter;
+	const ParticleData& particles;
+	uint32_t numParticles;
+	uint32_t numIndices;
+	uint32_t numVertices;
+	std::vector<uint32_t> particleIndices;
+	std::vector<uint32_t> numParticlesPerTrail;
+
+	ParticleMeshBuildInfo(const ParticleEmitter& e, const ParticleData& p, uint32_t n);
+};
+struct ParticleTrailVertexData {
+	std::vector<vec2d> positions;
+	std::vector<vec2d> sizes;
+	std::vector<vec4d> colors;
+};
+
 std::vector<vec2d> generateSpriteVertices(const vec2d& position, const vec2d& size, const vec2d& pivot, floatd rotation);
 std::vector<vec2d> generateSpriteTextureCoords(int32_t frame, int32_t framesRow, int32_t framesColumn, TextureOrigin textureOrigin);
-void generateParticleTrail(std::vector<vec2d>& trailPosition, std::vector<vec2d>& trailSize, std::vector<vec4d>& trailColor, const ParticleEmitter& emitter, const ParticleData& particles, uint32_t numParticles);
-
-uint32_t getNumParticleIndices(const ParticleEmitter& emitter, uint32_t numParticles);
-uint32_t getNumParticleVertices(const ParticleEmitter& emitter, uint32_t numParticles);
-uint32_t getNumSpriteIndices(const Sprite& sprite);
-uint32_t getNumSpriteVertices(const Sprite& sprite);
+std::vector<ParticleTrailVertexData> generateParticleTrails(const ParticleMeshBuildInfo& meshBuildInfo);
 
 template <typename IntT, typename FloatT>
-void generateParticleSpriteTriangles(IntT* indices, FloatT* positions, FloatT* textureCoords, FloatT* colors, const ParticleEmitter& emitter, const ParticleData& particles, uint32_t numParticles, floatd scaleX, floatd scaleY) {
+void generateParticleSpriteTriangles(IntT* indices, FloatT* positions, FloatT* textureCoords, FloatT* colors, const ParticleMeshBuildInfo& meshBuildInfo, floatd scaleX, floatd scaleY) {
 	if(indices) {
-		for(uint32_t p = 0; p < numParticles; p++) {
+		for(uint32_t p = 0; p < meshBuildInfo.numParticles; p++) {
 			indices[p * 6 + 0] = p * 4 + 0;
 			indices[p * 6 + 1] = p * 4 + 1;
 			indices[p * 6 + 2] = p * 4 + 3;
@@ -28,12 +40,12 @@ void generateParticleSpriteTriangles(IntT* indices, FloatT* positions, FloatT* t
 	}
 
 	if(positions) {
-		for(uint32_t p = 0; p < numParticles; p++) {
+		for(uint32_t p = 0; p < meshBuildInfo.numParticles; p++) {
 			std::vector<vec2d> pos = generateSpriteVertices(
-				particles.globalPosition[p],
-				particles.size[p],
-				emitter.particleSprite.texturePivot,
-				particles.rotation[p]);
+				meshBuildInfo.particles.globalPosition[p],
+				meshBuildInfo.particles.size[p],
+				meshBuildInfo.emitter.particleSprite.texturePivot,
+				meshBuildInfo.particles.rotation[p]);
 
 			positions[p * 4 * 2 + 0] = pos[0].x * scaleX;
 			positions[p * 4 * 2 + 1] = pos[0].y * scaleY;
@@ -47,12 +59,12 @@ void generateParticleSpriteTriangles(IntT* indices, FloatT* positions, FloatT* t
 	}
 
 	if(textureCoords) {
-		for(uint32_t p = 0; p < numParticles; p++) {
+		for(uint32_t p = 0; p < meshBuildInfo.numParticles; p++) {
 			std::vector<vec2d> uv = generateSpriteTextureCoords(
-				particles.frame[p],
-				emitter.particleSprite.framesRow,
-				emitter.particleSprite.framesColumn,
-				emitter.particleSprite.textureOrigin);
+				meshBuildInfo.particles.frame[p],
+				meshBuildInfo.emitter.particleSprite.framesRow,
+				meshBuildInfo.emitter.particleSprite.framesColumn,
+				meshBuildInfo.emitter.particleSprite.textureOrigin);
 
 			textureCoords[p * 4 * 2 + 0] = uv[0].x;
 			textureCoords[p * 4 * 2 + 1] = uv[0].y;
@@ -66,223 +78,131 @@ void generateParticleSpriteTriangles(IntT* indices, FloatT* positions, FloatT* t
 	}
 
 	if(colors) {
-		for(uint32_t p = 0; p < numParticles; p++) {
-			colors[p * 4 * 4 + 0] = particles.color[p].r;
-			colors[p * 4 * 4 + 1] = particles.color[p].g;
-			colors[p * 4 * 4 + 2] = particles.color[p].b;
-			colors[p * 4 * 4 + 3] = particles.color[p].a;
-			colors[p * 4 * 4 + 4] = particles.color[p].r;
-			colors[p * 4 * 4 + 5] = particles.color[p].g;
-			colors[p * 4 * 4 + 6] = particles.color[p].b;
-			colors[p * 4 * 4 + 7] = particles.color[p].a;
-			colors[p * 4 * 4 + 8] = particles.color[p].r;
-			colors[p * 4 * 4 + 9] = particles.color[p].g;
-			colors[p * 4 * 4 + 10] = particles.color[p].b;
-			colors[p * 4 * 4 + 11] = particles.color[p].a;
-			colors[p * 4 * 4 + 12] = particles.color[p].r;
-			colors[p * 4 * 4 + 13] = particles.color[p].g;
-			colors[p * 4 * 4 + 14] = particles.color[p].b;
-			colors[p * 4 * 4 + 15] = particles.color[p].a;
+		for(uint32_t p = 0; p < meshBuildInfo.numParticles; p++) {
+			colors[p * 4 * 4 + 0] = meshBuildInfo.particles.color[p].r;
+			colors[p * 4 * 4 + 1] = meshBuildInfo.particles.color[p].g;
+			colors[p * 4 * 4 + 2] = meshBuildInfo.particles.color[p].b;
+			colors[p * 4 * 4 + 3] = meshBuildInfo.particles.color[p].a;
+			colors[p * 4 * 4 + 4] = meshBuildInfo.particles.color[p].r;
+			colors[p * 4 * 4 + 5] = meshBuildInfo.particles.color[p].g;
+			colors[p * 4 * 4 + 6] = meshBuildInfo.particles.color[p].b;
+			colors[p * 4 * 4 + 7] = meshBuildInfo.particles.color[p].a;
+			colors[p * 4 * 4 + 8] = meshBuildInfo.particles.color[p].r;
+			colors[p * 4 * 4 + 9] = meshBuildInfo.particles.color[p].g;
+			colors[p * 4 * 4 + 10] = meshBuildInfo.particles.color[p].b;
+			colors[p * 4 * 4 + 11] = meshBuildInfo.particles.color[p].a;
+			colors[p * 4 * 4 + 12] = meshBuildInfo.particles.color[p].r;
+			colors[p * 4 * 4 + 13] = meshBuildInfo.particles.color[p].g;
+			colors[p * 4 * 4 + 14] = meshBuildInfo.particles.color[p].b;
+			colors[p * 4 * 4 + 15] = meshBuildInfo.particles.color[p].a;
 		}
 	}
 }
 
 template <typename IntT, typename FloatT>
-void generateParticleTrailTriangles(IntT* indices, FloatT* positions, FloatT* textureCoords, FloatT* colors, const ParticleEmitter& emitter, const ParticleData& particles, uint32_t numParticles, floatd scaleX, floatd scaleY) {
-	std::vector<vec2d> trailPosition;
-	std::vector<vec2d> trailSize;
-	std::vector<vec4d> trailColor;
-	generateParticleTrail(
-		trailPosition,
-		trailSize,
-		trailColor,
-		emitter,
-		particles,
-		numParticles);
+void generateParticleTrailTriangles(IntT* indices, FloatT* positions, FloatT* textureCoords, FloatT* colors, const ParticleMeshBuildInfo& meshBuildInfo, floatd scaleX, floatd scaleY) {
+	std::vector<ParticleTrailVertexData> trails = generateParticleTrails(meshBuildInfo);
 
-	uint32_t numVertices = trailPosition.size();
+	uint32_t i0 = 0;
+	uint32_t v0 = 0;
 
-	if(indices) {
-		for(uint32_t i = 0; i < numVertices - 1; i++) {
-			indices[i * 6 + 0] = i * 2 + 0;
-			indices[i * 6 + 1] = i * 2 + 2;
-			indices[i * 6 + 2] = i * 2 + 1;
-			indices[i * 6 + 3] = i * 2 + 2;
-			indices[i * 6 + 4] = i * 2 + 3;
-			indices[i * 6 + 5] = i * 2 + 1;
-		}
-	}
-
-	if(positions) {
-		for(uint32_t i = 0; i < numVertices - 1; i++) {
-			vec2d d = glm::normalize(trailPosition[i + 1] - trailPosition[i]);
-			positions[i * 2 * 2 + 0] = (trailPosition[i].x + d.y * std::max(trailSize[i].x, trailSize[i].y) * 0.5) * scaleX;
-			positions[i * 2 * 2 + 1] = (trailPosition[i].y - d.x * std::max(trailSize[i].x, trailSize[i].y) * 0.5) * scaleY;
-			positions[i * 2 * 2 + 2] = (trailPosition[i].x - d.y * std::max(trailSize[i].x, trailSize[i].y) * 0.5) * scaleX;
-			positions[i * 2 * 2 + 3] = (trailPosition[i].y + d.x * std::max(trailSize[i].x, trailSize[i].y) * 0.5) * scaleY;
+	for(const ParticleTrailVertexData& trail : trails) {
+		const uint32_t numVertices = static_cast<uint32_t>(trail.positions.size());
+		if(numVertices < 2) {
+			continue;
 		}
 
-		vec2d d = glm::normalize(trailPosition[numVertices - 2] - trailPosition[numVertices - 1]);
-		positions[(numVertices - 1) * 2 * 2 + 0] = (trailPosition[numVertices - 1].x - d.y * std::max(trailSize[numVertices - 1].x, trailSize[numVertices - 1].y) * 0.5) * scaleX;
-		positions[(numVertices - 1) * 2 * 2 + 1] = (trailPosition[numVertices - 1].y + d.x * std::max(trailSize[numVertices - 1].x, trailSize[numVertices - 1].y) * 0.5) * scaleY;
-		positions[(numVertices - 1) * 2 * 2 + 2] = (trailPosition[numVertices - 1].x + d.y * std::max(trailSize[numVertices - 1].x, trailSize[numVertices - 1].y) * 0.5) * scaleX;
-		positions[(numVertices - 1) * 2 * 2 + 3] = (trailPosition[numVertices - 1].y - d.x * std::max(trailSize[numVertices - 1].x, trailSize[numVertices - 1].y) * 0.5) * scaleY;
-	}
-
-	if(textureCoords) {
-		floatd trailLengthTotal = 0.0;
-		std::vector<floatd> trailLength(numVertices);
-		for(uint32_t i = 0; i < numVertices - 1; i++) {
-			trailLength[i] = trailLengthTotal;
-			trailLengthTotal += glm::length(trailPosition[i + 1] - trailPosition[i]);
+		if(indices) {
+			for(uint32_t i = 0; i < numVertices - 1; i++) {
+				indices[i0 + i * 6 + 0] = v0 + i * 2 + 0;
+				indices[i0 + i * 6 + 1] = v0 + i * 2 + 2;
+				indices[i0 + i * 6 + 2] = v0 + i * 2 + 1;
+				indices[i0 + i * 6 + 3] = v0 + i * 2 + 2;
+				indices[i0 + i * 6 + 4] = v0 + i * 2 + 3;
+				indices[i0 + i * 6 + 5] = v0 + i * 2 + 1;
+			}
 		}
 
-		trailLength.back() = trailLengthTotal;
+		if(positions) {
+			for(uint32_t i = 0; i < numVertices - 1; i++) {
+				vec2d d = glm::normalize(trail.positions[i + 1] - trail.positions[i]);
+				positions[(v0 + i * 2) * 2 + 0] = (trail.positions[i].x + d.y * std::max(trail.sizes[i].x, trail.sizes[i].y) * 0.5) * scaleX;
+				positions[(v0 + i * 2) * 2 + 1] = (trail.positions[i].y - d.x * std::max(trail.sizes[i].x, trail.sizes[i].y) * 0.5) * scaleY;
+				positions[(v0 + i * 2) * 2 + 2] = (trail.positions[i].x - d.y * std::max(trail.sizes[i].x, trail.sizes[i].y) * 0.5) * scaleX;
+				positions[(v0 + i * 2) * 2 + 3] = (trail.positions[i].y + d.x * std::max(trail.sizes[i].x, trail.sizes[i].y) * 0.5) * scaleY;
+			}
 
-		switch(emitter.rendererTrailUVRotation) {
-			case 1:
-				for(uint32_t i = 0; i < numVertices; i++) {
-					textureCoords[i * 2 * 2 + 0] = trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-					textureCoords[i * 2 * 2 + 1] = 0.0;
-					textureCoords[i * 2 * 2 + 2] = trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-					textureCoords[i * 2 * 2 + 3] = 1.0;
-				}
-				break;
-
-			case 2:
-				for(uint32_t i = 0; i < numVertices; i++) {
-					textureCoords[i * 2 * 2 + 0] = 0.0;
-					textureCoords[i * 2 * 2 + 1] = emitter.rendererTrailUVFactor - trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-					textureCoords[i * 2 * 2 + 2] = 1.0;
-					textureCoords[i * 2 * 2 + 3] = emitter.rendererTrailUVFactor - trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-				}
-				break;
-
-			case 3:
-				for(uint32_t i = 0; i < numVertices; i++) {
-					textureCoords[i * 2 * 2 + 0] = trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-					textureCoords[i * 2 * 2 + 1] = 1.0;
-					textureCoords[i * 2 * 2 + 2] = trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-					textureCoords[i * 2 * 2 + 3] = 0.0;
-				}
-				break;
-			
-			default:
-				for(uint32_t i = 0; i < numVertices; i++) {
-					textureCoords[i * 2 * 2 + 0] = 0.0;
-					textureCoords[i * 2 * 2 + 1] = trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-					textureCoords[i * 2 * 2 + 2] = 1.0;
-					textureCoords[i * 2 * 2 + 3] = trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-				}
-				break;
-		}
-	}
-
-	if(colors) {
-		for(uint32_t i = 0; i < numVertices; i++) {
-			colors[i * 2 * 4 + 0] = trailColor[i].r;
-			colors[i * 2 * 4 + 1] = trailColor[i].g;
-			colors[i * 2 * 4 + 2] = trailColor[i].b;
-			colors[i * 2 * 4 + 3] = trailColor[i].a;
-			colors[i * 2 * 4 + 4] = trailColor[i].r;
-			colors[i * 2 * 4 + 5] = trailColor[i].g;
-			colors[i * 2 * 4 + 6] = trailColor[i].b;
-			colors[i * 2 * 4 + 7] = trailColor[i].a;
-		}
-	}
-}
-
-template <typename FloatT>
-void generateParticleTrailTriangleStrip(FloatT* positions, FloatT* textureCoords, FloatT* colors, const ParticleEmitter& emitter, const ParticleData& particles, uint32_t numParticles, floatd scaleX, floatd scaleY) {
-	std::vector<vec2d> trailPosition;
-	std::vector<vec2d> trailSize;
-	std::vector<vec4d> trailColor;
-	generateParticleTrail(
-		trailPosition,
-		trailSize,
-		trailColor,
-		emitter,
-		particles,
-		numParticles);
-
-	uint32_t numVertices = trailPosition.size();
-	
-	if(positions) {
-		for(uint32_t i = 0; i < numVertices - 1; i++) {	
-			vec2d d = glm::normalize(trailPosition[i + 1] - trailPosition[i]);
-			positions[i * 2 * 2 + 0] = (trailPosition[i].x + d.y * std::max(trailSize[i].x, trailSize[i].y) * 0.5) * scaleX;
-			positions[i * 2 * 2 + 1] = (trailPosition[i].y - d.x * std::max(trailSize[i].x, trailSize[i].y) * 0.5) * scaleY;
-			positions[i * 2 * 2 + 2] = (trailPosition[i].x - d.y * std::max(trailSize[i].x, trailSize[i].y) * 0.5) * scaleX;
-			positions[i * 2 * 2 + 3] = (trailPosition[i].y + d.x * std::max(trailSize[i].x, trailSize[i].y) * 0.5) * scaleY;
+			vec2d d = glm::normalize(trail.positions[numVertices - 2] - trail.positions[numVertices - 1]);
+			positions[(v0 + (numVertices - 1) * 2) * 2 + 0] = (trail.positions[numVertices - 1].x - d.y * std::max(trail.sizes[numVertices - 1].x, trail.sizes[numVertices - 1].y) * 0.5) * scaleX;
+			positions[(v0 + (numVertices - 1) * 2) * 2 + 1] = (trail.positions[numVertices - 1].y + d.x * std::max(trail.sizes[numVertices - 1].x, trail.sizes[numVertices - 1].y) * 0.5) * scaleY;
+			positions[(v0 + (numVertices - 1) * 2) * 2 + 2] = (trail.positions[numVertices - 1].x + d.y * std::max(trail.sizes[numVertices - 1].x, trail.sizes[numVertices - 1].y) * 0.5) * scaleX;
+			positions[(v0 + (numVertices - 1) * 2) * 2 + 3] = (trail.positions[numVertices - 1].y - d.x * std::max(trail.sizes[numVertices - 1].x, trail.sizes[numVertices - 1].y) * 0.5) * scaleY;
 		}
 
-		vec2d d = glm::normalize(trailPosition[numVertices - 2] - trailPosition[numVertices - 1]);
-		positions[(numVertices - 1) * 2 * 2 + 0] = (trailPosition[numVertices - 1].x - d.y * std::max(trailSize[numVertices - 1].x, trailSize[numVertices - 1].y) * 0.5) * scaleX;
-		positions[(numVertices - 1) * 2 * 2 + 1] = (trailPosition[numVertices - 1].y + d.x * std::max(trailSize[numVertices - 1].x, trailSize[numVertices - 1].y) * 0.5) * scaleY;
-		positions[(numVertices - 1) * 2 * 2 + 2] = (trailPosition[numVertices - 1].x + d.y * std::max(trailSize[numVertices - 1].x, trailSize[numVertices - 1].y) * 0.5) * scaleX;
-		positions[(numVertices - 1) * 2 * 2 + 3] = (trailPosition[numVertices - 1].y - d.x * std::max(trailSize[numVertices - 1].x, trailSize[numVertices - 1].y) * 0.5) * scaleY;
-	}
+		if(textureCoords) {
+			floatd trailLengthTotal = 0.0;
+			std::vector<floatd> trailLength(numVertices);
+			for(uint32_t i = 0; i < numVertices - 1; i++) {
+				trailLength[i] = trailLengthTotal;
+				trailLengthTotal += glm::length(trail.positions[i + 1] - trail.positions[i]);
+			}
 
-	if(textureCoords) {
-		floatd trailLengthTotal = 0.0;
-		std::vector<floatd> trailLength(numVertices);
-		for(uint32_t i = 0; i < numVertices - 1; i++) {
-			trailLength[i] = trailLengthTotal;
-			trailLengthTotal += glm::length(trailPosition[i + 1] - trailPosition[i]);
+			trailLength.back() = trailLengthTotal;
+
+			switch(meshBuildInfo.emitter.rendererTrailUVRotation) {
+				case 1:
+					for(uint32_t i = 0; i < numVertices; i++) {
+						textureCoords[(v0 + i * 2) * 2 + 0] = trailLength[i] / trailLengthTotal * meshBuildInfo.emitter.rendererTrailUVFactor;
+						textureCoords[(v0 + i * 2) * 2 + 1] = 0.0;
+						textureCoords[(v0 + i * 2) * 2 + 2] = trailLength[i] / trailLengthTotal * meshBuildInfo.emitter.rendererTrailUVFactor;
+						textureCoords[(v0 + i * 2) * 2 + 3] = 1.0;
+					}
+					break;
+
+				case 2:
+					for(uint32_t i = 0; i < numVertices; i++) {
+						textureCoords[(v0 + i * 2) * 2 + 0] = 0.0;
+						textureCoords[(v0 + i * 2) * 2 + 1] = meshBuildInfo.emitter.rendererTrailUVFactor - trailLength[i] / trailLengthTotal * meshBuildInfo.emitter.rendererTrailUVFactor;
+						textureCoords[(v0 + i * 2) * 2 + 2] = 1.0;
+						textureCoords[(v0 + i * 2) * 2 + 3] = meshBuildInfo.emitter.rendererTrailUVFactor - trailLength[i] / trailLengthTotal * meshBuildInfo.emitter.rendererTrailUVFactor;
+					}
+					break;
+
+				case 3:
+					for(uint32_t i = 0; i < numVertices; i++) {
+						textureCoords[(v0 + i * 2) * 2 + 0] = trailLength[i] / trailLengthTotal * meshBuildInfo.emitter.rendererTrailUVFactor;
+						textureCoords[(v0 + i * 2) * 2 + 1] = 1.0;
+						textureCoords[(v0 + i * 2) * 2 + 2] = trailLength[i] / trailLengthTotal * meshBuildInfo.emitter.rendererTrailUVFactor;
+						textureCoords[(v0 + i * 2) * 2 + 3] = 0.0;
+					}
+					break;
+				
+				default:
+					for(uint32_t i = 0; i < numVertices; i++) {
+						textureCoords[(v0 + i * 2) * 2 + 0] = 0.0;
+						textureCoords[(v0 + i * 2) * 2 + 1] = trailLength[i] / trailLengthTotal * meshBuildInfo.emitter.rendererTrailUVFactor;
+						textureCoords[(v0 + i * 2) * 2 + 2] = 1.0;
+						textureCoords[(v0 + i * 2) * 2 + 3] = trailLength[i] / trailLengthTotal * meshBuildInfo.emitter.rendererTrailUVFactor;
+					}
+					break;
+			}
 		}
 
-		trailLength.back() = trailLengthTotal;
-
-		switch(emitter.rendererTrailUVRotation) {
-			case 1:
-				for(uint32_t i = 0; i < numVertices; i++) {
-					textureCoords[i * 2 * 2 + 0] = trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-					textureCoords[i * 2 * 2 + 1] = 0.0;
-					textureCoords[i * 2 * 2 + 2] = trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-					textureCoords[i * 2 * 2 + 3] = 1.0;
-				}
-				break;
-
-			case 2:
-				for(uint32_t i = 0; i < numVertices; i++) {
-					textureCoords[i * 2 * 2 + 0] = 0.0;
-					textureCoords[i * 2 * 2 + 1] = emitter.rendererTrailUVFactor - trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-					textureCoords[i * 2 * 2 + 2] = 1.0;
-					textureCoords[i * 2 * 2 + 3] = emitter.rendererTrailUVFactor - trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-				}
-				break;
-
-			case 3:
-				for(uint32_t i = 0; i < numVertices; i++) {
-					textureCoords[i * 2 * 2 + 0] = trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-					textureCoords[i * 2 * 2 + 1] = 1.0;
-					textureCoords[i * 2 * 2 + 2] = trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-					textureCoords[i * 2 * 2 + 3] = 0.0;
-				}
-				break;
-			
-			default:
-				for(uint32_t i = 0; i < numVertices; i++) {
-					textureCoords[i * 2 * 2 + 0] = 0.0;
-					textureCoords[i * 2 * 2 + 1] = trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-					textureCoords[i * 2 * 2 + 2] = 1.0;
-					textureCoords[i * 2 * 2 + 3] = trailLength[i] / trailLengthTotal * emitter.rendererTrailUVFactor;
-				}
-				break;
+		if(colors) {
+			for(uint32_t i = 0; i < numVertices; i++) {
+				colors[(v0 + i * 2) * 4 + 0] = trail.colors[i].r;
+				colors[(v0 + i * 2) * 4 + 1] = trail.colors[i].g;
+				colors[(v0 + i * 2) * 4 + 2] = trail.colors[i].b;
+				colors[(v0 + i * 2) * 4 + 3] = trail.colors[i].a;
+				colors[(v0 + i * 2) * 4 + 4] = trail.colors[i].r;
+				colors[(v0 + i * 2) * 4 + 5] = trail.colors[i].g;
+				colors[(v0 + i * 2) * 4 + 6] = trail.colors[i].b;
+				colors[(v0 + i * 2) * 4 + 7] = trail.colors[i].a;
+			}
 		}
-	}
 
-	if(colors) {
-		for(uint32_t i = 0; i < numVertices; i++) {	
-			colors[i * 2 * 4 + 0] = trailColor[i].r;
-			colors[i * 2 * 4 + 1] = trailColor[i].g;
-			colors[i * 2 * 4 + 2] = trailColor[i].b;
-			colors[i * 2 * 4 + 3] = trailColor[i].a;
-			colors[i * 2 * 4 + 4] = trailColor[i].r;
-			colors[i * 2 * 4 + 5] = trailColor[i].g;
-			colors[i * 2 * 4 + 6] = trailColor[i].b;
-			colors[i * 2 * 4 + 7] = trailColor[i].a;
-		}
+		i0 += (numVertices - 1) * 6;
+		v0 += numVertices * 2;
 	}
 }
 

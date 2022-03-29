@@ -6,6 +6,7 @@
 namespace pixelpart {
 struct ParticleData {
 	std::vector<uint32_t> spawnId;
+	std::vector<uint32_t> parentId;
 	std::vector<floatd> numParticlesToEmit;
 	std::vector<floatd> life;
 	std::vector<floatd> lifespan;
@@ -26,6 +27,7 @@ struct ParticleData {
 
 struct ParticleDataPointer {
 	uint32_t* spawnId;
+	uint32_t* parentId;
 	floatd* numParticlesToEmit;
 	floatd* life;
 	floatd* lifespan;

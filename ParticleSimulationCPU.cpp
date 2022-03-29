@@ -122,6 +122,7 @@ void ParticleSimulationCPU::simulate(const ParticleEmitter& emitter, ParticleDat
 
 			const ParticleDataPointer workgroupParticles{
 				particles.spawnId.data() + workgroupIndex,
+				particles.parentId.data() + workgroupIndex,
 				particles.numParticlesToEmit.data() + workgroupIndex,
 				particles.life.data() + workgroupIndex,
 				particles.lifespan.data() + workgroupIndex,
@@ -156,6 +157,7 @@ void ParticleSimulationCPU::simulate(const ParticleEmitter& emitter, ParticleDat
 	if(numActiveThreads == 1) {
 		const ParticleDataPointer workgroupParticles{
 			particles.spawnId.data(),
+			particles.parentId.data(),
 			particles.numParticlesToEmit.data(),
 			particles.life.data(),
 			particles.lifespan.data(),
