@@ -118,7 +118,7 @@ public:
 		refreshCache();
 	}
 	void clear() {
-		points.clear();		
+		points.clear();
 		refreshCache();
 	}
 
@@ -146,7 +146,7 @@ public:
 	}
 	floatd shiftPoint(std::size_t index, floatd delta) {
 		if(index < points.size()) {
-			floatd result = std::min(std::max(points[index].position + delta, 0.0), 1.0);		
+			floatd result = std::min(std::max(points[index].position + delta, 0.0), 1.0);
 			points[index].position = result;
 			refreshCache();
 
@@ -266,7 +266,7 @@ public:
 		}
 		else if(interpolation == CurveInterpolation::step) {
 			for(std::size_t i = 0, k0 = 0; i < cache.size(); i++) {
-				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1);		
+				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1);
 				std::size_t k = findIndex(position, k0);
 
 				if(k == invalidIndex) {
@@ -275,8 +275,11 @@ public:
 				else if(k + 1 == points.size()) {
 					cache[i] = points.back().value;
 				}
-				else {		
-					cache[i] = (std::abs(position - points[k].position) < std::abs(position - points[k+1].position)) ? points[k].value : points[k+1].value;
+				else {
+					cache[i] = (std::abs(position - points[k].position) < std::abs(position - points[k + 1].position))
+						? points[k].value
+						: points[k + 1].value;
+
 					k0 = k;
 				}
 			}
@@ -293,9 +296,11 @@ public:
 					cache[i] = points.back().value;
 				}
 				else {
-					floatd t = (position - points[k].position) / (points[k+1].position - points[k].position);
+					floatd t = (position - points[k].position) / (points[k + 1].position - points[k].position);
+					cache[i] = 
+						(1.0 - t) * points[k].value +
+						t * points[k + 1].value;
 
-					cache[i] = (1.0 - t) * points[k].value + t * points[k+1].value;
 					k0 = k;
 				}
 			}
@@ -315,10 +320,10 @@ public:
 					const floatd alpha = 0.5;
 					const floatd tension = 0.0;
 
-					Point p0 = (k > 0) ? points[k-1] : Point{ -0.1, points[k].value };
+					Point p0 = (k > 0) ? points[k - 1] : Point{ -0.1, points[k].value };
 					Point p1 = points[k];
-					Point p2 = points[k+1];
-					Point p3 = (k+2 < points.size()) ? points[k+2] : Point{ +1.1, points[k+1].value };
+					Point p2 = points[k + 1];
+					Point p3 = (k + 2 < points.size()) ? points[k + 2] : Point{ +1.1, points[k + 1].value };
 
 					floatd t = (position - p1.position) / (p2.position - p1.position);
 					floatd t0 = 0.0;
@@ -328,12 +333,17 @@ public:
 
 					T m1 = (1.0 - tension) * (t2 - t1) * ((p1.value - p0.value) / (t1 - t0) - (p2.value - p0.value) / (t2 - t0) + (p2.value - p1.value) / (t2 - t1));
 					T m2 = (1.0 - tension) * (t2 - t1) * ((p2.value - p1.value) / (t2 - t1) - (p3.value - p1.value) / (t3 - t1) + (p3.value - p2.value) / (t3 - t2));
-					T a = 2.0 * (p1.value - p2.value) + m1 + m2;
+					T a = +2.0 * (p1.value - p2.value) + m1 + m2;
 					T b = -3.0 * (p1.value - p2.value) - m1 - m1 - m2;
 					T c = m1;
 					T d = p1.value;
 
-					cache[i] = a * t * t * t + b * t * t + c * t + d;
+					cache[i] =
+						a * t * t * t +
+						b * t * t +
+						c * t +
+						d;
+
 					k0 = k;
 				}
 			}
@@ -360,7 +370,7 @@ private:
 
 template <typename T>
 void to_json(nlohmann::ordered_json& j, const typename Curve<T>::Point& point) {
-	j = nlohmann::ordered_json::array({ 
+	j = nlohmann::ordered_json::array({
 		point.position,
 		point.value
 	});

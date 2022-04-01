@@ -85,7 +85,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 			while(project.effect.isNameUsed(name)) {
 				name = "Collider" + std::to_string(counter++);
 			}
-			
+
 			collider.name = name;
 		}
 	}
@@ -137,7 +137,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 		fromJson(project.cameraPosition, j, "camera_position", "");
 		fromJson(project.cameraZoom, j, "camera_zoom", "");
 	}
-	
+
 	fromJson(project.renderSettings, j, "render_settings", "");
 	fromJson(project.previewSettings, j, "preview_settings", "");
 }

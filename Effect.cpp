@@ -4,7 +4,7 @@
 
 namespace pixelpart {
 Effect::Effect() {
-	
+
 }
 
 void Effect::setParticleEmitters(const std::vector<ParticleEmitter>& emitters) {
@@ -574,7 +574,7 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 				colliders.push_back(collider);
 			}
 		}
-	}	
+	}
 
 	effect.setParticleEmitters(particleEmitters);
 	effect.setForceFields(forceFields);

@@ -16,21 +16,10 @@
 
 namespace pixelpart {
 class ThreadPool {
-private:
+public:
 	using Task = std::function<void()>;
 
-	std::vector<std::thread> workers;
-	std::queue<std::pair<uint32_t, Task>> tasks;
-	std::unordered_set<uint32_t> runningTasks;
-
-	std::mutex queueMutex;
-	std::mutex stateMutex;
-	std::condition_variable completionCondition;
-	std::condition_variable workerCondition;
-	bool stop;
-
-public:
-	ThreadPool(std::size_t numThreads) : stop(false) {
+	ThreadPool(std::size_t numThreads) {
 		for(std::size_t i = 0; i < numThreads; i++) {
 			workers.emplace_back([this]() {
 				while(true) {
@@ -40,7 +29,7 @@ public:
 					{
 						std::unique_lock<std::mutex> lock(queueMutex);
 
-						workerCondition.wait(lock, [this] { 
+						workerCondition.wait(lock, [this] {
 							return stop || !tasks.empty();
 						});
 
@@ -67,7 +56,7 @@ public:
 	}
 	~ThreadPool() {
 		{
-			std::unique_lock<std::mutex> lock(queueMutex);	
+			std::unique_lock<std::mutex> lock(queueMutex);
 
 			stop = true;
 			workerCondition.notify_all();
@@ -93,7 +82,7 @@ public:
 			
 			tasks.emplace(std::make_pair(
 				taskId,
-				[task]() { 
+				[task]() {
 					(*task)();
 				}));
 
@@ -112,6 +101,17 @@ public:
 	std::size_t getNumThreads() const {
 		return workers.size();
 	}
+
+private:
+	std::vector<std::thread> workers;
+	std::queue<std::pair<uint32_t, Task>> tasks;
+	std::unordered_set<uint32_t> runningTasks;
+
+	std::mutex queueMutex;
+	std::mutex stateMutex;
+	std::condition_variable completionCondition;
+	std::condition_variable workerCondition;
+	bool stop = false;
 };
 }
 

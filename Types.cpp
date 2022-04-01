@@ -4,18 +4,24 @@ namespace pixelpart {
 const uint32_t NullId = 0xFFFFFFFF;
 
 std::ostream& operator<<(std::ostream& os, const vec2d& v) {
-	os << v.x << " " << v.y;
+	os << v.x << " "
+		<< v.y;
 
 	return os;
 }
 std::ostream& operator<<(std::ostream& os, const vec3d& v) {
-	os << v.x << " " << v.y << " " << v.z;
-	
+	os << v.x << " "
+		<< v.y << " "
+		<< v.z;
+
 	return os;
 }
 std::ostream& operator<<(std::ostream& os, const vec4d& v) {
-	os << v.x << " " << v.y << " " << v.z << " " << v.w;
-	
+	os << v.x << " "
+		<< v.y << " "
+		<< v.z << " "
+		<< v.w;
+
 	return os;
 }
 std::istream& operator>>(std::istream& is, vec2d& v) {
@@ -40,7 +46,7 @@ std::istream& operator>>(std::istream& is, vec4d& v) {
 	return is;
 }
 
-void to_json(nlohmann::ordered_json& j, const vec2d& v){
+void to_json(nlohmann::ordered_json& j, const vec2d& v) {
 	j = nlohmann::ordered_json{
 		{ "x", v.x },
 		{ "y", v.y },

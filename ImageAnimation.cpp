@@ -4,8 +4,8 @@
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const ImageAnimation& animation) {
 	j = nlohmann::ordered_json{
-		{ "frames", animation.frames },	
-		{ "duration", animation.duration },	
+		{ "frames", animation.frames },
+		{ "duration", animation.duration },
 		{ "loop", animation.loop }
 	};
 }

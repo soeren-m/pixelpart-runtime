@@ -3,19 +3,31 @@
 #include "ParticleData.h"
 #include "ParticleEmitter.h"
 #include "Sprite.h"
+#include "ImageResource.h"
 
 namespace pixelpart {
 struct ParticleMeshBuildInfo {
 	const ParticleEmitter& emitter;
 	const ParticleData& particles;
-	uint32_t numParticles;
-	uint32_t numIndices;
-	uint32_t numVertices;
+	uint32_t numParticles = 0;
+	uint32_t numIndices = 0;
+	uint32_t numVertices = 0;
 	std::vector<uint32_t> particleIndices;
 	std::vector<uint32_t> numParticlesPerTrail;
 
 	ParticleMeshBuildInfo(const ParticleEmitter& e, const ParticleData& p, uint32_t n);
 };
+struct SpriteMeshBuildInfo {
+	const Sprite& sprite;
+	const ImageResource& imageResource;
+	floatd aspectRatio = 1.0;
+	floatd time = 0.0;
+	uint32_t numIndices = 0;
+	uint32_t numVertices = 0;
+
+	SpriteMeshBuildInfo(const Sprite& s, const ImageResource& r, floatd t);
+};
+
 struct ParticleTrailVertexData {
 	std::vector<vec2d> positions;
 	std::vector<vec2d> sizes;
@@ -207,28 +219,28 @@ void generateParticleTrailTriangles(IntT* indices, FloatT* positions, FloatT* te
 }
 
 template <typename IntT, typename FloatT>
-void generateSpriteTriangles(IntT* indices, FloatT* positions, FloatT* textureCoords, FloatT* colors, const Sprite& sprite, floatd aspectRatio, floatd time, floatd scaleX, floatd scaleY) {
-	const floatd alpha = std::fmod(time - sprite.lifetimeStart, sprite.lifetimeDuration) / sprite.lifetimeDuration;
-	const vec4d color = vec4d(vec3d(sprite.color.get(alpha)), sprite.opacity.get(alpha));
-	const vec2d position = sprite.motionPath.get(alpha);
-	const vec2d nextPosition = sprite.motionPath.get(alpha + 0.01);
-	const floatd orientation = sprite.orientation.get(alpha) + ((sprite.alignWithPath && position != nextPosition) ? glm::degrees(glm::orientedAngle(vec2d(0.0, 1.0), glm::normalize(nextPosition - position))) : 0.0);
-	const vec2d size = vec2d(sprite.width.get(alpha) * aspectRatio, sprite.height.get(alpha));
-	const int32_t frameAdvance = static_cast<int32_t>((time - sprite.lifetimeStart) / sprite.imageAnimation.duration * static_cast<floatd>(sprite.imageAnimation.frames) + 0.5);
-	const int32_t frame = sprite.image.frame + sprite.imageAnimation.loop
-		? frameAdvance % static_cast<int32_t>(sprite.imageAnimation.frames)
-		: std::min(frameAdvance, static_cast<int32_t>(sprite.imageAnimation.frames) - 1);
+void generateSpriteTriangles(IntT* indices, FloatT* positions, FloatT* textureCoords, FloatT* colors, const SpriteMeshBuildInfo& meshBuildInfo, floatd scaleX, floatd scaleY) {
+	const floatd alpha = std::fmod(meshBuildInfo.time - meshBuildInfo.sprite.lifetimeStart, meshBuildInfo.sprite.lifetimeDuration) / meshBuildInfo.sprite.lifetimeDuration;
+	const vec4d color = vec4d(vec3d(meshBuildInfo.sprite.color.get(alpha)), meshBuildInfo.sprite.opacity.get(alpha));
+	const vec2d position = meshBuildInfo.sprite.motionPath.get(alpha);
+	const vec2d nextPosition = meshBuildInfo.sprite.motionPath.get(alpha + 0.01);
+	const floatd orientation = meshBuildInfo.sprite.orientation.get(alpha) + ((meshBuildInfo.sprite.alignWithPath && position != nextPosition) ? glm::degrees(glm::orientedAngle(vec2d(0.0, 1.0), glm::normalize(nextPosition - position))) : 0.0);
+	const vec2d size = vec2d(meshBuildInfo.sprite.width.get(alpha) * meshBuildInfo.aspectRatio, meshBuildInfo.sprite.height.get(alpha));
+	const int32_t frameAdvance = static_cast<int32_t>((meshBuildInfo.time - meshBuildInfo.sprite.lifetimeStart) / meshBuildInfo.sprite.imageAnimation.duration * static_cast<floatd>(meshBuildInfo.sprite.imageAnimation.frames) + 0.5);
+	const int32_t frame = meshBuildInfo.sprite.image.frame + meshBuildInfo.sprite.imageAnimation.loop
+		? frameAdvance % static_cast<int32_t>(meshBuildInfo.sprite.imageAnimation.frames)
+		: std::min(frameAdvance, static_cast<int32_t>(meshBuildInfo.sprite.imageAnimation.frames) - 1);
 
 	std::vector<vec2d> pos = generateSpriteVertices(
 		position,
 		size,
-		sprite.image.texturePivot,
+		meshBuildInfo.sprite.image.texturePivot,
 		orientation);
 	std::vector<vec2d> uv = generateSpriteTextureCoords(
 		frame,
-		sprite.image.framesRow,
-		sprite.image.framesColumn,
-		sprite.image.textureOrigin);
+		meshBuildInfo.sprite.image.framesRow,
+		meshBuildInfo.sprite.image.framesColumn,
+		meshBuildInfo.sprite.image.textureOrigin);
 
 	if(indices) {
 		indices[0] = 0;

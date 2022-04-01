@@ -80,7 +80,6 @@ vec4d hsv2rgb(const vec4d& clrHSV) {
 			return vec4d(p, q, clrHSV.z, clrHSV.a);
 		case 4:
 			return vec4d(t, p, clrHSV.z, clrHSV.a);
-		case 5:
 		default:
 			return vec4d(clrHSV.z, p, q, clrHSV.a);
 	}
@@ -114,7 +113,7 @@ void ParticleSimulationCPU::simulate(const ParticleEmitter& emitter, ParticleDat
 		const uint32_t numParticlesPerThread = numParticles / numActiveThreads;
 		const uint32_t numThreadsWithLargerLoad = numParticles % numActiveThreads;
 		uint32_t workgroupIndex = 0;
-		
+
 		for(uint32_t i = 0; i < numActiveThreads; i++) {
 			uint32_t workgroupSize = (i < numActiveThreads - numThreadsWithLargerLoad)
 				? numParticlesPerThread
@@ -142,7 +141,7 @@ void ParticleSimulationCPU::simulate(const ParticleEmitter& emitter, ParticleDat
 			};
 
 			threadPool->enqueue(i, &simulateParticles, emitter, workgroupParticles, workgroupSize, forceSolver, collisionSolver, t, dt);
-			
+
 			workgroupIndex += workgroupSize;
 		}
 
@@ -243,7 +242,7 @@ void ParticleSimulationCPU::simulateParticles(const ParticleEmitter& emitter, Pa
 			default:
 				break;
 		}
-	
+
 		particles.velocity[p] += particles.force[p] * dt;
 		particles.velocity[p] *= std::pow(emitter.particleDamping.get(particleAlpha), dt);
 		particles.position[p] += particles.velocity[p] * dt;

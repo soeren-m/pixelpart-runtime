@@ -10,7 +10,7 @@ vec2d rotate(const vec2d& p, const vec2d& o, floatd a) {
 		(p.x - o.x) * s + (p.y - o.y) * c + o.y);
 }
 
-ParticleMeshBuildInfo::ParticleMeshBuildInfo(const ParticleEmitter& e, const ParticleData& p, uint32_t n) : emitter(e), particles(p), numParticles(n), numIndices(0), numVertices(0) {
+ParticleMeshBuildInfo::ParticleMeshBuildInfo(const ParticleEmitter& e, const ParticleData& p, uint32_t n) : emitter(e), particles(p), numParticles(n) {
 	if(emitter.renderer == ParticleEmitter::RendererType::sprite || numParticles <= 1) {
 		numIndices = numParticles * 6;
 		numVertices = numParticles * 4;
@@ -48,6 +48,12 @@ ParticleMeshBuildInfo::ParticleMeshBuildInfo(const ParticleEmitter& e, const Par
 			}
 		}
 	}
+}
+
+SpriteMeshBuildInfo::SpriteMeshBuildInfo(const Sprite& s, const ImageResource& r, floatd t) : sprite(s), imageResource(r), time(t) {
+	aspectRatio = static_cast<floatd>(imageResource.width) / static_cast<floatd>(imageResource.height);
+	numIndices = 6;
+	numVertices = 4;
 }
 
 std::vector<vec2d> generateSpriteVertices(const vec2d& position, const vec2d& size, const vec2d& pivot, floatd rotation) {
@@ -101,7 +107,7 @@ std::vector<ParticleTrailVertexData> generateParticleTrails(const ParticleMeshBu
 				std::vector<floatd> trailLength(meshBuildInfo.numParticlesPerTrail[trailIndex]);
 				for(uint32_t pTrail = 0; pTrail < meshBuildInfo.numParticlesPerTrail[trailIndex] - 1; pTrail++) {
 					trailLength[pTrail] = trailLengthTotal;
-					trailLengthTotal += glm::length(meshBuildInfo.particles.globalPosition[meshBuildInfo.particleIndices[p + pTrail + 1]] - meshBuildInfo.particles.globalPosition[meshBuildInfo.particleIndices[p + pTrail]]);			
+					trailLengthTotal += glm::length(meshBuildInfo.particles.globalPosition[meshBuildInfo.particleIndices[p + pTrail + 1]] - meshBuildInfo.particles.globalPosition[meshBuildInfo.particleIndices[p + pTrail]]);
 				}
 
 				trailLength.back() = trailLengthTotal;
@@ -115,7 +121,7 @@ std::vector<ParticleTrailVertexData> generateParticleTrails(const ParticleMeshBu
 				Curve<vec4d> curveColor(CurveInterpolation::spline_catmullrom);
 
 				curvePosition.enableFixedCache(meshBuildInfo.emitter.rendererNumTrailSegments);
-				curvePosition.setPointsOrdered<uint32_t>(trailLength.data(), meshBuildInfo.particles.globalPosition.data(), meshBuildInfo.particleIndices.data() + p, meshBuildInfo.numParticlesPerTrail[trailIndex]);	
+				curvePosition.setPointsOrdered<uint32_t>(trailLength.data(), meshBuildInfo.particles.globalPosition.data(), meshBuildInfo.particleIndices.data() + p, meshBuildInfo.numParticlesPerTrail[trailIndex]);
 				curveSize.enableFixedCache(meshBuildInfo.emitter.rendererNumTrailSegments);
 				curveSize.setPointsOrdered<uint32_t>(trailLength.data(), meshBuildInfo.particles.size.data(), meshBuildInfo.particleIndices.data() + p, meshBuildInfo.numParticlesPerTrail[trailIndex]);
 				curveColor.enableFixedCache(meshBuildInfo.emitter.rendererNumTrailSegments);

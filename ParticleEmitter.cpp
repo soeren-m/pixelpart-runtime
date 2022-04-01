@@ -6,7 +6,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleEmitter& emitter) {
 	j = nlohmann::ordered_json{
 		{ "name", emitter.name },
 		{ "id", toJson(emitter.id) },
-		{ "parent_id", toJson(emitter.parentId) },	
+		{ "parent_id", toJson(emitter.parentId) },
 		{ "lifetime_start", emitter.lifetimeStart },
 		{ "lifetime_duration", emitter.lifetimeDuration },
 		{ "repeat", emitter.repeat },
@@ -21,7 +21,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleEmitter& emitter) {
 		{ "num_particles", emitter.numParticles },
 		{ "burst", emitter.burst },
 		{ "particle_lifespan", emitter.particleLifespan },
-		{ "particle_lifespan_variance", emitter.particleLifespanVariance },	
+		{ "particle_lifespan_variance", emitter.particleLifespanVariance },
 		{ "particle_spawn_on_step_emitter", toJson(emitter.particleSpawnOnStepEmitterId) },
 		{ "particle_spawn_on_step_prob", emitter.particleSpawnOnStepProb },
 		{ "particle_spawn_on_death_emitter", toJson(emitter.particleSpawnOnDeathEmitterId) },
@@ -105,7 +105,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleEmitter& emitter) {
 	fromJson(emitter.numParticles, j, "num_particles", "");
 	fromJson(emitter.burst, j, "burst", "");	
 	fromJson(emitter.particleLifespan, j, "particle_lifespan", "");
-	fromJson(emitter.particleLifespanVariance, j, "particle_lifespan_variance", "");	
+	fromJson(emitter.particleLifespanVariance, j, "particle_lifespan_variance", "");
 	fromJson(emitter.particleSpawnOnStepEmitterId, j, "particle_spawn_on_step_emitter", "");
 	fromJson(emitter.particleSpawnOnStepProb, j, "particle_spawn_on_step_prob", "");
 	fromJson(emitter.particleSpawnOnDeathEmitterId, j, "particle_spawn_on_death_emitter", "");
@@ -146,8 +146,8 @@ void from_json(const nlohmann::ordered_json& j, ParticleEmitter& emitter) {
 		fromJson(emitter.particleSprite.framesColumn, j, "sprite_columns", "");
 		fromJson(emitter.particleSprite.frame, j, "sprite_frame", "");
 		fromJson(emitter.particleSprite.randomFrame, j, "sprite_random_frame", "");
-		fromJson(emitter.particleSpriteAnimation.frames, j, "sprite_animation_frames", "");				
-		fromJson(emitter.particleSpriteAnimation.duration, j, "sprite_animation_duration", "");				
+		fromJson(emitter.particleSpriteAnimation.frames, j, "sprite_animation_frames", "");
+		fromJson(emitter.particleSpriteAnimation.duration, j, "sprite_animation_duration", "");
 		fromJson(emitter.particleSpriteAnimation.loop, j, "sprite_animation_loop", "");
 		if(j.contains("sprite_animated")) {
 			emitter.particleSpriteAnimation.frames = j.at("sprite_animated").get<bool>() ? emitter.particleSpriteAnimation.frames : 1;

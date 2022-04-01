@@ -4,7 +4,7 @@
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const ImageResource& resource) {
-	if(resource.data.empty()) {	
+	if(resource.data.empty()) {
 		throw std::runtime_error("Compression error");
 	}
 

@@ -189,7 +189,7 @@ void ParticleEngine::setParticleCapacity(uint32_t capacity) {
 		emitterParticles.color.resize(capacity);
 		emitterParticles.initialColor.resize(capacity);
 		emitterParticles.frame.resize(capacity);
-		emitterParticles.initialFrame.resize(capacity);	
+		emitterParticles.initialFrame.resize(capacity);
 		particlePositionSnapshot[emitterIndex].resize(capacity);
 	}
 }
@@ -254,7 +254,7 @@ void ParticleEngine::onColliderUpdate() {
 }
 
 int32_t ParticleEngine::sampleUniformInt(int32_t min, int32_t max) {
-	uniformIntDistribution.param(std::uniform_int_distribution<int32_t>::param_type(min, max));			
+	uniformIntDistribution.param(std::uniform_int_distribution<int32_t>::param_type(min, max));
 	return uniformIntDistribution(rng);
 }
 floatd ParticleEngine::sampleUniform(floatd min, floatd max) {
@@ -311,12 +311,12 @@ vec2d ParticleEngine::generatePointInEllipse(const vec2d& position, const vec2d&
 			p = vec2d(std::cos(phi), std::sin(phi)) * std::sqrt(rho);
 
 			break;
-		}		
-		case ParticleEmitter::Distribution::center: {	
+		}
+		case ParticleEmitter::Distribution::center: {
 			do {
 				phi = sampleUniform(0.0, 2.0 * M_PI);
 				rho = sampleUniform(0.0, 1.0);
-				p = vec2d(std::cos(phi), std::sin(phi)) * std::sqrt(rho);				
+				p = vec2d(std::cos(phi), std::sin(phi)) * std::sqrt(rho);
 			} while(std::pow(sampleUniform(0.0, 1.0), 2) < p.x * p.x + p.y * p.y);
 
 			break;
@@ -325,7 +325,7 @@ vec2d ParticleEngine::generatePointInEllipse(const vec2d& position, const vec2d&
 			do {
 				phi = sampleUniform(0.0, 2.0 * M_PI);
 				rho = sampleUniform(0.0, 1.0);
-				p = vec2d(std::cos(phi), std::sin(phi)) * std::sqrt(rho);		
+				p = vec2d(std::cos(phi), std::sin(phi)) * std::sqrt(rho);
 			} while(std::pow(sampleUniform(0.0, 1.0), 2) > p.x * p.x + p.y * p.y);
 
 			break;
@@ -367,7 +367,7 @@ vec2d ParticleEngine::generatePointInRectangle(const vec2d& position, const vec2
 		}
 		case ParticleEmitter::Distribution::center_reverse: {
 			floatd x;
-			floatd y;	
+			floatd y;
 			do {
 				x = sampleUniform(-1.0, +1.0);
 				y = sampleUniform(-1.0, +1.0);

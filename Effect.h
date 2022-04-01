@@ -24,7 +24,7 @@ public:
 	uint32_t getMaxParticleEmitterId() const;
 	uint32_t getNumParticleEmitters() const;
 	ParticleEmitter& getParticleEmitter(uint32_t id);
-	ParticleEmitter& getParticleEmitterByIndex(uint32_t index);	
+	ParticleEmitter& getParticleEmitterByIndex(uint32_t index);
 	ParticleEmitter& getParticleEmitterByLayer(uint32_t layer);
 	ParticleEmitter& getParticleEmitterByName(const std::string& name);
 	const ParticleEmitter& getParticleEmitter(uint32_t id) const;

@@ -7,7 +7,7 @@ bool CollisionSolver::onSegment(const vec2d& l1, const vec2d& l2, const vec2d& p
 
 	return (A >= 0.0) && (A < B);
 }
-bool CollisionSolver::closestPointOnSegment(const vec2d& l1, const vec2d& l2, const vec2d& p, vec2d& result) { 
+bool CollisionSolver::closestPointOnSegment(const vec2d& l1, const vec2d& l2, const vec2d& p, vec2d& result) {
 	floatd A1 = l2.y - l1.y;
 	floatd B1 = l1.x - l2.x;
 	floatd C1 = (l2.y - l1.y) * l1.x + (l1.x - l2.x) * l1.y;
@@ -158,25 +158,25 @@ void CollisionSolver::update(const std::vector<Collider>& allColliders) {
 		floatd tY = 0.0;
 		
 		if(direction.x < 0.0) { 
-			delta.x = -gridCellDimension.x / direction.x; 
-			tX = (std::floor(p1Grid.x / gridCellDimension.x) * gridCellDimension.x - p1Grid.x) / direction.x; 
+			delta.x = -gridCellDimension.x / direction.x;
+			tX = (std::floor(p1Grid.x / gridCellDimension.x) * gridCellDimension.x - p1Grid.x) / direction.x;
 		} 
 		else { 
-			delta.x = +gridCellDimension.x / direction.x; 
-			tX = ((std::floor(p1Grid.x / gridCellDimension.x) + 1) * gridCellDimension.x - p1Grid.x) / direction.x; 
+			delta.x = +gridCellDimension.x / direction.x;
+			tX = ((std::floor(p1Grid.x / gridCellDimension.x) + 1) * gridCellDimension.x - p1Grid.x) / direction.x;
 		} 
 		if(direction.y < 0.0) { 
 			delta.y = -gridCellDimension.y / direction.y;
-			tY = (std::floor(p1Grid.y / gridCellDimension.y) * gridCellDimension.y - p1Grid.y) / direction.y; 
+			tY = (std::floor(p1Grid.y / gridCellDimension.y) * gridCellDimension.y - p1Grid.y) / direction.y;
 		} 
 		else { 
 			delta.y = +gridCellDimension.y / direction.y;
-			tY = ((std::floor(p1Grid.y / gridCellDimension.y) + 1) * gridCellDimension.y - p1Grid.y) / direction.y; 
+			tY = ((std::floor(p1Grid.y / gridCellDimension.y) + 1) * gridCellDimension.y - p1Grid.y) / direction.y;
 		}
 		
-		int32_t cX = std::min(std::max(static_cast<int32_t>(std::floor(p1Grid.x / gridCellDimension.x)), 0), static_cast<int32_t>(gridNumColumns) - 1); 
+		int32_t cX = std::min(std::max(static_cast<int32_t>(std::floor(p1Grid.x / gridCellDimension.x)), 0), static_cast<int32_t>(gridNumColumns) - 1);
 		int32_t cY = std::min(std::max(static_cast<int32_t>(std::floor(p1Grid.y / gridCellDimension.y)), 0), static_cast<int32_t>(gridNumRows) - 1);
-		int32_t exitCX = std::min(std::max(static_cast<int32_t>(std::floor(p2Grid.x / gridCellDimension.x)), 0), static_cast<int32_t>(gridNumColumns) - 1); 
+		int32_t exitCX = std::min(std::max(static_cast<int32_t>(std::floor(p2Grid.x / gridCellDimension.x)), 0), static_cast<int32_t>(gridNumColumns) - 1);
 		int32_t exitCY = std::min(std::max(static_cast<int32_t>(std::floor(p2Grid.y / gridCellDimension.y)), 0), static_cast<int32_t>(gridNumRows) - 1);
 		
 		while(grid.contains(cX, cY)) {

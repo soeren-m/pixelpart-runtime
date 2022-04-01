@@ -223,7 +223,7 @@ const vec4d& PostProcessingEffect::getParameterVector(const std::string& name) c
 
 void to_json(nlohmann::ordered_json& j, const PostProcessingEffect& effect) {
 	nlohmann::ordered_json jParamArray = nlohmann::ordered_json::array();
-	
+
 	for(const PostProcessingEffect::Parameter& parameter : effect.parameters) {
 		nlohmann::ordered_json jValue;
 		switch(parameter.type) {
@@ -239,7 +239,7 @@ void to_json(nlohmann::ordered_json& j, const PostProcessingEffect& effect) {
 			default:
 				break;
 		}
-			
+
 		jParamArray.push_back(nlohmann::ordered_json{
 			{ "name", parameter.name },
 			{ "type", parameter.type },
