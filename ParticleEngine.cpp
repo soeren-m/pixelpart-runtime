@@ -9,8 +9,8 @@ namespace pixelpart {
 ParticleEngine::ParticleEngine() : ParticleEngine(nullptr, 1000) {
 
 }
-ParticleEngine::ParticleEngine(const Effect* effectPtr, uint32_t capacity) : effect(effectPtr), particleCapacity(capacity) {
-	particleSimulation = std::unique_ptr<ParticleSimulationCPU>(new ParticleSimulationCPU());
+ParticleEngine::ParticleEngine(const Effect* effectPtr, uint32_t capacity, uint32_t numThreadsMax) : effect(effectPtr), particleCapacity(capacity) {
+	particleSimulation = std::unique_ptr<ParticleSimulationCPU>(new ParticleSimulationCPU(numThreadsMax));
 
 	resetSeed();
 	onEffectUpdate();
@@ -113,6 +113,8 @@ void ParticleEngine::step(floatd dt) {
 		memcpy(particlePositionSnapshot[emitterIndex].data(), emitterParticles.globalPosition.data(), numParticles[emitterIndex] * sizeof(vec2d));
 	}
 
+	numActiveThreads = 1;
+
 	for(uint32_t emitterIndex = 0; emitterIndex < effect->getNumParticleEmitters(); emitterIndex++) {
 		particleSimulation->simulate(
 			effect->getParticleEmitterByIndex(emitterIndex),
@@ -122,6 +124,8 @@ void ParticleEngine::step(floatd dt) {
 			collisionSolver,
 			time,
 			dt);
+
+		numActiveThreads = std::max(numActiveThreads, particleSimulation->getNumActiveThreads());
 	}
 }
 
@@ -218,7 +222,7 @@ const std::vector<vec2d>& ParticleEngine::getParticlePositionSnapshot(uint32_t e
 }
 
 uint32_t ParticleEngine::getNumActiveThreads() const {
-	return particleSimulation->getNumActiveThreads();
+	return numActiveThreads;
 }
 
 void ParticleEngine::onEffectUpdate() {

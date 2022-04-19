@@ -5,9 +5,9 @@ ForceSolver::ForceSolver() {
 
 }
 
-void ForceSolver::solve(uint32_t emitterId, ParticleDataPointer& particles, uint32_t p, floatd particleWeight, floatd t, floatd dt) const {
+void ForceSolver::solve(const ParticleEmitter& emitter, ParticleDataPointer& particles, uint32_t p, floatd particleWeight, floatd t, floatd dt) const {
 	for(const ForceField& force : forces) {
-		if(!force.emitterMask[emitterId] || t < force.lifetimeStart || (t > force.lifetimeStart + force.lifetimeDuration && !force.repeat)) {
+		if(!force.emitterMask[emitter.id] || t < force.lifetimeStart || (t > force.lifetimeStart + force.lifetimeDuration && !force.repeat)) {
 			continue;
 		}
 

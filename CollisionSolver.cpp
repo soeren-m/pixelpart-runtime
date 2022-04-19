@@ -45,7 +45,7 @@ CollisionSolver::CollisionSolver() : grid(1, 1) {
 
 }
 
-void CollisionSolver::solve(uint32_t emitterId, ParticleDataPointer& particles, uint32_t p, floatd particleBounce, floatd particleFriction, floatd t, floatd dt) const {
+void CollisionSolver::solve(const ParticleEmitter& emitter, ParticleDataPointer& particles, uint32_t p, floatd particleBounce, floatd particleFriction, floatd t, floatd dt) const {
 	const auto toGridIndex = [this](const vec2d& position) -> GridIndex<int32_t> {
 		return GridIndex<int32_t>{
 			std::min(std::max(static_cast<int32_t>(std::floor((position.x - gridBottom.x) / gridCellDimension.x)), 0), static_cast<int32_t>(grid.getWidth()) - 1),
@@ -71,7 +71,7 @@ void CollisionSolver::solve(uint32_t emitterId, ParticleDataPointer& particles, 
 
 	for(uint32_t i : potentialColliders) {
 		const LineCollider& collider = colliders[i];
-		if(!collider.emitterMask[emitterId] || t < collider.lifetimeStart || (t > collider.lifetimeStart + collider.lifetimeDuration && !collider.repeat)) {
+		if(!collider.emitterMask[emitter.id] || t < collider.lifetimeStart || (t > collider.lifetimeStart + collider.lifetimeDuration && !collider.repeat)) {
 			continue;
 		}
 
@@ -94,14 +94,14 @@ void CollisionSolver::solve(ParticleDataPointer& particles, uint32_t p, floatd p
 		const vec2d normal = glm::normalize(colliderToParticle);
 		const vec2d reflectedVelocity = glm::reflect(particles.velocity[p], normal);
 		const vec2d segmentVector = glm::normalize(collider.p2 - collider.p1);
-		const floatd slideFactor = glm::dot((particles.force[p] != vec2d(0.0)) ? glm::normalize(particles.force[p]) : vec2d(0.0, 1.0), segmentVector) * glm::length(particles.force[p]);
+		const floatd slideFactor = glm::dot((particles.force[p] != vec2d(0.0)) ? glm::normalize(particles.force[p]) : vec2d(0.0, 1.0), segmentVector) * glm::length(particles.force[p]) * distance / particleRadius;
 		const floatd alpha = std::fmod(t - collider.lifetimeStart, collider.lifetimeDuration) / collider.lifetimeDuration;
 		const floatd bounce = collider.bounce.get(alpha) * particleBounce;
 		const floatd friction = std::min(collider.friction.get(alpha) * particleFriction, 1.0);
-	
+
 		particles.velocity[p] = reflectedVelocity * bounce;
 		particles.velocity[p] += segmentVector * slideFactor * (1.0 - friction);
-		particles.position[p] += reflectedVelocity * (particleRadius - distance);
+		particles.position[p] += normal * (particleRadius - distance);
 	}
 	else if(intersectionSegmentSegment(collider.p1, collider.p2, particles.globalPosition[p], particles.globalPosition[p] + particles.velocity[p] * dt + particles.force[p] * dt * dt, intersectionPoint)) {
 		const vec2d normal = glm::normalize(colliderToParticle);

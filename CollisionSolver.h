@@ -3,6 +3,7 @@
 #include "Collider.h"
 #include "Grid.h"
 #include "ParticleData.h"
+#include "ParticleEmitter.h"
 #include <unordered_set>
 
 namespace pixelpart {
@@ -25,7 +26,7 @@ public:
 
 	CollisionSolver();
 
-	void solve(uint32_t emitterId, ParticleDataPointer& particles, uint32_t p, floatd particleBounce, floatd particleFriction, floatd t, floatd dt) const;
+	void solve(const ParticleEmitter& emitter, ParticleDataPointer& particles, uint32_t p, floatd particleBounce, floatd particleFriction, floatd t, floatd dt) const;
 	void solve(ParticleDataPointer& particles, uint32_t p, floatd particleBounce, floatd particleFriction, floatd t, floatd dt, const LineCollider& collider) const;
 
 	void update(const std::vector<Collider>& allColliders);

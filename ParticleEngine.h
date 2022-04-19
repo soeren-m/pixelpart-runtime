@@ -8,7 +8,7 @@ namespace pixelpart {
 class ParticleEngine {
 public:
 	ParticleEngine();
-	ParticleEngine(const Effect* effectPtr, uint32_t capacity);
+	ParticleEngine(const Effect* effectPtr, uint32_t capacity, uint32_t numThreadsMax = 0);
 
 	void step(floatd dt);
 
@@ -64,6 +64,7 @@ private:
 	std::unique_ptr<ParticleSimulation> particleSimulation;
 	ForceSolver forceSolver;
 	CollisionSolver collisionSolver;
+	uint32_t numActiveThreads = 0;
 
 	std::vector<std::vector<vec2d>> particlePositionSnapshot;
 
