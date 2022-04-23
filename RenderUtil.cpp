@@ -10,52 +10,6 @@ vec2d rotate(const vec2d& p, const vec2d& o, floatd a) {
 		(p.x - o.x) * s + (p.y - o.y) * c + o.y);
 }
 
-ParticleMeshBuildInfo::ParticleMeshBuildInfo(const ParticleEmitter& e, const ParticleData& p, uint32_t n) : emitter(e), particles(p), numParticles(n) {
-	if(emitter.renderer == ParticleEmitter::RendererType::sprite || numParticles <= 1) {
-		numIndices = numParticles * 6;
-		numVertices = numParticles * 4;
-	}
-	else if(emitter.renderer == ParticleEmitter::RendererType::trail) {
-		particleIndices.resize(numParticles);
-		std::iota(particleIndices.begin(), particleIndices.end(), 0);
-		std::sort(particleIndices.begin(), particleIndices.end(), [this](uint32_t p0, uint32_t p1) {
-			return (particles.parentId[p0] != particles.parentId[p1])
-				? particles.parentId[p0] > particles.parentId[p1]
-				: particles.spawnId[p0] > particles.spawnId[p1];
-		});
-
-		for(uint32_t p = 0, parentId = 0; p < numParticles; p++) {
-			if(particles.parentId[particleIndices[p]] != parentId || p == 0) {
-				parentId = particles.parentId[particleIndices[p]];
-				numParticlesPerTrail.push_back(0);
-			}
-
-			numParticlesPerTrail.back()++;
-		}
-
-		if(emitter.rendererNumTrailSegments > 0) {
-			numIndices = static_cast<uint32_t>(numParticlesPerTrail.size()) * (emitter.rendererNumTrailSegments - 1) * 6;
-			numVertices = static_cast<uint32_t>(numParticlesPerTrail.size()) * emitter.rendererNumTrailSegments * 2;
-		}
-		else {
-			for(uint32_t n : numParticlesPerTrail) {
-				if(n < 2) {
-					continue;
-				}
-
-				numIndices += (n - 1) * 6;
-				numVertices += n * 2;
-			}
-		}
-	}
-}
-
-SpriteMeshBuildInfo::SpriteMeshBuildInfo(const Sprite& s, const ImageResource& r, floatd t) : sprite(s), imageResource(r), time(t) {
-	aspectRatio = static_cast<floatd>(imageResource.width) / static_cast<floatd>(imageResource.height);
-	numIndices = 6;
-	numVertices = 4;
-}
-
 std::vector<vec2d> generateSpriteVertices(const vec2d& position, const vec2d& size, const vec2d& pivot, floatd rotation) {
 	return std::vector<vec2d>{
 		position + rotate(vec2d(-0.5, -0.5) * size, pivot * size, rotation),
@@ -94,25 +48,110 @@ std::vector<vec2d> generateSpriteTextureCoords(int32_t frame, int32_t framesRow,
 		vec2d(uv.x, uv.y + sz.y)
 	};
 }
-std::vector<ParticleTrailVertexData> generateParticleTrails(const ParticleMeshBuildInfo& meshBuildInfo) {
-	std::vector<ParticleTrailVertexData> trails;
 
-	if(meshBuildInfo.emitter.rendererNumTrailSegments > 0) {
-		for(uint32_t p = 0, parentParticleId = 0; p < meshBuildInfo.numParticles; p++) {
-			if(meshBuildInfo.particles.parentId[meshBuildInfo.particleIndices[p]] != parentParticleId || p == 0) {
-				const uint32_t trailIndex = static_cast<uint32_t>(trails.size());
-				trails.push_back(ParticleTrailVertexData());
+ParticleMeshBuilder::ParticleMeshBuilder() {
+
+}
+ParticleMeshBuilder::ParticleMeshBuilder(const ParticleEmitter& particleEmitter, const ParticleData& particleData, uint32_t num, floatd t) {
+	update(particleEmitter, particleData, num, t);
+}
+
+void ParticleMeshBuilder::update(const ParticleEmitter& particleEmitter, const ParticleData& particleData, uint32_t num, floatd t) {
+	emitter = &particleEmitter;
+	particles = &particleData;
+	numParticles = num;
+
+	if(emitter->renderer == ParticleEmitter::RendererType::sprite || numParticles <= 1) {
+		numIndices = numParticles * 6;
+		numVertices = numParticles * 4;
+	}
+	else if(emitter->renderer == ParticleEmitter::RendererType::trail) {
+		numParticlesPerTrail.clear();
+		sortedParticleIndices.resize(numParticles);
+		std::iota(sortedParticleIndices.begin(), sortedParticleIndices.end(), 0);
+		std::sort(sortedParticleIndices.begin(), sortedParticleIndices.end(), [this](uint32_t p0, uint32_t p1) {
+			return (particles->parentId[p0] != particles->parentId[p1])
+				? particles->parentId[p0] > particles->parentId[p1]
+				: particles->spawnId[p0] > particles->spawnId[p1];
+		});
+
+		for(uint32_t p = 0, parentId = 0; p < numParticles; p++) {
+			if(particles->parentId[sortedParticleIndices[p]] != parentId || p == 0) {
+				parentId = particles->parentId[sortedParticleIndices[p]];
+
+				numParticlesPerTrail.push_back(0);
+
+				if(trailAnimation.count(parentId) == 0) {
+					TrailAnimationData animation;
+					animation.startTime = t;
+					animation.initialFrame = particles->initialFrame[sortedParticleIndices[p]];
+					animation.frame = animation.initialFrame;
+					trailAnimation[parentId] = animation;
+				}
+				else {
+					TrailAnimationData& animation = trailAnimation[parentId];
+					animation.frame = animation.initialFrame;
+					animation.frame += emitter->particleSpriteAnimation.loop
+							? static_cast<int32_t>((t - animation.startTime) / emitter->particleSpriteAnimation.duration * static_cast<floatd>(emitter->particleSpriteAnimation.frames)) % emitter->particleSpriteAnimation.frames
+							: std::min(static_cast<int32_t>((t - animation.startTime) / emitter->particleSpriteAnimation.duration * static_cast<floatd>(emitter->particleSpriteAnimation.frames)), static_cast<int32_t>(emitter->particleSpriteAnimation.frames) - 1);
+					animation.frame %= static_cast<int32_t>(emitter->particleSprite.framesRow * emitter->particleSprite.framesColumn);
+				}
+			}
+
+			numParticlesPerTrail.back()++;
+		}
+
+		numIndices = 0;
+		numVertices = 0;
+
+		for(uint32_t numTrailParticles : numParticlesPerTrail) {
+			uint32_t sections = static_cast<uint32_t>(emitter->rendererTrailUVFactor - 0.000001);
+
+			if(emitter->rendererNumTrailSegments > 0) {
+				numIndices += (emitter->rendererNumTrailSegments + sections - 1) * 6;
+				numVertices += (emitter->rendererNumTrailSegments + sections) * 2;
+			}
+			else if(numTrailParticles > 1) {
+				numIndices += (numTrailParticles + sections - 1) * 6;
+				numVertices += (numTrailParticles + sections) * 2;
+			}
+		}
+	}
+}
+
+const ParticleEmitter* ParticleMeshBuilder::getEmitter() const {
+	return emitter;
+}
+const ParticleData* ParticleMeshBuilder::getParticles() const {
+	return particles;
+}
+uint32_t ParticleMeshBuilder::getNumParticles() const {
+	return numParticles;
+}
+uint32_t ParticleMeshBuilder::getNumIndices() const {
+	return numIndices;
+}
+uint32_t ParticleMeshBuilder::getNumVertices() const {
+	return numVertices;
+}
+
+std::vector<ParticleMeshBuilder::TrailVertexData> ParticleMeshBuilder::generateTrails() const {
+	std::vector<TrailVertexData> trails;
+
+	if(emitter->rendererNumTrailSegments > 0) {
+		for(uint32_t p = 0, parentParticleId = 0; p < numParticles; p++) {
+			if(particles->parentId[sortedParticleIndices[p]] != parentParticleId || p == 0) {
+				parentParticleId = particles->parentId[sortedParticleIndices[p]];
 
 				floatd trailLengthTotal = 0.0;
-				std::vector<floatd> trailLength(meshBuildInfo.numParticlesPerTrail[trailIndex]);
-				for(uint32_t pTrail = 0; pTrail < meshBuildInfo.numParticlesPerTrail[trailIndex] - 1; pTrail++) {
+				std::vector<floatd> trailLength(numParticlesPerTrail[trails.size()]);
+
+				trailLength[0] = 0.0;
+				for(uint32_t pTrail = 1; pTrail < numParticlesPerTrail[trails.size()]; pTrail++) {
+					trailLengthTotal += glm::length(particles->globalPosition[sortedParticleIndices[p + pTrail]] - particles->globalPosition[sortedParticleIndices[p + pTrail - 1]]);
 					trailLength[pTrail] = trailLengthTotal;
-					trailLengthTotal += glm::length(meshBuildInfo.particles.globalPosition[meshBuildInfo.particleIndices[p + pTrail + 1]] - meshBuildInfo.particles.globalPosition[meshBuildInfo.particleIndices[p + pTrail]]);
 				}
-
-				trailLength.back() = trailLengthTotal;
-
-				for(uint32_t pTrail = 0; pTrail < meshBuildInfo.numParticlesPerTrail[trailIndex]; pTrail++) {
+				for(uint32_t pTrail = 0; pTrail < numParticlesPerTrail[trails.size()]; pTrail++) {
 					trailLength[pTrail] /= trailLengthTotal;
 				}
 
@@ -120,40 +159,82 @@ std::vector<ParticleTrailVertexData> generateParticleTrails(const ParticleMeshBu
 				Curve<vec2d> curveSize(CurveInterpolation::spline_catmullrom);
 				Curve<vec4d> curveColor(CurveInterpolation::spline_catmullrom);
 
-				curvePosition.enableFixedCache(meshBuildInfo.emitter.rendererNumTrailSegments);
-				curvePosition.setPointsOrdered<uint32_t>(trailLength.data(), meshBuildInfo.particles.globalPosition.data(), meshBuildInfo.particleIndices.data() + p, meshBuildInfo.numParticlesPerTrail[trailIndex]);
-				curveSize.enableFixedCache(meshBuildInfo.emitter.rendererNumTrailSegments);
-				curveSize.setPointsOrdered<uint32_t>(trailLength.data(), meshBuildInfo.particles.size.data(), meshBuildInfo.particleIndices.data() + p, meshBuildInfo.numParticlesPerTrail[trailIndex]);
-				curveColor.enableFixedCache(meshBuildInfo.emitter.rendererNumTrailSegments);
-				curveColor.setPointsOrdered<uint32_t>(trailLength.data(), meshBuildInfo.particles.color.data(), meshBuildInfo.particleIndices.data() + p, meshBuildInfo.numParticlesPerTrail[trailIndex]);
+				curvePosition.enableFixedCache(emitter->rendererNumTrailSegments);
+				curvePosition.setPointsOrdered<uint32_t>(trailLength.data(), particles->globalPosition.data(), sortedParticleIndices.data() + p, numParticlesPerTrail[trails.size()]);
+				curveSize.enableFixedCache(emitter->rendererNumTrailSegments);
+				curveSize.setPointsOrdered<uint32_t>(trailLength.data(), particles->size.data(), sortedParticleIndices.data() + p, numParticlesPerTrail[trails.size()]);
+				curveColor.enableFixedCache(emitter->rendererNumTrailSegments);
+				curveColor.setPointsOrdered<uint32_t>(trailLength.data(), particles->color.data(), sortedParticleIndices.data() + p, numParticlesPerTrail[trails.size()]);
 
+				trails.emplace_back();
 				trails.back().positions = curvePosition.getCache();
 				trails.back().sizes = curveSize.getCache();
 				trails.back().colors = curveColor.getCache();
-
-				parentParticleId = meshBuildInfo.particles.parentId[meshBuildInfo.particleIndices[p]];
+				trails.back().frame = trailAnimation.at(parentParticleId).frame;
 			}
 		}
 	}
 	else {
-		for(uint32_t p = 0, pTrail = 0, parentParticleId = 0; p < meshBuildInfo.numParticles; p++, pTrail++) {
-			if(meshBuildInfo.particles.parentId[meshBuildInfo.particleIndices[p]] != parentParticleId || p == 0) {
-				const uint32_t trailIndex = static_cast<uint32_t>(trails.size());
-				trails.push_back(ParticleTrailVertexData());
-				trails.back().positions.resize(meshBuildInfo.numParticlesPerTrail[trailIndex]);
-				trails.back().sizes.resize(meshBuildInfo.numParticlesPerTrail[trailIndex]);
-				trails.back().colors.resize(meshBuildInfo.numParticlesPerTrail[trailIndex]);
-				parentParticleId = meshBuildInfo.particles.parentId[meshBuildInfo.particleIndices[p]];
+		for(uint32_t p = 0, pTrail = 0, parentParticleId = 0; p < numParticles; p++, pTrail++) {
+			if(particles->parentId[sortedParticleIndices[p]] != parentParticleId || p == 0) {
+				parentParticleId = particles->parentId[sortedParticleIndices[p]];
 				pTrail = 0;
+
+				trails.emplace_back();
+				trails.back().positions.resize(numParticlesPerTrail[trails.size() - 1]);
+				trails.back().sizes.resize(numParticlesPerTrail[trails.size() - 1]);
+				trails.back().colors.resize(numParticlesPerTrail[trails.size() - 1]);
+				trails.back().frame = trailAnimation.at(parentParticleId).frame;
 			}
 
-			ParticleTrailVertexData& trail = trails.back();
-			trail.positions[pTrail] = meshBuildInfo.particles.globalPosition[meshBuildInfo.particleIndices[p]];
-			trail.sizes[pTrail] = meshBuildInfo.particles.size[meshBuildInfo.particleIndices[p]];
-			trail.colors[pTrail] = meshBuildInfo.particles.color[meshBuildInfo.particleIndices[p]];
+			trails.back().positions[pTrail] = particles->globalPosition[sortedParticleIndices[p]];
+			trails.back().sizes[pTrail] = particles->size[sortedParticleIndices[p]];
+			trails.back().colors[pTrail] = particles->color[sortedParticleIndices[p]];
 		}
 	}
 
 	return trails;
+}
+
+SpriteMeshBuilder::SpriteMeshBuilder() {
+
+}
+SpriteMeshBuilder::SpriteMeshBuilder(const Sprite& spriteRef, uint32_t width, uint32_t height, floatd t) {
+	sprite = &spriteRef;
+	aspectRatio = static_cast<floatd>(width) / static_cast<floatd>(height);
+	time = t;
+}
+SpriteMeshBuilder::SpriteMeshBuilder(const Sprite& spriteRef, const ImageResource& imageResource, floatd t) {
+	sprite = &spriteRef;
+	aspectRatio = static_cast<floatd>(imageResource.width) / static_cast<floatd>(imageResource.height);
+	time = t;
+}
+
+void SpriteMeshBuilder::prepare(vec2d& position, vec2d& size, floatd& orientation, vec4d& color, int32_t& frame) const {
+	const floatd alpha = std::fmod(time - sprite->lifetimeStart, sprite->lifetimeDuration) / sprite->lifetimeDuration;
+
+	position = sprite->motionPath.get(alpha);
+	size = vec2d(
+		sprite->width.get(alpha) * aspectRatio,
+		sprite->height.get(alpha));
+	orientation = sprite->orientation.get(alpha) + ((sprite->alignWithPath && position != sprite->motionPath.get(alpha + 0.01))
+		? glm::degrees(glm::orientedAngle(vec2d(0.0, 1.0), glm::normalize(sprite->motionPath.get(alpha + 0.01) - position)))
+		: 0.0);
+	color = vec4d(
+		vec3d(sprite->color.get(alpha)),
+		sprite->opacity.get(alpha));
+	frame = sprite->image.frame + sprite->imageAnimation.loop
+		? static_cast<int32_t>((time - sprite->lifetimeStart) / sprite->imageAnimation.duration * static_cast<floatd>(sprite->imageAnimation.frames) + 0.5) % static_cast<int32_t>(sprite->imageAnimation.frames)
+		: std::min(static_cast<int32_t>((time - sprite->lifetimeStart) / sprite->imageAnimation.duration * static_cast<floatd>(sprite->imageAnimation.frames) + 0.5), static_cast<int32_t>(sprite->imageAnimation.frames) - 1);
+}
+
+const Sprite* SpriteMeshBuilder::getSprite() const {
+	return sprite;
+}
+uint32_t SpriteMeshBuilder::getNumIndices() const {
+	return 6;
+}
+uint32_t SpriteMeshBuilder::getNumVertices() const {
+	return 4;
 }
 }
