@@ -26,6 +26,11 @@ struct ParticleEmitter : public Node {
 		out = 1,
 		in = 2
 	};
+	enum class InstantiationMode : uint32_t {
+		continuous = 0,
+		burst = 1,
+		burst_death = 2
+	};
 	enum class RotationMode : uint32_t {
 		angle = 0,
 		velocity = 1,
@@ -43,20 +48,15 @@ struct ParticleEmitter : public Node {
 	Shape shape = Shape::point;
 	Distribution distribution = Distribution::uniform;
 	SpawnMode spawnMode = SpawnMode::fixed;
+	InstantiationMode instantiationMode = InstantiationMode::continuous;
 	Curve<floatd> width = Curve<floatd>(0.0);
 	Curve<floatd> height = Curve<floatd>(0.0);
 	Curve<floatd> orientation = Curve<floatd>(0.0);
 	Curve<floatd> direction = Curve<floatd>(0.0);
 	Curve<floatd> spread = Curve<floatd>(0.0);
 	Curve<floatd> numParticles = Curve<floatd>(0.0);
-	bool burst = false;
 	Curve<floatd> particleLifespan = Curve<floatd>(1.0);
 	floatd particleLifespanVariance = 0.0;
-	uint32_t particleSpawnOnStepEmitterId = NullId;
-	floatd particleSpawnOnStepProb = 0.1;
-	uint32_t particleSpawnOnDeathEmitterId = NullId;
-	uint32_t particleSpawnOnDeathNumber = 1.0;
-	floatd particleSpawnOnDeathProb = 1.0;
 	
 	Curve<vec2d> motionPath = Curve<vec2d>(0.0, vec2d(0.0));
 	Curve<vec2d> particleMotionPath = Curve<vec2d>();

@@ -13,20 +13,15 @@ void to_json(nlohmann::ordered_json& j, const ParticleEmitter& emitter) {
 		{ "shape", emitter.shape },
 		{ "distribution", emitter.distribution },
 		{ "spawn_mode", emitter.spawnMode },
+		{ "instantiation_mode", emitter.instantiationMode },
 		{ "width", emitter.width },
 		{ "height", emitter.height },
 		{ "orientation", emitter.orientation },
 		{ "direction", emitter.direction },
 		{ "spread", emitter.spread },
 		{ "num_particles", emitter.numParticles },
-		{ "burst", emitter.burst },
 		{ "particle_lifespan", emitter.particleLifespan },
 		{ "particle_lifespan_variance", emitter.particleLifespanVariance },
-		{ "particle_spawn_on_step_emitter", toJson(emitter.particleSpawnOnStepEmitterId) },
-		{ "particle_spawn_on_step_prob", emitter.particleSpawnOnStepProb },
-		{ "particle_spawn_on_death_emitter", toJson(emitter.particleSpawnOnDeathEmitterId) },
-		{ "particle_spawn_on_death_number", emitter.particleSpawnOnDeathNumber },
-		{ "particle_spawn_on_death_prob", emitter.particleSpawnOnDeathProb },
 		{ "motion_path", emitter.motionPath },
 		{ "particle_motion_path", emitter.particleMotionPath },
 		{ "particle_motion_path_influence", emitter.particleMotionPathInfluence },
@@ -97,20 +92,21 @@ void from_json(const nlohmann::ordered_json& j, ParticleEmitter& emitter) {
 	fromJson(emitter.shape, j, "shape", "");
 	fromJson(emitter.distribution, j, "distribution", "");
 	fromJson(emitter.spawnMode, j, "spawn_mode", "spawn_direction");
+	fromJson(emitter.instantiationMode, j, "instantiation_mode", "");
 	fromJson(emitter.width, j, "width", "");
 	fromJson(emitter.height, j, "height", "");
 	fromJson(emitter.orientation, j, "orientation", "");
 	fromJson(emitter.direction, j, "direction", "");
 	fromJson(emitter.spread, j, "spread", "");
 	fromJson(emitter.numParticles, j, "num_particles", "");
-	fromJson(emitter.burst, j, "burst", "");	
 	fromJson(emitter.particleLifespan, j, "particle_lifespan", "");
 	fromJson(emitter.particleLifespanVariance, j, "particle_lifespan_variance", "");
-	fromJson(emitter.particleSpawnOnStepEmitterId, j, "particle_spawn_on_step_emitter", "");
-	fromJson(emitter.particleSpawnOnStepProb, j, "particle_spawn_on_step_prob", "");
-	fromJson(emitter.particleSpawnOnDeathEmitterId, j, "particle_spawn_on_death_emitter", "");
-	fromJson(emitter.particleSpawnOnDeathNumber, j, "particle_spawn_on_death_number", "");
-	fromJson(emitter.particleSpawnOnDeathProb, j, "particle_spawn_on_death_prob", "");
+
+	if(j.contains("burst")) {
+		emitter.instantiationMode = j.at("burst").get<bool>()
+			? ParticleEmitter::InstantiationMode::burst
+			: ParticleEmitter::InstantiationMode::continuous;
+	}
 
 	fromJsonMotionPath(emitter.motionPath, j, "motion_path", nullptr);
 	fromJsonMotionPath(emitter.particleMotionPath, j, "particle_motion_path", nullptr, &emitter.particleMotionPathInfluence);

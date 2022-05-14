@@ -25,12 +25,6 @@ uint32_t Effect::addParticleEmitter(const ParticleEmitter& emitter, uint32_t idO
 	if(insertedEmitter.parentId != NullId) {
 		insertedEmitter.parentId += idOffset;
 	}
-	if(insertedEmitter.particleSpawnOnStepEmitterId != NullId) {
-		insertedEmitter.particleSpawnOnStepEmitterId += idOffset;
-	}
-	if(insertedEmitter.particleSpawnOnDeathEmitterId != NullId) {
-		insertedEmitter.particleSpawnOnDeathEmitterId += idOffset;
-	}
 
 	refreshParticleEmitterIndexMap();
 
@@ -44,8 +38,6 @@ uint32_t Effect::copyParticleEmitter(uint32_t id) {
 	ParticleEmitter emitterCopy = getParticleEmitter(id);
 	emitterCopy.id = NullId;
 	emitterCopy.parentId = NullId;
-	emitterCopy.particleSpawnOnStepEmitterId = NullId;
-	emitterCopy.particleSpawnOnDeathEmitterId = NullId;
 
 	do {
 		emitterCopy.name += "(copy)";
@@ -69,12 +61,6 @@ void Effect::removeParticleEmitterAtIndex(uint32_t index) {
 		
 		if(emitter.parentId == emitterId) {
 			emitter.parentId = particleEmitters[index].parentId;
-		}
-		if(emitter.particleSpawnOnStepEmitterId == emitterId) {
-			emitter.particleSpawnOnStepEmitterId = NullId;
-		}
-		if(emitter.particleSpawnOnDeathEmitterId == emitterId) {
-			emitter.particleSpawnOnDeathEmitterId = NullId;
 		}
 	}
 
@@ -102,17 +88,6 @@ void Effect::setParticleEmitterParent(uint32_t id, uint32_t parentId) {
 				if(otherEmitter.parentId == id) {
 					otherEmitter.parentId = emitter.parentId;
 				}
-			}
-		}
-
-		if(hasParticleEmitter(emitter.parentId)) {
-			ParticleEmitter& oldParent = getParticleEmitter(emitter.parentId);
-
-			if(oldParent.particleSpawnOnStepEmitterId == id) {
-				oldParent.particleSpawnOnStepEmitterId = NullId;
-			}
-			if(oldParent.particleSpawnOnDeathEmitterId == id) {
-				oldParent.particleSpawnOnDeathEmitterId = NullId;
 			}
 		}
 
@@ -532,24 +507,40 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 	const nlohmann::ordered_json& jEmitterArray = j.at("emitters");
 
 	for(uint32_t i = 0; i < particleEmitters.size(); i++) {
-		if(particleEmitters[i].particleSpawnOnStepEmitterId != NullId) {
-			for(uint32_t j = 0; j < particleEmitters.size(); j++) {
-				if(particleEmitters[i].particleSpawnOnStepEmitterId == particleEmitters[j].id) {
-					particleEmitters[j].parentId = particleEmitters[i].id;
-				}
-			}
-		}
-		if(particleEmitters[i].particleSpawnOnDeathEmitterId != NullId) {
-			for(uint32_t j = 0; j < particleEmitters.size(); j++) {
-				if(particleEmitters[i].particleSpawnOnDeathEmitterId == particleEmitters[j].id) {
-					particleEmitters[j].parentId = particleEmitters[i].id;
-				}
-			}
-		}
-	}
-
-	for(uint32_t i = 0; i < particleEmitters.size(); i++) {
 		const ParticleEmitter& emitter = particleEmitters[i];
+
+		if(jEmitterArray[i].contains("particle_spawn_on_step_emitter")) {
+			uint32_t subEmitterId = NullId;
+			floatd subEmitterSpawnProb = 1.0;
+			fromJson(subEmitterId, jEmitterArray[i], "particle_spawn_on_step_emitter", "");
+			fromJson(subEmitterSpawnProb, jEmitterArray[i], "particle_spawn_on_step_prob", "");
+	
+			for(ParticleEmitter& subEmitter : particleEmitters) {
+				if(subEmitter.id == subEmitterId) {
+					subEmitter.parentId = emitter.id;
+					subEmitter.instantiationMode = ParticleEmitter::InstantiationMode::continuous;
+					subEmitter.numParticles.moveByFactor(subEmitterSpawnProb);
+				}
+			}
+		}
+
+		if(jEmitterArray[i].contains("particle_spawn_on_death_emitter")) {
+			uint32_t subEmitterId = NullId;
+			floatd subEmitterSpawnProb = 1.0;
+			fromJson(subEmitterId, jEmitterArray[i], "particle_spawn_on_death_emitter", "");
+			fromJson(subEmitterSpawnProb, jEmitterArray[i], "particle_spawn_on_death_prob", "");
+	
+			for(ParticleEmitter& subEmitter : particleEmitters) {
+				if(subEmitter.id == subEmitterId) {
+					subEmitter.parentId = emitter.id;
+					subEmitter.instantiationMode = ParticleEmitter::InstantiationMode::burst_death;
+					if(jEmitterArray[i].contains("particle_spawn_on_death_number")) {
+						subEmitter.numParticles = Curve<floatd>(static_cast<floatd>(jEmitterArray[i].at("particle_spawn_on_death_number").get<uint32_t>()));
+						subEmitter.numParticles.moveByFactor(subEmitterSpawnProb);
+					}
+				}
+			}
+		}
 
 		if(jEmitterArray[i].contains("force_fields")) {
 			std::vector<ForceField> emitterForceFields = jEmitterArray[i].at("force_fields").get<std::vector<ForceField>>();

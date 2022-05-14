@@ -32,10 +32,10 @@ public:
 
 	uint32_t getNumActiveThreads() const;
 
-	void onEffectUpdate();
-	void onParticleEmitterUpdate();
-	void onForceFieldUpdate();
-	void onColliderUpdate();
+	void refreshEffect();
+	void refreshParticleSolver();
+	void refreshForceSolver();
+	void refreshCollisionSolver();
 
 private:
 	int32_t sampleUniformInt(int32_t min, int32_t max);
@@ -56,6 +56,7 @@ private:
 	std::vector<ParticleData> particles;
 	std::vector<uint32_t> numParticles;
 	std::vector<floatd> numParticlesToEmit;
+	std::vector<std::vector<uint32_t>> subEmitterIndices;
 	uint32_t particleCapacity = 0;
 	uint32_t particleId = 0;
 	uint32_t seed = 0;
