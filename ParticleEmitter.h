@@ -13,7 +13,8 @@ struct ParticleEmitter : public Node {
 		point = 0,
 		line = 1,
 		ellipse = 2,
-		rectangle = 3
+		rectangle = 3,
+		path = 4
 	};
 	enum class Distribution : uint32_t {
 		uniform = 0,
@@ -49,6 +50,7 @@ struct ParticleEmitter : public Node {
 	Distribution distribution = Distribution::uniform;
 	SpawnMode spawnMode = SpawnMode::fixed;
 	InstantiationMode instantiationMode = InstantiationMode::continuous;
+	std::vector<vec2d> shapePath = std::vector<vec2d>();
 	Curve<floatd> width = Curve<floatd>(0.0);
 	Curve<floatd> height = Curve<floatd>(0.0);
 	Curve<floatd> orientation = Curve<floatd>(0.0);

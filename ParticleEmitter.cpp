@@ -14,6 +14,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleEmitter& emitter) {
 		{ "distribution", emitter.distribution },
 		{ "spawn_mode", emitter.spawnMode },
 		{ "instantiation_mode", emitter.instantiationMode },
+		{ "shape_path", emitter.shapePath },
 		{ "width", emitter.width },
 		{ "height", emitter.height },
 		{ "orientation", emitter.orientation },
@@ -93,6 +94,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleEmitter& emitter) {
 	fromJson(emitter.distribution, j, "distribution", "");
 	fromJson(emitter.spawnMode, j, "spawn_mode", "spawn_direction");
 	fromJson(emitter.instantiationMode, j, "instantiation_mode", "");
+	fromJson(emitter.shapePath, j, "shape_path", "");
 	fromJson(emitter.width, j, "width", "");
 	fromJson(emitter.height, j, "height", "");
 	fromJson(emitter.orientation, j, "orientation", "");

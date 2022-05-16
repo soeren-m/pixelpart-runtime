@@ -47,6 +47,7 @@ private:
 	vec2d generatePointOnSegment(const vec2d& position, floatd length, floatd angle, ParticleEmitter::Distribution distribution);
 	vec2d generatePointInEllipse(const vec2d& position, const vec2d& size, floatd angle, ParticleEmitter::Distribution distribution);
 	vec2d generatePointInRectangle(const vec2d& position, const vec2d& size, floatd angle, ParticleEmitter::Distribution distribution);
+	vec2d generatePointOnPath(const vec2d& position, const std::vector<vec2d>& path, ParticleEmitter::Distribution distribution);
 
 	uint32_t emitParticles(uint32_t emitterIndex, uint32_t count, floatd t, floatd tParent = 0.0, uint32_t parentEmitterIndex = NullId, uint32_t parentParticle = NullId);
 	void createParticle(uint32_t emitterIndex, uint32_t p, floatd t, floatd tParent = 0.0, uint32_t parentEmitterIndex = NullId, uint32_t parentParticle = NullId);

@@ -407,6 +407,31 @@ vec2d ParticleEngine::generatePointInRectangle(const vec2d& position, const vec2
 		}
 	}
 }
+vec2d ParticleEngine::generatePointOnPath(const vec2d& position, const std::vector<vec2d>& path, ParticleEmitter::Distribution distribution) {
+	if(path.empty()) {
+		return position;
+	}
+	else if(path.size() > 1) {
+		floatd pathLength = 0.0;
+		std::vector<floatd> distances(path.size(), 0.0);
+		for(std::size_t i = 1; i < path.size(); i++) {
+			pathLength += std::max(glm::distance(path[i], path[i - 1]), 0.001);
+			distances[i] = pathLength;
+		}
+
+		const floatd x = sample(distribution, 0.0, pathLength);
+
+		for(std::size_t i = 1; i < path.size(); i++) {
+			if(x < distances[i]) {
+				return position +
+					path[i - 1] * (1.0 - (x - distances[i - 1]) / (distances[i] - distances[i - 1])) +
+					path[i] * ((x - distances[i - 1]) / (distances[i] - distances[i - 1]));
+			}
+		}
+	}
+
+	return position + path.back();
+}
 
 uint32_t ParticleEngine::emitParticles(uint32_t emitterIndex, uint32_t count, floatd t, floatd tParent, uint32_t parentEmitterIndex, uint32_t parentParticle) {
 	const uint32_t numParticlesToSpawn = (numParticles[emitterIndex] + count > getParticleCapacity())
@@ -448,6 +473,9 @@ void ParticleEngine::createParticle(uint32_t emitterIndex, uint32_t p, floatd t,
 			break;
 		case ParticleEmitter::Shape::rectangle:
 			emitterParticles.position[p] = generatePointInRectangle(spawnPosition, vec2d(emitter.width.get(alpha), emitter.height.get(alpha)), emitter.orientation.get(alpha), emitter.distribution);
+			break;
+		case ParticleEmitter::Shape::path:
+			emitterParticles.position[p] = generatePointOnPath(spawnPosition, emitter.shapePath, emitter.distribution);
 			break;
 		default:
 			emitterParticles.position[p] = spawnPosition;
