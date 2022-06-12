@@ -471,14 +471,30 @@ bool Effect::isNameUsed(const std::string& name) const {
 }
 bool Effect::isResourceUsed(const std::string& resourceId) const {
 	for(const ParticleEmitter& emitter : particleEmitters) {
-		if(emitter.particleSprite.id == resourceId) {
-			return true;
+		const auto& shaderNodes = emitter.particleShader.getNodes();
+
+		for(const auto& nodeEntry : shaderNodes) {
+			for(const auto& nodeParameter : nodeEntry.second.parameters) {
+				if(nodeParameter.type == pixelpart::ShaderParameter::Value::type_resource_image) {
+					if(resourceId == nodeParameter.getResourceId()) {
+						return true;
+					}
+				}
+			}
 		}
 	}
 
 	for(const Sprite& sprite : sprites) {
-		if(sprite.image.id == resourceId) {
-			return true;
+		const auto& shaderNodes = sprite.shader.getNodes();
+
+		for(const auto& nodeEntry : shaderNodes) {
+			for(const auto& nodeParameter : nodeEntry.second.parameters) {
+				if(nodeParameter.type == pixelpart::ShaderParameter::Value::type_resource_image) {
+					if(resourceId == nodeParameter.getResourceId()) {
+						return true;
+					}
+				}
+			}
 		}
 	}
 

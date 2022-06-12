@@ -28,14 +28,13 @@ public:
 	uint32_t getNumParticles() const;
 	uint32_t getNumParticles(uint32_t emitterIndex) const;
 	const ParticleData& getParticles(uint32_t emitterIndex) const;
-	const std::vector<vec2d>& getParticlePositionSnapshot(uint32_t emitterIndex) const;
 
 	uint32_t getNumActiveThreads() const;
 
-	void refreshEffect();
-	void refreshParticleSolver();
-	void refreshForceSolver();
-	void refreshCollisionSolver();
+	void updateSolvers();
+	void updateParticleSolver();
+	void updateForceSolver();
+	void updateCollisionSolver();
 
 private:
 	int32_t sampleUniformInt(int32_t min, int32_t max);
@@ -47,7 +46,7 @@ private:
 	vec2d generatePointOnSegment(const vec2d& position, floatd length, floatd angle, ParticleEmitter::Distribution distribution);
 	vec2d generatePointInEllipse(const vec2d& position, const vec2d& size, floatd angle, ParticleEmitter::Distribution distribution);
 	vec2d generatePointInRectangle(const vec2d& position, const vec2d& size, floatd angle, ParticleEmitter::Distribution distribution);
-	vec2d generatePointOnPath(const vec2d& position, const std::vector<vec2d>& path, ParticleEmitter::Distribution distribution);
+	vec2d generatePointOnPath(const vec2d& position, const Curve<vec2d>& path, ParticleEmitter::Distribution distribution);
 
 	uint32_t emitParticles(uint32_t emitterIndex, uint32_t count, floatd t, floatd tParent = 0.0, uint32_t parentEmitterIndex = NullId, uint32_t parentParticle = NullId);
 	void createParticle(uint32_t emitterIndex, uint32_t p, floatd t, floatd tParent = 0.0, uint32_t parentEmitterIndex = NullId, uint32_t parentParticle = NullId);
@@ -67,8 +66,6 @@ private:
 	ForceSolver forceSolver;
 	CollisionSolver collisionSolver;
 	uint32_t numActiveThreads = 0;
-
-	std::vector<std::vector<vec2d>> particlePositionSnapshot;
 
 	std::mt19937 rng;
 	std::uniform_int_distribution<int32_t> uniformIntDistribution = std::uniform_int_distribution<int32_t>(0);

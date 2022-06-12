@@ -10,42 +10,12 @@ vec2d rotate(const vec2d& p, const vec2d& o, floatd a) {
 		(p.x - o.x) * s + (p.y - o.y) * c + o.y);
 }
 
-std::vector<vec2d> generateSpriteVertices(const vec2d& position, const vec2d& size, const vec2d& pivot, floatd rotation) {
+std::vector<vec2d> generateSpriteVertices(const vec2d& pivot, const vec2d& position, const vec2d& size, floatd rotation) {
 	return std::vector<vec2d>{
 		position + rotate(vec2d(-0.5, -0.5) * size, pivot * size, rotation),
 		position + rotate(vec2d(+0.5, -0.5) * size, pivot * size, rotation),
 		position + rotate(vec2d(+0.5, +0.5) * size, pivot * size, rotation),
 		position + rotate(vec2d(-0.5, +0.5) * size, pivot * size, rotation)
-	};
-}
-std::vector<vec2d> generateSpriteTextureCoords(int32_t frame, int32_t framesRow, int32_t framesColumn, TextureOrigin textureOrigin) {
-	vec2d sz = vec2d(
-		1.0 / static_cast<floatd>(framesRow),
-		1.0 / static_cast<floatd>(framesColumn));
-	vec2d uv = vec2d(
-		static_cast<floatd>(frame % framesRow) * sz.x,
-		static_cast<floatd>(frame / framesRow) * sz.y);
-
-	switch(textureOrigin) {
-		case TextureOrigin::bottom_right:
-			uv.x = 1.0 - static_cast<floatd>(frame % framesRow) * sz.x - sz.x;
-			break;
-		case TextureOrigin::top_left:
-			uv.y = 1.0 - static_cast<floatd>(frame / framesRow) * sz.y - sz.y;
-			break;
-		case TextureOrigin::top_right:
-			uv.x = 1.0 - static_cast<floatd>(frame % framesRow) * sz.x - sz.x;
-			uv.y = 1.0 - static_cast<floatd>(frame / framesRow) * sz.y - sz.y;
-			break;
-		default:
-			break;
-	}
-
-	return std::vector<vec2d>{
-		vec2d(uv.x, uv.y),
-		vec2d(uv.x + sz.x, uv.y),
-		vec2d(uv.x + sz.x, uv.y + sz.y),
-		vec2d(uv.x, uv.y + sz.y)
 	};
 }
 
@@ -66,7 +36,6 @@ void ParticleMeshBuilder::update(const ParticleEmitter& particleEmitter, const P
 		numVertices = numParticles * 4;
 	}
 	else if(emitter->renderer == ParticleEmitter::RendererType::trail) {
-		numParticlesPerTrail.clear();
 		sortedParticleIndices.resize(numParticles);
 		std::iota(sortedParticleIndices.begin(), sortedParticleIndices.end(), 0);
 		std::sort(sortedParticleIndices.begin(), sortedParticleIndices.end(), [this](uint32_t p0, uint32_t p1) {
@@ -75,26 +44,19 @@ void ParticleMeshBuilder::update(const ParticleEmitter& particleEmitter, const P
 				: particles->spawnId[p0] > particles->spawnId[p1];
 		});
 
+		numParticlesPerTrail.clear();
+
 		for(uint32_t p = 0, parentId = 0; p < numParticles; p++) {
 			if(particles->parentId[sortedParticleIndices[p]] != parentId || p == 0) {
 				parentId = particles->parentId[sortedParticleIndices[p]];
 
 				numParticlesPerTrail.push_back(0);
-
-				if(trailAnimation.count(parentId) == 0) {
-					TrailAnimationData animation;
-					animation.startTime = t;
-					animation.initialFrame = particles->initialFrame[sortedParticleIndices[p]];
-					animation.frame = animation.initialFrame;
-					trailAnimation[parentId] = animation;
+				if(trails.count(parentId) == 0) {
+					trails[parentId] = Trail();
+					trails[parentId].startTime = t;
 				}
 				else {
-					TrailAnimationData& animation = trailAnimation[parentId];
-					animation.frame = animation.initialFrame;
-					animation.frame += emitter->particleSpriteAnimation.loop
-							? static_cast<int32_t>((t - animation.startTime) / emitter->particleSpriteAnimation.duration * static_cast<floatd>(emitter->particleSpriteAnimation.frames)) % emitter->particleSpriteAnimation.frames
-							: std::min(static_cast<int32_t>((t - animation.startTime) / emitter->particleSpriteAnimation.duration * static_cast<floatd>(emitter->particleSpriteAnimation.frames)), static_cast<int32_t>(emitter->particleSpriteAnimation.frames) - 1);
-					animation.frame %= static_cast<int32_t>(emitter->particleSprite.framesRow * emitter->particleSprite.framesColumn);
+					trails[parentId].life = t - trails[parentId].startTime;
 				}
 			}
 
@@ -135,97 +97,100 @@ uint32_t ParticleMeshBuilder::getNumVertices() const {
 	return numVertices;
 }
 
-std::vector<ParticleMeshBuilder::TrailVertexData> ParticleMeshBuilder::generateTrails() const {
-	std::vector<TrailVertexData> trails;
+std::vector<ParticleMeshBuilder::TrailVertexData> ParticleMeshBuilder::generateTrailVertices() const {
+	std::vector<TrailVertexData> trailsVertexData;
 
 	if(emitter->rendererNumTrailSegments > 0) {
 		for(uint32_t p = 0, parentParticleId = 0; p < numParticles; p++) {
 			if(particles->parentId[sortedParticleIndices[p]] != parentParticleId || p == 0) {
+				const uint32_t numParticlesInTrail = numParticlesPerTrail[trailsVertexData.size()];
 				parentParticleId = particles->parentId[sortedParticleIndices[p]];
 
 				floatd trailLengthTotal = 0.0;
-				std::vector<floatd> trailLength(numParticlesPerTrail[trails.size()]);
-
-				trailLength[0] = 0.0;
-				for(uint32_t pTrail = 1; pTrail < numParticlesPerTrail[trails.size()]; pTrail++) {
+				std::vector<floatd> trailLength(numParticlesInTrail, 0.0);
+				for(uint32_t pTrail = 1; pTrail < numParticlesInTrail; pTrail++) {
 					trailLengthTotal += glm::length(particles->globalPosition[sortedParticleIndices[p + pTrail]] - particles->globalPosition[sortedParticleIndices[p + pTrail - 1]]);
 					trailLength[pTrail] = trailLengthTotal;
 				}
-				for(uint32_t pTrail = 0; pTrail < numParticlesPerTrail[trails.size()]; pTrail++) {
+				for(uint32_t pTrail = 0; pTrail < numParticlesInTrail; pTrail++) {
 					trailLength[pTrail] /= trailLengthTotal;
 				}
 
-				Curve<vec2d> curvePosition(CurveInterpolation::spline_catmullrom);
-				Curve<vec2d> curveSize(CurveInterpolation::spline_catmullrom);
-				Curve<vec4d> curveColor(CurveInterpolation::spline_catmullrom);
+				Curve<vec2d> curvePosition(CurveInterpolation::spline);
+				Curve<vec2d> curveSize(CurveInterpolation::spline);
+				Curve<vec4d> curveColor(CurveInterpolation::spline);
+				Curve<vec2d> curveVelocity(CurveInterpolation::spline);
+				Curve<vec2d> curveForce(CurveInterpolation::spline);
 
 				curvePosition.enableFixedCache(emitter->rendererNumTrailSegments);
-				curvePosition.setPointsOrdered<uint32_t>(trailLength.data(), particles->globalPosition.data(), sortedParticleIndices.data() + p, numParticlesPerTrail[trails.size()]);
+				curvePosition.setPointsOrdered<uint32_t>(trailLength.data(), particles->globalPosition.data(), sortedParticleIndices.data() + p, numParticlesInTrail);
 				curveSize.enableFixedCache(emitter->rendererNumTrailSegments);
-				curveSize.setPointsOrdered<uint32_t>(trailLength.data(), particles->size.data(), sortedParticleIndices.data() + p, numParticlesPerTrail[trails.size()]);
+				curveSize.setPointsOrdered<uint32_t>(trailLength.data(), particles->size.data(), sortedParticleIndices.data() + p, numParticlesInTrail);
 				curveColor.enableFixedCache(emitter->rendererNumTrailSegments);
-				curveColor.setPointsOrdered<uint32_t>(trailLength.data(), particles->color.data(), sortedParticleIndices.data() + p, numParticlesPerTrail[trails.size()]);
+				curveColor.setPointsOrdered<uint32_t>(trailLength.data(), particles->color.data(), sortedParticleIndices.data() + p,numParticlesInTrail);
+				curveVelocity.enableFixedCache(emitter->rendererNumTrailSegments);
+				curveVelocity.setPointsOrdered<uint32_t>(trailLength.data(), particles->velocity.data(), sortedParticleIndices.data() + p, numParticlesInTrail);
+				curveForce.enableFixedCache(emitter->rendererNumTrailSegments);
+				curveForce.setPointsOrdered<uint32_t>(trailLength.data(), particles->force.data(), sortedParticleIndices.data() + p, numParticlesInTrail);
 
-				trails.emplace_back();
-				trails.back().positions = curvePosition.getCache();
-				trails.back().sizes = curveSize.getCache();
-				trails.back().colors = curveColor.getCache();
-				trails.back().frame = trailAnimation.at(parentParticleId).frame;
+				trailsVertexData.emplace_back();
+				trailsVertexData.back().id = static_cast<int32_t>(parentParticleId);
+				trailsVertexData.back().life = trails.at(parentParticleId).life;
+				trailsVertexData.back().positions = curvePosition.getCache();
+				trailsVertexData.back().sizes = curveSize.getCache();
+				trailsVertexData.back().colors = curveColor.getCache();
+				trailsVertexData.back().velocities = curveVelocity.getCache();
+				trailsVertexData.back().forces = curveForce.getCache();
 			}
 		}
 	}
 	else {
 		for(uint32_t p = 0, pTrail = 0, parentParticleId = 0; p < numParticles; p++, pTrail++) {
 			if(particles->parentId[sortedParticleIndices[p]] != parentParticleId || p == 0) {
+				const uint32_t numParticlesInTrail = numParticlesPerTrail[trailsVertexData.size()];
 				parentParticleId = particles->parentId[sortedParticleIndices[p]];
 				pTrail = 0;
 
-				trails.emplace_back();
-				trails.back().positions.resize(numParticlesPerTrail[trails.size() - 1]);
-				trails.back().sizes.resize(numParticlesPerTrail[trails.size() - 1]);
-				trails.back().colors.resize(numParticlesPerTrail[trails.size() - 1]);
-				trails.back().frame = trailAnimation.at(parentParticleId).frame;
+				trailsVertexData.emplace_back();
+				trailsVertexData.back().id = static_cast<int32_t>(parentParticleId);
+				trailsVertexData.back().life = trails.at(parentParticleId).life;
+				trailsVertexData.back().positions.resize(numParticlesInTrail);
+				trailsVertexData.back().sizes.resize(numParticlesInTrail);
+				trailsVertexData.back().colors.resize(numParticlesInTrail);
+				trailsVertexData.back().velocities.resize(numParticlesInTrail);
+				trailsVertexData.back().forces.resize(numParticlesInTrail);
 			}
 
-			trails.back().positions[pTrail] = particles->globalPosition[sortedParticleIndices[p]];
-			trails.back().sizes[pTrail] = particles->size[sortedParticleIndices[p]];
-			trails.back().colors[pTrail] = particles->color[sortedParticleIndices[p]];
+			trailsVertexData.back().positions[pTrail] = particles->globalPosition[sortedParticleIndices[p]];
+			trailsVertexData.back().sizes[pTrail] = particles->size[sortedParticleIndices[p]];
+			trailsVertexData.back().colors[pTrail] = particles->color[sortedParticleIndices[p]];
+			trailsVertexData.back().velocities[pTrail] = particles->velocity[sortedParticleIndices[p]];
+			trailsVertexData.back().forces[pTrail] = particles->force[sortedParticleIndices[p]];
 		}
 	}
 
-	return trails;
+	return trailsVertexData;
 }
 
 SpriteMeshBuilder::SpriteMeshBuilder() {
 
 }
-SpriteMeshBuilder::SpriteMeshBuilder(const Sprite& spriteRef, uint32_t width, uint32_t height, floatd t) {
-	sprite = &spriteRef;
-	aspectRatio = static_cast<floatd>(width) / static_cast<floatd>(height);
-	time = t;
-}
-SpriteMeshBuilder::SpriteMeshBuilder(const Sprite& spriteRef, const ImageResource& imageResource, floatd t) {
-	sprite = &spriteRef;
-	aspectRatio = static_cast<floatd>(imageResource.width) / static_cast<floatd>(imageResource.height);
-	time = t;
+SpriteMeshBuilder::SpriteMeshBuilder(const Sprite& spriteRef, floatd t) : sprite(&spriteRef), time(t) {
+
 }
 
-void SpriteMeshBuilder::prepare(vec2d& position, vec2d& size, floatd& orientation, vec4d& color, int32_t& frame) const {
-	const floatd alpha = std::fmod(time - sprite->lifetimeStart, sprite->lifetimeDuration) / sprite->lifetimeDuration;
-
-	position = sprite->motionPath.get(alpha);
+void SpriteMeshBuilder::prepare(vec2d& position, vec2d& size, floatd& orientation, vec4d& color, floatd& life) const {
+	life = std::fmod(time - sprite->lifetimeStart, sprite->lifetimeDuration) / sprite->lifetimeDuration;
+	position = sprite->motionPath.get(life);
 	size = vec2d(
-		sprite->width.get(alpha) * aspectRatio,
-		sprite->height.get(alpha));
-	orientation = sprite->orientation.get(alpha) + ((sprite->alignWithPath && position != sprite->motionPath.get(alpha + 0.01))
-		? glm::degrees(glm::orientedAngle(vec2d(0.0, 1.0), glm::normalize(sprite->motionPath.get(alpha + 0.01) - position)))
+		sprite->width.get(life),
+		sprite->height.get(life));
+	orientation = sprite->orientation.get(life) + ((sprite->alignWithPath && position != sprite->motionPath.get(life + 0.01))
+		? glm::degrees(glm::orientedAngle(vec2d(0.0, 1.0), glm::normalize(sprite->motionPath.get(life + 0.01) - position)))
 		: 0.0);
 	color = vec4d(
-		vec3d(sprite->color.get(alpha)),
-		sprite->opacity.get(alpha));
-	frame = sprite->image.frame + sprite->imageAnimation.loop
-		? static_cast<int32_t>((time - sprite->lifetimeStart) / sprite->imageAnimation.duration * static_cast<floatd>(sprite->imageAnimation.frames) + 0.5) % static_cast<int32_t>(sprite->imageAnimation.frames)
-		: std::min(static_cast<int32_t>((time - sprite->lifetimeStart) / sprite->imageAnimation.duration * static_cast<floatd>(sprite->imageAnimation.frames) + 0.5), static_cast<int32_t>(sprite->imageAnimation.frames) - 1);
+		vec3d(sprite->color.get(life)),
+		sprite->opacity.get(life));
 }
 
 const Sprite* SpriteMeshBuilder::getSprite() const {

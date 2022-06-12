@@ -6,9 +6,9 @@
 
 namespace pixelpart {
 enum class CurveInterpolation : uint32_t {
-	step = 0,
+	none = 0,
 	linear = 1,
-	spline_catmullrom = 2
+	spline = 2
 };
 
 template <typename T>
@@ -32,43 +32,11 @@ public:
 	Curve(floatd initialPosition, const T& initialValue, CurveInterpolation interp = CurveInterpolation::linear) : Curve(interp) {
 		addPoint(initialPosition, initialValue);
 	}
-	Curve(const T& initialValue, CurveInterpolation interp = CurveInterpolation::linear) : Curve(0.5, initialValue, interp) {
-
+	Curve(const T& initialValue, CurveInterpolation interp = CurveInterpolation::linear) : Curve(interp) {
+		addPoint(0.5, initialValue);
 	}
-
-	friend std::ostream& operator<<(std::ostream& os, const Curve& curve) {
-		os << static_cast<uint32_t>(curve.interpolation) << " ";
-		for(const Point& point : curve.points) {
-			os << "(" << point.position << " " << point.value << ") ";
-		}
-
-		return os;
-	}
-	friend std::istream& operator>>(std::istream& is, Curve& curve) {
-		uint32_t interpolation = 0;
-		Point point = Point{ 0.0, T(0) };
-		char bracket = 0;
-
-		is >> interpolation;
-
-		curve.interpolation = static_cast<CurveInterpolation>(interpolation);
-		curve.points.clear();
-
-		while(is) {
-			is >> bracket;
-			is >> point.position;
-			is >> point.value;
-			is >> bracket;
-			if(!is) {
-				break;
-			}
-
-			curve.points.emplace_back(point);
-		}
-
-		curve.refreshCache();
-
-		return is;
+	Curve(const std::vector<Point>& pointList, CurveInterpolation interp = CurveInterpolation::linear) : Curve(interp) {
+		setPoints(pointList);
 	}
 
 	T operator()(floatd position = 0.0) const {
@@ -212,6 +180,9 @@ public:
 	const std::vector<Point>& getPoints() const {
 		return points;
 	}
+	const Point& getPoint(std::size_t index) const {
+		return points.at(index);
+	}
 
 	void setInterpolation(CurveInterpolation method) {
 		bool needToRefreshCache = method != interpolation;
@@ -262,9 +233,9 @@ public:
 			std::fill(cache.begin(), cache.end(), T(0));
 		}
 		else if(points.size() == 1) {
-			std::fill(cache.begin(), cache.end(), points[0].value);
+			std::fill(cache.begin(), cache.end(), points.back().value);
 		}
-		else if(interpolation == CurveInterpolation::step) {
+		else if(interpolation == CurveInterpolation::none) {
 			for(std::size_t i = 0, k0 = 0; i < cache.size(); i++) {
 				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1);
 				std::size_t k = findIndex(position, k0);
@@ -305,7 +276,7 @@ public:
 				}
 			}
 		}
-		else if(interpolation == CurveInterpolation::spline_catmullrom) {
+		else if(interpolation == CurveInterpolation::spline) {
 			for(std::size_t i = 0, k0 = 0; i < cache.size(); i++) {
 				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1);
 				std::size_t k = findIndex(position, k0);
@@ -363,10 +334,16 @@ private:
 
 	CurveInterpolation interpolation = CurveInterpolation::linear;
 	bool adaptiveCache = true;
-	
+
 	std::vector<Point> points;
 	std::vector<T> cache;
 };
+
+NLOHMANN_JSON_SERIALIZE_ENUM(CurveInterpolation, {
+	{ CurveInterpolation::none, "none" },
+	{ CurveInterpolation::linear, "linear" },
+	{ CurveInterpolation::spline, "spline" }
+})
 
 template <typename T>
 void to_json(nlohmann::ordered_json& j, const typename Curve<T>::Point& point) {
@@ -398,20 +375,24 @@ void to_json(nlohmann::ordered_json& j, const Curve<T>& curve) {
 }
 template <typename T>
 void from_json(const nlohmann::ordered_json& j, Curve<T>& curve) {
-	nlohmann::ordered_json jPointList = j.at("points");
-
 	std::vector<typename Curve<T>::Point> points;
-	for(nlohmann::ordered_json jPoint : jPointList) {
+
+	const nlohmann::ordered_json& jPointList = j.at("points");
+	for(const nlohmann::ordered_json& jPoint : jPointList) {
 		typename Curve<T>::Point point;
 		from_json<T>(jPoint, point);
 
 		points.push_back(point);
 	}
-	
+
 	curve = Curve<T>();
 	curve.setPoints(points);
+
 	if(j.contains("interpolation")) {
-		curve.setInterpolation(j.at("interpolation"));
+		const nlohmann::ordered_json& jInterpolation = j.at("interpolation");
+		curve.setInterpolation(jInterpolation.is_number()
+			? static_cast<CurveInterpolation>(jInterpolation.get<int32_t>())
+			: jInterpolation.get<CurveInterpolation>());
 	}
 }
 }

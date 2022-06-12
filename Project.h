@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Effect.h"
-#include "PostProcessingEffect.h"
+#include "PostProcessingPipeline.h"
 #include "RenderSettings.h"
 #include "ResourceDatabase.h"
 
@@ -11,7 +11,7 @@ struct Project {
 
 	Effect effect;
 
-	PostProcessingPipeline postProcessingEffects;
+	PostProcessingPipeline postProcessingPipeline;
 	vec4d backgroundColor = vec4d(0.0);
 	vec2d cameraPosition = vec2d(0.0);
 	floatd cameraZoom = 1.0;

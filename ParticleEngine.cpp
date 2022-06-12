@@ -13,7 +13,7 @@ ParticleEngine::ParticleEngine(const Effect* effectPtr, uint32_t capacity, uint3
 	particleSimulation = std::unique_ptr<ParticleSimulationCPU>(new ParticleSimulationCPU(numThreadsMax));
 
 	resetSeed();
-	refreshEffect();
+	updateSolvers();
 }
 
 void ParticleEngine::step(floatd dt) {
@@ -41,7 +41,7 @@ void ParticleEngine::step(floatd dt) {
 			}
 		}
 
-		int32_t particlesEmitted = static_cast<int32_t>(numParticlesToEmit[emitterIndex]);	
+		int32_t particlesEmitted = static_cast<int32_t>(numParticlesToEmit[emitterIndex]);
 		if(particlesEmitted > 0) {
 			particlesEmitted = emitParticles(emitterIndex,
 				particlesEmitted,
@@ -85,7 +85,7 @@ void ParticleEngine::step(floatd dt) {
 							}
 						}
 					}
-					
+
 					int32_t particlesEmitted = static_cast<int32_t>(numParticlesToEmit[subEmitterIndex]);
 					if(particlesEmitted > 0) {
 						particlesEmitted = emitParticles(subEmitterIndex,
@@ -106,8 +106,6 @@ void ParticleEngine::step(floatd dt) {
 				destroyParticle(emitterIndex, p);
 			}
 		}
-
-		memcpy(particlePositionSnapshot[emitterIndex].data(), emitterParticles.globalPosition.data(), numParticles[emitterIndex] * sizeof(vec2d));
 	}
 
 	numActiveThreads = 1;
@@ -168,7 +166,7 @@ void ParticleEngine::resetSeed() {
 
 void ParticleEngine::setEffect(const Effect* effectPtr) {
 	effect = effectPtr;
-	refreshEffect();
+	updateSolvers();
 }
 void ParticleEngine::setParticleCapacity(uint32_t capacity) {
 	particleCapacity = capacity;
@@ -178,7 +176,6 @@ void ParticleEngine::setParticleCapacity(uint32_t capacity) {
 
 		emitterParticles.spawnId.resize(capacity);
 		emitterParticles.parentId.resize(capacity);
-		emitterParticles.numParticlesToEmit.resize(capacity);
 		emitterParticles.life.resize(capacity);
 		emitterParticles.lifespan.resize(capacity);
 		emitterParticles.position.resize(capacity);
@@ -192,9 +189,6 @@ void ParticleEngine::setParticleCapacity(uint32_t capacity) {
 		emitterParticles.initialSize.resize(capacity);
 		emitterParticles.color.resize(capacity);
 		emitterParticles.initialColor.resize(capacity);
-		emitterParticles.frame.resize(capacity);
-		emitterParticles.initialFrame.resize(capacity);
-		particlePositionSnapshot[emitterIndex].resize(capacity);
 	}
 }
 const Effect* ParticleEngine::getEffect() const {
@@ -217,32 +211,27 @@ uint32_t ParticleEngine::getNumParticles(uint32_t emitterIndex) const {
 const ParticleData& ParticleEngine::getParticles(uint32_t emitterIndex) const {
 	return particles[emitterIndex];
 }
-const std::vector<vec2d>& ParticleEngine::getParticlePositionSnapshot(uint32_t emitterIndex) const {
-	return particlePositionSnapshot[emitterIndex];
-}
 
 uint32_t ParticleEngine::getNumActiveThreads() const {
 	return numActiveThreads;
 }
 
-void ParticleEngine::refreshEffect() {
-	refreshParticleSolver();
-	refreshForceSolver();
-	refreshCollisionSolver();
+void ParticleEngine::updateSolvers() {
+	updateParticleSolver();
+	updateForceSolver();
+	updateCollisionSolver();
 }
-void ParticleEngine::refreshParticleSolver() {
+void ParticleEngine::updateParticleSolver() {
 	particles.clear();
 	numParticles.clear();
 	numParticlesToEmit.clear();
 	subEmitterIndices.clear();
-	particlePositionSnapshot.clear();
 
 	if(effect) {
 		particles.resize(effect->getNumParticleEmitters());
 		numParticles.resize(effect->getNumParticleEmitters());
 		numParticlesToEmit.resize(effect->getNumParticleEmitters());
 		subEmitterIndices.resize(effect->getNumParticleEmitters());
-		particlePositionSnapshot.resize(effect->getNumParticleEmitters());
 
 		for(uint32_t emitterIndex = 0; emitterIndex < effect->getNumParticleEmitters(); emitterIndex++) {
 			const uint32_t parentEmitterIndex = effect->findParticleEmitterById(effect->getParticleEmitterByIndex(emitterIndex).parentId);
@@ -256,10 +245,10 @@ void ParticleEngine::refreshParticleSolver() {
 
 	restart();
 }
-void ParticleEngine::refreshForceSolver() {
+void ParticleEngine::updateForceSolver() {
 	forceSolver.update(effect ? effect->getForceFields() : std::vector<ForceField>());
 }
-void ParticleEngine::refreshCollisionSolver() {
+void ParticleEngine::updateCollisionSolver() {
 	collisionSolver.update(effect ? effect->getColliders() : std::vector<Collider>());
 }
 
@@ -407,30 +396,10 @@ vec2d ParticleEngine::generatePointInRectangle(const vec2d& position, const vec2
 		}
 	}
 }
-vec2d ParticleEngine::generatePointOnPath(const vec2d& position, const std::vector<vec2d>& path, ParticleEmitter::Distribution distribution) {
-	if(path.empty()) {
-		return position;
-	}
-	else if(path.size() > 1) {
-		floatd pathLength = 0.0;
-		std::vector<floatd> distances(path.size(), 0.0);
-		for(std::size_t i = 1; i < path.size(); i++) {
-			pathLength += std::max(glm::distance(path[i], path[i - 1]), 0.001);
-			distances[i] = pathLength;
-		}
+vec2d ParticleEngine::generatePointOnPath(const vec2d& position, const Curve<vec2d>& path, ParticleEmitter::Distribution distribution) {
+	const floatd x = sample(distribution, 0.0, 1.0);
 
-		const floatd x = sample(distribution, 0.0, pathLength);
-
-		for(std::size_t i = 1; i < path.size(); i++) {
-			if(x < distances[i]) {
-				return position +
-					path[i - 1] * (1.0 - (x - distances[i - 1]) / (distances[i] - distances[i - 1])) +
-					path[i] * ((x - distances[i - 1]) / (distances[i] - distances[i - 1]));
-			}
-		}
-	}
-
-	return position + path.back();
+	return position + path.get(x);
 }
 
 uint32_t ParticleEngine::emitParticles(uint32_t emitterIndex, uint32_t count, floatd t, floatd tParent, uint32_t parentEmitterIndex, uint32_t parentParticle) {
@@ -460,7 +429,6 @@ void ParticleEngine::createParticle(uint32_t emitterIndex, uint32_t p, floatd t,
 
 	emitterParticles.spawnId[p] = particleId++;
 	emitterParticles.parentId[p] = (parentParticle != NullId) ? particles[parentEmitterIndex].spawnId[parentParticle] : NullId;
-	emitterParticles.numParticlesToEmit[p] = 0.0;
 	emitterParticles.life[p] = 0.0;
 	emitterParticles.lifespan[p] = std::max(emitter.particleLifespan.get(alpha) + sampleUniform(-emitter.particleLifespanVariance, +emitter.particleLifespanVariance), 0.0);
 
@@ -510,10 +478,6 @@ void ParticleEngine::createParticle(uint32_t emitterIndex, uint32_t p, floatd t,
 		sampleUniform(-emitter.particleColorVariance.z, +emitter.particleColorVariance.z),
 		emitter.particleInitialOpacity.get(alpha) + sampleUniform(-emitter.particleOpacityVariance, +emitter.particleOpacityVariance));
 	emitterParticles.color[p] = vec4d(vec3d(emitter.particleColor.get()), emitter.particleOpacity.get());
-	emitterParticles.initialFrame[p] = emitter.particleSprite.randomFrame 
-		? sampleUniformInt(0, emitter.particleSprite.framesRow * emitter.particleSprite.framesColumn - 1)
-		: emitter.particleSprite.frame;
-	emitterParticles.frame[p] = emitterParticles.initialFrame[p];
 }
 void ParticleEngine::destroyParticle(uint32_t emitterIndex, int32_t& p) {
 	ParticleData& emitterParticles = particles[emitterIndex];
@@ -522,7 +486,6 @@ void ParticleEngine::destroyParticle(uint32_t emitterIndex, int32_t& p) {
 
 	std::swap(emitterParticles.spawnId[p], emitterParticles.spawnId[n]);
 	std::swap(emitterParticles.parentId[p], emitterParticles.parentId[n]);
-	std::swap(emitterParticles.numParticlesToEmit[p], emitterParticles.numParticlesToEmit[n]);
 	std::swap(emitterParticles.life[p], emitterParticles.life[n]);
 	std::swap(emitterParticles.lifespan[p], emitterParticles.lifespan[n]);
 	std::swap(emitterParticles.position[p], emitterParticles.position[n]);
@@ -536,8 +499,6 @@ void ParticleEngine::destroyParticle(uint32_t emitterIndex, int32_t& p) {
 	std::swap(emitterParticles.initialSize[p], emitterParticles.initialSize[n]);
 	std::swap(emitterParticles.color[p], emitterParticles.color[n]);
 	std::swap(emitterParticles.initialColor[p], emitterParticles.initialColor[n]);
-	std::swap(emitterParticles.frame[p], emitterParticles.frame[n]);
-	std::swap(emitterParticles.initialFrame[p], emitterParticles.initialFrame[n]);
 	p--;
 }
 }

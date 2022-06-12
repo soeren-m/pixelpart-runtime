@@ -1,14 +1,15 @@
 #include "Project.h"
+#include "ShaderGraphBuilder.h"
 #include "JSONUtil.h"
 
 namespace pixelpart {
-const uint32_t Project::version = 5;
+const uint32_t Project::version = 6;
 
 void to_json(nlohmann::ordered_json& j, const Project& project) {
 	j = nlohmann::ordered_json{
 		{ "version", Project::version },
 		{ "effect", project.effect },
-		{ "postprocessing_effects", project.postProcessingEffects },
+		{ "postprocessing_pipeline", project.postProcessingPipeline },
 		{ "background_color", project.backgroundColor },
 		{ "camera_position", project.cameraPosition },
 		{ "camera_zoom", project.cameraZoom },
@@ -36,11 +37,11 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 	if(version <= 4) {
 		if(j.contains("particle_system_metadata")) {
 			const nlohmann::ordered_json& jEmitterMetadata = j.at("particle_system_metadata");
-			
+
 			for(uint32_t i = 0; i < jEmitterMetadata.size(); i++) {
 				const nlohmann::ordered_json& jMetadata = jEmitterMetadata.at(i).at(1);
 				const uint32_t emitterId = jEmitterMetadata.at(i).at(0);
-			
+
 				if(project.effect.hasParticleEmitter(emitterId) && jMetadata.contains("name")) {
 					project.effect.getParticleEmitter(emitterId).name = jMetadata.at("name");
 				}
@@ -111,7 +112,6 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 		vec2d backgroundImagePosition;
 		vec2d backgroundImageSize;
 
-		fromJson(project.postProcessingEffects, jViewSettings, "postprocessing_effects", "");
 		fromJson(project.backgroundColor, jViewSettings, "background_color", "");
 		fromJson(project.cameraPosition, jViewSettings, "position", "");
 		fromJson(project.cameraZoom, jViewSettings, "zoom", "");
@@ -122,17 +122,17 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 
 		if(!backgroundImageId.empty()) {
 			Sprite sprite;
-			sprite.name = "BACKGROUND";
-			sprite.image.id = backgroundImageId;
-			sprite.layer = backgroundImageLayer;
+			sprite.name = "__background__";
 			sprite.motionPath = Curve<vec2d>(backgroundImagePosition);
 			sprite.width = Curve<floatd>(backgroundImageSize.x);
 			sprite.height = Curve<floatd>(backgroundImageSize.y);
+			sprite.shader = ShaderGraphBuilder::buildTextureShaderGraph(backgroundImageId, "");
+			sprite.layer = backgroundImageLayer;
 			project.effect.addSprite(sprite);
 		}
 	}
 	else {
-		fromJson(project.postProcessingEffects, j, "postprocessing_effects", "");
+		fromJson(project.postProcessingPipeline, j, "postprocessing_pipeline", "");
 		fromJson(project.backgroundColor, j, "background_color", "");
 		fromJson(project.cameraPosition, j, "camera_position", "");
 		fromJson(project.cameraZoom, j, "camera_zoom", "");

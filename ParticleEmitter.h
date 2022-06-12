@@ -2,10 +2,8 @@
 
 #include "Node.h"
 #include "Curve.h"
-#include "ImageReference.h"
-#include "ImageAnimation.h"
-#include "ColorMode.h"
 #include "BlendMode.h"
+#include "ShaderGraph.h"
 
 namespace pixelpart {
 struct ParticleEmitter : public Node {
@@ -50,7 +48,7 @@ struct ParticleEmitter : public Node {
 	Distribution distribution = Distribution::uniform;
 	SpawnMode spawnMode = SpawnMode::fixed;
 	InstantiationMode instantiationMode = InstantiationMode::continuous;
-	std::vector<vec2d> shapePath = std::vector<vec2d>();
+	Curve<vec2d> shapePath = Curve<vec2d>();
 	Curve<floatd> width = Curve<floatd>(0.0);
 	Curve<floatd> height = Curve<floatd>(0.0);
 	Curve<floatd> orientation = Curve<floatd>(0.0);
@@ -59,7 +57,7 @@ struct ParticleEmitter : public Node {
 	Curve<floatd> numParticles = Curve<floatd>(0.0);
 	Curve<floatd> particleLifespan = Curve<floatd>(1.0);
 	floatd particleLifespanVariance = 0.0;
-	
+
 	Curve<vec2d> motionPath = Curve<vec2d>(0.0, vec2d(0.0));
 	Curve<vec2d> particleMotionPath = Curve<vec2d>();
 	floatd particleMotionPathInfluence = 10.0;
@@ -74,13 +72,13 @@ struct ParticleEmitter : public Node {
 	RotationMode particleRotationMode = RotationMode::angle;
 	floatd particleRotationVariance = 0.0;
 	floatd particleAngularVelocityVariance = 0.0;
+	vec2d particlePivot = vec2d(0.0);
 
 	Curve<floatd> particleWeight = Curve<floatd>(1.0);
 	Curve<floatd> particleBounce = Curve<floatd>(1.0);
 	Curve<floatd> particleFriction = Curve<floatd>(1.0);
-	
-	ImageReference particleSprite;
-	ImageAnimation particleSpriteAnimation;
+
+	ShaderGraph particleShader;
 	Curve<floatd> particleInitialSize = Curve<floatd>(1.0);
 	Curve<floatd> particleSize = Curve<floatd>(0.1);
 	Curve<floatd> particleWidth = Curve<floatd>(1.0);
@@ -89,11 +87,9 @@ struct ParticleEmitter : public Node {
 	Curve<vec4d> particleColor = Curve<vec4d>(vec4d(1.0));
 	Curve<floatd> particleInitialOpacity = Curve<floatd>(1.0);
 	Curve<floatd> particleOpacity = Curve<floatd>(1.0);
-	vec4d particleColorVariance = vec4d(0);
+	vec4d particleColorVariance = vec4d(0.0);
 	floatd particleOpacityVariance = 0.0;
-	floatd alphaThreshold = 0.0;
 	BlendMode blendMode = BlendMode::normal;
-	ColorMode colorMode = ColorMode::multiply;
 	RendererType renderer = RendererType::sprite;
 	floatd rendererTrailUVFactor = 1.0;
 	uint32_t rendererTrailUVRotation = 0;

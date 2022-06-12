@@ -26,7 +26,6 @@ void ParticleSimulationCPU::simulate(const ParticleEmitter& emitter, ParticleDat
 			const ParticleDataPointer workgroupParticles{
 				particles.spawnId.data() + workgroupIndex,
 				particles.parentId.data() + workgroupIndex,
-				particles.numParticlesToEmit.data() + workgroupIndex,
 				particles.life.data() + workgroupIndex,
 				particles.lifespan.data() + workgroupIndex,
 				particles.position.data() + workgroupIndex,
@@ -39,9 +38,7 @@ void ParticleSimulationCPU::simulate(const ParticleEmitter& emitter, ParticleDat
 				particles.size.data() + workgroupIndex,
 				particles.initialSize.data() + workgroupIndex,
 				particles.color.data() + workgroupIndex,
-				particles.initialColor.data() + workgroupIndex,
-				particles.frame.data() + workgroupIndex,
-				particles.initialFrame.data() + workgroupIndex
+				particles.initialColor.data() + workgroupIndex
 			};
 
 			threadPool->enqueue(i, &simulateParticles, emitter, workgroupParticles, workgroupSize, forceSolver, collisionSolver, t, dt);
@@ -61,7 +58,6 @@ void ParticleSimulationCPU::simulate(const ParticleEmitter& emitter, ParticleDat
 		const ParticleDataPointer workgroupParticles{
 			particles.spawnId.data(),
 			particles.parentId.data(),
-			particles.numParticlesToEmit.data(),
 			particles.life.data(),
 			particles.lifespan.data(),
 			particles.position.data(),
@@ -74,9 +70,7 @@ void ParticleSimulationCPU::simulate(const ParticleEmitter& emitter, ParticleDat
 			particles.size.data(),
 			particles.initialSize.data(),
 			particles.color.data(),
-			particles.initialColor.data(),
-			particles.frame.data(),
-			particles.initialFrame.data()
+			particles.initialColor.data()
 		};
 
 		simulateParticles(emitter, workgroupParticles, numParticles, forceSolver, collisionSolver, t, dt);
@@ -93,8 +87,6 @@ void ParticleSimulationCPU::setNumParticlesPerThread(uint32_t num) {
 
 void ParticleSimulationCPU::simulateParticles(const ParticleEmitter& emitter, ParticleDataPointer particles, uint32_t workgroupSize, const ForceSolver& forceSolver, const CollisionSolver& collisionSolver, floatd t, floatd dt) {
 	for(uint32_t p = 0; p < workgroupSize; p++) {
-		const int32_t frameAdvance = static_cast<int32_t>(particles.life[p] * particles.lifespan[p] / emitter.particleSpriteAnimation.duration * static_cast<floatd>(emitter.particleSpriteAnimation.frames));
-
 		particles.size[p] = vec2d(emitter.particleSize.get(particles.life[p]) * particles.initialSize[p]) * vec2d(
 			emitter.particleWidth.get(particles.life[p]),
 			emitter.particleHeight.get(particles.life[p]));
@@ -102,11 +94,6 @@ void ParticleSimulationCPU::simulateParticles(const ParticleEmitter& emitter, Pa
 			emitter.particleColor.get(particles.life[p]),
 			particles.initialColor[p],
 			emitter.particleOpacity.get(particles.life[p]));
-		particles.frame[p] = particles.initialFrame[p];
-		particles.frame[p] += emitter.particleSpriteAnimation.loop
-				? frameAdvance % emitter.particleSpriteAnimation.frames
-				: std::min(frameAdvance, static_cast<int32_t>(emitter.particleSpriteAnimation.frames) - 1);
-		particles.frame[p] %= static_cast<int32_t>(emitter.particleSprite.framesRow * emitter.particleSprite.framesColumn);
 	}
 
 	for(uint32_t p = 0; p < workgroupSize; p++) {

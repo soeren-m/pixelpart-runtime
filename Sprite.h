@@ -2,10 +2,8 @@
 
 #include "Node.h"
 #include "Curve.h"
-#include "ColorMode.h"
 #include "BlendMode.h"
-#include "ImageReference.h"
-#include "ImageAnimation.h"
+#include "ShaderGraph.h"
 
 namespace pixelpart {
 struct Sprite : public Node {
@@ -14,12 +12,11 @@ struct Sprite : public Node {
 	Curve<floatd> height = Curve<floatd>(0.5);
 	Curve<floatd> orientation = Curve<floatd>(0.0);
 	bool alignWithPath = false;
+	vec2d pivot = vec2d(0.0);
 
-	ImageReference image;
-	ImageAnimation imageAnimation;
+	ShaderGraph shader;
 	Curve<vec4d> color = Curve<vec4d>(vec4d(1.0));
 	Curve<floatd> opacity = Curve<floatd>(1.0);
-	ColorMode colorMode = ColorMode::multiply;
 	BlendMode blendMode = BlendMode::normal;
 	uint32_t layer = 0;
 	bool visible = true;
