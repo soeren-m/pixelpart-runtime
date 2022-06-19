@@ -5,6 +5,8 @@
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const Sprite& sprite) {
 	j = nlohmann::ordered_json{
+		{ "id", toJson(sprite.id) },
+		{ "parent_id", toJson(sprite.parentId) },
 		{ "name", sprite.name },
 		{ "lifetime_start", sprite.lifetimeStart },
 		{ "lifetime_duration", sprite.lifetimeDuration },
@@ -25,6 +27,8 @@ void to_json(nlohmann::ordered_json& j, const Sprite& sprite) {
 }
 void from_json(const nlohmann::ordered_json& j, Sprite& sprite) {
 	sprite = Sprite();
+	fromJson(sprite.id, j, "id", "");
+	fromJson(sprite.parentId, j, "parent_id", "");
 	fromJson(sprite.name, j, "name", "");
 	fromJson(sprite.lifetimeStart, j, "lifetime_start", "delay");
 	fromJson(sprite.lifetimeDuration, j, "lifetime_duration", "duration");

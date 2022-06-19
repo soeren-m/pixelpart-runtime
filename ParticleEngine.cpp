@@ -23,8 +23,8 @@ void ParticleEngine::step(floatd dt) {
 		return;
 	}
 
-	for(uint32_t emitterIndex = 0; emitterIndex < effect->getNumParticleEmitters(); emitterIndex++) {
-		const ParticleEmitter& emitter = effect->getParticleEmitterByIndex(emitterIndex);
+	for(uint32_t emitterIndex = 0; emitterIndex < effect->particleEmitters.getCount(); emitterIndex++) {
+		const ParticleEmitter& emitter = effect->particleEmitters.getByIndex(emitterIndex);
 		if(emitter.parentId != NullId) {
 			continue;
 		}
@@ -51,8 +51,8 @@ void ParticleEngine::step(floatd dt) {
 		}
 	}
 
-	for(uint32_t emitterIndex = 0; emitterIndex < effect->getNumParticleEmitters(); emitterIndex++) {
-		const ParticleEmitter& emitter = effect->getParticleEmitterByIndex(emitterIndex);
+	for(uint32_t emitterIndex = 0; emitterIndex < effect->particleEmitters.getCount(); emitterIndex++) {
+		const ParticleEmitter& emitter = effect->particleEmitters.getByIndex(emitterIndex);
 		const std::vector<uint32_t>& subEmitters = subEmitterIndices[emitterIndex];
 		ParticleData& emitterParticles = particles[emitterIndex];
 
@@ -66,7 +66,7 @@ void ParticleEngine::step(floatd dt) {
 
 			for(uint32_t p = 0; p < numParticles[emitterIndex]; p++) {
 				for(uint32_t subEmitterIndex : subEmitters) {
-					const ParticleEmitter& subEmitter = effect->getParticleEmitterByIndex(subEmitterIndex);
+					const ParticleEmitter& subEmitter = effect->particleEmitters.getByIndex(subEmitterIndex);
 					const floatd localTimeSubEmitter = emitterParticles.life[p] * emitterParticles.lifespan[p] - subEmitter.lifetimeStart;
 					const floatd localTimeRepSubEmitter = std::fmod(localTimeSubEmitter, subEmitter.lifetimeDuration);
 
@@ -110,9 +110,9 @@ void ParticleEngine::step(floatd dt) {
 
 	numActiveThreads = 1;
 
-	for(uint32_t emitterIndex = 0; emitterIndex < effect->getNumParticleEmitters(); emitterIndex++) {
+	for(uint32_t emitterIndex = 0; emitterIndex < effect->particleEmitters.getCount(); emitterIndex++) {
 		particleSimulation->simulate(
-			effect->getParticleEmitterByIndex(emitterIndex),
+			effect->particleEmitters.getByIndex(emitterIndex),
 			particles[emitterIndex],
 			numParticles[emitterIndex],
 			forceSolver,
@@ -143,15 +143,15 @@ floatd ParticleEngine::getTime() const {
 }
 
 void ParticleEngine::spawnParticles(uint32_t emitterId, uint32_t count) {
-	if(!effect || !effect->hasParticleEmitter(emitterId)) {
+	if(!effect || !effect->particleEmitters.contains(emitterId)) {
 		return;
 	}
 
-	const ParticleEmitter& emitter = effect->getParticleEmitter(emitterId);
+	const ParticleEmitter& emitter = effect->particleEmitters.get(emitterId);
 	const floatd localTimeRep = std::fmod(time - emitter.lifetimeStart, emitter.lifetimeDuration);
 
 	emitParticles(
-		effect->findParticleEmitterById(emitterId),
+		effect->particleEmitters.findById(emitterId),
 		count,
 		localTimeRep);
 }
@@ -228,13 +228,13 @@ void ParticleEngine::updateParticleSolver() {
 	subEmitterIndices.clear();
 
 	if(effect) {
-		particles.resize(effect->getNumParticleEmitters());
-		numParticles.resize(effect->getNumParticleEmitters());
-		numParticlesToEmit.resize(effect->getNumParticleEmitters());
-		subEmitterIndices.resize(effect->getNumParticleEmitters());
+		particles.resize(effect->particleEmitters.getCount());
+		numParticles.resize(effect->particleEmitters.getCount());
+		numParticlesToEmit.resize(effect->particleEmitters.getCount());
+		subEmitterIndices.resize(effect->particleEmitters.getCount());
 
-		for(uint32_t emitterIndex = 0; emitterIndex < effect->getNumParticleEmitters(); emitterIndex++) {
-			const uint32_t parentEmitterIndex = effect->findParticleEmitterById(effect->getParticleEmitterByIndex(emitterIndex).parentId);
+		for(uint32_t emitterIndex = 0; emitterIndex < effect->particleEmitters.getCount(); emitterIndex++) {
+			const uint32_t parentEmitterIndex = effect->particleEmitters.findById(effect->particleEmitters.getByIndex(emitterIndex).parentId);
 			if(parentEmitterIndex != NullId) {
 				subEmitterIndices[parentEmitterIndex].push_back(emitterIndex);
 			}
@@ -246,10 +246,10 @@ void ParticleEngine::updateParticleSolver() {
 	restart();
 }
 void ParticleEngine::updateForceSolver() {
-	forceSolver.update(effect ? effect->getForceFields() : std::vector<ForceField>());
+	forceSolver.update(effect ? effect->forceFields.get() : std::vector<ForceField>());
 }
 void ParticleEngine::updateCollisionSolver() {
-	collisionSolver.update(effect ? effect->getColliders() : std::vector<Collider>());
+	collisionSolver.update(effect ? effect->colliders.get() : std::vector<Collider>());
 }
 
 int32_t ParticleEngine::sampleUniformInt(int32_t min, int32_t max) {
@@ -416,7 +416,7 @@ uint32_t ParticleEngine::emitParticles(uint32_t emitterIndex, uint32_t count, fl
 	return numParticlesToSpawn;
 }
 void ParticleEngine::createParticle(uint32_t emitterIndex, uint32_t p, floatd t, floatd tParent, uint32_t parentEmitterIndex, uint32_t parentParticle) {
-	const ParticleEmitter& emitter = effect->getParticleEmitterByIndex(emitterIndex);
+	const ParticleEmitter& emitter = effect->particleEmitters.getByIndex(emitterIndex);
 	ParticleData& emitterParticles = particles[emitterIndex];
 
 	const floatd alpha = t / emitter.lifetimeDuration;

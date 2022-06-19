@@ -5,9 +5,9 @@
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const ParticleEmitter& emitter) {
 	j = nlohmann::ordered_json{
-		{ "name", emitter.name },
 		{ "id", toJson(emitter.id) },
 		{ "parent_id", toJson(emitter.parentId) },
+		{ "name", emitter.name },
 		{ "lifetime_start", emitter.lifetimeStart },
 		{ "lifetime_duration", emitter.lifetimeDuration },
 		{ "repeat", emitter.repeat },
@@ -76,9 +76,9 @@ void from_json(const nlohmann::ordered_json& j, ParticleEmitter& emitter) {
 	};
 
 	emitter = ParticleEmitter();
-	fromJson(emitter.name, j, "name", "");
 	fromJson(emitter.id, j, "id", "");
-	fromJson(emitter.parentId, j, "parent_id", "");	
+	fromJson(emitter.parentId, j, "parent_id", "");
+	fromJson(emitter.name, j, "name", "");
 	fromJson(emitter.lifetimeStart, j, "lifetime_start", "delay");
 	fromJson(emitter.lifetimeDuration, j, "lifetime_duration", "duration");
 	fromJson(emitter.repeat, j, "repeat", "");

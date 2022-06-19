@@ -41,9 +41,6 @@ struct ParticleEmitter : public Node {
 		trail = 1
 	};
 
-	uint32_t id = NullId;
-	uint32_t parentId = NullId;
-
 	Shape shape = Shape::point;
 	Distribution distribution = Distribution::uniform;
 	SpawnMode spawnMode = SpawnMode::fixed;

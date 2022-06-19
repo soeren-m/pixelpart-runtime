@@ -25,15 +25,6 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 
 	fromJson(project.effect, j, "effect", "particle_system");
 
-	if(version <= 2) {
-		for(uint32_t i = 0; i < project.effect.getNumParticleEmitters(); i++) {
-			ParticleEmitter& emitter = project.effect.getParticleEmitterByIndex(i);
-			if(emitter.parentId != NullId) {
-				emitter.motionPath = Curve<vec2d>(vec2d(0.0));
-			}
-		}
-	}
-
 	if(version <= 4) {
 		if(j.contains("particle_system_metadata")) {
 			const nlohmann::ordered_json& jEmitterMetadata = j.at("particle_system_metadata");
@@ -42,20 +33,18 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 				const nlohmann::ordered_json& jMetadata = jEmitterMetadata.at(i).at(1);
 				const uint32_t emitterId = jEmitterMetadata.at(i).at(0);
 
-				if(project.effect.hasParticleEmitter(emitterId) && jMetadata.contains("name")) {
-					project.effect.getParticleEmitter(emitterId).name = jMetadata.at("name");
+				if(project.effect.particleEmitters.contains(emitterId) && jMetadata.contains("name")) {
+					project.effect.particleEmitters.get(emitterId).name = jMetadata.at("name");
 				}
 			}
 		}
 	}
 
-	for(uint32_t i = 0; i < project.effect.getNumParticleEmitters(); i++) {
-		ParticleEmitter& emitter = project.effect.getParticleEmitterByIndex(i);
-
+	for(ParticleEmitter& emitter : project.effect.particleEmitters) {
 		if(emitter.name.empty()) {
 			uint32_t counter = 1;
 			std::string name = "Emitter";
-			while(project.effect.isNameUsed(name)) {
+			while(isNameUsed(project.effect, name)) {
 				name = "Emitter" + std::to_string(counter++);
 			}
 
@@ -63,13 +52,23 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 		}
 	}
 
-	for(uint32_t i = 0; i < project.effect.getNumForceFields(); i++) {
-		ForceField& forceField = project.effect.getForceField(i);
+	for(Sprite& sprite : project.effect.sprites) {
+		if(sprite.name.empty()) {
+			uint32_t counter = 1;
+			std::string name = "Sprite";
+			while(isNameUsed(project.effect, name)) {
+				name = "Sprite" + std::to_string(counter++);
+			}
 
+			sprite.name = name;
+		}
+	}
+
+	for(ForceField& forceField : project.effect.forceFields) {
 		if(forceField.name.empty()) {
 			uint32_t counter = 1;
 			std::string name = "Force";
-			while(project.effect.isNameUsed(name)) {
+			while(isNameUsed(project.effect, name)) {
 				name = "Force" + std::to_string(counter++);
 			}
 
@@ -77,31 +76,15 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 		}
 	}
 
-	for(uint32_t i = 0; i < project.effect.getNumColliders(); i++) {
-		Collider& collider = project.effect.getCollider(i);
-
+	for(Collider& collider : project.effect.colliders) {
 		if(collider.name.empty()) {
 			uint32_t counter = 1;
 			std::string name = "Collider";
-			while(project.effect.isNameUsed(name)) {
+			while(isNameUsed(project.effect, name)) {
 				name = "Collider" + std::to_string(counter++);
 			}
 
 			collider.name = name;
-		}
-	}
-
-	for(uint32_t i = 0; i < project.effect.getNumSprites(); i++) {
-		Sprite& sprite = project.effect.getSprite(i);
-
-		if(sprite.name.empty()) {
-			uint32_t counter = 1;
-			std::string name = "Sprite";
-			while(project.effect.isNameUsed(name)) {
-				name = "Sprite" + std::to_string(counter++);
-			}
-
-			sprite.name = name;
 		}
 	}
 
@@ -128,7 +111,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 			sprite.height = Curve<floatd>(backgroundImageSize.y);
 			sprite.shader = ShaderGraphBuilder::buildTextureShaderGraph(backgroundImageId, "");
 			sprite.layer = backgroundImageLayer;
-			project.effect.addSprite(sprite);
+			project.effect.sprites.add(sprite);
 		}
 	}
 	else {
@@ -145,7 +128,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 std::string serialize(const Project& project, const ResourceDatabase& resources, int32_t indent) {
 	ResourceDatabase requiredResources;
 	for(const auto& imageResource : resources.images) {
-		if(project.effect.isResourceUsed(imageResource.first)) {
+		if(isResourceUsed(project.effect, imageResource.first)) {
 			requiredResources.images.insert(imageResource);
 		}
 	}

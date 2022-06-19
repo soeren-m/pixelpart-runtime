@@ -4,6 +4,8 @@
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const ForceField& forceField) {
 	j = nlohmann::ordered_json{
+		{ "id", toJson(forceField.id) },
+		{ "parent_id", toJson(forceField.parentId) },
 		{ "name", forceField.name },
 		{ "lifetime_start", forceField.lifetimeStart },
 		{ "lifetime_duration", forceField.lifetimeDuration },
@@ -26,6 +28,8 @@ void to_json(nlohmann::ordered_json& j, const ForceField& forceField) {
 }
 void from_json(const nlohmann::ordered_json& j, ForceField& forceField) {
 	forceField = ForceField();
+	fromJson(forceField.id, j, "id", "");
+	fromJson(forceField.parentId, j, "parent_id", "");
 	fromJson(forceField.name, j, "name", "");
 	fromJson(forceField.lifetimeStart, j, "lifetime_start", "delay");
 	fromJson(forceField.lifetimeDuration, j, "lifetime_duration", "duration");
