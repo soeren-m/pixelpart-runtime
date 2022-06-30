@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ShaderValueType.h"
+#include "ShaderValue.h"
 #include "ShaderParameter.h"
 
 namespace pixelpart {
 struct ShaderNodeType {
 	struct Signature {
-		std::vector<ShaderValueType> inputTypes;
-		std::vector<ShaderValueType> outputTypes;
+		std::vector<ShaderValue::Type> inputTypes;
+		std::vector<ShaderValue::Type> outputTypes;
 	};
 
 	std::string name;
@@ -16,6 +16,7 @@ struct ShaderNodeType {
 	std::vector<std::string> inputs;
 	std::vector<std::string> outputs;
 	std::vector<Signature> signatures;
+	std::vector<ShaderValue> defaultInputs;
 	std::vector<ShaderParameter> parameters;
 };
 

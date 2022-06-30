@@ -1,12 +1,12 @@
 #pragma once
 
-#include "ShaderValueType.h"
+#include "Types.h"
 #include "Curve.h"
 
 namespace pixelpart {
 struct ShaderParameter {
 	struct Value {
-		enum Type {
+		enum Type : uint32_t {
 			type_int,
 			type_float,
 			type_float2,

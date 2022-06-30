@@ -2,10 +2,6 @@
 #include "JSONUtil.h"
 
 namespace pixelpart {
-ShaderParameter::Value::Value() : type(type_int) {
-	data.integer = 0;
-}
-
 ShaderParameter::Value ShaderParameter::Value::IntValue(int32_t v) {
 	ShaderParameter::Value value;
 	value.type = type_int;
@@ -174,6 +170,10 @@ ShaderParameter::Value ShaderParameter::Value::ImageResourceValue(const std::str
 	value.data.string = id + "@" + path;
 
 	return value;
+}
+
+ShaderParameter::Value::Value() : type(type_int) {
+	data.integer = 0;
 }
 
 int32_t ShaderParameter::Value::getInt() const {
@@ -394,7 +394,7 @@ ShaderParameter ShaderParameter::createImageResourceParameter(const std::string&
 void to_json(nlohmann::ordered_json& j, const ShaderParameter::Value& value) {
 	j = nlohmann::ordered_json{
 		{ "type", value.type },
-		{ "value", 0 }
+		{ "value", nullptr }
 	};
 
 	switch(value.type) {

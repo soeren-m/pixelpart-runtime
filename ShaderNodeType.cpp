@@ -16,6 +16,7 @@ void to_json(nlohmann::ordered_json& j, const ShaderNodeType& nodeType) {
 		{ "inputs", nodeType.inputs },
 		{ "outputs", nodeType.outputs },
 		{ "signatures", nodeType.signatures },
+		{ "default_inputs", nodeType.defaultInputs },
 		{ "parameters", nodeType.parameters }
 	};
 }
@@ -32,6 +33,9 @@ void from_json(const nlohmann::ordered_json& j, ShaderNodeType& nodeType) {
 	fromJson(nodeType.inputs, j, "inputs", "");
 	fromJson(nodeType.outputs,  j, "outputs", "");
 	fromJson(nodeType.signatures, j, "signatures", "");
+	fromJson(nodeType.defaultInputs, j, "default_inputs", "");
 	fromJson(nodeType.parameters, j, "parameters", "");
+
+	nodeType.defaultInputs.resize(nodeType.inputs.size());
 }
 }
