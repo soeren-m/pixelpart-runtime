@@ -18,7 +18,7 @@ ShaderGraph ShaderGraphBuilder::buildTextureShaderGraph(const std::string& image
 int32_t colorBlendMode, floatd alphaThreshold) {
 	ShaderGraph shader;
 	uint32_t outputNodeId = shader.addNode("shader_node_output");
-	uint32_t vertexTextureCoordNodeId = shader.addNode("shader_node_vertex_texcoord");
+	uint32_t vertexTextureCoordNodeId = shader.addNode("shader_node_vertex_texturecoord");
 	uint32_t vertexColorNodeId = shader.addNode("shader_node_vertex_color");
 	uint32_t textureNodeId = shader.addNode("shader_node_texture_image");
 	uint32_t blendNodeId = shader.addNode("shader_node_blend");
@@ -68,7 +68,7 @@ uint32_t numFramesRow, uint32_t numFramesColumn, uint32_t textureOrigin, uint32_
 int32_t colorBlendMode, floatd alphaThreshold) {
 	ShaderGraph shader;
 	uint32_t outputNodeId = shader.addNode("shader_node_output");
-	uint32_t vertexTextureCoordNodeId = shader.addNode("shader_node_vertex_texcoord");
+	uint32_t vertexTextureCoordNodeId = shader.addNode("shader_node_vertex_texturecoord");
 	uint32_t vertexColorNodeId = shader.addNode("shader_node_vertex_color");
 	uint32_t textureNodeId = shader.addNode("shader_node_texture_spritesheet");
 	uint32_t blendNodeId = shader.addNode("shader_node_blend");
@@ -147,7 +147,7 @@ uint32_t numAnimationFrames, floatd animationDuration, bool animationLoop,
 int32_t colorBlendMode, floatd alphaThreshold) {
 	ShaderGraph shader;
 	uint32_t outputNodeId = shader.addNode("shader_node_output");
-	uint32_t vertexTextureCoordNodeId = shader.addNode("shader_node_vertex_texcoord");
+	uint32_t vertexTextureCoordNodeId = shader.addNode("shader_node_vertex_texturecoord");
 	uint32_t vertexColorNodeId = shader.addNode("shader_node_vertex_color");
 	uint32_t vertexLifeNodeId = shader.addNode("shader_node_vertex_life");
 	uint32_t textureNodeId = shader.addNode("shader_node_texture_spritesheet");
