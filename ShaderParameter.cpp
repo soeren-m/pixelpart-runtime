@@ -167,7 +167,7 @@ ShaderParameter::Value ShaderParameter::Value::ImageResourceValue(const std::str
 ShaderParameter::Value ShaderParameter::Value::ImageResourceValue(const std::string& id, const std::string& path) {
 	ShaderParameter::Value value;
 	value.type = type_resource_image;
-	value.data.string = id + "@" + path;
+	value.data.string = id + (!path.empty() ? "@" + path : "");
 
 	return value;
 }
