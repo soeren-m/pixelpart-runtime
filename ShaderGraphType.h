@@ -7,7 +7,7 @@ struct ShaderGraphType {
 	std::vector<ShaderNodeType> nodes;
 	std::vector<std::string> typeNames;
 	std::vector<std::string> typeConstructors;
-	std::vector<std::string> typeCasts;
+	std::vector<std::vector<std::string>> typeCasts;
 	std::vector<std::string> textureSamplers;
 	std::string shaderTemplate;
 };

@@ -270,10 +270,22 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 			throw BuildException("Types do not match", nodeId, inputSlot);
 		}
 
+		ShaderValue::Type sourceValueType = ShaderValue::type_null;
+
+		if(nodes.count(link.nodeId) != 0) {
+			const ShaderNodeType& sourceNodeType = getNodeTypeOfNode(link.nodeId);
+			const ShaderNodeType::Signature& sourceNodeSignature = sourceNodeType.signatures[result.nodeSignatures[link.nodeId]];
+
+			sourceValueType = sourceNodeSignature.outputTypes[link.slot];
+		}
+		else {
+			sourceValueType = nodeType.defaultInputs[inputSlot].type;
+		}
+		
 		std::string inputVariableTemplate = "{in" + std::to_string(inputSlot) + "}";
 
 		if(typeMatch[inputSlot] != typematch_exact) {
-			std::string codeTypeCast = graphType.typeCasts[static_cast<uint32_t>(signature.inputTypes[inputSlot])];
+			std::string codeTypeCast = graphType.typeCasts[signature.inputTypes[inputSlot]][sourceValueType];
 			codeTypeCast = replace(codeTypeCast, inputVariableTemplate, "{0}");
 			code = replace(code, codeTypeCast, inputVariableTemplate);
 		}
