@@ -41,7 +41,12 @@ ShaderGraph::ShaderGraph(const std::unordered_map<uint32_t, ShaderNode>& initial
 	uint32_t maxLinkId = 0;
 	for(const auto& node : nodes) {
 		maxNodeId = std::max(maxNodeId, node.first);
+
 		for(const auto& link : node.second.inputs) {
+			if(link.id == pixelpart::NullId) {
+				continue;
+			}
+
 			maxLinkId = std::max(maxLinkId, link.id);
 		}
 	}
