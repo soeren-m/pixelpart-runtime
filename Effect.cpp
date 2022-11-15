@@ -63,7 +63,7 @@ void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 		{ "emitters", effect.particleEmitters.get() },
 		{ "sprites", effect.sprites.get() },
 		{ "force_fields", effect.forceFields.get() },
-		{ "colliders", effect.colliders.get() }		
+		{ "colliders", effect.colliders.get() }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, Effect& effect) {
@@ -87,7 +87,7 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 			floatd subEmitterSpawnProb = 1.0;
 			fromJson(subEmitterId, jEmitterArray[i], "particle_spawn_on_step_emitter", "");
 			fromJson(subEmitterSpawnProb, jEmitterArray[i], "particle_spawn_on_step_prob", "");
-	
+
 			for(ParticleEmitter& subEmitter : particleEmitters) {
 				if(subEmitter.id == subEmitterId) {
 					subEmitter.parentId = emitter.id;
@@ -102,7 +102,7 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 			floatd subEmitterSpawnProb = 1.0;
 			fromJson(subEmitterId, jEmitterArray[i], "particle_spawn_on_death_emitter", "");
 			fromJson(subEmitterSpawnProb, jEmitterArray[i], "particle_spawn_on_death_prob", "");
-	
+
 			for(ParticleEmitter& subEmitter : particleEmitters) {
 				if(subEmitter.id == subEmitterId) {
 					subEmitter.parentId = emitter.id;

@@ -134,7 +134,7 @@ public:
 	}
 
 	uint32_t findById(uint32_t nodeId) const {
-		return (nodeId < indexMap.size()) 
+		return (nodeId < indexMap.size())
 			? indexMap[nodeId]
 			: NullId;
 	}

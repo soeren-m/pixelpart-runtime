@@ -302,7 +302,7 @@ vec2d ParticleEngine::generatePointInEllipse(const vec2d& position, const vec2d&
 	floatd phi = 0.0;
 	floatd rho = 0.0;
 	vec2d p = vec2d(0.0);
-	
+
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform: {
 			phi = sampleUniform(0.0, 2.0 * M_PI);

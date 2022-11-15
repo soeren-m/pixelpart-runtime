@@ -16,7 +16,7 @@ template <typename T>
 bool fromJson(T& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey) {
 	if(j.contains(key)) {
 		value = j.at(key).get<T>();
-		
+
 		return true;
 	}
 	else if(!alternativeKey.empty()) {

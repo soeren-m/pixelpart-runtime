@@ -8,7 +8,7 @@
 namespace pixelpart {
 struct ForceField : public Node {
 	enum class Type : uint32_t {
-		point = 0, 
+		point = 0,
 		area = 1
 	};
 

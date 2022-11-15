@@ -92,14 +92,14 @@ int32_t colorBlendMode, floatd alphaThreshold) {
 	if(randomFrame) {
 		uint32_t vertexObjectIdNodeId = shader.addNode("shader_node_vertex_objectid");
 		uint32_t frameCountNumberNodeId = shader.addNode("shader_node_integer");
-		uint32_t modNodeId = shader.addNode("shader_node_mod"); 
+		uint32_t modNodeId = shader.addNode("shader_node_mod");
 
 		shader.linkNodes(vertexObjectIdNodeId, modNodeId, 0, 0);
 		shader.linkNodes(frameCountNumberNodeId, modNodeId, 0, 1);
 		shader.linkNodes(modNodeId, textureNodeId, 0, 1);
 
 		shader.setNodeParameter(frameCountNumberNodeId, "shader_param_integer", ShaderParameter::Value::IntValue(static_cast<int32_t>(numFramesRow * numFramesColumn)));
-	
+
 		shader.setNodePosition(vertexObjectIdNodeId, vec2d(0.0, 350.0));
 		shader.setNodePosition(frameCountNumberNodeId, vec2d(0.0, 500.0));
 		shader.setNodePosition(modNodeId, vec2d(250.0, 350.0));

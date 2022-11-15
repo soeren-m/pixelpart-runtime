@@ -160,7 +160,7 @@ void ParticleSimulationCPU::simulateParticles(const ParticleEmitter& emitter, Pa
 	for(uint32_t p = 0; p < workgroupSize; p++) {
 		const floatd alpha = std::fmod(t - emitter.lifetimeStart, emitter.lifetimeDuration) / emitter.lifetimeDuration;
 		const vec2d emitterPosition = emitter.motionPath.get(alpha);
-	
+
 		particles.velocity[p] += particles.force[p] * dt;
 		particles.velocity[p] *= std::pow(emitter.particleDamping.get(particles.life[p]), dt);
 		particles.position[p] += particles.velocity[p] * dt;

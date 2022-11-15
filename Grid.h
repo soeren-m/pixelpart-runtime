@@ -16,7 +16,7 @@ bool operator==(const GridIndex<IntT>& i1, const GridIndex<IntT>& i2) {
 
 template <typename T>
 class Grid {
-public:	
+public:
 	Grid() : width(0), height(0) {
 
 	}
@@ -26,7 +26,7 @@ public:
 	Grid(std::size_t w, std::size_t h, const T& value) : width(w), height(h) {
 		cells.resize(width * height, value);
 	}
-	
+
 	T& operator()(std::size_t i) {
 		return cells[i];
 	}
@@ -50,7 +50,7 @@ public:
 	const T& operator()(const GridIndex<IntT>& index) const {
 		return cells[static_cast<std::size_t>(index.y) * width + static_cast<std::size_t>(index.x)];
 	}
-	
+
 	void resize(std::size_t w, std::size_t h) {
 		width = w;
 		height = h;
@@ -72,7 +72,7 @@ public:
 			static_cast<std::size_t>(x) < width &&
 			static_cast<std::size_t>(y) < height;
 	}
-	
+
 	std::vector<T>& getCells() {
 		return cells;
 	}
@@ -88,7 +88,7 @@ public:
 	std::size_t getSize() const {
 		return width * height;
 	}
-	
+
 	template <typename Fn>
 	void loop1d(Fn&& func) const {
 		for(std::size_t i = 0; i < width * height; i++) {
@@ -101,7 +101,7 @@ public:
 			func(i);
 		}
 	}
-	
+
 	template <typename Fn>
 	void loop2d(Fn&& func) const {
 		for(std::size_t y = 0; y < height; y++) {
@@ -109,7 +109,7 @@ public:
 				func(x, y);
 			}
 		}
-	}	
+	}
 	template <typename Fn>
 	void loop2d(Fn&& func, std::size_t fromX, std::size_t toX, std::size_t fromY, std::size_t toY) const {
 		for(std::size_t y = fromY; y < std::min(toY, height); y++) {
@@ -118,7 +118,7 @@ public:
 			}
 		}
 	}
-	
+
 private:
 	std::vector<T> cells;
 	std::size_t width;

@@ -29,7 +29,7 @@ void from_json(const nlohmann::ordered_json& j, Collider& collider) {
 	fromJson(collider.friction, j, "friction", "");
 
 	if(j.contains("p1") && j.contains("p2")) {
-		collider.points = std::vector<vec2d>{ 
+		collider.points = std::vector<vec2d>{
 			j.at("p1").get<vec2d>(),
 			j.at("p2").get<vec2d>()
 		};

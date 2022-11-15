@@ -147,7 +147,7 @@ public:
 			point.position = std::min(std::max(point.position * factor, 0.0), 1.0);
 		}
 		refreshCache();
-	}	
+	}
 
 	template <typename BinOp>
 	T accumulate(BinOp operation, T value = T(0)) const {
@@ -157,7 +157,7 @@ public:
 
 		return value;
 	}
-	
+
 	int32_t getIndex(floatd position) const {
 		if(points.empty()) {
 			return -1;
@@ -268,7 +268,7 @@ public:
 				}
 				else {
 					floatd t = (position - points[k].position) / (points[k + 1].position - points[k].position);
-					cache[i] = 
+					cache[i] =
 						(1.0 - t) * points[k].value +
 						t * points[k + 1].value;
 
@@ -370,7 +370,7 @@ void to_json(nlohmann::ordered_json& j, const Curve<T>& curve) {
 
 	j = nlohmann::ordered_json{
 		{ "interpolation", curve.getInterpolation() },
-		{ "points", jPointList }	
+		{ "points", jPointList }
 	};
 }
 template <typename T>

@@ -79,7 +79,7 @@ public:
 
 		{
 			std::unique_lock<std::mutex> lk(queueMutex);
-			
+
 			tasks.emplace(std::make_pair(
 				taskId,
 				[task]() {

@@ -39,10 +39,10 @@ public:
 	static ShaderGraphType graphType;
 	static std::string shaderVariableNamePrefix;
 	static uint32_t numCurveInterpolationPoints;
-	
+
 	ShaderGraph();
 	ShaderGraph(const std::unordered_map<uint32_t, ShaderNode>& initialNodes);
-	
+
 	std::string build(BuildResult& result, uint32_t nodeId = 0) const;
 
 	uint32_t addNode(const std::string& typeName);

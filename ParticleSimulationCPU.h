@@ -19,7 +19,7 @@ public:
 
 private:
 	static void simulateParticles(const ParticleEmitter& emitter, ParticleDataPointer particles, uint32_t workgroupSize, const ForceSolver& forceSolver, const CollisionSolver& collisionSolver, floatd t, floatd dt);
-	
+
 #ifndef __EMSCRIPTEN__
 	std::unique_ptr<ThreadPool> threadPool;
 #endif

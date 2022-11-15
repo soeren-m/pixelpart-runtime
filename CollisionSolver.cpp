@@ -51,7 +51,7 @@ void CollisionSolver::solve(const ParticleEmitter& emitter, ParticleDataPointer&
 			std::min(std::max(static_cast<int32_t>(std::floor((position.x - gridBottom.x) / gridCellDimension.x)), 0), static_cast<int32_t>(grid.getWidth()) - 1),
 			std::min(std::max(static_cast<int32_t>(std::floor((position.y - gridBottom.y) / gridCellDimension.y)), 0), static_cast<int32_t>(grid.getHeight()) - 1) };
 	};
-	
+
 	GridIndex<int32_t> startIndex = toGridIndex(particles.globalPosition[p]);
 	GridIndex<int32_t> endIndex = toGridIndex(particles.globalPosition[p] + particles.velocity[p] * dt + particles.force[p] * dt * dt);
 
@@ -61,7 +61,7 @@ void CollisionSolver::solve(const ParticleEmitter& emitter, ParticleDataPointer&
 	if(startIndex.y > endIndex.y) {
 		std::swap(startIndex.y, endIndex.y);
 	}
-	
+
 	std::unordered_set<uint32_t> potentialColliders;
 	for(int32_t cy = startIndex.y; cy <= endIndex.y; cy++) {
 		for(int32_t cx = startIndex.x; cx <= endIndex.x; cx++) {
@@ -126,7 +126,7 @@ void CollisionSolver::update(const std::vector<Collider>& allColliders) {
 				c.points[i - 1],
 				c.points[i],
 				c.bounce,
-				c.friction	
+				c.friction
 			});
 		}
 	}
@@ -137,17 +137,17 @@ void CollisionSolver::update(const std::vector<Collider>& allColliders) {
 		gridBottom = glm::min(gridBottom, glm::min(collider.p1, collider.p2));
 		gridTop = glm::max(gridTop, glm::max(collider.p1, collider.p2));
 	}
-	
+
 	gridBottom -= vec2d(gridPadding);
 	gridTop += vec2d(gridPadding);
-	
+
 	uint32_t gridNumColumns = std::max(gridCellCountFactor * static_cast<uint32_t>((gridTop.x - gridBottom.x) * std::sqrt(static_cast<floatd>(colliders.size()) / ((gridTop.x - gridBottom.x) * (gridTop.y - gridBottom.y)))), 1U);
 	uint32_t gridNumRows = std::max(gridCellCountFactor * static_cast<uint32_t>((gridTop.y - gridBottom.y) * std::sqrt(static_cast<floatd>(colliders.size()) / ((gridTop.x - gridBottom.x) * (gridTop.y - gridBottom.y)))), 1U);
 	grid.resize(gridNumColumns, gridNumRows);
 	grid.clear();
 
 	gridCellDimension = (gridTop - gridBottom) / vec2d(gridNumColumns, gridNumRows);
-	
+
 	for(uint32_t i = 0; i < colliders.size(); i++) {
 		const LineCollider& collider = colliders[i];
 		vec2d direction = glm::normalize(collider.p2 - collider.p1);
@@ -156,41 +156,41 @@ void CollisionSolver::update(const std::vector<Collider>& allColliders) {
 		vec2d delta = vec2d(0.0);
 		floatd tX = 0.0;
 		floatd tY = 0.0;
-		
-		if(direction.x < 0.0) { 
+
+		if(direction.x < 0.0) {
 			delta.x = -gridCellDimension.x / direction.x;
 			tX = (std::floor(p1Grid.x / gridCellDimension.x) * gridCellDimension.x - p1Grid.x) / direction.x;
-		} 
-		else { 
+		}
+		else {
 			delta.x = +gridCellDimension.x / direction.x;
 			tX = ((std::floor(p1Grid.x / gridCellDimension.x) + 1) * gridCellDimension.x - p1Grid.x) / direction.x;
-		} 
-		if(direction.y < 0.0) { 
+		}
+		if(direction.y < 0.0) {
 			delta.y = -gridCellDimension.y / direction.y;
 			tY = (std::floor(p1Grid.y / gridCellDimension.y) * gridCellDimension.y - p1Grid.y) / direction.y;
-		} 
-		else { 
+		}
+		else {
 			delta.y = +gridCellDimension.y / direction.y;
 			tY = ((std::floor(p1Grid.y / gridCellDimension.y) + 1) * gridCellDimension.y - p1Grid.y) / direction.y;
 		}
-		
+
 		int32_t cX = std::min(std::max(static_cast<int32_t>(std::floor(p1Grid.x / gridCellDimension.x)), 0), static_cast<int32_t>(gridNumColumns) - 1);
 		int32_t cY = std::min(std::max(static_cast<int32_t>(std::floor(p1Grid.y / gridCellDimension.y)), 0), static_cast<int32_t>(gridNumRows) - 1);
 		int32_t exitCX = std::min(std::max(static_cast<int32_t>(std::floor(p2Grid.x / gridCellDimension.x)), 0), static_cast<int32_t>(gridNumColumns) - 1);
 		int32_t exitCY = std::min(std::max(static_cast<int32_t>(std::floor(p2Grid.y / gridCellDimension.y)), 0), static_cast<int32_t>(gridNumRows) - 1);
-		
+
 		while(grid.contains(cX, cY)) {
 			grid(cX, cY).push_back(i);
 
-			if(tX < tY) { 
+			if(tX < tY) {
 				tX += delta.x;
 				cX += (direction.x < 0.0) ? -1 : +1;
 			}
-			else { 
+			else {
 				tY += delta.y;
 				cY += (direction.y < 0.0) ? -1 : +1;
 			}
-		
+
 			if(cX == exitCX && cY == exitCY) {
 				break;
 			}
@@ -208,7 +208,7 @@ void CollisionSolver::setGridPadding(floatd padding) {
 void CollisionSolver::findPotentialColliders(std::unordered_set<uint32_t>& potentialColliders, int32_t cx, int32_t cy, const vec2d& size) const {
 	int32_t radiusX = 1 + static_cast<int32_t>(size.x / gridCellDimension.x);
 	int32_t radiusY = 1 + static_cast<int32_t>(size.y / gridCellDimension.y);
-	
+
 	for(int32_t y = cy - radiusY; y <= cy + radiusY && y < static_cast<int32_t>(grid.getHeight()); y++) {
 		for(int32_t x = cx - radiusX; x <= cx + radiusX && x < static_cast<int32_t>(grid.getWidth()); x++) {
 			if(x < 0 || y < 0) {

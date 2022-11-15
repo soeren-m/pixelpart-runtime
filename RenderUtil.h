@@ -236,7 +236,7 @@ public:
 								textureCoords[(v0 + (i - trailSectionStart) * 2) * 2 + 3] = 0.0;
 							}
 							break;
-						
+
 						default:
 							for(uint32_t i = trailSectionStart; i < trailSectionEnd; i++) {
 								textureCoords[(v0 + (i - trailSectionStart) * 2) * 2 + 0] = 1.0;

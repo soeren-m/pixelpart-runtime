@@ -30,7 +30,7 @@ public:
 	void solve(ParticleDataPointer& particles, uint32_t p, floatd particleBounce, floatd particleFriction, floatd t, floatd dt, const LineCollider& collider) const;
 
 	void update(const std::vector<Collider>& allColliders);
-	
+
 	void setGridCellCountFactor(uint32_t factor);
 	void setGridPadding(floatd padding);
 

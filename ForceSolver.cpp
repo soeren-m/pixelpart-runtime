@@ -22,7 +22,7 @@ void ForceSolver::solve(ParticleDataPointer& particles, uint32_t p, floatd parti
 	const floatd forceOrientation = force.orientation.get(alpha);
 	const floatd forceDirection = force.direction.get(alpha);
 	const floatd forceStrength = force.strength.get(alpha);
-	
+
 	vec2d forceVector = vec2d(0.0);
 	int32_t gridCellX = 0;
 	int32_t gridCellY = 0;

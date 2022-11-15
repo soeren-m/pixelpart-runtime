@@ -237,7 +237,7 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[2]), "{2}");
 					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[3]), "{3}");
 					break;
-				}		
+				}
 				default: {
 					break;
 				}
@@ -286,7 +286,7 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 		else {
 			sourceValueType = nodeType.defaultInputs[inputSlot].type;
 		}
-		
+
 		std::string inputVariableTemplate = "{in" + std::to_string(inputSlot) + "}";
 
 		if(typeMatch[inputSlot] != typematch_exact) {
@@ -486,7 +486,7 @@ uint32_t ShaderGraph::findNodeSignature(const BuildResult& result, const ShaderN
 
 	for(uint32_t s = 0; s < static_cast<uint32_t>(nodeType.signatures.size()); s++) {
 		const ShaderNodeType::Signature& signature = nodeType.signatures[s];
-		
+
 		std::vector<TypeMatch> currentMatch(node.inputs.size(), typematch_none);
 		for(uint32_t i = 0; i < static_cast<uint32_t>(node.inputs.size()); i++) {
 			ShaderValue::Type inputType = ShaderValue::type_null;
