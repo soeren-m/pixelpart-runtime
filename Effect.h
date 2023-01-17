@@ -2,37 +2,18 @@
 
 #include "NodeCollection.h"
 #include "ParticleEmitter.h"
-#include "Sprite.h"
+#include "ParticleType.h"
 #include "ForceField.h"
 #include "Collider.h"
 
 namespace pixelpart {
 struct Effect {
 	NodeCollection<ParticleEmitter> particleEmitters;
-	NodeCollection<Sprite> sprites;
+	NodeCollection<ParticleType> particleTypes;
 	NodeCollection<ForceField> forceFields;
 	NodeCollection<Collider> colliders;
+	bool is3d = false;
 };
-
-template <typename T>
-uint32_t findUnusedNodeId(const std::vector<T>& nodes) {
-	uint32_t id = 0;
-	bool isUsed = true;
-
-	while(isUsed) {
-		id++;
-		isUsed = false;
-
-		for(const T& node : nodes) {
-			if(node.id == id) {
-				isUsed = true;
-				break;
-			}
-		}
-	}
-
-	return id;
-}
 
 bool isNameUsed(const Effect& effect, const std::string& name);
 bool isResourceUsed(const Effect& effect, const std::string& resourceId);

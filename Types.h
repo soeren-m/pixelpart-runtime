@@ -9,11 +9,10 @@
 #include "glm/glm/gtx/norm.hpp"
 #include "glm/glm/gtx/rotate_vector.hpp"
 #include "glm/glm/gtx/vector_angle.hpp"
+#include "glm/glm/gtx/euler_angles.hpp"
 #include "json/single_include/nlohmann/json.hpp"
 
 namespace pixelpart {
-extern const uint32_t NullId;
-
 using floatd = double;
 using vec2d = glm::vec<2, floatd, glm::highp>;
 using vec3d = glm::vec<3, floatd, glm::highp>;
@@ -21,6 +20,11 @@ using vec4d = glm::vec<4, floatd, glm::highp>;
 using mat2d = glm::mat<2, 2, floatd, glm::highp>;
 using mat3d = glm::mat<3, 3, floatd, glm::highp>;
 using mat4d = glm::mat<4, 4, floatd, glm::highp>;
+
+extern const uint32_t nullId;
+extern const vec2d worldUpVector2;
+extern const vec3d worldUpVector3;
+extern const vec4d worldUpVector4;
 
 std::ostream& operator<<(std::ostream& os, const vec2d& v);
 std::ostream& operator<<(std::ostream& os, const vec3d& v);

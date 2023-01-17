@@ -5,7 +5,7 @@
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const ImageResource& resource) {
 	if(resource.data.empty()) {
-		throw std::runtime_error("Compression error");
+		throw std::runtime_error("Compression error, no data available");
 	}
 
 	uLongf compressedSize = (resource.data.size() * 1.1) + 12;
@@ -18,7 +18,7 @@ void to_json(nlohmann::ordered_json& j, const ImageResource& resource) {
 		resource.data.size());
 
 	if(result != Z_OK) {
-		throw std::runtime_error("zlib compression error");
+		throw std::runtime_error("Compression error, zlib returned " + std::to_string(result));
 	}
 
 	j = nlohmann::ordered_json{
@@ -39,7 +39,7 @@ void from_json(const nlohmann::ordered_json& j, ImageResource& resource) {
 	std::string compressedData = decodeBase64(j.at("data").get<std::string>());
 
 	if(compressedData.empty()) {
-		throw std::runtime_error("Decompression error");
+		throw std::runtime_error("Decompression error, compressed data is empty");
 	}
 
 	if(compression == "zlib") {
@@ -53,14 +53,14 @@ void from_json(const nlohmann::ordered_json& j, ImageResource& resource) {
 			static_cast<uLong>(compressedData.size()));
 
 		if(result != Z_OK) {
-			throw std::runtime_error("zlib decompression error");
+			throw std::runtime_error("Decompression error, zlib returned " + std::to_string(result));
 		}
 	}
 	else if(compression.empty()) {
 		resource.data = std::vector<unsigned char>(compressedData.begin(), compressedData.end());
 	}
 	else {
-		throw std::runtime_error("Unknown compression method");
+		throw std::runtime_error("Decompression error, unknown compression method");
 	}
 }
 }

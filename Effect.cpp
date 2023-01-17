@@ -2,14 +2,34 @@
 #include "JSONUtil.h"
 
 namespace pixelpart {
+template <typename T>
+uint32_t findUnusedNodeId(const std::vector<T>& nodes) {
+	uint32_t id = 0;
+	bool isUsed = true;
+
+	while(isUsed) {
+		id++;
+		isUsed = false;
+
+		for(const T& node : nodes) {
+			if(node.id == id) {
+				isUsed = true;
+				break;
+			}
+		}
+	}
+
+	return id;
+}
+
 bool isNameUsed(const Effect& effect, const std::string& name) {
-	for(const ParticleEmitter& emitter : effect.particleEmitters) {
-		if(emitter.name == name) {
+	for(const ParticleEmitter& particleEmitter : effect.particleEmitters) {
+		if(particleEmitter.name == name) {
 			return true;
 		}
 	}
-	for(const Sprite& sprite : effect.sprites) {
-		if(sprite.name == name) {
+	for(const ParticleType& particleType : effect.particleTypes) {
+		if(particleType.name == name) {
 			return true;
 		}
 	}
@@ -27,22 +47,8 @@ bool isNameUsed(const Effect& effect, const std::string& name) {
 	return false;
 }
 bool isResourceUsed(const Effect& effect, const std::string& resourceId) {
-	for(const ParticleEmitter& emitter : effect.particleEmitters) {
-		const auto& shaderNodes = emitter.particleShader.getNodes();
-
-		for(const auto& nodeEntry : shaderNodes) {
-			for(const auto& nodeParameter : nodeEntry.second.parameters) {
-				if(nodeParameter.type == pixelpart::ShaderParameter::Value::type_resource_image) {
-					if(resourceId == nodeParameter.getResourceId()) {
-						return true;
-					}
-				}
-			}
-		}
-	}
-
-	for(const Sprite& sprite : effect.sprites) {
-		const auto& shaderNodes = sprite.shader.getNodes();
+	for(const ParticleType& particleType : effect.particleTypes) {
+		const auto& shaderNodes = particleType.shader.getNodes();
 
 		for(const auto& nodeEntry : shaderNodes) {
 			for(const auto& nodeParameter : nodeEntry.second.parameters) {
@@ -60,109 +66,50 @@ bool isResourceUsed(const Effect& effect, const std::string& resourceId) {
 
 void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 	j = nlohmann::ordered_json{
-		{ "emitters", effect.particleEmitters.get() },
-		{ "sprites", effect.sprites.get() },
+		{ "particle_emitters", effect.particleEmitters.get() },
+		{ "particle_types", effect.particleTypes.get() },
 		{ "force_fields", effect.forceFields.get() },
-		{ "colliders", effect.colliders.get() }
+		{ "colliders", effect.colliders.get() },
+		{ "3d", effect.is3d }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 	std::vector<ParticleEmitter> particleEmitters;
-	std::vector<Sprite> sprites;
+	std::vector<ParticleType> particleTypes;
 	std::vector<ForceField> forceFields;
 	std::vector<Collider> colliders;
 
-	fromJson(particleEmitters, j, "emitters", "");
-	fromJson(sprites, j, "sprites", "");
-	fromJson(forceFields, j, "force_fields", "");
-	fromJson(colliders, j, "colliders", "");
+	effect = Effect();
 
-	const nlohmann::ordered_json& jEmitterArray = j.at("emitters");
+	fromJson(particleEmitters, j, "particle_emitters");
+	fromJson(particleTypes, j, "particle_types");
+	fromJson(forceFields, j, "force_fields");
+	fromJson(colliders, j, "colliders");
+	fromJson(effect.is3d, j, "3d");
 
-	for(uint32_t i = 0; i < particleEmitters.size(); i++) {
-		const ParticleEmitter& emitter = particleEmitters[i];
-
-		if(jEmitterArray[i].contains("particle_spawn_on_step_emitter")) {
-			uint32_t subEmitterId = NullId;
-			floatd subEmitterSpawnProb = 1.0;
-			fromJson(subEmitterId, jEmitterArray[i], "particle_spawn_on_step_emitter", "");
-			fromJson(subEmitterSpawnProb, jEmitterArray[i], "particle_spawn_on_step_prob", "");
-
-			for(ParticleEmitter& subEmitter : particleEmitters) {
-				if(subEmitter.id == subEmitterId) {
-					subEmitter.parentId = emitter.id;
-					subEmitter.instantiationMode = ParticleEmitter::InstantiationMode::continuous;
-					subEmitter.numParticles.moveByFactor(subEmitterSpawnProb);
-				}
-			}
-		}
-
-		if(jEmitterArray[i].contains("particle_spawn_on_death_emitter")) {
-			uint32_t subEmitterId = NullId;
-			floatd subEmitterSpawnProb = 1.0;
-			fromJson(subEmitterId, jEmitterArray[i], "particle_spawn_on_death_emitter", "");
-			fromJson(subEmitterSpawnProb, jEmitterArray[i], "particle_spawn_on_death_prob", "");
-
-			for(ParticleEmitter& subEmitter : particleEmitters) {
-				if(subEmitter.id == subEmitterId) {
-					subEmitter.parentId = emitter.id;
-					subEmitter.instantiationMode = ParticleEmitter::InstantiationMode::burst_death;
-					if(jEmitterArray[i].contains("particle_spawn_on_death_number")) {
-						subEmitter.numParticles = Curve<floatd>(static_cast<floatd>(jEmitterArray[i].at("particle_spawn_on_death_number").get<uint32_t>()));
-						subEmitter.numParticles.moveByFactor(subEmitterSpawnProb);
-					}
-				}
-			}
-		}
-
-		if(jEmitterArray[i].contains("force_fields")) {
-			std::vector<ForceField> emitterForceFields = jEmitterArray[i].at("force_fields").get<std::vector<ForceField>>();
-			for(ForceField& forceField : emitterForceFields) {
-				forceField.emitterMask.reset();
-				forceField.emitterMask[emitter.id] = true;
-				forceField.lifetimeStart = 0.0;
-				forceField.lifetimeDuration = 1.0;
-				forceField.repeat = true;
-				forceFields.push_back(forceField);
-			}
-		}
-
-		if(jEmitterArray[i].contains("colliders")) {
-			std::vector<Collider> emitterColliders = jEmitterArray[i].at("colliders").get<std::vector<Collider>>();
-			for(Collider& collider : emitterColliders) {
-				collider.emitterMask.reset();
-				collider.emitterMask[emitter.id] = true;
-				collider.lifetimeStart = 0.0;
-				collider.lifetimeDuration = 1.0;
-				collider.repeat = true;
-				colliders.push_back(collider);
-			}
+	for(ParticleEmitter& particleEmitter : particleEmitters) {
+		if(particleEmitter.id == nullId) {
+			particleEmitter.id = findUnusedNodeId(particleEmitters);
 		}
 	}
-
-	for(ParticleEmitter& emitter : particleEmitters) {
-		if(emitter.id == NullId) {
-			emitter.id = findUnusedNodeId(particleEmitters);
-		}
-	}
-	for(Sprite& sprite : sprites) {
-		if(sprite.id == NullId) {
-			sprite.id = findUnusedNodeId(sprites);
+	for(ParticleType& particleType : particleTypes) {
+		if(particleType.id == nullId) {
+			particleType.id = findUnusedNodeId(particleTypes);
 		}
 	}
 	for(ForceField& forceField : forceFields) {
-		if(forceField.id == NullId) {
+		if(forceField.id == nullId) {
 			forceField.id = findUnusedNodeId(forceFields);
 		}
 	}
 	for(Collider& collider : colliders) {
-		if(collider.id == NullId) {
+		if(collider.id == nullId) {
 			collider.id = findUnusedNodeId(colliders);
 		}
 	}
 
 	effect.particleEmitters.set(particleEmitters);
-	effect.sprites.set(sprites);
+	effect.particleTypes.set(particleTypes);
 	effect.forceFields.set(forceFields);
 	effect.colliders.set(colliders);
 }

@@ -13,8 +13,12 @@ struct Project {
 
 	PostProcessingPipeline postProcessingPipeline;
 	vec4d backgroundColor = vec4d(0.0);
-	vec2d cameraPosition = vec2d(0.0);
+	vec3d cameraPosition = vec3d(0.0, 0.0, 1.0);
 	floatd cameraZoom = 1.0;
+	floatd cameraFieldOfView = 60.0;
+	floatd cameraPitch = 0.0;
+	floatd cameraYaw = 0.0;
+	floatd cameraRoll = 0.0;
 
 	RenderSettings renderSettings;
 	RenderSettings previewSettings;

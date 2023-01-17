@@ -9,6 +9,7 @@ void to_json(nlohmann::ordered_json& j, const ResourceDatabase& resources) {
 }
 void from_json(const nlohmann::ordered_json& j, ResourceDatabase& resources) {
 	resources = ResourceDatabase();
-	fromJson(resources.images, j, "images", "");
+
+	fromJson(resources.images, j, "images");
 }
 }

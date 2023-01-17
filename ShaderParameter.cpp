@@ -488,10 +488,11 @@ void from_json(const nlohmann::ordered_json& j, ShaderParameter::Value& value) {
 }
 void from_json(const nlohmann::ordered_json& j, ShaderParameter& parameter) {
 	parameter = ShaderParameter();
-	fromJson(parameter.name, j, "name", "");
-	fromJson(parameter.defaultValue, j, "default_value", "");
-	fromJson(parameter.minValue, j, "min_value", "");
-	fromJson(parameter.maxValue, j, "max_value", "");
-	fromJson(parameter.valueNames, j, "value_names", "");
+
+	fromJson(parameter.name, j, "name");
+	fromJson(parameter.defaultValue, j, "default_value");
+	fromJson(parameter.minValue, j, "min_value");
+	fromJson(parameter.maxValue, j, "max_value");
+	fromJson(parameter.valueNames, j, "value_names");
 }
 }

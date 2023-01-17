@@ -1,4 +1,5 @@
 #include "PostProcessingEffectCollection.h"
+#include "JSONUtil.h"
 
 namespace pixelpart {
 namespace {
@@ -18,7 +19,7 @@ std::string replace(std::string str, const std::string& to, const std::string& f
 }
 
 std::string PostProcessingEffectCollection::build(const std::string& typeName) const {
-	uint32_t typeIndex = NullId;
+	uint32_t typeIndex = nullId;
 	for(uint32_t i = 0; i < static_cast<uint32_t>(effects.size()); i++) {
 		if(effects[i].name == typeName) {
 			typeIndex = i;
@@ -26,7 +27,7 @@ std::string PostProcessingEffectCollection::build(const std::string& typeName) c
 		}
 	}
 
-	if(typeIndex == NullId) {
+	if(typeIndex == nullId) {
 		return std::string();
 	}
 
@@ -37,7 +38,7 @@ std::string PostProcessingEffectCollection::build(const std::string& typeName) c
 }
 
 const PostProcessingEffectType* PostProcessingEffectCollection::getEffectType(const std::string& name) const {
-	uint32_t typeIndex = NullId;
+	uint32_t typeIndex = nullId;
 	for(uint32_t i = 0; i < effects.size(); i++) {
 		if(effects[i].name == name) {
 			typeIndex = i;
@@ -45,7 +46,7 @@ const PostProcessingEffectType* PostProcessingEffectCollection::getEffectType(co
 		}
 	}
 
-	if(typeIndex == NullId) {
+	if(typeIndex == nullId) {
 		return nullptr;
 	}
 
@@ -60,7 +61,8 @@ void to_json(nlohmann::ordered_json& j, const PostProcessingEffectCollection& ef
 }
 void from_json(const nlohmann::ordered_json& j, PostProcessingEffectCollection& effectCollection) {
 	effectCollection = PostProcessingEffectCollection();
-	effectCollection.effects = j.at("effects");
-	effectCollection.shaderTemplate = j.at("shader_template");
+
+	fromJson(effectCollection.effects, j, "effects");
+	fromJson(effectCollection.shaderTemplate, j, "shader_template");
 }
 }

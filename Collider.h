@@ -1,13 +1,15 @@
 #pragma once
 
 #include "Node.h"
-#include "Curve.h"
-#include <bitset>
 
 namespace pixelpart {
 struct Collider : public Node {
-	std::bitset<256> emitterMask = std::bitset<256>().set();
-	std::vector<vec2d> points = std::vector<vec2d>{ vec2d(-0.5, 0.0), vec2d(+0.5, 0.0) };
+	std::vector<uint32_t> exclusionList;
+	std::vector<vec3d> points = std::vector<vec3d>{
+		vec3d(-0.5, 0.0, 0.0),
+		vec3d(+0.5, 0.0, 0.0)
+	};
+
 	Curve<floatd> bounce = Curve<floatd>(0.5);
 	Curve<floatd> friction = Curve<floatd>(0.5);
 };

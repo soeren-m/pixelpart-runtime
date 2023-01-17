@@ -5,8 +5,8 @@
 namespace pixelpart {
 struct ShaderNode {
 	struct Link {
-		uint32_t id = NullId;
-		uint32_t nodeId = NullId;
+		uint32_t id = nullId;
+		uint32_t nodeId = nullId;
 		uint32_t slot = 0;
 
 		Link();

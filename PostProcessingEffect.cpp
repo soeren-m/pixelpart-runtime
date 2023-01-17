@@ -19,7 +19,8 @@ void to_json(nlohmann::ordered_json& j, const PostProcessingEffect& effect) {
 }
 void from_json(const nlohmann::ordered_json& j, PostProcessingEffect& effect) {
 	effect = PostProcessingEffect();
-	fromJson(effect.type, j, "type", "id");
-	fromJson(effect.parameters, j, "parameters", "");
+
+	fromJson(effect.type, j, "type");
+	fromJson(effect.parameters, j, "parameters");
 }
 }

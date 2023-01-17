@@ -67,7 +67,8 @@ public:
 
 	template <typename IntT>
 	bool contains(IntT x, IntT y) const {
-		return x >= 0 &&
+		return
+			x >= 0 &&
 			y >= 0 &&
 			static_cast<std::size_t>(x) < width &&
 			static_cast<std::size_t>(y) < height;

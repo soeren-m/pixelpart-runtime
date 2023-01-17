@@ -3,7 +3,7 @@
 namespace pixelpart {
 template <>
 nlohmann::ordered_json toJson<uint32_t>(const uint32_t& value) {
-	if(value == NullId) {
+	if(value == nullId) {
 		return nlohmann::ordered_json(nullptr);
 	}
 
@@ -16,7 +16,7 @@ bool fromJson(uint32_t& value, const nlohmann::ordered_json& j, const std::strin
 		const nlohmann::ordered_json& jValue = j.at(key);
 		value = jValue.is_number_unsigned()
 			? jValue.get<uint32_t>()
-			: NullId;
+			: nullId;
 
 		return true;
 	}

@@ -12,9 +12,10 @@ void to_json(nlohmann::ordered_json& j, const PostProcessingEffectType& effectTy
 }
 void from_json(const nlohmann::ordered_json& j, PostProcessingEffectType& effectType) {
 	effectType = PostProcessingEffectType();
-	fromJson(effectType.name, j, "name", "");
-	fromJson(effectType.category, j, "category", "");
-	fromJson(effectType.code, j, "code", "");
-	fromJson(effectType.parameters, j, "parameters", "");
+
+	fromJson(effectType.name, j, "name");
+	fromJson(effectType.category, j, "category");
+	fromJson(effectType.code, j, "code");
+	fromJson(effectType.parameters, j, "parameters");
 }
 }

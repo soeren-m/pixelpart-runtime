@@ -1,4 +1,5 @@
 #include "PostProcessingPipeline.h"
+#include "JSONUtil.h"
 
 namespace pixelpart {
 PostProcessingEffectCollection PostProcessingPipeline::effectCollection = PostProcessingEffectCollection();
@@ -10,6 +11,7 @@ void to_json(nlohmann::ordered_json& j, const PostProcessingPipeline& pipeline) 
 }
 void from_json(const nlohmann::ordered_json& j, PostProcessingPipeline& pipeline) {
 	pipeline = PostProcessingPipeline();
-	pipeline.effects = j.at("effects");
+
+	fromJson(pipeline.effects, j, "effects");
 }
 }

@@ -72,13 +72,13 @@ public:
 		auto task = std::make_shared<std::packaged_task<typename std::result_of<F(Args...)>::type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
 
 		{
-			std::unique_lock<std::mutex> lk(stateMutex);
+			std::unique_lock<std::mutex> lock(stateMutex);
 
 			runningTasks.insert(taskId);
 		}
 
 		{
-			std::unique_lock<std::mutex> lk(queueMutex);
+			std::unique_lock<std::mutex> lock(queueMutex);
 
 			tasks.emplace(std::make_pair(
 				taskId,

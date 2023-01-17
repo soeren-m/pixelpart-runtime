@@ -36,38 +36,50 @@ public:
 		updateIndexMap();
 	}
 
-	uint32_t add(const T& node, uint32_t offsetId = 0) {
-		uint32_t nodeId = offsetId + ((node.id != NullId) ? node.id : 0);
-		while(contains(nodeId)) {
-			nodeId++;
-			offsetId++;
-		}
+	uint32_t set(const T& node, uint32_t baseId) {
+		uint32_t nodeId = (node.id != nullId)
+			? baseId + node.id
+			: baseId;
+		uint32_t parentId = (node.parentId != nullId)
+			? baseId + node.parentId
+			: nullId;
 
 		nodes.push_back(node);
 
 		T& insertedNode = nodes.back();
 		insertedNode.id = nodeId;
-		if(insertedNode.parentId != NullId) {
-			insertedNode.parentId += offsetId;
-		}
-
+		insertedNode.parentId = parentId;
 		updateIndexMap();
 
 		return nodeId;
 	}
 
-	uint32_t duplicate(uint32_t nodeId) {
+	uint32_t add(const T& node) {
+		uint32_t nodeId = (node.id != nullId) ? node.id : 0;
+		while(contains(nodeId)) {
+			nodeId++;
+		}
+
+		nodes.push_back(node);
+		nodes.back().id = nodeId;
+		updateIndexMap();
+
+		return nodeId;
+	}
+
+	uint32_t duplicate(uint32_t nodeId, const std::string& nameExtension = " (copy)") {
 		if(!contains(nodeId)) {
-			return NullId;
+			return nullId;
 		}
 
 		T otherNode = get(nodeId);
-		otherNode.id = NullId;
-		otherNode.parentId = NullId;
+		otherNode.id = nullId;
+		otherNode.parentId = nullId;
 
 		do {
-			otherNode.name += "(copy)";
-		} while(containsWithName(otherNode.name));
+			otherNode.name += nameExtension;
+		}
+		while(containsName(otherNode.name));
 
 		return add(otherNode);
 	}
@@ -80,17 +92,6 @@ public:
 			return;
 		}
 
-		uint32_t nodeId = nodes[index].id;
-		for(T& node : nodes) {
-			if(node.id == nodeId) {
-				continue;
-			}
-
-			if(node.parentId == nodeId) {
-				node.parentId = nodes[index].parentId;
-			}
-		}
-
 		nodes.erase(nodes.begin() + index);
 		updateIndexMap();
 	}
@@ -99,44 +100,10 @@ public:
 		updateIndexMap();
 	}
 
-	void setParent(uint32_t nodeId, uint32_t parentId) {
-		if(!contains(nodeId)) {
-			return;
-		}
-
-		T& node = get(nodeId);
-
-		if(node.parentId != parentId) {
-			if(isDescendent(parentId, nodeId)) {
-				for(Node& otherNode : nodes) {
-					if(otherNode.parentId == nodeId) {
-						otherNode.parentId = node.parentId;
-					}
-				}
-			}
-
-			node.parentId = parentId;
-		}
-	}
-
-	bool isDescendent(uint32_t nodeId, uint32_t ancestorId) const {
-		uint32_t currentId = nodeId;
-		while(contains(currentId)) {
-			const T& node = get(currentId);
-			if(node.parentId == ancestorId) {
-				return true;
-			}
-
-			currentId = node.parentId;
-		}
-
-		return false;
-	}
-
 	uint32_t findById(uint32_t nodeId) const {
 		return (nodeId < indexMap.size())
 			? indexMap[nodeId]
-			: NullId;
+			: nullId;
 	}
 	uint32_t findByParent(uint32_t parentId) const {
 		for(uint32_t i = 0; i < nodes.size(); i++) {
@@ -145,7 +112,7 @@ public:
 			}
 		}
 
-		return NullId;
+		return nullId;
 	}
 	uint32_t findByName(const std::string& name) const {
 		for(uint32_t i = 0; i < nodes.size(); i++) {
@@ -154,17 +121,17 @@ public:
 			}
 		}
 
-		return NullId;
+		return nullId;
 	}
 
 	bool contains(uint32_t nodeId) const {
-		return findById(nodeId) != NullId;
+		return findById(nodeId) != nullId;
 	}
-	bool containsWithParent(uint32_t parentId) const {
-		return findByParent(parentId) != NullId;
+	bool containsParent(uint32_t parentId) const {
+		return findByParent(parentId) != nullId;
 	}
-	bool containsWithName(const std::string& name) const {
-		return findByName(name) != NullId;
+	bool containsName(const std::string& name) const {
+		return findByName(name) != nullId;
 	}
 	bool containsIndex(uint32_t index) const {
 		return index < nodes.size();
@@ -242,7 +209,7 @@ private:
 		for(uint32_t i = 0; i < nodes.size(); i++) {
 			uint32_t nodeId = nodes[i].id;
 			if(nodeId >= indexMap.size()) {
-				indexMap.resize(nodeId + 1, NullId);
+				indexMap.resize(nodeId + 1, nullId);
 			}
 
 			indexMap[nodeId] = i;

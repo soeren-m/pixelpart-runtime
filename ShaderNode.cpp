@@ -35,15 +35,17 @@ void to_json(nlohmann::ordered_json& j, const ShaderNode& node) {
 }
 void from_json(const nlohmann::ordered_json& j, ShaderNode::Link& link) {
 	link = ShaderNode::Link();
-	fromJson(link.id, j, "id", "");
-	fromJson(link.nodeId, j, "node", "");
-	fromJson(link.slot, j, "slot", "");
+
+	fromJson(link.id, j, "id");
+	fromJson(link.nodeId, j, "node");
+	fromJson(link.slot, j, "slot");
 }
 void from_json(const nlohmann::ordered_json& j, ShaderNode& node) {
 	node = ShaderNode();
-	fromJson(node.type, j, "type", "");
-	fromJson(node.inputs , j, "inputs", "");
-	fromJson(node.parameters, j, "parameters", "");
-	fromJson(node.position, j, "position", "");
+
+	fromJson(node.type, j, "type");
+	fromJson(node.inputs , j, "inputs");
+	fromJson(node.parameters, j, "parameters");
+	fromJson(node.position, j, "position");
 }
 }

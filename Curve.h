@@ -389,10 +389,7 @@ void from_json(const nlohmann::ordered_json& j, Curve<T>& curve) {
 	curve.setPoints(points);
 
 	if(j.contains("interpolation")) {
-		const nlohmann::ordered_json& jInterpolation = j.at("interpolation");
-		curve.setInterpolation(jInterpolation.is_number()
-			? static_cast<CurveInterpolation>(jInterpolation.get<int32_t>())
-			: jInterpolation.get<CurveInterpolation>());
+		curve.setInterpolation(j.at("interpolation").get<CurveInterpolation>());
 	}
 }
 }

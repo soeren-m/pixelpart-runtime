@@ -2,13 +2,13 @@
 
 #include "Effect.h"
 #include "ParticleSimulation.h"
-#include <random>
+#include "ParticleContainer.h"
 
 namespace pixelpart {
 class ParticleEngine {
 public:
 	ParticleEngine();
-	ParticleEngine(const Effect* effectPtr, uint32_t capacity, uint32_t numThreadsMax = 0);
+	ParticleEngine(const Effect* fx, uint32_t capacity, uint32_t maxNumThreads = 0);
 
 	void step(floatd dt);
 
@@ -16,18 +16,19 @@ public:
 	void restart();
 	floatd getTime() const;
 
-	void spawnParticles(uint32_t emitterId, uint32_t count);
+	void spawnParticles(uint32_t particleTypeId, uint32_t count);
 
 	void setSeed(uint32_t sd);
 	void resetSeed();
 
-	void setEffect(const Effect* effectPtr);
-	void setParticleCapacity(uint32_t capacity);
+	void setEffect(const Effect* fx);
 	const Effect* getEffect() const;
+
 	uint32_t getParticleCapacity() const;
 	uint32_t getNumParticles() const;
-	uint32_t getNumParticles(uint32_t emitterIndex) const;
-	const ParticleData& getParticles(uint32_t emitterIndex) const;
+	uint32_t getNumParticles(uint32_t particleTypeIndex) const;
+
+	const ParticleData& getParticles(uint32_t particleTypeIndex) const;
 
 	uint32_t getNumActiveThreads() const;
 
@@ -37,26 +38,14 @@ public:
 	void updateCollisionSolver();
 
 private:
-	int32_t sampleUniformInt(int32_t min, int32_t max);
-	floatd sampleUniform(floatd min, floatd max);
-	floatd sampleNormal(floatd min, floatd max);
-	floatd sampleNormalReverse(floatd min, floatd max);
-	floatd sample(ParticleEmitter::Distribution distribution, floatd min, floatd max);
+	uint32_t spawnParticles(uint32_t count, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, floatd t, floatd tParent);
 
-	vec2d generatePointOnSegment(const vec2d& position, floatd length, floatd angle, ParticleEmitter::Distribution distribution);
-	vec2d generatePointInEllipse(const vec2d& position, const vec2d& size, floatd angle, ParticleEmitter::Distribution distribution);
-	vec2d generatePointInRectangle(const vec2d& position, const vec2d& size, floatd angle, ParticleEmitter::Distribution distribution);
-	vec2d generatePointOnPath(const vec2d& position, const Curve<vec2d>& path, ParticleEmitter::Distribution distribution);
-
-	uint32_t emitParticles(uint32_t emitterIndex, uint32_t count, floatd t, floatd tParent = 0.0, uint32_t parentEmitterIndex = NullId, uint32_t parentParticle = NullId);
-	void createParticle(uint32_t emitterIndex, uint32_t p, floatd t, floatd tParent = 0.0, uint32_t parentEmitterIndex = NullId, uint32_t parentParticle = NullId);
-	void destroyParticle(uint32_t emitterIndex, int32_t& p);
+	void createParticle(uint32_t p, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, floatd t, floatd tParent);
 
 	const Effect* effect = nullptr;
-	std::vector<ParticleData> particles;
-	std::vector<uint32_t> numParticles;
-	std::vector<floatd> numParticlesToEmit;
-	std::vector<std::vector<uint32_t>> subEmitterIndices;
+	std::vector<ParticleContainer> particleContainers;
+	std::vector<std::vector<uint32_t>> particleSubTypes;
+	std::vector<floatd> particleSpawnCount;
 	uint32_t particleCapacity = 0;
 	uint32_t particleId = 0;
 	uint32_t seed = 0;
@@ -68,8 +57,5 @@ private:
 	uint32_t numActiveThreads = 0;
 
 	std::mt19937 rng;
-	std::uniform_int_distribution<int32_t> uniformIntDistribution = std::uniform_int_distribution<int32_t>(0);
-	std::uniform_real_distribution<floatd> uniformDistribution = std::uniform_real_distribution<floatd>(0.0, 1.0);
-	std::normal_distribution<floatd> normalDistribution = std::normal_distribution<floatd>(0.0, 0.3);
 };
 }

@@ -22,19 +22,21 @@ void to_json(nlohmann::ordered_json& j, const ShaderNodeType& nodeType) {
 }
 void from_json(const nlohmann::ordered_json& j, ShaderNodeType::Signature& signature) {
 	signature = ShaderNodeType::Signature();
-	fromJson(signature.inputTypes, j, "input_types", "");
-	fromJson(signature.outputTypes, j, "output_types", "");
+
+	fromJson(signature.inputTypes, j, "input_types");
+	fromJson(signature.outputTypes, j, "output_types");
 }
 void from_json(const nlohmann::ordered_json& j, ShaderNodeType& nodeType) {
 	nodeType = ShaderNodeType();
-	fromJson(nodeType.name, j, "name", "");
-	fromJson(nodeType.category, j, "category", "");
-	fromJson(nodeType.code, j, "code", "");
-	fromJson(nodeType.inputs, j, "inputs", "");
-	fromJson(nodeType.outputs,  j, "outputs", "");
-	fromJson(nodeType.signatures, j, "signatures", "");
-	fromJson(nodeType.defaultInputs, j, "default_inputs", "");
-	fromJson(nodeType.parameters, j, "parameters", "");
+
+	fromJson(nodeType.name, j, "name");
+	fromJson(nodeType.category, j, "category");
+	fromJson(nodeType.code, j, "code");
+	fromJson(nodeType.inputs, j, "inputs");
+	fromJson(nodeType.outputs,  j, "outputs");
+	fromJson(nodeType.signatures, j, "signatures");
+	fromJson(nodeType.defaultInputs, j, "default_inputs");
+	fromJson(nodeType.parameters, j, "parameters");
 
 	nodeType.defaultInputs.resize(nodeType.inputs.size());
 }

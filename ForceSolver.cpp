@@ -5,59 +5,74 @@ ForceSolver::ForceSolver() {
 
 }
 
-void ForceSolver::solve(const ParticleEmitter& emitter, ParticleDataPointer& particles, uint32_t p, floatd particleWeight, floatd t, floatd dt) const {
-	for(const ForceField& force : forces) {
-		if(!force.emitterMask[emitter.id] || t < force.lifetimeStart || (t > force.lifetimeStart + force.lifetimeDuration && !force.repeat)) {
+void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd particleWeight, floatd t, floatd dt) const {
+	for(std::size_t f = 0; f < forceFields.size(); f++) {
+		const ForceField& forceField = forceFields[f];
+		if(forceFieldExclusionSets[f][particleType.id] ||
+			t < forceField.lifetimeStart ||
+			t > forceField.lifetimeStart + forceField.lifetimeDuration && !forceField.repeat) {
 			continue;
 		}
 
-		solve(particles, p, particleWeight, t, dt, force);
+		solve(particleType, particles, particleIndex, particleWeight, t, dt, forceField);
 	}
 }
 
-void ForceSolver::solve(ParticleDataPointer& particles, uint32_t p, floatd particleWeight, floatd t, floatd dt, const ForceField& force) const {
-	const floatd alpha = std::fmod(t - force.lifetimeStart, force.lifetimeDuration) / force.lifetimeDuration;
-	const vec2d forceCenter = force.motionPath.get(alpha);
-	const vec2d forceSize = vec2d(force.width.get(alpha), force.height.get(alpha)) * 0.5;
-	const floatd forceOrientation = force.orientation.get(alpha);
-	const floatd forceDirection = force.direction.get(alpha);
-	const floatd forceStrength = force.strength.get(alpha);
+void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd particleWeight, floatd t, floatd dt, const ForceField& forceField) const {
+	floatd alpha = std::fmod(t - forceField.lifetimeStart, forceField.lifetimeDuration) / forceField.lifetimeDuration;
+	vec3d forceFieldCenter = forceField.position.get(alpha);
+	vec3d forceFieldSize = forceField.size.get(alpha) * 0.5;
+	vec3d forceFieldOrientation = glm::radians(forceField.orientation.get(alpha));
+	vec3d forceDirection = glm::radians(forceField.direction.get(alpha));
+	floatd forceStrength = forceField.strength.get(alpha);
 
-	vec2d forceVector = vec2d(0.0);
+	vec3d forceVector = vec3d(0.0);
 	int32_t gridCellX = 0;
 	int32_t gridCellY = 0;
+	int32_t gridCellZ = 0;
 
-	switch(force.type) {
+	switch(forceField.type) {
 		case ForceField::Type::point: {
-			floatd d = std::max(glm::distance(forceCenter, particles.globalPosition[p]), forceSize.x * 0.01);
+			floatd distance = glm::distance(forceFieldCenter, particles.globalPosition[particleIndex]);
 
-			if((d < forceSize.x || forceSize.x < 0.0) && forceCenter != particles.globalPosition[p]) {
-				gridCellX = (forceSize.x > 0.0)
-					? static_cast<int32_t>((particles.globalPosition[p].x - (forceCenter.x - forceSize.x)) / (forceSize.x * 2.0) * static_cast<floatd>(force.gridSize[0]))
+			if(distance < forceFieldSize.x || forceFieldSize.x < 0.0) {
+				gridCellX = (forceFieldSize.x > 0.0)
+					? static_cast<int32_t>((particles.globalPosition[particleIndex].x - (forceFieldCenter.x - forceFieldSize.x)) / (forceFieldSize.x * 2.0) * static_cast<floatd>(forceField.gridSize[0]))
 					: 0;
-				gridCellY = (forceSize.x > 0.0)
-					? static_cast<int32_t>((particles.globalPosition[p].y - (forceCenter.y - forceSize.x)) / (forceSize.x * 2.0) * static_cast<floatd>(force.gridSize[1]))
+				gridCellY = (forceFieldSize.x > 0.0)
+					? static_cast<int32_t>((particles.globalPosition[particleIndex].y - (forceFieldCenter.y - forceFieldSize.x)) / (forceFieldSize.x * 2.0) * static_cast<floatd>(forceField.gridSize[1]))
+					: 0;
+				gridCellZ = (forceFieldSize.x > 0.0)
+					? static_cast<int32_t>((particles.globalPosition[particleIndex].z - (forceFieldCenter.z - forceFieldSize.x)) / (forceFieldSize.x * 2.0) * static_cast<floatd>(forceField.gridSize[2]))
 					: 0;
 
-				forceVector = glm::normalize(forceCenter - particles.globalPosition[p]) / d;
+				forceVector = (distance > 0.0001)
+					? glm::normalize(forceFieldCenter - particles.globalPosition[particleIndex]) / std::max(distance, forceFieldSize.x * 0.01)
+					: vec3d(0.0);
 			}
 
 			break;
 		}
 
 		case ForceField::Type::area: {
-			vec2d rotatedPosition = forceCenter + glm::rotate(particles.globalPosition[p] - forceCenter, -glm::radians(forceOrientation));
+			vec3d rotatedParticlePosition = forceFieldCenter + vec3d(
+				glm::yawPitchRoll(forceFieldOrientation.y, forceFieldOrientation.z, forceFieldOrientation.x) *
+				vec4d(particles.globalPosition[particleIndex] - forceFieldCenter, 1.0));
 
-			if(((rotatedPosition.x > forceCenter.x - forceSize.x && rotatedPosition.x < forceCenter.x + forceSize.x) || forceSize.x < 0.0) &&
-			((rotatedPosition.y > forceCenter.y - forceSize.y && rotatedPosition.y < forceCenter.y + forceSize.y) || forceSize.y < 0.0)) {
-				gridCellX = (forceSize.x > 0.0)
-					? static_cast<int32_t>((rotatedPosition.x - (forceCenter.x - forceSize.x)) / (forceSize.x * 2.0) * static_cast<floatd>(force.gridSize[0]))
+			if(((rotatedParticlePosition.x > forceFieldCenter.x - forceFieldSize.x && rotatedParticlePosition.x < forceFieldCenter.x + forceFieldSize.x) || forceFieldSize.x < 0.0) &&
+			((rotatedParticlePosition.y > forceFieldCenter.y - forceFieldSize.y && rotatedParticlePosition.y < forceFieldCenter.y + forceFieldSize.y) || forceFieldSize.y < 0.0) &&
+			((rotatedParticlePosition.z > forceFieldCenter.z - forceFieldSize.z && rotatedParticlePosition.z < forceFieldCenter.z + forceFieldSize.z) || forceFieldSize.z < 0.0)) {
+				gridCellX = (forceFieldSize.x > 0.0)
+					? static_cast<int32_t>((rotatedParticlePosition.x - (forceFieldCenter.x - forceFieldSize.x)) / (forceFieldSize.x * 2.0) * static_cast<floatd>(forceField.gridSize[0]))
 					: 0;
-				gridCellY = (forceSize.y > 0.0)
-					? static_cast<int32_t>((rotatedPosition.y - (forceCenter.y - forceSize.y)) / (forceSize.y * 2.0) * static_cast<floatd>(force.gridSize[1]))
+				gridCellY = (forceFieldSize.y > 0.0)
+					? static_cast<int32_t>((rotatedParticlePosition.y - (forceFieldCenter.y - forceFieldSize.y)) / (forceFieldSize.y * 2.0) * static_cast<floatd>(forceField.gridSize[1]))
+					: 0;
+				gridCellZ = (forceFieldSize.z > 0.0)
+					? static_cast<int32_t>((rotatedParticlePosition.z - (forceFieldCenter.z - forceFieldSize.z)) / (forceFieldSize.z * 2.0) * static_cast<floatd>(forceField.gridSize[2]))
 					: 0;
 
-				forceVector = glm::rotate(vec2d(0.0, 1.0), glm::radians(forceDirection));
+				forceVector = vec3d(glm::yawPitchRoll(forceDirection.y, forceDirection.z, forceDirection.x) * worldUpVector4);
 			}
 
 			break;
@@ -68,13 +83,31 @@ void ForceSolver::solve(ParticleDataPointer& particles, uint32_t p, floatd parti
 		}
 	}
 
-	forceVector = glm::rotate(forceVector, glm::radians(force.directionVariance * force.directionGrid[gridCellY * force.gridSize[0] + gridCellX]));
-	forceVector *= forceStrength + force.strengthVariance * force.strengthGrid[gridCellY * force.gridSize[0] + gridCellX];
+	uint32_t gridCellIndex = gridCellZ * forceField.gridSize[1] * forceField.gridSize[0] + gridCellY * forceField.gridSize[0] + gridCellX;
+	vec3d gridDirectionOffset = glm::radians(forceField.directionVariance * forceField.directionGrid[gridCellIndex]);
+	floatd gridStrengthOffset = forceField.strengthVariance * forceField.strengthGrid[gridCellIndex];
+
+	forceVector = vec3d(glm::yawPitchRoll(gridDirectionOffset.y, gridDirectionOffset.z, gridDirectionOffset.x) * vec4d(forceVector, 0.0));
+	forceVector *= forceStrength + gridStrengthOffset;
 	forceVector *= particleWeight;
-	particles.force[p] += forceVector;
+	particles.force[particleIndex] += forceVector;
 }
 
-void ForceSolver::update(const std::vector<ForceField>& allForces) {
-	forces = allForces;
+void ForceSolver::update(const Effect* effect) {
+	if(!effect) {
+		forceFields.clear();
+		forceFieldExclusionSets.clear();
+		return;
+	}
+
+	forceFields = effect->forceFields.get();
+
+	forceFieldExclusionSets.resize(forceFields.size());
+	for(std::size_t f = 0; f < forceFields.size(); f++) {
+		forceFieldExclusionSets[f].reset();
+		for(uint32_t particleTypeId : forceFields[f].exclusionList) {
+			forceFieldExclusionSets[f].set(particleTypeId);
+		}
+	}
 }
 }
