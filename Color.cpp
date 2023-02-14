@@ -93,7 +93,7 @@ vec4d hsvAdd(const vec4d& colorRGB, const vec4d& colorHSV, floatd alpha) {
 	hsv.x = (hue < 0.0) ? hue + 360.0 : hue;
 	hsv.y = glm::clamp(hsv.y + colorHSV.y, 0.0, 1.0);
 	hsv.z = glm::clamp(hsv.z + colorHSV.z, 0.0, 1.0);
-	hsv.w = glm::clamp(hsv.w * colorHSV.w * alpha, 0.0, 1.0);
+	hsv.w = hsv.w * colorHSV.w * alpha;
 
 	return hsv2rgb(hsv);
 }
