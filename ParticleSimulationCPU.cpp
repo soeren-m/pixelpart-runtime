@@ -112,13 +112,14 @@ void ParticleSimulationCPU::simulateParticles(const ParticleEmitter& particleEmi
 
 		forceSolver.solve(particleType,
 			particles, p,
-			particleType.weight.get(particles.life[p]),
 			t, dt);
 
 		collisionSolver.solve(particleType,
 			particles, p,
-			particleType.bounce.get(particles.life[p]),
-			particleType.friction.get(particles.life[p]),
+			t, dt);
+
+		MotionPathSolver::solve(particleType,
+			particles, p,
 			t, dt);
 	}
 
@@ -148,11 +149,6 @@ void ParticleSimulationCPU::simulateParticles(const ParticleEmitter& particleEmi
 		particles.velocity[p] += particles.force[p] * dt;
 		particles.velocity[p] *= std::pow(particleType.damping.get(particles.life[p]), dt);
 		particles.position[p] += particles.velocity[p] * dt;
-
-		particles.position[p] = glm::mix(
-			particles.position[p],
-			particleType.position.get(particles.life[p]),
-			particleType.motionPathInfluence);
 
 		particles.globalPosition[p] = particleType.positionRelative
 			? particles.position[p] + particleEmitter.position.get(particleEmitterLife)

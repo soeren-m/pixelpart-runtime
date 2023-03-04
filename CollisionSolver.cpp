@@ -45,7 +45,7 @@ CollisionSolver::CollisionSolver() : grid(1, 1) {
 
 }
 
-void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd particleBounce, floatd particleFriction, floatd t, floatd dt) const {
+void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd t, floatd dt) const {
 	GridIndex<int32_t> startIndex = toGridIndex(particles.globalPosition[particleIndex]);
 	GridIndex<int32_t> endIndex = toGridIndex(particles.globalPosition[particleIndex] + particles.velocity[particleIndex] * dt + particles.force[particleIndex] * dt * dt);
 
@@ -71,10 +71,10 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointe
 			continue;
 		}
 
-		solve(particleType, particles, particleIndex, particleBounce, particleFriction, t, dt, collider);
+		solve(particleType, particles, particleIndex, t, dt, collider);
 	}
 }
-void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd particleBounce, floatd particleFriction, floatd t, floatd dt, const LineCollider& collider) const {
+void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd t, floatd dt, const LineCollider& collider) const {
 	vec2d closestPoint = vec2d(0.0);
 	if(!getClosestPointOnSegment(collider.p1, collider.p2, particles.globalPosition[particleIndex], closestPoint)) {
 		return;
@@ -95,8 +95,8 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointe
 		vec2d segmentVector = glm::normalize(collider.p2 - collider.p1);
 		floatd slideFactor = glm::dot((globalParticleForce != vec2d(0.0)) ? glm::normalize(globalParticleForce) : vec2d(0.0, 1.0), segmentVector) * glm::length(globalParticleForce) * distance / particleRadius;
 		floatd alpha = std::fmod(t - collider.lifetimeStart, collider.lifetimeDuration) / collider.lifetimeDuration;
-		floatd bounce = collider.bounce.get(alpha) * particleBounce;
-		floatd friction = std::min(collider.friction.get(alpha) * particleFriction, 1.0);
+		floatd bounce = collider.bounce.get(alpha) * particleType.bounce.get(particles.life[particleIndex]);
+		floatd friction = std::min(collider.friction.get(alpha) * particleType.friction.get(particles.life[particleIndex]), 1.0);
 
 		particles.velocity[particleIndex] = vec3d(reflectedVelocity * bounce, particles.velocity[particleIndex].z);
 		particles.velocity[particleIndex] += vec3d(segmentVector * slideFactor * (1.0 - friction), 0.0);
@@ -106,7 +106,7 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointe
 		vec2d normal = glm::normalize(colliderToParticle);
 		vec2d reflectedVelocity = glm::reflect(globalParticleVelocity, normal);
 		floatd alpha = std::fmod(t - collider.lifetimeStart, collider.lifetimeDuration) / collider.lifetimeDuration;
-		floatd bounce = collider.bounce.get(alpha) * particleBounce;
+		floatd bounce = collider.bounce.get(alpha) * particleType.bounce.get(particles.life[particleIndex]);
 
 		particles.velocity[particleIndex] = vec3d(reflectedVelocity * bounce, particles.velocity[particleIndex].z);
 	}

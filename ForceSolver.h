@@ -10,8 +10,8 @@ class ForceSolver {
 public:
 	ForceSolver();
 
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd particleWeight, floatd t, floatd dt) const;
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd particleWeight, floatd t, floatd dt, const ForceField& forceField) const;
+	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd t, floatd dt) const;
+	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd t, floatd dt, const ForceField& forceField) const;
 
 	void update(const Effect* effect);
 

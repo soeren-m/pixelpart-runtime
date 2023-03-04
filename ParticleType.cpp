@@ -17,7 +17,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "lifespan_variance", particleType.lifespanVariance },
 
 		{ "position_relative", particleType.positionRelative },
-		{ "motion_path_influence", particleType.motionPathInfluence },
+		{ "motion_path_force", particleType.motionPathForce },
 		{ "initial_velocity", particleType.initialVelocity },
 		{ "velocity_variance", particleType.velocityVariance },
 		{ "acceleration", particleType.acceleration },
@@ -68,7 +68,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	fromJson(particleType.lifespanVariance, j, "lifespan_variance");
 
 	fromJson(particleType.positionRelative, j, "position_relative");
-	fromJson(particleType.motionPathInfluence, j, "motion_path_influence");
+	fromJson(particleType.motionPathForce, j, "motion_path_force");
 	fromJson(particleType.initialVelocity, j, "initial_velocity");
 	fromJson(particleType.velocityVariance, j, "velocity_variance");
 	fromJson(particleType.acceleration, j, "acceleration");

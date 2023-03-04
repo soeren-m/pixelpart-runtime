@@ -19,7 +19,7 @@ struct ParticleType : public Node {
 	floatd lifespanVariance = 0.0;
 
 	bool positionRelative = false;
-	floatd motionPathInfluence = 0.0;
+	floatd motionPathForce = 0.0;
 	Curve<floatd> initialVelocity = Curve<floatd>(1.0);
 	floatd velocityVariance = 0.0;
 	Curve<floatd> acceleration = Curve<floatd>(0.0);

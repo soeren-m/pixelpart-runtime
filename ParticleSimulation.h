@@ -1,5 +1,6 @@
 #pragma once
 
+#include "MotionPathSolver.h"
 #include "ForceSolver.h"
 #include "CollisionSolver.h"
 

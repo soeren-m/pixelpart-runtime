@@ -5,7 +5,7 @@ ForceSolver::ForceSolver() {
 
 }
 
-void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd particleWeight, floatd t, floatd dt) const {
+void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd t, floatd dt) const {
 	for(std::size_t f = 0; f < forceFields.size(); f++) {
 		const ForceField& forceField = forceFields[f];
 		if(forceFieldExclusionSets[f][particleType.id] ||
@@ -14,11 +14,11 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& p
 			continue;
 		}
 
-		solve(particleType, particles, particleIndex, particleWeight, t, dt, forceField);
+		solve(particleType, particles, particleIndex, t, dt, forceField);
 	}
 }
 
-void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd particleWeight, floatd t, floatd dt, const ForceField& forceField) const {
+void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd t, floatd dt, const ForceField& forceField) const {
 	floatd alpha = std::fmod(t - forceField.lifetimeStart, forceField.lifetimeDuration) / forceField.lifetimeDuration;
 	vec3d forceFieldCenter = forceField.position.get(alpha);
 	vec3d forceFieldSize = forceField.size.get(alpha) * 0.5;
@@ -89,7 +89,7 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& p
 
 	forceVector = vec3d(glm::yawPitchRoll(gridDirectionOffset.y, gridDirectionOffset.z, gridDirectionOffset.x) * vec4d(forceVector, 0.0));
 	forceVector *= forceStrength + gridStrengthOffset;
-	forceVector *= particleWeight;
+	forceVector *= particleType.weight.get(particles.life[particleIndex]);
 	particles.force[particleIndex] += forceVector;
 }
 
