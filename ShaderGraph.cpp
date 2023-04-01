@@ -398,6 +398,13 @@ void ShaderGraph::unlinkNodes(uint32_t linkId) {
 		}
 	}
 }
+void ShaderGraph::setNodeName(uint32_t nodeId, const std::string& name) {
+	if(!hasNode(nodeId)) {
+		return;
+	}
+
+	nodes[nodeId].name = name;
+}
 void ShaderGraph::setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, ShaderParameter::Value value) {
 	if(!hasNode(nodeId) || parameterIndex >= nodes[nodeId].parameters.size()) {
 		return;

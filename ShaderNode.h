@@ -17,6 +17,7 @@ struct ShaderNode {
 	ShaderNode(const ShaderNodeType& nodeType);
 
 	std::string type;
+	std::string name;
 	std::vector<Link> inputs;
 	std::vector<ShaderParameter::Value> parameters;
 

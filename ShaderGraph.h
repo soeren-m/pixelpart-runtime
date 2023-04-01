@@ -51,6 +51,7 @@ public:
 	void linkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, const std::string& sourceSlotName, const std::string& targetSlotName);
 	void unlinkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, uint32_t targetSlot);
 	void unlinkNodes(uint32_t linkId);
+	void setNodeName(uint32_t nodeId, const std::string& name);
 	void setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, ShaderParameter::Value value);
 	void setNodeParameter(uint32_t nodeId, const std::string& parameterName, ShaderParameter::Value value);
 	void setNodePosition(uint32_t nodeId, const vec2d& position);
