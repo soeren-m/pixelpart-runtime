@@ -1,14 +1,11 @@
 #include "ParticleEngine.h"
 #include "ParticleEmission.h"
-#include "ParticleSimulationCPU.h"
 
 namespace pixelpart {
-ParticleEngine::ParticleEngine() : ParticleEngine(nullptr, 1000) {
+ParticleEngine::ParticleEngine() {
 
 }
-ParticleEngine::ParticleEngine(const Effect* fx, uint32_t capacity, uint32_t maxNumThreads) : effect(fx), particleCapacity(capacity) {
-	particleSimulation = std::unique_ptr<ParticleSimulationCPU>(new ParticleSimulationCPU(maxNumThreads));
-
+ParticleEngine::ParticleEngine(const Effect* fx, uint32_t capacity, std::unique_ptr<ParticleSolver> solver) : effect(fx), particleCapacity(capacity), particleSolver(std::move(solver)) {
 	resetSeed();
 	updateSolvers();
 }
@@ -16,7 +13,7 @@ ParticleEngine::ParticleEngine(const Effect* fx, uint32_t capacity, uint32_t max
 void ParticleEngine::step(floatd dt) {
 	time += dt;
 
-	if(!effect) {
+	if(!effect || !particleSolver) {
 		return;
 	}
 
@@ -164,13 +161,11 @@ void ParticleEngine::step(floatd dt) {
 		const ParticleEmitter& particleEmitter = effect->particleEmitters.get(particleType.parentId);
 		ParticleContainer& particleContainer = particleContainers[particleTypeIndex];
 
-		particleSimulation->simulate(
+		particleSolver->solve(
 			particleEmitter,
 			particleType,
 			particleContainer.get(),
 			particleContainer.getNumParticles(),
-			forceSolver,
-			collisionSolver,
 			time,
 			dt);
 
@@ -186,7 +181,7 @@ void ParticleEngine::step(floatd dt) {
 			}
 		}
 
-		numActiveThreads = std::max(numActiveThreads, particleSimulation->getNumActiveThreads());
+		numActiveThreads = std::max(numActiveThreads, particleSolver->getNumActiveThreads());
 	}
 }
 
@@ -240,7 +235,6 @@ void ParticleEngine::resetSeed() {
 
 void ParticleEngine::setEffect(const Effect* fx) {
 	effect = fx;
-
 	updateSolvers();
 }
 const Effect* ParticleEngine::getEffect() const {
@@ -270,10 +264,18 @@ uint32_t ParticleEngine::getNumActiveThreads() const {
 	return numActiveThreads;
 }
 
+void ParticleEngine::setSolver(std::unique_ptr<ParticleSolver> solver) {
+	particleSolver = std::move(solver);
+	updateSolvers();
+}
 void ParticleEngine::updateSolvers() {
 	updateParticleSolver();
-	updateForceSolver();
-	updateCollisionSolver();
+
+	if(particleSolver) {
+		particleSolver->refresh(effect,
+			ParticleSolver::refresh_force |
+			ParticleSolver::refresh_collision);
+	}
 }
 void ParticleEngine::updateParticleSolver() {
 	particleContainers.clear();
@@ -306,10 +308,17 @@ void ParticleEngine::updateParticleSolver() {
 	restart();
 }
 void ParticleEngine::updateForceSolver() {
-	forceSolver.update(effect);
+	if(particleSolver) {
+		particleSolver->refresh(effect, ParticleSolver::refresh_force);
+	}
 }
 void ParticleEngine::updateCollisionSolver() {
-	collisionSolver.update(effect);
+	if(particleSolver) {
+		particleSolver->refresh(effect, ParticleSolver::refresh_collision);
+	}
+}
+const ParticleSolver* ParticleEngine::getSolver() const {
+	return particleSolver.get();
 }
 
 uint32_t ParticleEngine::spawnParticles(uint32_t count, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, floatd t, floatd tParent) {

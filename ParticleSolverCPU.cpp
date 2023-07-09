@@ -1,9 +1,8 @@
-#include "ParticleSimulationCPU.h"
+#include "ParticleSolverCPU.h"
 #include "Color.h"
-#include <algorithm>
 
 namespace pixelpart {
-ParticleSimulationCPU::ParticleSimulationCPU(uint32_t numThreads) {
+ParticleSolverCPU::ParticleSolverCPU(uint32_t numThreads) {
 #ifndef __EMSCRIPTEN__
 	threadPool = std::unique_ptr<ThreadPool>(
 		new ThreadPool((numThreads > 0)
@@ -12,7 +11,7 @@ ParticleSimulationCPU::ParticleSimulationCPU(uint32_t numThreads) {
 #endif
 }
 
-void ParticleSimulationCPU::simulate(const ParticleEmitter& particleEmitter, const ParticleType& particleType, ParticleData& particles, uint32_t numParticles, const ForceSolver& forceSolver, const CollisionSolver& collisionSolver, floatd t, floatd dt) {
+void ParticleSolverCPU::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType, ParticleData& particles, uint32_t numParticles, floatd t, floatd dt) {
 #ifndef __EMSCRIPTEN__
 	numActiveThreads = std::min(std::max(numParticles / numParticlesPerThread, 1U), static_cast<uint32_t>(threadPool->getNumThreads()));
 
@@ -44,7 +43,13 @@ void ParticleSimulationCPU::simulate(const ParticleEmitter& particleEmitter, con
 				particles.initialColor.data() + workgroupIndex
 			};
 
-			threadPool->enqueue(i, &simulateParticles, particleEmitter, particleType, workgroupParticles, workgroupSize, forceSolver, collisionSolver, t, dt);
+			threadPool->enqueue(i, &simulateParticles,
+				particleEmitter, particleType,
+				workgroupParticles, workgroupSize,
+				t, dt,
+				forceSolver,
+				collisionSolver,
+				motionPathSolver);
 
 			workgroupIndex += workgroupSize;
 		}
@@ -76,21 +81,46 @@ void ParticleSimulationCPU::simulate(const ParticleEmitter& particleEmitter, con
 			particles.initialColor.data()
 		};
 
-		simulateParticles(particleEmitter, particleType, workgroupParticles, numParticles, forceSolver, collisionSolver, t, dt);
+		simulateParticles(
+			particleEmitter, particleType,
+			workgroupParticles, numParticles,
+			t, dt,
+			forceSolver,
+			collisionSolver,
+			motionPathSolver);
+	}
+}
+void ParticleSolverCPU::refresh(const Effect* effect, uint32_t flags) {
+	if(flags & refresh_force) {
+		forceSolver.update(effect);
+	}
+	if(flags & refresh_collision) {
+		collisionSolver.update(effect);
 	}
 }
 
-uint32_t ParticleSimulationCPU::getNumActiveThreads() const {
+uint32_t ParticleSolverCPU::getNumActiveThreads() const {
 	return numActiveThreads;
 }
 
-void ParticleSimulationCPU::setNumParticlesPerThread(uint32_t num) {
+void ParticleSolverCPU::setNumParticlesPerThread(uint32_t num) {
 	numParticlesPerThread = std::max(num, 1U);
 }
 
-void ParticleSimulationCPU::simulateParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType, ParticleDataPointer particles, uint32_t workgroupSize, const ForceSolver& forceSolver, const CollisionSolver& collisionSolver, floatd t, floatd dt) {
+void ParticleSolverCPU::simulateParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+ParticleDataPointer particles, uint32_t workgroupSize,
+floatd t, floatd dt,
+const ForceSolver& forceSolver,
+const CollisionSolver& collisionSolver,
+const MotionPathSolver& motionPathSolver) {
+	floatd particleEmitterLife = std::fmod(t - particleEmitter.lifetimeStart, particleEmitter.lifetimeDuration) / particleEmitter.lifetimeDuration;
+	vec3d particleEmitterPosition = particleEmitter.position.get(particleEmitterLife);
+
 	for(uint32_t p = 0; p < workgroupSize; p++) {
 		particles.size[p] = particleType.size.get(particles.life[p]) * particles.initialSize[p];
+	}
+
+	for(uint32_t p = 0; p < workgroupSize; p++) {
 		particles.color[p] = hsvAdd(
 			particleType.color.get(particles.life[p]),
 			particles.initialColor[p],
@@ -98,30 +128,20 @@ void ParticleSimulationCPU::simulateParticles(const ParticleEmitter& particleEmi
 	}
 
 	for(uint32_t p = 0; p < workgroupSize; p++) {
-		floatd particleEmitterLife = std::fmod(t - particleEmitter.lifetimeStart, particleEmitter.lifetimeDuration) / particleEmitter.lifetimeDuration;
-		vec3d prticleEmitterPosition = particleEmitter.position.get(particleEmitterLife);
 		vec3d forwardDirection = (particles.velocity[p] != vec3d(0.0))
 			? glm::normalize(particles.velocity[p])
 			: vec3d(0.0);
-		vec3d radialDirection = (prticleEmitterPosition != particles.globalPosition[p])
-			? glm::normalize(prticleEmitterPosition - particles.globalPosition[p])
+		vec3d radialDirection = (particleEmitterPosition != particles.globalPosition[p])
+			? glm::normalize(particleEmitterPosition - particles.globalPosition[p])
 			: vec3d(0.0);
 
 		particles.force[p] = forwardDirection * particleType.acceleration.get(particles.life[p]);
 		particles.force[p] += radialDirection * particleType.radialAcceleration.get(particles.life[p]);
-
-		forceSolver.solve(particleType,
-			particles, p,
-			t, dt);
-
-		collisionSolver.solve(particleType,
-			particles, p,
-			t, dt);
-
-		MotionPathSolver::solve(particleType,
-			particles, p,
-			t, dt);
 	}
+
+	forceSolver.solve(particleType, particles, workgroupSize, t, dt);
+	collisionSolver.solve(particleType, particles, workgroupSize, t, dt);
+	motionPathSolver.solve(particleType, particles, workgroupSize, t, dt);
 
 	switch(particleType.rotationMode) {
 		case RotationMode::angle: {
@@ -144,14 +164,12 @@ void ParticleSimulationCPU::simulateParticles(const ParticleEmitter& particleEmi
 	}
 
 	for(uint32_t p = 0; p < workgroupSize; p++) {
-		floatd particleEmitterLife = std::fmod(t - particleEmitter.lifetimeStart, particleEmitter.lifetimeDuration) / particleEmitter.lifetimeDuration;
-
 		particles.velocity[p] += particles.force[p] * dt;
 		particles.velocity[p] *= std::pow(particleType.damping.get(particles.life[p]), dt);
 		particles.position[p] += particles.velocity[p] * dt;
 
 		particles.globalPosition[p] = particleType.positionRelative
-			? particles.position[p] + particleEmitter.position.get(particleEmitterLife)
+			? particles.position[p] + particleEmitterPosition
 			: particles.position[p];
 	}
 }

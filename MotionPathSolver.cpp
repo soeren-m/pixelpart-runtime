@@ -5,22 +5,24 @@ MotionPathSolver::MotionPathSolver() {
 
 }
 
-void MotionPathSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd t, floatd dt) {
+void MotionPathSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, floatd t, floatd dt) const {
+	const floatd positionLookahead = 0.1;
+	const floatd targetLookahead = 0.01;
+
 	if(particleType.motionPathForce < 0.1) {
 		return;
 	}
 
-	const floatd positionLookahead = 0.1;
-	const floatd targetLookahead = 0.01;
+	for(uint32_t p = 0; p < numParticles; p++) {
+		vec3d predictedPosition = particles.position[p] +
+			particles.velocity[p] * positionLookahead +
+			particles.force[p] * positionLookahead * positionLookahead;
 
-	vec3d predictedPosition = particles.position[particleIndex] +
-		particles.velocity[particleIndex] * positionLookahead +
-		particles.force[particleIndex] * positionLookahead * positionLookahead;
+		vec3d targetPosition = particleType.position.get(particles.life[p] + targetLookahead);
+		vec3d targetVelocity = targetPosition - predictedPosition;
+		targetVelocity *= particleType.motionPathForce;
 
-	vec3d targetPosition = particleType.position.get(particles.life[particleIndex] + targetLookahead);
-	vec3d targetVelocity = targetPosition - predictedPosition;
-	targetVelocity *= particleType.motionPathForce;
-
-	particles.force[particleIndex] += targetVelocity - particles.velocity[particleIndex];
+		particles.force[p] += targetVelocity - particles.velocity[p];
+	}
 }
 }

@@ -45,47 +45,53 @@ CollisionSolver::CollisionSolver() : grid(1, 1) {
 
 }
 
-void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd t, floatd dt) const {
-	GridIndex<int32_t> startIndex = toGridIndex(particles.globalPosition[particleIndex]);
-	GridIndex<int32_t> endIndex = toGridIndex(particles.globalPosition[particleIndex] + particles.velocity[particleIndex] * dt + particles.force[particleIndex] * dt * dt);
-
-	if(startIndex.x > endIndex.x) {
-		std::swap(startIndex.x, endIndex.x);
-	}
-	if(startIndex.y > endIndex.y) {
-		std::swap(startIndex.y, endIndex.y);
-	}
-
-	std::unordered_set<uint32_t> potentialColliders;
-	for(int32_t cy = startIndex.y; cy <= endIndex.y; cy++) {
-		for(int32_t cx = startIndex.x; cx <= endIndex.x; cx++) {
-			findPotentialColliders(potentialColliders, cx, cy, particles.size[particleIndex]);
-		}
-	}
-
-	for(uint32_t i : potentialColliders) {
-		const LineCollider& collider = colliders[i];
-		if(collider.exclusionSet[particleType.id] ||
-			t < collider.lifetimeStart ||
-			t > collider.lifetimeStart + collider.lifetimeDuration && !collider.repeat) {
-			continue;
-		}
-
-		solve(particleType, particles, particleIndex, t, dt, collider);
-	}
-}
-void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd t, floatd dt, const LineCollider& collider) const {
-	vec2d closestPoint = vec2d(0.0);
-	if(!getClosestPointOnSegment(collider.p1, collider.p2, particles.globalPosition[particleIndex], closestPoint)) {
+void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, floatd t, floatd dt) const {
+	if(colliders.empty()) {
 		return;
 	}
 
-	vec2d globalParticlePosition = vec2d(particles.globalPosition[particleIndex]);
-	vec2d globalParticleVelocity = vec2d(particles.velocity[particleIndex]);
-	vec2d globalParticleForce = vec2d(particles.force[particleIndex]);
+	for(uint32_t p = 0; p < numParticles; p++) {
+		GridIndex<int32_t> startIndex = toGridIndex(particles.globalPosition[p]);
+		GridIndex<int32_t> endIndex = toGridIndex(particles.globalPosition[p] + particles.velocity[p] * dt + particles.force[p] * dt * dt);
+
+		if(startIndex.x > endIndex.x) {
+			std::swap(startIndex.x, endIndex.x);
+		}
+		if(startIndex.y > endIndex.y) {
+			std::swap(startIndex.y, endIndex.y);
+		}
+
+		std::unordered_set<uint32_t> potentialColliders;
+		for(int32_t cy = startIndex.y; cy <= endIndex.y; cy++) {
+			for(int32_t cx = startIndex.x; cx <= endIndex.x; cx++) {
+				findPotentialColliders(potentialColliders, cx, cy, particles.size[p]);
+			}
+		}
+
+		for(uint32_t i : potentialColliders) {
+			const LineCollider& collider = colliders[i];
+			if(collider.exclusionSet[particleType.id] ||
+				t < collider.lifetimeStart ||
+				t > collider.lifetimeStart + collider.lifetimeDuration && !collider.repeat) {
+				continue;
+			}
+
+			solve(particleType, particles, p, t, dt, collider);
+		}
+	}
+}
+void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t p, floatd t, floatd dt, const LineCollider& collider) const {
+	vec2d closestPoint = vec2d(0.0);
+	if(!getClosestPointOnSegment(collider.p1, collider.p2, particles.globalPosition[p], closestPoint)) {
+		return;
+	}
+
+	vec2d globalParticlePosition = vec2d(particles.globalPosition[p]);
+	vec2d globalParticleVelocity = vec2d(particles.velocity[p]);
+	vec2d globalParticleForce = vec2d(particles.force[p]);
 	vec2d colliderToParticle = globalParticlePosition - closestPoint;
 	floatd distanceSqr = glm::length2(colliderToParticle);
-	floatd particleRadius = std::max(std::min(particles.size[particleIndex].x, particles.size[particleIndex].y) * 0.5, 0.01);
+	floatd particleRadius = std::max(std::min(particles.size[p].x, particles.size[p].y) * 0.5, 0.01);
 	vec2d intersectionPoint = vec2d(0.0);
 
 	if(distanceSqr <= particleRadius * particleRadius) {
@@ -95,20 +101,20 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointe
 		vec2d segmentVector = glm::normalize(collider.p2 - collider.p1);
 		floatd slideFactor = glm::dot((globalParticleForce != vec2d(0.0)) ? glm::normalize(globalParticleForce) : vec2d(0.0, 1.0), segmentVector) * glm::length(globalParticleForce) * distance / particleRadius;
 		floatd alpha = std::fmod(t - collider.lifetimeStart, collider.lifetimeDuration) / collider.lifetimeDuration;
-		floatd bounce = collider.bounce.get(alpha) * particleType.bounce.get(particles.life[particleIndex]);
-		floatd friction = std::min(collider.friction.get(alpha) * particleType.friction.get(particles.life[particleIndex]), 1.0);
+		floatd bounce = collider.bounce.get(alpha) * particleType.bounce.get(particles.life[p]);
+		floatd friction = std::min(collider.friction.get(alpha) * particleType.friction.get(particles.life[p]), 1.0);
 
-		particles.velocity[particleIndex] = vec3d(reflectedVelocity * bounce, particles.velocity[particleIndex].z);
-		particles.velocity[particleIndex] += vec3d(segmentVector * slideFactor * (1.0 - friction), 0.0);
-		particles.position[particleIndex] += vec3d(normal * (particleRadius - distance), 0.0);
+		particles.velocity[p] = vec3d(reflectedVelocity * bounce, particles.velocity[p].z);
+		particles.velocity[p] += vec3d(segmentVector * slideFactor * (1.0 - friction), 0.0);
+		particles.position[p] += vec3d(normal * (particleRadius - distance), 0.0);
 	}
 	else if(getIntersectionSegmentSegment(collider.p1, collider.p2, globalParticlePosition, globalParticlePosition + globalParticleVelocity * dt + globalParticleForce * dt * dt, intersectionPoint)) {
 		vec2d normal = glm::normalize(colliderToParticle);
 		vec2d reflectedVelocity = glm::reflect(globalParticleVelocity, normal);
 		floatd alpha = std::fmod(t - collider.lifetimeStart, collider.lifetimeDuration) / collider.lifetimeDuration;
-		floatd bounce = collider.bounce.get(alpha) * particleType.bounce.get(particles.life[particleIndex]);
+		floatd bounce = collider.bounce.get(alpha) * particleType.bounce.get(particles.life[p]);
 
-		particles.velocity[particleIndex] = vec3d(reflectedVelocity * bounce, particles.velocity[particleIndex].z);
+		particles.velocity[p] = vec3d(reflectedVelocity * bounce, particles.velocity[p].z);
 	}
 }
 

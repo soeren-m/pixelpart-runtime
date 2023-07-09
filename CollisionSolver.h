@@ -27,8 +27,8 @@ public:
 
 	CollisionSolver();
 
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd t, floatd dt) const;
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t particleIndex, floatd t, floatd dt, const LineCollider& collider) const;
+	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, floatd t, floatd dt) const;
+	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t p, floatd t, floatd dt, const LineCollider& collider) const;
 
 	void update(const Effect* effect);
 
