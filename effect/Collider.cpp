@@ -14,6 +14,9 @@ void to_json(nlohmann::ordered_json& j, const Collider& collider) {
 
 		{ "exclusion_list", collider.exclusionList },
 		{ "points", collider.points },
+		{ "width", collider.width },
+		{ "orientation", collider.orientation },
+		{ "kill_on_contact", collider.killOnContact },
 
 		{ "bounce", collider.bounce },
 		{ "friction", collider.friction }
@@ -32,6 +35,9 @@ void from_json(const nlohmann::ordered_json& j, Collider& collider) {
 
 	fromJson(collider.exclusionList, j, "exclusion_list");
 	fromJson(collider.points, j, "points");
+	fromJson(collider.width, j, "width");
+	fromJson(collider.orientation, j, "orientation");
+	fromJson(collider.killOnContact, j, "kill_on_contact");
 
 	fromJson(collider.bounce, j, "bounce");
 	fromJson(collider.friction, j, "friction");

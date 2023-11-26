@@ -9,6 +9,9 @@ struct Collider : public Node {
 		vec3d(-0.5, 0.0, 0.0),
 		vec3d(+0.5, 0.0, 0.0)
 	};
+	floatd width = 1.0;
+	floatd orientation = 0.0;
+	bool killOnContact = false;
 
 	Curve<floatd> bounce = Curve<floatd>(0.5);
 	Curve<floatd> friction = Curve<floatd>(0.5);
