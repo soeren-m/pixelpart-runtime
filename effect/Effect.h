@@ -5,14 +5,18 @@
 #include "ParticleType.h"
 #include "ForceField.h"
 #include "Collider.h"
+#include "EffectResourceSet.h"
 
 namespace pixelpart {
 struct Effect {
+	bool is3d = false;
+
 	NodeCollection<ParticleEmitter> particleEmitters;
 	NodeCollection<ParticleType> particleTypes;
 	NodeCollection<ForceField> forceFields;
 	NodeCollection<Collider> colliders;
-	bool is3d = false;
+
+	EffectResourceSet resources;
 };
 
 bool isNameUsed(const Effect& effect, const std::string& name);

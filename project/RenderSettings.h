@@ -4,17 +4,21 @@
 
 namespace pixelpart {
 struct RenderSettings {
-	uint32_t frameWidth = 1;
-	uint32_t frameHeight = 1;
+	uint32_t frameWidth = 1u;
+	uint32_t frameHeight = 1u;
+
 	floatd captureRate = 30.0;
 	floatd duration = 1.0;
 	floatd delay = 0.0;
 	floatd playbackSpeed = 1.0;
+
 	bool loop = false;
 	bool backgroundEnabled = true;
 	bool postProcessingEnabled = true;
 	bool seamlessRenderingEnabled = false;
-	uint32_t simulationSeed = 0;
+	vec4d backgroundColor = vec4d(0.0);
+
+	uint32_t simulationSeed = 0u;
 };
 
 void to_json(nlohmann::ordered_json& j, const RenderSettings& settings);

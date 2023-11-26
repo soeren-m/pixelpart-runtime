@@ -1,13 +1,14 @@
 #pragma once
 
-#include "../common/Types.h"
+#include "Resource.h"
 #include <vector>
 
 namespace pixelpart {
-struct ImageResource {
-	uint32_t width = 0;
-	uint32_t height = 0;
-	uint32_t bpp = 0;
+struct ImageResource : public Resource {
+	uint32_t width = 0u;
+	uint32_t height = 0u;
+	uint32_t bpp = 0u;
+
 	std::vector<unsigned char> data;
 };
 

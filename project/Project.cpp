@@ -10,22 +10,16 @@ void to_json(nlohmann::ordered_json& j, const Project& project) {
 
 		{ "effect", project.effect },
 
-		{ "postprocessing_pipeline", project.postProcessingPipeline },
-		{ "background_color", project.backgroundColor },
-		{ "camera_position", project.cameraPosition },
-		{ "camera_zoom", project.cameraZoom },
-		{ "camera_fov", project.cameraFieldOfView },
-		{ "camera_pitch", project.cameraPitch },
-		{ "camera_yaw", project.cameraYaw },
-		{ "camera_roll", project.cameraRoll },
+		{ "post_processing", project.postProcessingPipeline },
 
-		{ "render_settings", project.renderSettings },
-		{ "preview_settings", project.previewSettings },
+		{ "camera", project.cameraSettings },
+		{ "render", project.renderSettings },
+		{ "preview", project.previewSettings },
 	};
 }
 void from_json(const nlohmann::ordered_json& j, Project& project) {
 	uint32_t version = j.at("version");
-	if(version < 7 || version > Project::version) {
+	if(version != Project::version) {
 		throw std::runtime_error("Unsupported project version " + std::to_string(version));
 	}
 
@@ -79,51 +73,32 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 		}
 	}
 
-	fromJson(project.postProcessingPipeline, j, "postprocessing_pipeline");
-	fromJson(project.backgroundColor, j, "background_color");
-	fromJson(project.cameraPosition, j, "camera_position");
-	fromJson(project.cameraZoom, j, "camera_zoom");
-	fromJson(project.cameraFieldOfView, j, "camera_fov");
-	fromJson(project.cameraPitch, j, "camera_pitch");
-	fromJson(project.cameraYaw, j, "camera_yaw");
-	fromJson(project.cameraRoll, j, "camera_roll");
+	fromJson(project.postProcessingPipeline, j, "post_processing");
 
-	fromJson(project.renderSettings, j, "render_settings");
-	fromJson(project.previewSettings, j, "preview_settings");
+	fromJson(project.cameraSettings, j, "camera");
+	fromJson(project.renderSettings, j, "render");
+	fromJson(project.previewSettings, j, "preview");
 }
 
-std::string serialize(const Project& project, const ResourceDatabase& resources, int32_t indent) {
-	ResourceDatabase requiredResources;
-	for(const auto& imageResource : resources.images) {
-		if(isResourceUsed(project.effect, imageResource.first)) {
-			requiredResources.images.insert(imageResource);
-		}
-	}
-
-	nlohmann::ordered_json jsonData = nlohmann::ordered_json{
-		{ "project", project },
-		{ "resources", requiredResources }
-	};
+std::string serialize(const Project& project, int32_t indent) {
+	nlohmann::ordered_json jsonData = project;
 
 	return jsonData.dump(indent);
 }
 
-Project deserialize(std::istream& stream, ResourceDatabase& resources) {
+Project deserialize(std::istream& stream) {
 	nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(stream);
-	resources = jsonData.at("resources");
 
-	return jsonData.at("project").get<Project>();
+	return jsonData.get<Project>();
 }
-Project deserialize(const std::string& data, ResourceDatabase& resources) {
+Project deserialize(const std::string& data) {
 	nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(data);
-	resources = jsonData.at("resources");
 
-	return jsonData.at("project").get<Project>();
+	return jsonData.get<Project>();
 }
-Project deserialize(const char* data, std::size_t size, ResourceDatabase& resources) {
+Project deserialize(const char* data, std::size_t size) {
 	nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(data, data + size);
-	resources = jsonData.at("resources");
 
-	return jsonData.at("project").get<Project>();
+	return jsonData.get<Project>();
 }
 }

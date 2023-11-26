@@ -1,5 +1,6 @@
 #include "ImageResource.h"
 #include "../common/Base64.h"
+#include "../common/JsonUtil.h"
 #include "../zlib/zlib.h"
 
 namespace pixelpart {
@@ -22,6 +23,7 @@ void to_json(nlohmann::ordered_json& j, const ImageResource& resource) {
 	}
 
 	j = nlohmann::ordered_json{
+		{ "name", resource.name },
 		{ "width", resource.width },
 		{ "height", resource.height },
 		{ "bpp", resource.bpp },
@@ -30,6 +32,8 @@ void to_json(nlohmann::ordered_json& j, const ImageResource& resource) {
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ImageResource& resource) {
+	fromJson(resource.name, j, "name");
+
 	resource.width = j.at("width");
 	resource.height = j.at("height");
 	resource.bpp = j.at("bpp");

@@ -66,11 +66,12 @@ bool isResourceUsed(const Effect& effect, const std::string& resourceId) {
 
 void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 	j = nlohmann::ordered_json{
+		{ "3d", effect.is3d },
 		{ "particle_emitters", effect.particleEmitters.get() },
 		{ "particle_types", effect.particleTypes.get() },
 		{ "force_fields", effect.forceFields.get() },
 		{ "colliders", effect.colliders.get() },
-		{ "3d", effect.is3d }
+		{ "resources", effect.resources }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, Effect& effect) {
@@ -81,11 +82,12 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 
 	effect = Effect();
 
+	fromJson(effect.is3d, j, "3d");
 	fromJson(particleEmitters, j, "particle_emitters");
 	fromJson(particleTypes, j, "particle_types");
 	fromJson(forceFields, j, "force_fields");
 	fromJson(colliders, j, "colliders");
-	fromJson(effect.is3d, j, "3d");
+	fromJson(effect.resources, j, "resources");
 
 	for(ParticleEmitter& particleEmitter : particleEmitters) {
 		if(particleEmitter.id == nullId) {
