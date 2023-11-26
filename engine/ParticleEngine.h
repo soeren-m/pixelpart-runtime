@@ -52,14 +52,15 @@ public:
 	const ParticleSolver* getSolver() const;
 
 private:
-	uint32_t spawnParticles(uint32_t count, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, floatd t, floatd tParent);
+	uint32_t spawnParticles(uint32_t count, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, floatd dt, floatd t, floatd tParent);
 
-	void createParticle(uint32_t p, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, floatd t, floatd tParent);
+	void createParticle(uint32_t p, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, floatd dt, floatd t, floatd tParent);
 
 	const Effect* effect = nullptr;
 	std::vector<ParticleContainer> particleContainers;
 	std::vector<std::vector<uint32_t>> particleSubTypes;
 	std::vector<floatd> particleSpawnCount;
+	std::vector<uint32_t> particleEmitterGridIndices;
 	uint32_t particleCapacity = 0;
 	uint32_t particleId = 0;
 	uint32_t seed = 0;

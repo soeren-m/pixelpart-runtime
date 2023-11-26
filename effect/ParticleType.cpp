@@ -19,6 +19,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "position_relative", particleType.positionRelative },
 		{ "motion_path_force", particleType.motionPathForce },
 		{ "initial_velocity", particleType.initialVelocity },
+		{ "inherited_velocity", particleType.inheritedVelocity },
 		{ "velocity_variance", particleType.velocityVariance },
 		{ "acceleration", particleType.acceleration },
 		{ "radial_acceleration", particleType.radialAcceleration },
@@ -27,6 +28,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "alignment_mode", particleType.alignmentMode },
 		{ "initial_rotation", particleType.initialRotation },
 		{ "rotation", particleType.rotation },
+		{ "rotation_by_speed", particleType.rotationBySpeed },
 		{ "rotation_variance", particleType.rotationVariance },
 		{ "angular_velocity_variance", particleType.angularVelocityVariance },
 		{ "pivot", particleType.pivot },
@@ -42,11 +44,13 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "initial_size", particleType.initialSize },
 		{ "size", particleType.size },
 		{ "size_variance", particleType.sizeVariance },
+		{ "stretch", particleType.stretch },
 		{ "color", particleType.color },
 		{ "color_variance", particleType.colorVariance },
 		{ "initial_opacity", particleType.initialOpacity },
 		{ "opacity", particleType.opacity },
 		{ "opacity_variance", particleType.opacityVariance },
+
 		{ "renderer", particleType.renderer },
 		{ "sprite_renderer_settings", particleType.spriteRendererSettings },
 		{ "trail_renderer_settings", particleType.trailRendererSettings }
@@ -70,6 +74,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	fromJson(particleType.positionRelative, j, "position_relative");
 	fromJson(particleType.motionPathForce, j, "motion_path_force");
 	fromJson(particleType.initialVelocity, j, "initial_velocity");
+	fromJson(particleType.inheritedVelocity, j, "inherited_velocity");
 	fromJson(particleType.velocityVariance, j, "velocity_variance");
 	fromJson(particleType.acceleration, j, "acceleration");
 	fromJson(particleType.radialAcceleration, j, "radial_acceleration");
@@ -78,6 +83,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	fromJson(particleType.alignmentMode, j, "alignment_mode");
 	fromJson(particleType.initialRotation, j, "initial_rotation");
 	fromJson(particleType.rotation, j, "rotation");
+	fromJson(particleType.rotationBySpeed, j, "rotation_by_speed");
 	fromJson(particleType.rotationVariance, j, "rotation_variance");
 	fromJson(particleType.angularVelocityVariance, j, "angular_velocity_variance");
 	fromJson(particleType.pivot, j, "pivot");
@@ -93,11 +99,13 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	fromJson(particleType.initialSize, j, "initial_size");
 	fromJson(particleType.size, j, "size");
 	fromJson(particleType.sizeVariance, j, "size_variance");
+	fromJson(particleType.stretch, j, "stretch");
 	fromJson(particleType.color, j, "color");
 	fromJson(particleType.colorVariance, j, "color_variance");
 	fromJson(particleType.initialOpacity, j, "initial_opacity");
 	fromJson(particleType.opacity, j, "opacity");
 	fromJson(particleType.opacityVariance, j, "opacity_variance");
+
 	fromJson(particleType.renderer, j, "renderer");
 	fromJson(particleType.spriteRendererSettings, j, "sprite_renderer_settings");
 	fromJson(particleType.trailRendererSettings, j, "trail_renderer_settings");

@@ -18,6 +18,10 @@ void to_json(nlohmann::ordered_json& j, const ParticleEmitter& particleEmitter) 
 		{ "orientation", particleEmitter.orientation },
 
 		{ "distribution", particleEmitter.distribution },
+		{ "grid_order", particleEmitter.gridOrder },
+		{ "grid_size_x", particleEmitter.gridSize[0] },
+		{ "grid_size_y", particleEmitter.gridSize[1] },
+		{ "grid_size_z", particleEmitter.gridSize[2] },
 		{ "emission_mode", particleEmitter.emissionMode },
 		{ "direction_mode", particleEmitter.directionMode },
 		{ "direction", particleEmitter.direction },
@@ -41,6 +45,10 @@ void from_json(const nlohmann::ordered_json& j, ParticleEmitter& particleEmitter
 	fromJson(particleEmitter.orientation, j, "orientation");
 
 	fromJson(particleEmitter.distribution, j, "distribution");
+	fromJson(particleEmitter.gridOrder, j, "grid_order");
+	fromJson(particleEmitter.gridSize[0], j, "grid_size_x");
+	fromJson(particleEmitter.gridSize[1], j, "grid_size_y");
+	fromJson(particleEmitter.gridSize[2], j, "grid_size_z");
 	fromJson(particleEmitter.emissionMode, j, "emission_mode");
 	fromJson(particleEmitter.directionMode, j, "direction_mode");
 	fromJson(particleEmitter.direction, j, "direction");

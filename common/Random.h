@@ -38,5 +38,15 @@ floatd normalReverse(T& rng, floatd min, floatd max) {
 		? m + (max - x)
 		: m - (x - min);
 }
+
+template <typename T>
+floatd uniformGrid(T& rng, uint32_t size) {
+	return static_cast<floatd>(uniformInt(rng, 0, size - 1u)) / static_cast<floatd>(size - 1u);
+}
+
+template <typename T>
+floatd uniformGrid(T& rng, uint32_t size, floatd min, floatd max) {
+	return static_cast<floatd>(uniformInt(rng, 0, size - 1u)) / static_cast<floatd>(size - 1u) * (max - min) + min;
+}
 }
 }

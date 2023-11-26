@@ -21,6 +21,7 @@ struct ParticleType : public Node {
 	bool positionRelative = false;
 	floatd motionPathForce = 0.0;
 	Curve<floatd> initialVelocity = Curve<floatd>(1.0);
+	Curve<floatd> inheritedVelocity = Curve<floatd>(0.0);
 	floatd velocityVariance = 0.0;
 	Curve<floatd> acceleration = Curve<floatd>(0.0);
 	Curve<floatd> radialAcceleration = Curve<floatd>(0.0);
@@ -29,6 +30,7 @@ struct ParticleType : public Node {
 	AlignmentMode alignmentMode = AlignmentMode::camera;
 	Curve<vec3d> initialRotation = Curve<vec3d>(vec3d(0.0));
 	Curve<vec3d> rotation = Curve<vec3d>(vec3d(0.0));
+	Curve<vec3d> rotationBySpeed = Curve<vec3d>(vec3d(0.0));
 	vec3d rotationVariance = vec3d(0.0);
 	vec3d angularVelocityVariance = vec3d(0.0);
 	vec3d pivot = vec3d(0.0);
@@ -44,11 +46,13 @@ struct ParticleType : public Node {
 	Curve<floatd> initialSize = Curve<floatd>(0.1);
 	Curve<vec3d> size = Curve<vec3d>(vec3d(1.0));
 	floatd sizeVariance = 0.0;
+	Curve<vec3d> stretch = Curve<vec3d>(vec3d(0.0));
 	Curve<vec4d> color = Curve<vec4d>(vec4d(1.0));
 	vec4d colorVariance = vec4d(0.0);
 	Curve<floatd> initialOpacity = Curve<floatd>(1.0);
 	Curve<floatd> opacity = Curve<floatd>(1.0);
 	floatd opacityVariance = 0.0;
+
 	Renderer renderer = Renderer::sprite;
 	ParticleSpriteRendererSettings spriteRendererSettings;
 	ParticleTrailRendererSettings trailRendererSettings;
