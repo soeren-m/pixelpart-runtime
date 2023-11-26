@@ -43,11 +43,20 @@ bool isNameUsed(const Effect& effect, const std::string& name) {
 			return true;
 		}
 	}
+	for(const LightSource& lightSource : effect.lightSources) {
+		if(lightSource.name == name) {
+			return true;
+		}
+	}
 
 	return false;
 }
 bool isResourceUsed(const Effect& effect, const std::string& resourceId) {
 	for(const ParticleType& particleType : effect.particleTypes) {
+		if(particleType.meshRendererSettings.meshResourceId == resourceId) {
+			return true;
+		}
+
 		const auto& shaderNodes = particleType.shader.getNodes();
 
 		for(const auto& nodeEntry : shaderNodes) {
@@ -61,6 +70,12 @@ bool isResourceUsed(const Effect& effect, const std::string& resourceId) {
 		}
 	}
 
+	for(const ForceField& forceField : effect.forceFields) {
+		if(resourceId == forceField.vectorField.resourceId) {
+			return true;
+		}
+	}
+
 	return false;
 }
 
@@ -71,6 +86,7 @@ void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 		{ "particle_types", effect.particleTypes.get() },
 		{ "force_fields", effect.forceFields.get() },
 		{ "colliders", effect.colliders.get() },
+		{ "light_sources", effect.lightSources.get() },
 		{ "resources", effect.resources }
 	};
 }
@@ -79,6 +95,7 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 	std::vector<ParticleType> particleTypes;
 	std::vector<ForceField> forceFields;
 	std::vector<Collider> colliders;
+	std::vector<LightSource> lightSources;
 
 	effect = Effect();
 
@@ -87,6 +104,7 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 	fromJson(particleTypes, j, "particle_types");
 	fromJson(forceFields, j, "force_fields");
 	fromJson(colliders, j, "colliders");
+	fromJson(lightSources, j, "light_sources");
 	fromJson(effect.resources, j, "resources");
 
 	for(ParticleEmitter& particleEmitter : particleEmitters) {
@@ -109,10 +127,16 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 			collider.id = findUnusedNodeId(colliders);
 		}
 	}
+	for(LightSource& lightSource : lightSources) {
+		if(lightSource.id == nullId) {
+			lightSource.id = findUnusedNodeId(lightSources);
+		}
+	}
 
 	effect.particleEmitters.set(particleEmitters);
 	effect.particleTypes.set(particleTypes);
 	effect.forceFields.set(forceFields);
 	effect.colliders.set(colliders);
+	effect.lightSources.set(lightSources);
 }
 }

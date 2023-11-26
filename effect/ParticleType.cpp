@@ -53,7 +53,8 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 
 		{ "renderer", particleType.renderer },
 		{ "sprite_renderer_settings", particleType.spriteRendererSettings },
-		{ "trail_renderer_settings", particleType.trailRendererSettings }
+		{ "trail_renderer_settings", particleType.trailRendererSettings },
+		{ "mesh_renderer_settings", particleType.meshRendererSettings }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
@@ -109,5 +110,6 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	fromJson(particleType.renderer, j, "renderer");
 	fromJson(particleType.spriteRendererSettings, j, "sprite_renderer_settings");
 	fromJson(particleType.trailRendererSettings, j, "trail_renderer_settings");
+	fromJson(particleType.meshRendererSettings, j, "mesh_renderer_settings");
 }
 }

@@ -5,6 +5,7 @@
 #include "ParticleType.h"
 #include "ForceField.h"
 #include "Collider.h"
+#include "LightSource.h"
 #include "EffectResourceSet.h"
 
 namespace pixelpart {
@@ -15,6 +16,7 @@ struct Effect {
 	NodeCollection<ParticleType> particleTypes;
 	NodeCollection<ForceField> forceFields;
 	NodeCollection<Collider> colliders;
+	NodeCollection<LightSource> lightSources;
 
 	EffectResourceSet resources;
 };

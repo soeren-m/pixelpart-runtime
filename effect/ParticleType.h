@@ -11,7 +11,8 @@ namespace pixelpart {
 struct ParticleType : public Node {
 	enum class Renderer : uint32_t {
 		sprite = 0,
-		trail = 1
+		trail = 1,
+		mesh = 2
 	};
 
 	Curve<floatd> numParticles = Curve<floatd>(0.0);
@@ -56,11 +57,13 @@ struct ParticleType : public Node {
 	Renderer renderer = Renderer::sprite;
 	ParticleSpriteRendererSettings spriteRendererSettings;
 	ParticleTrailRendererSettings trailRendererSettings;
+	ParticleMeshRendererSettings meshRendererSettings;
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ParticleType::Renderer, {
 	{ ParticleType::Renderer::sprite, "sprite" },
-	{ ParticleType::Renderer::trail, "trail" }
+	{ ParticleType::Renderer::trail, "trail" },
+	{ ParticleType::Renderer::mesh, "mesh" }
 })
 
 void to_json(nlohmann::ordered_json& j, const ParticleType& particleType);
