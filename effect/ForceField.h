@@ -18,9 +18,9 @@ struct ForceField : public Node {
 	};
 
 	struct AccelerationField {
-		Curve<vec3d> direction = Curve<vec3d>(vec3d(0.0));
-		floatd directionVariance = 0.0;
-		floatd strengthVariance = 0.0;
+		AnimatedProperty<vec3d> direction = AnimatedProperty<vec3d>(vec3d(0.0));
+		AnimatedProperty<floatd> directionVariance = AnimatedProperty<floatd>(0.0);
+		AnimatedProperty<floatd> strengthVariance = AnimatedProperty<floatd>(0.0);
 
 		int32_t gridSize[3] = { 1, 1, 1 };
 		std::vector<vec3d> directionGrid = std::vector<vec3d>{ vec3d(0.0) };
@@ -52,31 +52,31 @@ struct ForceField : public Node {
 		std::string resourceId;
 		Filter filter = Filter::none;
 
-		Curve<floatd> tightness = Curve<floatd>(1.0);
+		AnimatedProperty<floatd> tightness = AnimatedProperty<floatd>(1.0);
 	};
 
 	struct NoiseField {
-		uint32_t octaves = 4u;
-		Curve<floatd> frequency = Curve<floatd>(1.0);
-		Curve<floatd> persistence = Curve<floatd>(0.5);
-		Curve<floatd> lacunarity = Curve<floatd>(2.0);
+		StaticProperty<int64_t> octaves = StaticProperty<int64_t>(4);
+		AnimatedProperty<floatd> frequency = AnimatedProperty<floatd>(1.0);
+		AnimatedProperty<floatd> persistence = AnimatedProperty<floatd>(0.5);
+		AnimatedProperty<floatd> lacunarity = AnimatedProperty<floatd>(2.0);
 
 		bool animated = false;
-		floatd animationTimeScale = 1.0;
-		floatd animationTimeBase = 0.0;
+		StaticProperty<floatd> animationTimeScale = StaticProperty<floatd>(1.0);
+		StaticProperty<floatd> animationTimeBase = StaticProperty<floatd>(0.0);
 	};
 
 	struct DragField {
-		floatd velocityInfluence = 1.0;
-		floatd sizeInfluence = 1.0;
+		StaticProperty<floatd> velocityInfluence = StaticProperty<floatd>(1.0);
+		StaticProperty<floatd> sizeInfluence = StaticProperty<floatd>(1.0);
 	};
 
 	Type type = Type::attraction_field;
 	std::vector<uint32_t> exclusionList;
-	Curve<vec3d> size = Curve<vec3d>(vec3d(1.0));
-	Curve<vec3d> orientation = Curve<vec3d>(vec3d(0.0));
+	AnimatedProperty<vec3d> size = AnimatedProperty<vec3d>(vec3d(1.0));
+	AnimatedProperty<vec3d> orientation = AnimatedProperty<vec3d>(vec3d(0.0));
 
-	Curve<floatd> strength = Curve<floatd>(1.0);
+	AnimatedProperty<floatd> strength = AnimatedProperty<floatd>(1.0);
 
 	AttractionField attractionField;
 	AccelerationField accelerationField;

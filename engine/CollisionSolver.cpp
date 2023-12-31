@@ -2,8 +2,10 @@
 
 namespace pixelpart {
 CollisionSolver::ColliderSegment::ColliderSegment(const Collider& collider) :
-	lifetimeStart(collider.lifetimeStart), lifetimeDuration(collider.lifetimeDuration), repeat(collider.repeat), killOnContact(collider.killOnContact),
-	bounce(collider.bounce), friction(collider.friction) {
+	lifetimeStart(collider.lifetimeStart), lifetimeDuration(collider.lifetimeDuration), repeat(collider.repeat),
+	killOnContact(collider.killOnContact.get()),
+	bounce(collider.bounce.getComputedCurve()),
+	friction(collider.friction.getComputedCurve()) {
 
 }
 
@@ -32,19 +34,19 @@ CollisionSolver::PlaneColliderSegment::PlaneColliderSegment(const Collider& coll
 		normal = glm::normalize(vec3d(0.0, 1.0, -rightVector.y / rightVector.z));
 	}
 
-	upVector = glm::cross(glm::normalize(rightVector), normal) * collider.width * 0.5;
+	upVector = glm::cross(glm::normalize(rightVector), normal) * collider.width.get() * 0.5;
 
-	normal = glm::rotate(normal, glm::radians(collider.orientation), rightVector);
-	upVector = glm::rotate(upVector, glm::radians(collider.orientation), rightVector);
+	normal = glm::rotate(normal, glm::radians(collider.orientation.get()), rightVector);
+	upVector = glm::rotate(upVector, glm::radians(collider.orientation.get()), rightVector);
 }
 
-CollisionSolver::CollisionSolver() : grid(1, 1) {
+CollisionSolver::CollisionSolver() : grid(1u, 1u) {
 
 }
 
 void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, floatd t, floatd dt) const {
 	if(!planeColliders.empty()) {
-		for(uint32_t p = 0; p < numParticles; p++) {
+		for(uint32_t p = 0u; p < numParticles; p++) {
 			for(const PlaneColliderSegment& collider : planeColliders) {
 				if(collider.exclusionSet[particleType.id] ||
 					t < collider.lifetimeStart ||
@@ -57,7 +59,7 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointe
 		}
 	}
 	else if(!lineColliders.empty()) {
-		for(uint32_t p = 0; p < numParticles; p++) {
+		for(uint32_t p = 0u; p < numParticles; p++) {
 			GridIndex<int32_t> startIndex = toGridIndex(particles.globalPosition[p]);
 			GridIndex<int32_t> endIndex = toGridIndex(particles.globalPosition[p] + particles.velocity[p] * dt + particles.force[p] * dt * dt);
 

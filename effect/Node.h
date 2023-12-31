@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../common/Curve.h"
+#include "../property/StaticProperty.h"
+#include "../property/AnimatedProperty.h"
 
 namespace pixelpart {
 struct Node {
@@ -12,6 +13,6 @@ struct Node {
 	floatd lifetimeDuration = 1.0;
 	bool repeat = true;
 
-	Curve<vec3d> position = Curve<vec3d>(0.0, vec3d(0.0));
+	AnimatedProperty<vec3d> position = AnimatedProperty<vec3d>(0.0, vec3d(0.0));
 };
 }

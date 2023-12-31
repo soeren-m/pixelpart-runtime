@@ -9,7 +9,7 @@ void MotionPathSolver::solve(const ParticleType& particleType, ParticleDataPoint
 	const floatd positionLookahead = 0.1;
 	const floatd targetLookahead = 0.01;
 
-	if(particleType.motionPathForce < 0.1) {
+	if(particleType.motionPathForce.get() < 0.1) {
 		return;
 	}
 
@@ -20,7 +20,7 @@ void MotionPathSolver::solve(const ParticleType& particleType, ParticleDataPoint
 
 		vec3d targetPosition = particleType.position.get(particles.life[p] + targetLookahead);
 		vec3d targetVelocity = targetPosition - predictedPosition;
-		targetVelocity *= particleType.motionPathForce;
+		targetVelocity *= particleType.motionPathForce.get();
 
 		particles.force[p] += targetVelocity - particles.velocity[p];
 	}

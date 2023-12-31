@@ -19,9 +19,9 @@ public:
 		T value;
 	};
 
-	static constexpr uint32_t minCacheSize = 256;
-	static constexpr uint32_t maxCacheSize = 1024;
-	static constexpr uint32_t invalidIndex = 0xFFFFFFFF;
+	static constexpr uint32_t minCacheSize = 256u;
+	static constexpr uint32_t maxCacheSize = 1024u;
+	static constexpr uint32_t invalidIndex = 0xFFFFFFFFu;
 
 	Curve() {
 		cache.resize(minCacheSize);
@@ -52,7 +52,9 @@ public:
 		refreshCache();
 	}
 	void setPoints(const Point* pointList, std::size_t numPoints) {
-		points = (pointList && numPoints > 0) ? std::vector<Point>(pointList, pointList + numPoints) : std::vector<Point>();
+		points = pointList != nullptr && numPoints > 0u
+			? std::vector<Point>(pointList, pointList + numPoints)
+			: std::vector<Point>();
 		refreshCache();
 	}
 
@@ -73,10 +75,6 @@ public:
 		points.push_back(Point{ std::min(std::max(position, 0.0), 1.0), value });
 		refreshCache();
 	}
-	void removePoint(floatd position) {
-		points.remove_if([position](const Point& m) { return m.position == position; });
-		refreshCache();
-	}
 	void removePoint(std::size_t index) {
 		if(index >= points.size()) {
 			return;
@@ -85,87 +83,25 @@ public:
 		points.erase(points.begin() + index);
 		refreshCache();
 	}
+	void setPoint(std::size_t index, const T& value) {
+		if(index >= points.size()) {
+			return;
+		}
+
+		points[index].value = value;
+		refreshCache();
+	}
+	void setPointPosition(std::size_t index, floatd position) {
+		if(index >= points.size()) {
+			return;
+		}
+
+		points[index].position = std::min(std::max(position, 0.0), 1.0);
+		refreshCache();
+	}
 	void clear() {
 		points.clear();
 		refreshCache();
-	}
-
-	T setPoint(std::size_t index, const T& value) {
-		if(index < points.size()) {
-			T result = value;
-			points[index].value = result;
-			refreshCache();
-
-			return result;
-		}
-
-		return T(0);
-	}
-	T movePoint(std::size_t index, const T& delta) {
-		if(index < points.size()) {
-			T result = points[index].value + delta;
-			points[index].value = result;
-			refreshCache();
-
-			return result;
-		}
-
-		return T(0);
-	}
-	floatd shiftPoint(std::size_t index, floatd delta) {
-		if(index < points.size()) {
-			floatd result = std::min(std::max(points[index].position + delta, 0.0), 1.0);
-			points[index].position = result;
-			refreshCache();
-
-			return result;
-		}
-
-		return 0.0;
-	}
-
-	void move(const T& delta) {
-		for(Point& point : points) {
-			point.value += delta;
-		}
-		refreshCache();
-	}
-	void moveByFactor(const T& factor) {
-		for(Point& point : points) {
-			point.value *= factor;
-		}
-		refreshCache();
-	}
-	void shift(floatd delta) {
-		for(Point& point : points) {
-			point.position = std::min(std::max(point.position + delta, 0.0), 1.0);
-		}
-		refreshCache();
-	}
-	void shiftByFactor(floatd factor) {
-		for(Point& point : points) {
-			point.position = std::min(std::max(point.position * factor, 0.0), 1.0);
-		}
-		refreshCache();
-	}
-
-	template <typename BinOp>
-	T accumulate(BinOp operation, T value = T(0)) const {
-		for(const T& currentValue : cache) {
-			value = operation(value, currentValue);
-		}
-
-		return value;
-	}
-
-	int32_t getIndex(floatd position) const {
-		if(points.empty()) {
-			return -1;
-		}
-
-		return std::min_element(points.begin(), points.end(), [position](const Point& p1, const Point& p2) {
-					return std::abs(p1.position - position) < std::abs(p2.position - position);
-				}) - points.begin();
 	}
 
 	bool containsPoints() const {
@@ -182,6 +118,22 @@ public:
 	}
 	const Point& getPoint(std::size_t index) const {
 		return points.at(index);
+	}
+
+	std::ptrdiff_t getPointIndex(floatd position, floatd epsilon = 0.001) const {
+		if(points.empty()) {
+			return -1;
+		}
+
+		typename std::vector<Point>::const_iterator it = std::min_element(points.begin(), points.end(), [position](const Point& p1, const Point& p2) {
+			return std::abs(p1.position - position) < std::abs(p2.position - position);
+		});
+
+		if(std::abs(it->position - position) > epsilon) {
+			return -1;
+		}
+
+		return it - points.begin();
 	}
 
 	void setInterpolation(CurveInterpolation method) {
@@ -202,17 +154,11 @@ public:
 	}
 	void enableFixedCache(std::size_t size) {
 		adaptiveCache = false;
-		cache.resize(std::max(size, static_cast<std::size_t>(1U)));
+		cache.resize(std::max(size, static_cast<std::size_t>(1u)));
 		refreshCache();
 	}
 	const std::vector<T>& getCache() const {
 		return cache;
-	}
-	const T* getCacheData() const {
-		return cache.data();
-	}
-	std::size_t getCacheSize() const {
-		return cache.size();
 	}
 
 	void refreshCache() {
@@ -221,80 +167,80 @@ public:
 		});
 
 		if(adaptiveCache) {
-			if(cache.size() < maxCacheSize && points.size() > cache.size() / 16) {
-				cache.resize(cache.size() * 2);
+			if(cache.size() < maxCacheSize && points.size() > cache.size() / 16u) {
+				cache.resize(cache.size() * 2u);
 			}
-			else if(cache.size() > minCacheSize && points.size() < cache.size() / 32) {
-				cache.resize(cache.size() / 2);
+			else if(cache.size() > minCacheSize && points.size() < cache.size() / 32u) {
+				cache.resize(cache.size() / 2u);
 			}
 		}
 
 		if(points.empty()) {
 			std::fill(cache.begin(), cache.end(), T(0));
 		}
-		else if(points.size() == 1) {
+		else if(points.size() == 1u) {
 			std::fill(cache.begin(), cache.end(), points.back().value);
 		}
 		else if(interpolation == CurveInterpolation::none) {
-			for(std::size_t i = 0, k0 = 0; i < cache.size(); i++) {
-				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1);
+			for(std::size_t i = 0u, k0 = 0u; i < cache.size(); i++) {
+				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1u);
 				std::size_t k = findIndex(position, k0);
 
 				if(k == invalidIndex) {
 					cache[i] = points.front().value;
 				}
-				else if(k + 1 == points.size()) {
+				else if(k + 1u == points.size()) {
 					cache[i] = points.back().value;
 				}
 				else {
-					cache[i] = (std::abs(position - points[k].position) < std::abs(position - points[k + 1].position))
+					cache[i] = (std::abs(position - points[k].position) < std::abs(position - points[k + 1u].position))
 						? points[k].value
-						: points[k + 1].value;
+						: points[k + 1u].value;
 
 					k0 = k;
 				}
 			}
 		}
 		else if(interpolation == CurveInterpolation::linear) {
-			for(std::size_t i = 0, k0 = 0; i < cache.size(); i++) {
-				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1);
+			for(std::size_t i = 0u, k0 = 0u; i < cache.size(); i++) {
+				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1u);
 				std::size_t k = findIndex(position, k0);
 
 				if(k == invalidIndex) {
 					cache[i] = points.front().value;
 				}
-				else if(k + 1 == points.size()) {
+				else if(k + 1u == points.size()) {
 					cache[i] = points.back().value;
 				}
 				else {
-					floatd t = (position - points[k].position) / (points[k + 1].position - points[k].position);
+					floatd t = (position - points[k].position) / (points[k + 1u].position - points[k].position);
 					cache[i] =
 						(1.0 - t) * points[k].value +
-						t * points[k + 1].value;
+						t * points[k + 1u].value;
 
 					k0 = k;
 				}
 			}
 		}
 		else if(interpolation == CurveInterpolation::spline) {
-			for(std::size_t i = 0, k0 = 0; i < cache.size(); i++) {
-				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1);
+			for(std::size_t i = 0u, k0 = 0u; i < cache.size(); i++) {
+				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1u);
 				std::size_t k = findIndex(position, k0);
 
 				if(k == invalidIndex) {
 					cache[i] = points.front().value;
 				}
-				else if(k + 1 == points.size()) {
+				else if(k + 1u == points.size()) {
 					cache[i] = points.back().value;
 				}
 				else {
 					const floatd alpha = 0.5;
 					const floatd tension = 0.0;
 
-					Point p0 = (k > 0) ? points[k - 1] : Point{ -0.1, points[k].value };
+					Point p0 = (k > 0u) ? points[k - 1u] : Point{ -0.1, points[k].value };
 					Point p1 = points[k];
-					Point p2 = points[k + 1];
-					Point p3 = (k + 2 < points.size()) ? points[k + 2] : Point{ +1.1, points[k + 1].value };
+					Point p2 = points[k + 1u];
+					Point p3 = (k + 2u < points.size()) ? points[k + 2u] : Point{ +1.1, points[k + 1u].value };
 
 					floatd t = (position - p1.position) / (p2.position - p1.position);
 					floatd t0 = 0.0;
@@ -325,11 +271,11 @@ private:
 	std::size_t findIndex(floatd position, std::size_t indexStart) {
 		for(std::size_t i = indexStart; i < points.size(); i++) {
 			if(points[i].position >= position) {
-				return (i > 0) ? (i - 1) : invalidIndex;
+				return (i > 0u) ? (i - 1u) : invalidIndex;
 			}
 		}
 
-		return points.size() - 1;
+		return points.size() - 1u;
 	}
 
 	CurveInterpolation interpolation = CurveInterpolation::linear;

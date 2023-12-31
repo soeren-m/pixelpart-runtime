@@ -183,8 +183,8 @@ vec3d ForceSolver::sampleAccelerationField(const ForceField::AccelerationField& 
 		gridCellY * accelerationField.gridSize[0] +
 		gridCellX);
 
-	vec3d gridDirectionOffset = glm::radians(accelerationField.directionVariance * accelerationField.directionGrid[gridCellIndex]);
-	floatd gridStrengthOffset = accelerationField.strengthVariance * accelerationField.strengthGrid[gridCellIndex] + 1.0;
+	vec3d gridDirectionOffset = glm::radians(accelerationField.directionVariance.get() * accelerationField.directionGrid[gridCellIndex]);
+	floatd gridStrengthOffset = accelerationField.strengthVariance.get() * accelerationField.strengthGrid[gridCellIndex] + 1.0;
 
 	vec3d result = vec3d(glm::yawPitchRoll(gridDirectionOffset.y, gridDirectionOffset.z, gridDirectionOffset.x) *
 		vec4d(vec3d(directionMatrix * worldUpVector4), 0.0));
@@ -366,13 +366,13 @@ vec3d ForceSolver::sampleNoiseField(const ForceField::NoiseField& noiseField,
 	}
 
 	vec3d samplePosition = rotatedParticlePosition - position;
-	uint32_t octaves = noiseField.octaves;
+	uint32_t octaves = static_cast<uint32_t>(std::max(noiseField.octaves.get(), 0l));
 	floatd frequency = noiseField.frequency.get(life);
 	floatd persistence = noiseField.persistence.get(life);
 	floatd lacunarity = noiseField.lacunarity.get(life);
 
 	if(noiseField.animated) {
-		floatd animationTime = noiseField.animationTimeBase + noiseField.animationTimeScale * t;
+		floatd animationTime = noiseField.animationTimeBase.get() + noiseField.animationTimeScale.get() * t;
 
 		return is3d
 			? computeAnimatedCurlNoise3d(samplePosition, animationTime, octaves, frequency, persistence, lacunarity)
@@ -398,8 +398,8 @@ vec3d ForceSolver::sampleDragField(const ForceField::DragField& dragField,
 	floatd particleArea = std::max(particleSize.x, std::max(particleSize.y, particleSize.z));
 
 	return -particleVelocity / particleSpeed *
-		(1.0 + (particleSpeed * particleSpeed - 1.0) * dragField.velocityInfluence) *
-		(1.0 + (particleArea - 1.0) * dragField.sizeInfluence);
+		(1.0 + (particleSpeed * particleSpeed - 1.0) * dragField.velocityInfluence.get()) *
+		(1.0 + (particleArea - 1.0) * dragField.sizeInfluence.get());
 }
 
 vec3d ForceSolver::computeStaticCurlNoise2d(const vec2d& samplePosition, uint32_t octaves, floatd frequency, floatd persistence, floatd lacunarity) const {

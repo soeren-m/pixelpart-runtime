@@ -9,12 +9,12 @@ struct Collider : public Node {
 		vec3d(-0.5, 0.0, 0.0),
 		vec3d(+0.5, 0.0, 0.0)
 	};
-	floatd width = 1.0;
-	floatd orientation = 0.0;
-	bool killOnContact = false;
+	StaticProperty<floatd> width = StaticProperty<floatd>(1.0);
+	StaticProperty<floatd> orientation = StaticProperty<floatd>(0.0);
+	StaticProperty<bool> killOnContact = StaticProperty<bool>(false);
 
-	Curve<floatd> bounce = Curve<floatd>(0.5);
-	Curve<floatd> friction = Curve<floatd>(0.5);
+	AnimatedProperty<floatd> bounce = AnimatedProperty<floatd>(0.5);
+	AnimatedProperty<floatd> friction = AnimatedProperty<floatd>(0.5);
 };
 
 void to_json(nlohmann::ordered_json& j, const Collider& collider);

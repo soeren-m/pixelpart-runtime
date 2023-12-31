@@ -15,44 +15,44 @@ struct ParticleType : public Node {
 		mesh = 2
 	};
 
-	Curve<floatd> numParticles = Curve<floatd>(0.0);
-	Curve<floatd> lifespan = Curve<floatd>(1.0);
-	floatd lifespanVariance = 0.0;
+	AnimatedProperty<floatd> numParticles = AnimatedProperty<floatd>(0.0);
+	AnimatedProperty<floatd> lifespan = AnimatedProperty<floatd>(1.0);
+	StaticProperty<floatd> lifespanVariance = StaticProperty<floatd>(0.0);
 
 	bool positionRelative = false;
-	floatd motionPathForce = 0.0;
-	Curve<floatd> initialVelocity = Curve<floatd>(1.0);
-	Curve<floatd> inheritedVelocity = Curve<floatd>(0.0);
-	floatd velocityVariance = 0.0;
-	Curve<floatd> acceleration = Curve<floatd>(0.0);
-	Curve<floatd> radialAcceleration = Curve<floatd>(0.0);
-	Curve<floatd> damping = Curve<floatd>(1.0);
+	StaticProperty<floatd> motionPathForce = StaticProperty<floatd>(0.0);
+	AnimatedProperty<floatd> initialVelocity = AnimatedProperty<floatd>(1.0);
+	AnimatedProperty<floatd> inheritedVelocity = AnimatedProperty<floatd>(0.0);
+	StaticProperty<floatd> velocityVariance = StaticProperty<floatd>(0.0);
+	AnimatedProperty<floatd> acceleration = AnimatedProperty<floatd>(0.0);
+	AnimatedProperty<floatd> radialAcceleration = AnimatedProperty<floatd>(0.0);
+	AnimatedProperty<floatd> damping = AnimatedProperty<floatd>(1.0);
 	RotationMode rotationMode = RotationMode::angle;
 	AlignmentMode alignmentMode = AlignmentMode::camera;
-	Curve<vec3d> initialRotation = Curve<vec3d>(vec3d(0.0));
-	Curve<vec3d> rotation = Curve<vec3d>(vec3d(0.0));
-	Curve<vec3d> rotationBySpeed = Curve<vec3d>(vec3d(0.0));
-	vec3d rotationVariance = vec3d(0.0);
-	vec3d angularVelocityVariance = vec3d(0.0);
-	vec3d pivot = vec3d(0.0);
+	AnimatedProperty<vec3d> initialRotation = AnimatedProperty<vec3d>(vec3d(0.0));
+	AnimatedProperty<vec3d> rotation = AnimatedProperty<vec3d>(vec3d(0.0));
+	AnimatedProperty<vec3d> rotationBySpeed = AnimatedProperty<vec3d>(vec3d(0.0));
+	StaticProperty<vec3d> rotationVariance = StaticProperty<vec3d>(vec3d(0.0));
+	StaticProperty<vec3d> angularVelocityVariance = StaticProperty<vec3d>(vec3d(0.0));
+	StaticProperty<vec3d> pivot = StaticProperty<vec3d>(vec3d(0.0));
 
-	Curve<floatd> weight = Curve<floatd>(1.0);
-	Curve<floatd> bounce = Curve<floatd>(1.0);
-	Curve<floatd> friction = Curve<floatd>(1.0);
+	AnimatedProperty<floatd> weight = AnimatedProperty<floatd>(1.0);
+	AnimatedProperty<floatd> bounce = AnimatedProperty<floatd>(1.0);
+	AnimatedProperty<floatd> friction = AnimatedProperty<floatd>(1.0);
 
 	bool visible = true;
 	uint32_t layer = 0;
 	BlendMode blendMode = BlendMode::normal;
 	ShaderGraph shader;
-	Curve<floatd> initialSize = Curve<floatd>(0.1);
-	Curve<vec3d> size = Curve<vec3d>(vec3d(1.0));
-	floatd sizeVariance = 0.0;
-	Curve<vec3d> stretch = Curve<vec3d>(vec3d(0.0));
-	Curve<vec4d> color = Curve<vec4d>(vec4d(1.0));
-	vec4d colorVariance = vec4d(0.0);
-	Curve<floatd> initialOpacity = Curve<floatd>(1.0);
-	Curve<floatd> opacity = Curve<floatd>(1.0);
-	floatd opacityVariance = 0.0;
+	AnimatedProperty<floatd> initialSize = AnimatedProperty<floatd>(0.1);
+	AnimatedProperty<vec3d> size = AnimatedProperty<vec3d>(vec3d(1.0));
+	StaticProperty<floatd> sizeVariance = StaticProperty<floatd>(0.0);
+	AnimatedProperty<vec3d> stretch = AnimatedProperty<vec3d>(vec3d(0.0));
+	AnimatedProperty<vec4d> color = AnimatedProperty<vec4d>(vec4d(1.0));
+	StaticProperty<vec4d> colorVariance = StaticProperty<vec4d>(vec4d(0.0));
+	AnimatedProperty<floatd> initialOpacity = AnimatedProperty<floatd>(1.0);
+	AnimatedProperty<floatd> opacity = AnimatedProperty<floatd>(1.0);
+	StaticProperty<floatd> opacityVariance = StaticProperty<floatd>(0.0);
 
 	Renderer renderer = Renderer::sprite;
 	ParticleSpriteRendererSettings spriteRendererSettings;

@@ -45,11 +45,12 @@ public:
 	uint32_t getNumActiveThreads() const;
 
 	void setSolver(std::unique_ptr<ParticleSolver> solver);
-	void updateSolvers();
-	void updateParticleSolver();
-	void updateForceSolver();
-	void updateCollisionSolver();
 	const ParticleSolver* getSolver() const;
+
+	void refresh();
+	void refreshParticleSolver();
+	void refreshForceSolver();
+	void refreshCollisionSolver();
 
 private:
 	uint32_t spawnParticles(uint32_t count, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, floatd dt, floatd t, floatd tParent);

@@ -12,14 +12,14 @@ struct LightSource : public Node {
 
 	Type type = Type::directional;
 
-	Curve<vec3d> direction = Curve<vec3d>(vec3d(0.0));
-	Curve<floatd> range = Curve<floatd>(1.0);
-	Curve<floatd> attenuation = Curve<floatd>(1.0);
-	Curve<floatd> spotAngle = Curve<floatd>(45.0);
-	Curve<floatd> spotAngleAttenuation = Curve<floatd>(1.0);
+	AnimatedProperty<vec3d> direction = AnimatedProperty<vec3d>(vec3d(0.0));
+	AnimatedProperty<floatd> range = AnimatedProperty<floatd>(1.0);
+	AnimatedProperty<floatd> attenuation = AnimatedProperty<floatd>(1.0);
+	AnimatedProperty<floatd> spotAngle = AnimatedProperty<floatd>(45.0);
+	AnimatedProperty<floatd> spotAngleAttenuation = AnimatedProperty<floatd>(1.0);
 
-	Curve<vec4d> color = Curve<vec4d>(vec4d(1.0));
-	Curve<floatd> intensity = Curve<floatd>(1.0);
+	AnimatedProperty<vec4d> color = AnimatedProperty<vec4d>(vec4d(1.0));
+	AnimatedProperty<floatd> intensity = AnimatedProperty<floatd>(1.0);
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(LightSource::Type, {
