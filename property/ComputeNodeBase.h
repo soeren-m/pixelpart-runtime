@@ -13,7 +13,7 @@ public:
 		const std::vector<std::string>& nodeOutputs,
 		const std::vector<Signature>& nodeSignatures,
 		const std::vector<VariantValue>& nodeDefaultInputs,
-		const std::vector<ComputeNodeParameter>& nodeParameters) :
+		const std::vector<VariantParameter>& nodeParameters) :
 		ComputeNode(nodeType, nodeCategory, nodeInputs, nodeOutputs, nodeSignatures, nodeDefaultInputs, nodeParameters) {
 
 	}

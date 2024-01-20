@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../common/VariantValue.h"
-#include "ComputeNodeParameter.h"
+#include "../common/VariantParameter.h"
 #include <memory>
 #include <unordered_map>
 #include <stdexcept>
@@ -41,7 +41,7 @@ public:
 		const std::vector<std::string>& nodeOutputs,
 		const std::vector<Signature>& nodeSignatures,
 		const std::vector<VariantValue>& nodeDefaultInputs,
-		const std::vector<ComputeNodeParameter>& nodeParameters);
+		const std::vector<VariantParameter>& nodeParameters);
 
 	virtual std::vector<VariantValue> evaluate(const std::vector<VariantValue>& in) const = 0;
 
@@ -49,7 +49,7 @@ public:
 
 	void setName(const std::string& nodeName);
 	void setInputs(const std::vector<Link>& nodeInputs);
-	void setParameterValues(const std::vector<ComputeNodeParameter::Value>& values);
+	void setParameterValues(const std::vector<VariantParameter::Value>& values);
 
 	uint32_t findInputSlot(const std::string& slotName) const;
 	uint32_t findOutputSlot(const std::string& slotName) const;
@@ -65,8 +65,8 @@ public:
 	const std::vector<VariantValue>& getDefaultInputs() const;
 	const std::vector<Link>& getInputs() const;
 
-	const std::vector<ComputeNodeParameter>& getParameters() const;
-	const std::vector<ComputeNodeParameter::Value>& getParameterValues() const;
+	const std::vector<VariantParameter>& getParameters() const;
+	const std::vector<VariantParameter::Value>& getParameterValues() const;
 
 	void setPosition(const vec2d& pos);
 	vec2d getPosition() const;
@@ -84,8 +84,8 @@ protected:
 	std::vector<VariantValue> defaultInputs;
 	std::vector<Link> inputs;
 
-	std::vector<ComputeNodeParameter> parameters;
-	std::vector<ComputeNodeParameter::Value> parameterValues;
+	std::vector<VariantParameter> parameters;
+	std::vector<VariantParameter::Value> parameterValues;
 
 	vec2d position = vec2d(0.0);
 };

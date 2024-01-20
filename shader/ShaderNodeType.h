@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../common/VariantValue.h"
-#include "ShaderParameter.h"
+#include "../common/VariantParameter.h"
 
 namespace pixelpart {
 struct ShaderNodeType {
@@ -17,7 +17,7 @@ struct ShaderNodeType {
 	std::vector<std::string> outputs;
 	std::vector<Signature> signatures;
 	std::vector<VariantValue> defaultInputs;
-	std::vector<ShaderParameter> parameters;
+	std::vector<VariantParameter> parameters;
 };
 
 void to_json(nlohmann::ordered_json& j, const ShaderNodeType::Signature& signature);

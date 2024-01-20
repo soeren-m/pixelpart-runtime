@@ -246,7 +246,7 @@ void ComputeGraph::setNodeName(uint32_t nodeId, const std::string& name) {
 	const auto& node = nodes.at(nodeId);
 	node->name = name;
 }
-void ComputeGraph::setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, ComputeNodeParameter::Value value) {
+void ComputeGraph::setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, VariantParameter::Value value) {
 	if(!hasNode(nodeId)) {
 		return;
 	}
@@ -254,7 +254,7 @@ void ComputeGraph::setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, Co
 	const auto& node = nodes.at(nodeId);
 	node->parameterValues[parameterIndex] = value;
 }
-void ComputeGraph::setNodeParameter(uint32_t nodeId, const std::string& parameterName, ComputeNodeParameter::Value value) {
+void ComputeGraph::setNodeParameter(uint32_t nodeId, const std::string& parameterName, VariantParameter::Value value) {
 	if(!hasNode(nodeId)) {
 		return;
 	}

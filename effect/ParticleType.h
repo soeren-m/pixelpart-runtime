@@ -4,8 +4,8 @@
 #include "BlendMode.h"
 #include "RotationMode.h"
 #include "AlignmentMode.h"
+#include "MaterialInstance.h"
 #include "ParticleRendererSettings.h"
-#include "../shader/ShaderGraph.h"
 
 namespace pixelpart {
 struct ParticleType : public Node {
@@ -43,7 +43,6 @@ struct ParticleType : public Node {
 	bool visible = true;
 	uint32_t layer = 0;
 	BlendMode blendMode = BlendMode::normal;
-	ShaderGraph shader;
 	AnimatedProperty<floatd> initialSize = AnimatedProperty<floatd>(0.1);
 	AnimatedProperty<vec3d> size = AnimatedProperty<vec3d>(vec3d(1.0));
 	StaticProperty<floatd> sizeVariance = StaticProperty<floatd>(0.0);
@@ -54,6 +53,7 @@ struct ParticleType : public Node {
 	AnimatedProperty<floatd> opacity = AnimatedProperty<floatd>(1.0);
 	StaticProperty<floatd> opacityVariance = StaticProperty<floatd>(0.0);
 
+	MaterialInstance materialInstance;
 	Renderer renderer = Renderer::sprite;
 	ParticleSpriteRendererSettings spriteRendererSettings;
 	ParticleTrailRendererSettings trailRendererSettings;

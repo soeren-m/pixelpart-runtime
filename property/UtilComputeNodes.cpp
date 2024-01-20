@@ -15,7 +15,7 @@ CurveComputeNode::CurveComputeNode() : ComputeNodeBase(typeName,
 	{ "compute_slot_result" },
 	{ Signature{ { VariantValue::type_float }, { VariantValue::type_float } } },
 	{ VariantValue::Float(0.0) },
-	{ ComputeNodeParameter::createCurveParameter("compute_param_curve", Curve<floatd>(0.5, CurveInterpolation::linear)) }) {
+	{ VariantParameter::createCurveParameter("compute_param_curve", Curve<floatd>(0.5, CurveInterpolation::linear)) }) {
 
 }
 std::vector<VariantValue> CurveComputeNode::evaluate(const std::vector<VariantValue>& in) const {

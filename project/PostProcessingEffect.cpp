@@ -6,7 +6,7 @@ PostProcessingEffect::PostProcessingEffect() {
 
 }
 PostProcessingEffect::PostProcessingEffect(const PostProcessingEffectType& effectType) : type(effectType.name), parameters(effectType.parameters.size()) {
-	for(std::size_t p = 0; p < parameters.size(); p++) {
+	for(std::size_t p = 0u; p < parameters.size(); p++) {
 		parameters[p] = effectType.parameters[p].defaultValue;
 	}
 }

@@ -24,7 +24,7 @@ ComputeNode::ComputeNode(
 	const std::vector<std::string>& nodeOutputs,
 	const std::vector<Signature>& nodeSignatures,
 	const std::vector<VariantValue>& nodeDefaultInputs,
-	const std::vector<ComputeNodeParameter>& nodeParameters) :
+	const std::vector<VariantParameter>& nodeParameters) :
 	type(nodeType), category(nodeCategory),
 	inputSlots(nodeInputs), outputSlots(nodeOutputs),
 	signatures(nodeSignatures), defaultInputs(nodeDefaultInputs),
@@ -65,7 +65,7 @@ void ComputeNode::setName(const std::string& nodeName) {
 void ComputeNode::setInputs(const std::vector<Link>& nodeInputs) {
 	inputs = nodeInputs;
 }
-void ComputeNode::setParameterValues(const std::vector<ComputeNodeParameter::Value>& values) {
+void ComputeNode::setParameterValues(const std::vector<VariantParameter::Value>& values) {
 	parameterValues = values;
 }
 
@@ -129,10 +129,10 @@ const std::vector<ComputeNode::Link>& ComputeNode::getInputs() const {
 	return inputs;
 }
 
-const std::vector<ComputeNodeParameter>& ComputeNode::getParameters() const {
+const std::vector<VariantParameter>& ComputeNode::getParameters() const {
 	return parameters;
 }
-const std::vector<ComputeNodeParameter::Value>& ComputeNode::getParameterValues() const {
+const std::vector<VariantParameter::Value>& ComputeNode::getParameterValues() const {
 	return parameterValues;
 }
 
@@ -179,7 +179,7 @@ void from_json(const nlohmann::ordered_json& j, ComputeNode::Link& link) {
 void from_json(const nlohmann::ordered_json& j, ComputeNode& node) {
 	std::string name;
 	std::vector<ComputeNode::Link> inputs;
-	std::vector<ComputeNodeParameter::Value> parameterValues;
+	std::vector<VariantParameter::Value> parameterValues;
 	vec2d position = vec2d(0.0);
 
 	name = j.at("name");

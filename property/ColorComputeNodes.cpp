@@ -16,7 +16,7 @@ BlendComputeNode::BlendComputeNode() : ComputeNodeBase(typeName,
 	{ Signature{ { VariantValue::type_float4, VariantValue::type_float4 }, { VariantValue::type_float4 } } },
 	{ VariantValue(), VariantValue() },
 	{
-		ComputeNodeParameter::createEnumParameter("compute_param_mode", 0, std::vector<std::string>{
+		VariantParameter::createEnumParameter("compute_param_mode", 0, std::vector<std::string>{
 			"blend_multiply",
 			"blend_add",
 			"blend_subtract",
@@ -88,7 +88,7 @@ ColorRampComputeNode::ColorRampComputeNode() : ComputeNodeBase(typeName,
 	{ "compute_slot_color" },
 	{ Signature{ { VariantValue::type_float }, { VariantValue::type_float4 } } },
 	{ VariantValue::Float(0.0) },
-	{ ComputeNodeParameter::createGradientParameter("compute_param_gradient", Curve<vec4d>(vec4d(0.5), CurveInterpolation::linear)) }) {
+	{ VariantParameter::createGradientParameter("compute_param_gradient", Curve<vec4d>(vec4d(0.5), CurveInterpolation::linear)) }) {
 
 }
 std::vector<VariantValue> ColorRampComputeNode::evaluate(const std::vector<VariantValue>& in) const {

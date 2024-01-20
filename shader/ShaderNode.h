@@ -7,7 +7,7 @@ struct ShaderNode {
 	struct Link {
 		uint32_t id = nullId;
 		uint32_t nodeId = nullId;
-		uint32_t slot = 0;
+		uint32_t slot = 0u;
 
 		Link();
 		Link(uint32_t l, uint32_t n, uint32_t s);
@@ -19,7 +19,8 @@ struct ShaderNode {
 	std::string type;
 	std::string name;
 	std::vector<Link> inputs;
-	std::vector<ShaderParameter::Value> parameters;
+	std::vector<VariantParameter::Value> parameters;
+	bool isParameterNode = false;
 
 	vec2d position = vec2d(0.0);
 };
