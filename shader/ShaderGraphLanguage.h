@@ -16,6 +16,7 @@ struct ShaderGraphLanguage {
 
 	std::string variablePrefix;
 	std::string parameterPrefix;
+	std::string parameterBlockName;
 
 	std::string shaderTemplate;
 };

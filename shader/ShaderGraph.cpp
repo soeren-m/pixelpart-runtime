@@ -81,15 +81,17 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 		std::string valueString;
 
 		if(node.isParameterNode) {
-			// TODO:
-			std::string parameterVariableName = graphLanguage.parameterPrefix + parameter.name;
-			std::string parameterCode = graphLanguage.parameterTemplate;
-			parameterCode = replace(parameterCode, graphLanguage.parameterTypeNames.at(parameterValue.type), "{type}");
-			parameterCode = replace(parameterCode, parameterVariableName, "{name}");
-			result.parameterCode += "\n";
-			result.parameterCode += parameterCode;
+			// TODO: don't generate code for samplers?
+			if(parameterValue.type != VariantParameter::Value::type_resource_image) {
+				std::string parameterVariableName = graphLanguage.parameterPrefix + parameter.name;
+				std::string parameterCode = graphLanguage.parameterTemplate;
+				parameterCode = replace(parameterCode, graphLanguage.parameterTypeNames.at(parameterValue.type), "{type}");
+				parameterCode = replace(parameterCode, parameterVariableName, "{name}");
+				result.parameterCode += "\n";
+				result.parameterCode += parameterCode;
 
-			valueString = parameterVariableName;
+				valueString = parameterVariableName;
+			}
 		}
 		else {
 			switch(parameterValue.type) {
@@ -422,6 +424,13 @@ void ShaderGraph::setNodeParameter(uint32_t nodeId, const std::string& parameter
 			node.parameters[p] = value;
 		}
 	}
+}
+void ShaderGraph::setNodeParameterNode(uint32_t nodeId, bool enable) {
+	if(!hasNode(nodeId)) {
+		return;
+	}
+
+	nodes[nodeId].isParameterNode = enable;
 }
 void ShaderGraph::setNodePosition(uint32_t nodeId, const vec2d& position) {
 	if(!hasNode(nodeId)) {

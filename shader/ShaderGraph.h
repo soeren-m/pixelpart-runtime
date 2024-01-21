@@ -55,6 +55,7 @@ public:
 	void setNodeName(uint32_t nodeId, const std::string& name);
 	void setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, VariantParameter::Value value);
 	void setNodeParameter(uint32_t nodeId, const std::string& parameterName, VariantParameter::Value value);
+	void setNodeParameterNode(uint32_t nodeId, bool enable);
 	void setNodePosition(uint32_t nodeId, const vec2d& position);
 	bool hasNode(uint32_t nodeId) const;
 	const ShaderNode& getNode(uint32_t nodeId) const;
