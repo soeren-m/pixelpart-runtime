@@ -93,12 +93,17 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 				}
 			}
 			else {
-				std::string parameterVariableName = graphLanguage.parameterPrefix + parameter.name;
+				std::string nodeIdentifier = replace(nodeType.name, "_", " ");
+				std::string parameterVariableName = graphLanguage.parameterPrefix
+					+ nodeIdentifier
+					+ "_" + std::to_string(nodeId)
+					+ "_" + std::to_string(parameterIndex);
+
 				std::string parameterCode = graphLanguage.parameterTemplate;
 				parameterCode = replace(parameterCode, graphLanguage.parameterTypeNames.at(parameterValue.type), "{type}");
 				parameterCode = replace(parameterCode, parameterVariableName, "{name}");
-				result.parameterCode += "\n";
 				result.parameterCode += parameterCode;
+				result.parameterCode += "\n";
 
 				valueString = parameterVariableName;
 			}
