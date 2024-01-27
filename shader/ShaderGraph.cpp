@@ -81,8 +81,18 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 		std::string valueString;
 
 		if(node.isParameterNode) {
-			// TODO: don't generate code for samplers?
-			if(parameterValue.type != VariantParameter::Value::type_resource_image) {
+			if(parameterValue.type == VariantParameter::Value::type_resource_image) {
+				std::size_t samplerIndex = result.textureResourceIds.size();
+				if(samplerIndex < graphLanguage.textureSamplers.size()) {
+					result.textureResourceIds.push_back(parameterValue.getResourceId());
+					result.textureParameterNames.push_back(parameter.name);
+					valueString = graphLanguage.textureSamplers[samplerIndex];
+				}
+				else {
+					throw BuildException("No more texture samplers available", nodeId);
+				}
+			}
+			else {
 				std::string parameterVariableName = graphLanguage.parameterPrefix + parameter.name;
 				std::string parameterCode = graphLanguage.parameterTemplate;
 				parameterCode = replace(parameterCode, graphLanguage.parameterTypeNames.at(parameterValue.type), "{type}");
@@ -168,9 +178,10 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 					break;
 				}
 				case VariantParameter::Value::type_resource_image: {
-					std::size_t samplerIndex = result.textureIds.size();
+					std::size_t samplerIndex = result.textureResourceIds.size();
 					if(samplerIndex < graphLanguage.textureSamplers.size()) {
-						result.textureIds.push_back(parameterValue.getResourceId());
+						result.textureResourceIds.push_back(parameterValue.getResourceId());
+						result.textureParameterNames.push_back(parameter.name);
 						valueString = graphLanguage.textureSamplers[samplerIndex];
 					}
 					else {
@@ -299,7 +310,14 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 	result.resolvedNodes.insert(nodeId);
 
 	if(nodeId == 0u) {
-		result.code = replace(graphLanguage.shaderTemplate, result.parameterCode, "{parameters}");
+		std::string parameterBlock;
+		if(!result.parameterCode.empty()) {
+			parameterBlock = graphLanguage.parameterBlockTemplate;
+			parameterBlock = replace(parameterBlock, graphLanguage.parameterBlockName, "{block_name}");
+			parameterBlock = replace(parameterBlock, result.parameterCode, "{parameters}");
+		}
+
+		result.code = replace(graphLanguage.shaderTemplate, parameterBlock, "{parameter_block}");
 		result.code = replace(result.code, inputCode + "\n" + code, "{main}");
 
 		return result.code;

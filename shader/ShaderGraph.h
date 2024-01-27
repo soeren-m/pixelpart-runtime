@@ -33,7 +33,8 @@ public:
 		std::unordered_map<uint32_t, std::vector<std::string>> nodeOutputVariables;
 		std::unordered_map<uint32_t, uint32_t> nodeSignatures;
 		std::unordered_set<uint32_t> resolvedNodes;
-		std::vector<std::string> textureIds;
+		std::vector<std::string> textureResourceIds;
+		std::vector<std::string> textureParameterNames;
 		uint32_t numVariables = 0u;
 	};
 

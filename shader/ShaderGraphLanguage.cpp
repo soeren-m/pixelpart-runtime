@@ -17,6 +17,7 @@ void to_json(nlohmann::ordered_json& j, const ShaderGraphLanguage& graphLanguage
 		{ "variable_prefix", graphLanguage.variablePrefix },
 		{ "parameter_prefix", graphLanguage.parameterPrefix },
 		{ "parameter_block_name", graphLanguage.parameterBlockName },
+		{ "parameter_block_template", graphLanguage.parameterBlockTemplate },
 
 		{ "shader_template", graphLanguage.shaderTemplate }
 	};
@@ -37,6 +38,7 @@ void from_json(const nlohmann::ordered_json& j, ShaderGraphLanguage& graphLangua
 	fromJson(graphLanguage.variablePrefix, j, "variable_prefix");
 	fromJson(graphLanguage.parameterPrefix, j, "parameter_prefix");
 	fromJson(graphLanguage.parameterBlockName, j, "parameter_block_name");
+	fromJson(graphLanguage.parameterBlockTemplate, j, "parameter_block_template");
 
 	fromJson(graphLanguage.shaderTemplate, j, "shader_template");
 }
