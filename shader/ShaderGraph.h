@@ -35,6 +35,7 @@ public:
 		std::unordered_set<uint32_t> resolvedNodes;
 		std::vector<std::string> textureResourceIds;
 		std::vector<std::string> textureParameterNames;
+		std::unordered_map<uint32_t, std::string> parameterNames;
 		uint32_t numVariables = 0u;
 	};
 

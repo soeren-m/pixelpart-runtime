@@ -86,6 +86,8 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 				if(samplerIndex < graphLanguage.textureSamplers.size()) {
 					result.textureResourceIds.push_back(parameterValue.getResourceId());
 					result.textureParameterNames.push_back(parameter.name);
+					result.parameterNames[nodeId] = graphLanguage.textureSamplers[samplerIndex];
+
 					valueString = graphLanguage.textureSamplers[samplerIndex];
 				}
 				else {
@@ -98,6 +100,8 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 					+ nodeIdentifier
 					+ "_" + std::to_string(nodeId)
 					+ "_" + std::to_string(parameterIndex);
+
+				result.parameterNames[nodeId] = parameterVariableName;
 
 				std::string parameterCode = graphLanguage.parameterTemplate;
 				parameterCode = replace(parameterCode, graphLanguage.parameterTypeNames.at(parameterValue.type), "{type}");

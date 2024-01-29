@@ -31,7 +31,7 @@ void to_json(nlohmann::ordered_json& j, const ShaderNode& node) {
 		{ "name", node.name },
 		{ "inputs", node.inputs },
 		{ "parameters", node.parameters },
-		{ "is_parameter_node", node.isParameterNode },
+		{ "parameter_node", node.isParameterNode },
 
 		{ "position", node.position }
 	};
@@ -50,7 +50,7 @@ void from_json(const nlohmann::ordered_json& j, ShaderNode& node) {
 	fromJson(node.name, j, "name");
 	fromJson(node.inputs , j, "inputs");
 	fromJson(node.parameters, j, "parameters");
-	fromJson(node.isParameterNode, j, "is_parameter_node");
+	fromJson(node.isParameterNode, j, "parameter_node");
 
 	fromJson(node.position, j, "position");
 }
