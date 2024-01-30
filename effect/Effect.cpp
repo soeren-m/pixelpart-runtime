@@ -4,7 +4,7 @@
 namespace pixelpart {
 template <typename T>
 uint32_t findUnusedNodeId(const std::vector<T>& nodes) {
-	uint32_t id = 0;
+	uint32_t id = 0u;
 	bool isUsed = true;
 
 	while(isUsed) {
@@ -139,26 +139,29 @@ bool isNameUsedInEffect(const Effect& effect, const std::string& name) {
 }
 bool isResourceUsedInEffect(const Effect& effect, const std::string& resourceId) {
 	for(const ParticleType& particleType : effect.particleTypes) {
-		if(particleType.meshRendererSettings.meshResourceId == resourceId) {
+		if(particleType.materialInstance.materialId == resourceId ||
+			particleType.meshRendererSettings.meshResourceId == resourceId) {
 			return true;
-		}
-
-		const auto& shaderNodes = particleType.shader.getNodes();
-
-		for(const auto& nodeEntry : shaderNodes) {
-			for(const auto& nodeParameter : nodeEntry.second.parameters) {
-				if(nodeParameter.type == pixelpart::ShaderParameter::Value::type_resource_image) {
-					if(resourceId == nodeParameter.getResourceId()) {
-						return true;
-					}
-				}
-			}
 		}
 	}
 
 	for(const ForceField& forceField : effect.forceFields) {
 		if(resourceId == forceField.vectorField.resourceId) {
 			return true;
+		}
+	}
+
+	for(const auto& resourceEntry : effect.resources.materials) {
+		const MaterialResource& material = resourceEntry.second;
+
+		for(const auto& nodeEntry : material.shaderGraph.getNodes()) {
+			for(const auto& nodeParameter : nodeEntry.second.parameters) {
+				if(nodeParameter.type == pixelpart::VariantParameter::Value::type_resource_image) {
+					if(resourceId == nodeParameter.getResourceId()) {
+						return true;
+					}
+				}
+			}
 		}
 	}
 

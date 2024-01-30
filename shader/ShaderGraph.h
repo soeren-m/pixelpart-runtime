@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ShaderNode.h"
-#include "ShaderGraphType.h"
+#include "ShaderGraphLanguage.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <stdexcept>
@@ -29,21 +29,24 @@ public:
 	};
 	struct BuildResult {
 		std::string code;
+		std::string parameterCode;
 		std::unordered_map<uint32_t, std::vector<std::string>> nodeOutputVariables;
 		std::unordered_map<uint32_t, uint32_t> nodeSignatures;
 		std::unordered_set<uint32_t> resolvedNodes;
-		std::vector<std::string> textureIds;
-		uint32_t numVariables = 0;
+		std::vector<std::string> textureResourceIds;
+		std::vector<std::string> textureParameterNames;
+		std::unordered_map<uint32_t, std::string> parameterNames;
+		uint32_t numVariables = 0u;
 	};
 
-	static ShaderGraphType graphType;
-	static std::string shaderVariableNamePrefix;
+	static ShaderGraphLanguage graphLanguage;
+
 	static uint32_t numCurveInterpolationPoints;
 
 	ShaderGraph();
 	ShaderGraph(const std::unordered_map<uint32_t, ShaderNode>& initialNodes);
 
-	std::string build(BuildResult& result, uint32_t nodeId = 0) const;
+	std::string build(BuildResult& result, uint32_t nodeId = 0u) const;
 
 	uint32_t addNode(const std::string& typeName);
 	void removeNode(uint32_t nodeId);
@@ -52,14 +55,17 @@ public:
 	void unlinkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, uint32_t targetSlot);
 	void unlinkNodes(uint32_t linkId);
 	void setNodeName(uint32_t nodeId, const std::string& name);
-	void setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, ShaderParameter::Value value);
-	void setNodeParameter(uint32_t nodeId, const std::string& parameterName, ShaderParameter::Value value);
+	void setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, VariantParameter::Value value);
+	void setNodeParameter(uint32_t nodeId, const std::string& parameterName, VariantParameter::Value value);
+	void setNodeParameterNode(uint32_t nodeId, bool enable);
 	void setNodePosition(uint32_t nodeId, const vec2d& position);
 	bool hasNode(uint32_t nodeId) const;
 	const ShaderNode& getNode(uint32_t nodeId) const;
 	const std::unordered_map<uint32_t, ShaderNode>& getNodes() const;
 	uint32_t getNextNodeId() const;
 	uint32_t getNextLinkId() const;
+
+	std::unordered_map<uint32_t, VariantParameter> getShaderParameters() const;
 
 	bool hasNodeType(const std::string& typeName) const;
 	const ShaderNodeType& getNodeType(const std::string& typeName) const;
@@ -70,8 +76,9 @@ private:
 	uint32_t findNodeSignature(const BuildResult& result, const ShaderNode& node, std::vector<TypeMatch>& typeMatch) const;
 
 	std::unordered_map<uint32_t, ShaderNode> nodes;
-	uint32_t nextNodeId = 0;
-	uint32_t nextLinkId = 0;
+
+	uint32_t nextNodeId = 0u;
+	uint32_t nextLinkId = 0u;
 };
 
 void to_json(nlohmann::ordered_json& j, const ShaderGraph& shader);

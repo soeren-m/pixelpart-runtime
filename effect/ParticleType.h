@@ -4,17 +4,12 @@
 #include "BlendMode.h"
 #include "RotationMode.h"
 #include "AlignmentMode.h"
+#include "MaterialInstance.h"
+#include "ParticleRendererType.h"
 #include "ParticleRendererSettings.h"
-#include "../shader/ShaderGraph.h"
 
 namespace pixelpart {
 struct ParticleType : public Node {
-	enum class Renderer : uint32_t {
-		sprite = 0,
-		trail = 1,
-		mesh = 2
-	};
-
 	AnimatedProperty<floatd> numParticles = AnimatedProperty<floatd>(0.0);
 	AnimatedProperty<floatd> lifespan = AnimatedProperty<floatd>(1.0);
 	StaticProperty<floatd> lifespanVariance = StaticProperty<floatd>(0.0);
@@ -43,7 +38,6 @@ struct ParticleType : public Node {
 	bool visible = true;
 	uint32_t layer = 0;
 	BlendMode blendMode = BlendMode::normal;
-	ShaderGraph shader;
 	AnimatedProperty<floatd> initialSize = AnimatedProperty<floatd>(0.1);
 	AnimatedProperty<vec3d> size = AnimatedProperty<vec3d>(vec3d(1.0));
 	StaticProperty<floatd> sizeVariance = StaticProperty<floatd>(0.0);
@@ -54,17 +48,12 @@ struct ParticleType : public Node {
 	AnimatedProperty<floatd> opacity = AnimatedProperty<floatd>(1.0);
 	StaticProperty<floatd> opacityVariance = StaticProperty<floatd>(0.0);
 
-	Renderer renderer = Renderer::sprite;
+	MaterialInstance materialInstance;
+	ParticleRendererType renderer = ParticleRendererType::sprite;
 	ParticleSpriteRendererSettings spriteRendererSettings;
 	ParticleTrailRendererSettings trailRendererSettings;
 	ParticleMeshRendererSettings meshRendererSettings;
 };
-
-NLOHMANN_JSON_SERIALIZE_ENUM(ParticleType::Renderer, {
-	{ ParticleType::Renderer::sprite, "sprite" },
-	{ ParticleType::Renderer::trail, "trail" },
-	{ ParticleType::Renderer::mesh, "mesh" }
-})
 
 void to_json(nlohmann::ordered_json& j, const ParticleType& particleType);
 void from_json(const nlohmann::ordered_json& j, ParticleType& particleType);

@@ -63,8 +63,8 @@ public:
 	void unlinkRemovedInputs(const InputSet& graphInputs);
 
 	void setNodeName(uint32_t nodeId, const std::string& name);
-	void setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, ComputeNodeParameter::Value value);
-	void setNodeParameter(uint32_t nodeId, const std::string& parameterName, ComputeNodeParameter::Value value);
+	void setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, VariantParameter::Value value);
+	void setNodeParameter(uint32_t nodeId, const std::string& parameterName, VariantParameter::Value value);
 	void setNodePosition(uint32_t nodeId, const vec2d& position);
 
 	bool hasNode(uint32_t nodeId) const;

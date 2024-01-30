@@ -5,7 +5,7 @@
 namespace pixelpart {
 struct PostProcessingEffect {
 	std::string type;
-	std::vector<ShaderParameter::Value> parameters;
+	std::vector<VariantParameter::Value> parameters;
 
 	PostProcessingEffect();
 	PostProcessingEffect(const PostProcessingEffectType& effectType);

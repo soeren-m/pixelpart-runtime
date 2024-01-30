@@ -40,7 +40,6 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "visible", particleType.visible },
 		{ "layer", particleType.layer },
 		{ "blend_mode", particleType.blendMode },
-		{ "shader", particleType.shader },
 		{ "initial_size", particleType.initialSize },
 		{ "size", particleType.size },
 		{ "size_variance", particleType.sizeVariance },
@@ -51,6 +50,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "opacity", particleType.opacity },
 		{ "opacity_variance", particleType.opacityVariance },
 
+		{ "material_instance", particleType.materialInstance },
 		{ "renderer", particleType.renderer },
 		{ "sprite_renderer_settings", particleType.spriteRendererSettings },
 		{ "trail_renderer_settings", particleType.trailRendererSettings },
@@ -96,7 +96,6 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	fromJson(particleType.visible, j, "visible");
 	fromJson(particleType.layer, j, "layer");
 	fromJson(particleType.blendMode, j, "blend_mode");
-	fromJson(particleType.shader, j, "shader");
 	fromJson(particleType.initialSize, j, "initial_size");
 	fromJson(particleType.size, j, "size");
 	fromJson(particleType.sizeVariance, j, "size_variance");
@@ -107,6 +106,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	fromJson(particleType.opacity, j, "opacity");
 	fromJson(particleType.opacityVariance, j, "opacity_variance");
 
+	fromJson(particleType.materialInstance, j, "material_instance");
 	fromJson(particleType.renderer, j, "renderer");
 	fromJson(particleType.spriteRendererSettings, j, "sprite_renderer_settings");
 	fromJson(particleType.trailRendererSettings, j, "trail_renderer_settings");

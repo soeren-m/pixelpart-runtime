@@ -1,11 +1,10 @@
 #pragma once
 
-#include "../common/Types.h"
+#include "Resource.h"
 #include <vector>
 
 namespace pixelpart {
-struct MeshResource {
-	std::string name;
+struct MeshResource : public Resource {
 	std::vector<uint32_t> faces;
 	std::vector<glm::vec3> positions;
 	std::vector<glm::vec3> normals;

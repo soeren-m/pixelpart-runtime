@@ -13,7 +13,7 @@ ShaderNode::ShaderNode() {
 
 }
 ShaderNode::ShaderNode(const ShaderNodeType& nodeType) : type(nodeType.name), inputs(nodeType.inputs.size()), parameters(nodeType.parameters.size()) {
-	for(std::size_t p = 0; p < parameters.size(); p++) {
+	for(std::size_t p = 0u; p < parameters.size(); p++) {
 		parameters[p] = nodeType.parameters[p].defaultValue;
 	}
 }
@@ -22,7 +22,7 @@ void to_json(nlohmann::ordered_json& j, const ShaderNode::Link& link) {
 	j = nlohmann::ordered_json{
 		{ "id", link.id },
 		{ "node", link.nodeId },
-		{ "slot", link.slot },
+		{ "slot", link.slot }
 	};
 }
 void to_json(nlohmann::ordered_json& j, const ShaderNode& node) {
@@ -31,6 +31,8 @@ void to_json(nlohmann::ordered_json& j, const ShaderNode& node) {
 		{ "name", node.name },
 		{ "inputs", node.inputs },
 		{ "parameters", node.parameters },
+		{ "parameter_node", node.isParameterNode },
+
 		{ "position", node.position }
 	};
 }
@@ -48,6 +50,8 @@ void from_json(const nlohmann::ordered_json& j, ShaderNode& node) {
 	fromJson(node.name, j, "name");
 	fromJson(node.inputs , j, "inputs");
 	fromJson(node.parameters, j, "parameters");
+	fromJson(node.isParameterNode, j, "parameter_node");
+
 	fromJson(node.position, j, "position");
 }
 }
