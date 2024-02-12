@@ -9,7 +9,7 @@ void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
 	for(std::size_t z = 0u; z < resource.field.getDepth(); z++) {
 		for(std::size_t y = 0u; y < resource.field.getHeight(); y++) {
 			for(std::size_t x = 0u; x < resource.field.getWidth(); x++) {
-				const vec3d& vector = resource.field(x, y, z);
+				const vec3_t& vector = resource.field(x, y, z);
 
 				dataString += std::to_string(vector.x);
 				dataString += ' ';
@@ -48,7 +48,7 @@ void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
 	std::size_t width = j.at("width");
 	std::size_t height = j.at("height");
 	std::size_t depth = j.at("depth");
-	resource.field = Grid3d<vec3d>(width, height, depth, vec3d(0.0));
+	resource.field = Grid3d<vec3_t>(width, height, depth, vec3_t(0.0));
 
 	std::string compression;
 	fromJson(compression, j, "compression");
@@ -90,7 +90,7 @@ void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
 					break;
 				}
 
-				vec3d vector = vec3d(0.0);
+				vec3_t vector = vec3_t(0.0);
 				std::string token;
 
 				std::getline(dataStream, token, ' ');

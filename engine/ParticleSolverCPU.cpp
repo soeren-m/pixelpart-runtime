@@ -9,7 +9,7 @@ ParticleSolverCPU::ParticleSolverCPU(uint32_t numThreads) {
 #endif
 }
 
-void ParticleSolverCPU::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType, ParticleData& particles, uint32_t numParticles, floatd t, floatd dt) {
+void ParticleSolverCPU::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType, ParticleData& particles, uint32_t numParticles, float_t t, float_t dt) {
 #ifndef __EMSCRIPTEN__
 	numActiveThreads = std::min(std::max(numParticles / numParticlesPerThread, 1u), static_cast<uint32_t>(threadPool->getNumThreads()));
 
@@ -107,12 +107,12 @@ void ParticleSolverCPU::setNumParticlesPerThread(uint32_t num) {
 
 void ParticleSolverCPU::simulateParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
 	ParticleDataPointer particles, uint32_t workgroupSize,
-	floatd t, floatd dt,
+	float_t t, float_t dt,
 	const ForceSolver& forceSolver,
 	const CollisionSolver& collisionSolver,
 	const MotionPathSolver& motionPathSolver) {
-	floatd particleEmitterLife = std::fmod(t - particleEmitter.lifetimeStart, particleEmitter.lifetimeDuration) / particleEmitter.lifetimeDuration;
-	vec3d particleEmitterPosition = particleEmitter.position.get(particleEmitterLife);
+	float_t particleEmitterLife = std::fmod(t - particleEmitter.lifetimeStart, particleEmitter.lifetimeDuration) / particleEmitter.lifetimeDuration;
+	vec3_t particleEmitterPosition = particleEmitter.position.get(particleEmitterLife);
 
 	for(uint32_t p = 0u; p < workgroupSize; p++) {
 		particles.size[p] = particleType.size.get(particles.life[p]) * particles.initialSize[p];
@@ -127,12 +127,12 @@ void ParticleSolverCPU::simulateParticles(const ParticleEmitter& particleEmitter
 	}
 
 	for(uint32_t p = 0u; p < workgroupSize; p++) {
-		vec3d forwardDirection = (particles.velocity[p] != vec3d(0.0))
+		vec3_t forwardDirection = (particles.velocity[p] != vec3_t(0.0))
 			? glm::normalize(particles.velocity[p])
-			: vec3d(0.0);
-		vec3d radialDirection = (particleEmitterPosition != particles.globalPosition[p])
+			: vec3_t(0.0);
+		vec3_t radialDirection = (particleEmitterPosition != particles.globalPosition[p])
 			? glm::normalize(particleEmitterPosition - particles.globalPosition[p])
-			: vec3d(0.0);
+			: vec3_t(0.0);
 
 		particles.force[p] = forwardDirection * particleType.acceleration.get(particles.life[p]);
 		particles.force[p] += radialDirection * particleType.radialAcceleration.get(particles.life[p]);

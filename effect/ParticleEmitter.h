@@ -44,17 +44,17 @@ struct ParticleEmitter : public Node {
 	};
 
 	Shape shape = Shape::point;
-	Curve<vec3d> path = Curve<vec3d>();
-	AnimatedProperty<vec3d> size = AnimatedProperty<vec3d>(vec3d(1.0));
-	AnimatedProperty<vec3d> orientation = AnimatedProperty<vec3d>(vec3d(0.0));
+	Curve<vec3_t> path = Curve<vec3_t>();
+	AnimatedProperty<vec3_t> size = AnimatedProperty<vec3_t>(vec3_t(1.0));
+	AnimatedProperty<vec3_t> orientation = AnimatedProperty<vec3_t>(vec3_t(0.0));
 
 	Distribution distribution = Distribution::uniform;
 	GridOrder gridOrder = GridOrder::x_y_z;
 	uint32_t gridSize[3] = { 5u, 5u, 5u };
 	EmissionMode emissionMode = EmissionMode::continuous;
 	DirectionMode directionMode = DirectionMode::fixed;
-	AnimatedProperty<vec3d> direction = AnimatedProperty<vec3d>(vec3d(0.0));
-	AnimatedProperty<floatd> spread = AnimatedProperty<floatd>(0.0);
+	AnimatedProperty<vec3_t> direction = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	AnimatedProperty<float_t> spread = AnimatedProperty<float_t>(0.0);
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ParticleEmitter::Shape, {

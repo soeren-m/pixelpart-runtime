@@ -30,50 +30,50 @@ BlendComputeNode::BlendComputeNode() : ComputeNodeBase(typeName,
 
 }
 std::vector<VariantValue> BlendComputeNode::evaluate(const std::vector<VariantValue>& in) const {
-	VariantValue result = VariantValue::Float4(vec4d(1.0));
+	VariantValue result = VariantValue::Float4(vec4_t(1.0));
 	switch(parameterValues[0].getEnum()) {
 		case 0:
 			result = VariantValue::Float4(in[0].toFloat4() * in[1].toFloat4());
 			break;
 		case 1:
-			result = VariantValue::Float4(vec4d(
-				glm::clamp(in[0].toFloat3() + in[1].toFloat3(), vec3d(0.0), vec3d(1.0)),
+			result = VariantValue::Float4(vec4_t(
+				glm::clamp(in[0].toFloat3() + in[1].toFloat3(), vec3_t(0.0), vec3_t(1.0)),
 				in[0].toFloat4().a * in[1].toFloat4().a));
 			break;
 		case 2:
-			result = VariantValue::Float4(vec4d(
-				glm::clamp(in[0].toFloat3() - in[1].toFloat3(), vec3d(0.0), vec3d(1.0)),
+			result = VariantValue::Float4(vec4_t(
+				glm::clamp(in[0].toFloat3() - in[1].toFloat3(), vec3_t(0.0), vec3_t(1.0)),
 				in[0].toFloat4().a * in[1].toFloat4().a));
 			break;
 		case 3:
-			result = VariantValue::Float4(vec4d(
+			result = VariantValue::Float4(vec4_t(
 				glm::abs(in[0].toFloat3() - in[1].toFloat3()),
 				in[0].toFloat4().a * in[1].toFloat4().a));
 			break;
 		case 4:
-			result = VariantValue::Float4(vec4d(
-				vec3d(1.0) - (vec3d(1.0) - in[0].toFloat3()) * (vec3d(1.0) - in[1].toFloat3()),
+			result = VariantValue::Float4(vec4_t(
+				vec3_t(1.0) - (vec3_t(1.0) - in[0].toFloat3()) * (vec3_t(1.0) - in[1].toFloat3()),
 				in[0].toFloat4().a * in[1].toFloat4().a));
 			break;
 		case 5:
-			result = VariantValue::Float4(vec4d(
+			result = VariantValue::Float4(vec4_t(
 				(in[0].toFloat4().r < 0.5) ? (2.0 * in[0].toFloat4().r * in[1].toFloat4().r) : (1.0 - 2.0 * (1.0 - in[0].toFloat4().r) * (1.0 - in[1].toFloat4().r)),
 				(in[0].toFloat4().g < 0.5) ? (2.0 * in[0].toFloat4().g * in[1].toFloat4().g) : (1.0 - 2.0 * (1.0 - in[0].toFloat4().g) * (1.0 - in[1].toFloat4().g)),
 				(in[0].toFloat4().b < 0.5) ? (2.0 * in[0].toFloat4().b * in[1].toFloat4().b) : (1.0 - 2.0 * (1.0 - in[0].toFloat4().b) * (1.0 - in[1].toFloat4().b)),
 				in[0].toFloat4().a * in[1].toFloat4().a));
 			break;
 		case 6:
-			result = VariantValue::Float4(vec4d(
+			result = VariantValue::Float4(vec4_t(
 				glm::max(in[0].toFloat3(), in[1].toFloat3()),
 				in[0].toFloat4().a * in[1].toFloat4().a));
 			break;
 		case 7:
-			result = VariantValue::Float4(vec4d(
+			result = VariantValue::Float4(vec4_t(
 				glm::min(in[0].toFloat3(), in[1].toFloat3()),
 				in[0].toFloat4().a * in[1].toFloat4().a));
 			break;
 		case 8:
-			result = VariantValue::Float4(vec4d(
+			result = VariantValue::Float4(vec4_t(
 				in[1].toFloat3(),
 				in[0].toFloat4().a * in[1].toFloat4().a));
 			break;
@@ -88,7 +88,7 @@ ColorRampComputeNode::ColorRampComputeNode() : ComputeNodeBase(typeName,
 	{ "compute_slot_color" },
 	{ Signature{ { VariantValue::type_float }, { VariantValue::type_float4 } } },
 	{ VariantValue::Float(0.0) },
-	{ VariantParameter::createGradientParameter("compute_param_gradient", Curve<vec4d>(vec4d(0.5), CurveInterpolation::linear)) }) {
+	{ VariantParameter::createGradientParameter("compute_param_gradient", Curve<vec4_t>(vec4_t(0.5), CurveInterpolation::linear)) }) {
 
 }
 std::vector<VariantValue> ColorRampComputeNode::evaluate(const std::vector<VariantValue>& in) const {
@@ -108,8 +108,8 @@ BrightnessComputeNode::BrightnessComputeNode() : ComputeNodeBase(typeName,
 }
 std::vector<VariantValue> BrightnessComputeNode::evaluate(const std::vector<VariantValue>& in) const {
 	return std::vector<VariantValue>{
-		VariantValue::Float4(vec4d(
-			in[0].toFloat3() + vec3d(in[1].toFloat()),
+		VariantValue::Float4(vec4_t(
+			in[0].toFloat3() + vec3_t(in[1].toFloat()),
 			in[0].toFloat4().a))
 	};
 }
@@ -125,8 +125,8 @@ ExposureComputeNode::ExposureComputeNode() : ComputeNodeBase(typeName,
 }
 std::vector<VariantValue> ExposureComputeNode::evaluate(const std::vector<VariantValue>& in) const {
 	return std::vector<VariantValue>{
-		VariantValue::Float4(vec4d(
-			in[0].toFloat3() * vec3d(1.0 + in[1].toFloat()),
+		VariantValue::Float4(vec4_t(
+			in[0].toFloat3() * vec3_t(1.0 + in[1].toFloat()),
 			in[0].toFloat4().a))
 	};
 }
@@ -142,8 +142,8 @@ ContrastComputeNode::ContrastComputeNode() : ComputeNodeBase(typeName,
 }
 std::vector<VariantValue> ContrastComputeNode::evaluate(const std::vector<VariantValue>& in) const {
 	return std::vector<VariantValue>{
-		VariantValue::Float4(vec4d(
-			vec3d(0.5) + (in[0].toFloat3() - vec3d(0.5)) * (1.0 + in[1].toFloat()),
+		VariantValue::Float4(vec4_t(
+			vec3_t(0.5) + (in[0].toFloat3() - vec3_t(0.5)) * (1.0 + in[1].toFloat()),
 			in[0].toFloat4().a))
 	};
 }
@@ -159,9 +159,9 @@ SaturationComputeNode::SaturationComputeNode() : ComputeNodeBase(typeName,
 }
 std::vector<VariantValue> SaturationComputeNode::evaluate(const std::vector<VariantValue>& in) const {
 	return std::vector<VariantValue>{
-		VariantValue::Float4(vec4d(
+		VariantValue::Float4(vec4_t(
 			glm::mix(
-				vec3d(glm::dot(in[0].toFloat3(), vec3d(0.2126, 0.7152, 0.0722))),
+				vec3_t(glm::dot(in[0].toFloat3(), vec3_t(0.2126, 0.7152, 0.0722))),
 				in[0].toFloat3(),
 				1.0 + in[1].toFloat()),
 			in[0].toFloat4().a))

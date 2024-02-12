@@ -16,7 +16,7 @@ struct ParticleTrailRendererSettings {
 	SmoothingMethod smoothingMethod = SmoothingMethod::none;
 	uint32_t numSmoothingSegments = 100u;
 
-	floatd textureUVFactor = 1.0;
+	float_t textureUVFactor = 1.0;
 	uint32_t textureRotation = 0u;
 };
 

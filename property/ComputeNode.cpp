@@ -13,7 +13,7 @@ uint32_t ComputeNode::InputException::getInputIndex() const {
 ComputeNode::Link::Link() {
 
 }
-ComputeNode::Link::Link(uint32_t l, uint32_t n, uint32_t s) : id(l), nodeId(n), slot(s) {
+ComputeNode::Link::Link(id_t l, id_t n, uint32_t s) : id(l), nodeId(n), slot(s) {
 
 }
 
@@ -136,10 +136,10 @@ const std::vector<VariantParameter::Value>& ComputeNode::getParameterValues() co
 	return parameterValues;
 }
 
-void ComputeNode::setPosition(const vec2d& pos) {
+void ComputeNode::setPosition(const vec2_t& pos) {
 	position = pos;
 }
-vec2d ComputeNode::getPosition() const {
+vec2_t ComputeNode::getPosition() const {
 	return position;
 }
 
@@ -180,7 +180,7 @@ void from_json(const nlohmann::ordered_json& j, ComputeNode& node) {
 	std::string name;
 	std::vector<ComputeNode::Link> inputs;
 	std::vector<VariantParameter::Value> parameterValues;
-	vec2d position = vec2d(0.0);
+	vec2_t position = vec2_t(0.0);
 
 	name = j.at("name");
 	inputs = j.at("inputs");

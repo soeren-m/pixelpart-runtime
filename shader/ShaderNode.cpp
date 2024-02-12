@@ -5,7 +5,7 @@ namespace pixelpart {
 ShaderNode::Link::Link() {
 
 }
-ShaderNode::Link::Link(uint32_t l, uint32_t n, uint32_t s) : id(l), nodeId(n), slot(s) {
+ShaderNode::Link::Link(id_t l, id_t n, uint32_t s) : id(l), nodeId(n), slot(s) {
 
 }
 

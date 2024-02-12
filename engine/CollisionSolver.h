@@ -11,74 +11,74 @@ class CollisionSolver {
 public:
 	struct ColliderSegment {
 		std::bitset<256> exclusionSet;
-		floatd lifetimeStart = 0.0;
-		floatd lifetimeDuration = 0.0;
+		float_t lifetimeStart = 0.0;
+		float_t lifetimeDuration = 0.0;
 		bool repeat = false;
 		bool killOnContact = false;
 
-		Curve<floatd> bounce;
-		Curve<floatd> friction;
+		Curve<float_t> bounce;
+		Curve<float_t> friction;
 
 		ColliderSegment(const Collider& collider);
 	};
 
 	struct LineColliderSegment : ColliderSegment {
-		vec2d startPoint = vec2d(-1.0, 0.0);
-		vec2d endPoint = vec2d(+1.0, 0.0);
+		vec2_t startPoint = vec2_t(-1.0, 0.0);
+		vec2_t endPoint = vec2_t(+1.0, 0.0);
 
 		LineColliderSegment(const Collider& collider, std::size_t segmentIndex);
 	};
 
 	struct PlaneColliderSegment : ColliderSegment {
-		vec3d center = vec3d(0.0, 0.0, 0.0);
-		vec3d normal = vec3d(0.0, 1.0, 0.0);
-		vec3d rightVector = vec3d(1.0, 0.0, 0.0);
-		vec3d upVector = vec3d(0.0, 0.0, 1.0);
+		vec3_t center = vec3_t(0.0, 0.0, 0.0);
+		vec3_t normal = vec3_t(0.0, 1.0, 0.0);
+		vec3_t rightVector = vec3_t(1.0, 0.0, 0.0);
+		vec3_t upVector = vec3_t(0.0, 0.0, 1.0);
 
 		PlaneColliderSegment(const Collider& collider, std::size_t segmentIndex);
 	};
 
 	CollisionSolver();
 
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, floatd t, floatd dt) const;
+	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) const;
 
 	void update(const Effect* effect);
 
 	void setGridCellCountFactor(uint32_t factor);
-	void setGridPadding(floatd padding);
+	void setGridPadding(float_t padding);
 
 private:
 	struct Intersection {
 		bool hit = false;
-		vec3d point = vec3d(0.0);
+		vec3_t point = vec3_t(0.0);
 
 		Intersection();
-		Intersection(const vec3d& p);
+		Intersection(const vec3_t& p);
 	};
 
-	static bool isPointOnLineSegment(const vec2d& p, const vec2d& l1, const vec2d& l2);
-	static bool isPointOnLineSegment(const vec3d& p, const vec3d& l1, const vec3d& l2);
-	static bool isPointOnCollider(const vec3d& p, const PlaneColliderSegment& collider);
-	static vec2d calculateClosestPointOnLine(const vec2d& p, const LineColliderSegment& collider);
-	static vec3d calculateClosestPointOnPlane(const vec3d& p, const PlaneColliderSegment& collider);
-	static Intersection calculateRayColliderIntersection(const LineColliderSegment& collider, const vec2d& rayOrigin, const vec2d& rayEnd);
-	static Intersection calculateRayColliderIntersection(const PlaneColliderSegment& collider, const vec3d& rayOrigin, const vec3d& rayEnd);
+	static bool isPointOnLineSegment(const vec2_t& p, const vec2_t& l1, const vec2_t& l2);
+	static bool isPointOnLineSegment(const vec3_t& p, const vec3_t& l1, const vec3_t& l2);
+	static bool isPointOnCollider(const vec3_t& p, const PlaneColliderSegment& collider);
+	static vec2_t calculateClosestPointOnLine(const vec2_t& p, const LineColliderSegment& collider);
+	static vec3_t calculateClosestPointOnPlane(const vec3_t& p, const PlaneColliderSegment& collider);
+	static Intersection calculateRayColliderIntersection(const LineColliderSegment& collider, const vec2_t& rayOrigin, const vec2_t& rayEnd);
+	static Intersection calculateRayColliderIntersection(const PlaneColliderSegment& collider, const vec3_t& rayOrigin, const vec3_t& rayEnd);
 
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t p, floatd t, floatd dt, const LineColliderSegment& collider) const;
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t p, floatd t, floatd dt, const PlaneColliderSegment& collider) const;
+	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t p, float_t t, float_t dt, const LineColliderSegment& collider) const;
+	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t p, float_t t, float_t dt, const PlaneColliderSegment& collider) const;
 
-	GridIndex<int32_t> toGridIndex(const vec3d& position) const;
+	GridIndex<int32_t> toGridIndex(const vec3_t& position) const;
 
-	void findPotentialColliders(std::unordered_set<uint32_t>& potentialColliders, int32_t cx, int32_t cy, const vec2d& size) const;
+	void findPotentialColliders(std::unordered_set<uint32_t>& potentialColliders, int32_t cx, int32_t cy, const vec2_t& size) const;
 
 	std::vector<LineColliderSegment> lineColliders;
 	std::vector<PlaneColliderSegment> planeColliders;
 
 	Grid<std::vector<uint32_t>> grid;
-	vec2d gridBottom = vec2d(0.0);
-	vec2d gridTop = vec2d(0.0);
-	vec2d gridCellDimension = vec2d(1.0);
+	vec2_t gridBottom = vec2_t(0.0);
+	vec2_t gridTop = vec2_t(0.0);
+	vec2_t gridCellDimension = vec2_t(1.0);
 	uint32_t gridCellCountFactor = 3;
-	floatd gridPadding = 0.25;
+	float_t gridPadding = 0.25;
 };
 }

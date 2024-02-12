@@ -17,11 +17,11 @@ std::string replace(std::string str, const std::string& to, const std::string& f
 }
 }
 
-ShaderGraph::BuildException::BuildException(const std::string& msg, uint32_t node, uint32_t slot) : std::runtime_error(msg), nodeId(node), slotIndex(slot) {
+ShaderGraph::BuildException::BuildException(const std::string& msg, id_t node, uint32_t slot) : std::runtime_error(msg), nodeId(node), slotIndex(slot) {
 
 }
 
-uint32_t ShaderGraph::BuildException::getNodeId() const {
+id_t ShaderGraph::BuildException::getNodeId() const {
 	return nodeId;
 }
 uint32_t ShaderGraph::BuildException::getSlotIndex() const {
@@ -35,9 +35,9 @@ uint32_t ShaderGraph::numCurveInterpolationPoints = 100u;
 ShaderGraph::ShaderGraph() {
 
 }
-ShaderGraph::ShaderGraph(const std::unordered_map<uint32_t, ShaderNode>& initialNodes) : nodes(initialNodes) {
-	uint32_t maxNodeId = 0u;
-	uint32_t maxLinkId = 0u;
+ShaderGraph::ShaderGraph(const std::unordered_map<id_t, ShaderNode>& initialNodes) : nodes(initialNodes) {
+	id_t maxNodeId = 0u;
+	id_t maxLinkId = 0u;
 	for(const auto& nodeEntry : nodes) {
 		maxNodeId = std::max(maxNodeId, nodeEntry.first);
 
@@ -54,7 +54,7 @@ ShaderGraph::ShaderGraph(const std::unordered_map<uint32_t, ShaderNode>& initial
 	nextLinkId = maxLinkId + 1u;
 }
 
-std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
+std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 	if(nodeId == 0u) {
 		result = BuildResult();
 	}
@@ -153,10 +153,10 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 					break;
 				}
 				case VariantParameter::Value::type_curve: {
-					Curve<floatd> curve = parameterValue.getCurve();
+					Curve<float_t> curve = parameterValue.getCurve();
 
 					for(uint32_t i = 0u; i < numCurveInterpolationPoints; i++) {
-						floatd pointValue = curve.get(static_cast<floatd>(i) / static_cast<floatd>(numCurveInterpolationPoints - 1u));
+						float_t pointValue = curve.get(static_cast<float_t>(i) / static_cast<float_t>(numCurveInterpolationPoints - 1u));
 						std::string pointValueString = graphLanguage.typeConstructors[VariantValue::type_float];
 						pointValueString = replace(pointValueString, std::to_string(pointValue), "{0}");
 
@@ -169,10 +169,10 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 					break;
 				}
 				case VariantParameter::Value::type_gradient: {
-					Curve<vec3d> gradient = parameterValue.getGradient();
+					Curve<vec3_t> gradient = parameterValue.getGradient();
 
 					for(uint32_t i = 0u; i < numCurveInterpolationPoints; i++) {
-						vec3d pointValue = gradient.get(static_cast<floatd>(i) / static_cast<floatd>(numCurveInterpolationPoints - 1u));
+						vec3_t pointValue = gradient.get(static_cast<float_t>(i) / static_cast<float_t>(numCurveInterpolationPoints - 1u));
 						std::string pointValueString = graphLanguage.typeConstructors[VariantValue::type_float3];
 						pointValueString = replace(pointValueString, std::to_string(pointValue.x), "{0}");
 						pointValueString = replace(pointValueString, std::to_string(pointValue.y), "{1}");
@@ -279,7 +279,7 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 	result.nodeOutputVariables[nodeId] = std::vector<std::string>();
 	for(std::size_t outputSlot = 0u; outputSlot < nodeType.outputs.size(); outputSlot++) {
 		std::string outputVariableName = graphLanguage.variablePrefix + std::to_string(result.numVariables++);
-		std::string outputVariableDefinition = graphLanguage.typeNames[static_cast<uint32_t>(signature.outputTypes[outputSlot])] + " " + outputVariableName;
+		std::string outputVariableDefinition = graphLanguage.typeNames[static_cast<std::size_t>(signature.outputTypes[outputSlot])] + " " + outputVariableName;
 		result.nodeOutputVariables[nodeId].push_back(outputVariableName);
 
 		code = replace(code, outputVariableName, "{out" + std::to_string(outputSlot) + "}");
@@ -335,18 +335,18 @@ std::string ShaderGraph::build(BuildResult& result, uint32_t nodeId) const {
 	return inputCode + "\n" + code;
 }
 
-uint32_t ShaderGraph::addNode(const std::string& typeName) {
+id_t ShaderGraph::addNode(const std::string& typeName) {
 	uint32_t typeIndex = findNodeType(typeName);
 	if(typeIndex == nullId) {
 		return nullId;
 	}
 
-	uint32_t nodeId = nextNodeId++;
+	id_t nodeId = nextNodeId++;
 	nodes[nodeId] = ShaderNode(graphLanguage.nodes[typeIndex]);
 
 	return nodeId;
 }
-void ShaderGraph::removeNode(uint32_t nodeId) {
+void ShaderGraph::removeNode(id_t nodeId) {
 	for(auto& nodeEntry : nodes) {
 		for(auto& link : nodeEntry.second.inputs) {
 			if(link.nodeId == nodeId) {
@@ -357,7 +357,7 @@ void ShaderGraph::removeNode(uint32_t nodeId) {
 
 	nodes.erase(nodeId);
 }
-void ShaderGraph::linkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, uint32_t sourceSlot, uint32_t targetSlot) {
+void ShaderGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t sourceSlot, uint32_t targetSlot) {
 	if(!hasNode(sourceNodeId) || !hasNode(targetNodeId)) {
 		return;
 	}
@@ -373,7 +373,7 @@ void ShaderGraph::linkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, uint32
 		sourceNodeId,
 		sourceSlot);
 }
-void ShaderGraph::linkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, const std::string& sourceSlotName, const std::string& targetSlotName) {
+void ShaderGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::string& sourceSlotName, const std::string& targetSlotName) {
 	if(!hasNode(sourceNodeId) || !hasNode(targetNodeId)) {
 		return;
 	}
@@ -404,7 +404,7 @@ void ShaderGraph::linkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, const 
 			sourceSlot);
 	}
 }
-void ShaderGraph::unlinkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, uint32_t targetSlot) {
+void ShaderGraph::unlinkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t targetSlot) {
 	if(!hasNode(sourceNodeId) || !hasNode(targetNodeId)) {
 		return;
 	}
@@ -416,7 +416,7 @@ void ShaderGraph::unlinkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, uint
 
 	targetNode.inputs[targetSlot] = ShaderNode::Link();
 }
-void ShaderGraph::unlinkNodes(uint32_t linkId) {
+void ShaderGraph::unlinkNodes(id_t linkId) {
 	for(auto& nodeEntry : nodes) {
 		for(ShaderNode::Link& link : nodeEntry.second.inputs) {
 			if(link.id == linkId) {
@@ -426,21 +426,21 @@ void ShaderGraph::unlinkNodes(uint32_t linkId) {
 		}
 	}
 }
-void ShaderGraph::setNodeName(uint32_t nodeId, const std::string& name) {
+void ShaderGraph::setNodeName(id_t nodeId, const std::string& name) {
 	if(!hasNode(nodeId)) {
 		return;
 	}
 
 	nodes[nodeId].name = name;
 }
-void ShaderGraph::setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, VariantParameter::Value value) {
+void ShaderGraph::setNodeParameter(id_t nodeId, uint32_t parameterIndex, VariantParameter::Value value) {
 	if(!hasNode(nodeId) || parameterIndex >= nodes[nodeId].parameters.size()) {
 		return;
 	}
 
 	nodes[nodeId].parameters[parameterIndex] = value;
 }
-void ShaderGraph::setNodeParameter(uint32_t nodeId, const std::string& parameterName, VariantParameter::Value value) {
+void ShaderGraph::setNodeParameter(id_t nodeId, const std::string& parameterName, VariantParameter::Value value) {
 	if(!hasNode(nodeId)) {
 		return;
 	}
@@ -452,38 +452,38 @@ void ShaderGraph::setNodeParameter(uint32_t nodeId, const std::string& parameter
 		}
 	}
 }
-void ShaderGraph::setNodeParameterNode(uint32_t nodeId, bool enable) {
+void ShaderGraph::setNodeParameterNode(id_t nodeId, bool enable) {
 	if(!hasNode(nodeId)) {
 		return;
 	}
 
 	nodes[nodeId].isParameterNode = enable;
 }
-void ShaderGraph::setNodePosition(uint32_t nodeId, const vec2d& position) {
+void ShaderGraph::setNodePosition(id_t nodeId, const vec2_t& position) {
 	if(!hasNode(nodeId)) {
 		return;
 	}
 
 	nodes[nodeId].position = position;
 }
-bool ShaderGraph::hasNode(uint32_t nodeId) const {
+bool ShaderGraph::hasNode(id_t nodeId) const {
 	return nodes.count(nodeId) != 0u;
 }
-const ShaderNode& ShaderGraph::getNode(uint32_t nodeId) const {
+const ShaderNode& ShaderGraph::getNode(id_t nodeId) const {
 	return nodes.at(nodeId);
 }
-const std::unordered_map<uint32_t, ShaderNode>& ShaderGraph::getNodes() const {
+const std::unordered_map<id_t, ShaderNode>& ShaderGraph::getNodes() const {
 	return nodes;
 }
-uint32_t ShaderGraph::getNextNodeId() const {
+id_t ShaderGraph::getNextNodeId() const {
 	return nextNodeId;
 }
-uint32_t ShaderGraph::getNextLinkId() const {
+id_t ShaderGraph::getNextLinkId() const {
 	return nextLinkId;
 }
 
-std::unordered_map<uint32_t, VariantParameter> ShaderGraph::getShaderParameters() const {
-	std::unordered_map<uint32_t, VariantParameter> parameters;
+std::unordered_map<id_t, VariantParameter> ShaderGraph::getShaderParameters() const {
+	std::unordered_map<id_t, VariantParameter> parameters;
 
 	for(const auto& nodeEntry : nodes) {
 		const ShaderNode& node = nodeEntry.second;
@@ -545,7 +545,7 @@ uint32_t ShaderGraph::findNodeSignature(const BuildResult& result, const ShaderN
 		std::vector<TypeMatch> currentMatch(node.inputs.size(), typematch_none);
 		for(std::size_t i = 0u; i < node.inputs.size(); i++) {
 			VariantValue::Type inputType = VariantValue::type_null;
-			uint32_t sourceNodeId = node.inputs[i].nodeId;
+			id_t sourceNodeId = node.inputs[i].nodeId;
 
 			if(nodes.count(sourceNodeId) != 0u) {
 				uint32_t sourceSlot = node.inputs[i].slot;
@@ -589,7 +589,7 @@ void to_json(nlohmann::ordered_json& j, const ShaderGraph& shader) {
 }
 void from_json(const nlohmann::ordered_json& j, ShaderGraph& shader) {
 	shader = ShaderGraph(
-		j.at("nodes").get<std::unordered_map<uint32_t, ShaderNode>>()
+		j.at("nodes").get<std::unordered_map<id_t, ShaderNode>>()
 	);
 }
 }

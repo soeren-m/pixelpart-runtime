@@ -3,8 +3,8 @@
 
 namespace pixelpart {
 template <typename T>
-uint32_t findUnusedNodeId(const std::vector<T>& nodes) {
-	uint32_t id = 0u;
+id_t findUnusedNodeId(const std::vector<T>& nodes) {
+	id_t id = 0u;
 	bool isUsed = true;
 
 	while(isUsed) {

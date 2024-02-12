@@ -44,69 +44,69 @@ inline uint8_t hash(int32_t i) {
     return permutationTable[static_cast<uint8_t>(i)];
 }
 
-inline int32_t fastfloor(floatd f) {
+inline int32_t fastfloor(float_t f) {
     int32_t i = static_cast<int32_t>(f);
     return f < i ? i - 1 : i;
 }
 
-floatd grad(int32_t hash, floatd x) {
+float_t grad(int32_t hash, float_t x) {
 	int32_t h = hash & 0x0F;
-	floatd grad = 1.0 + (h & 7);
+	float_t grad = 1.0 + (h & 7);
 
 	return ((h & 8) ? -grad : grad) * x;
 }
-floatd grad(int32_t hash, floatd x, floatd y) {
+float_t grad(int32_t hash, float_t x, float_t y) {
 	int32_t h = hash & 0x3F;
-	floatd u = h < 4 ? x : y;
-	floatd v = h < 4 ? y : x;
+	float_t u = h < 4 ? x : y;
+	float_t v = h < 4 ? y : x;
 
 	return ((h & 1) ? -u : u) + ((h & 2) ? -2.0 * v : 2.0 * v);
 }
-floatd grad(int32_t hash, floatd x, floatd y, floatd z) {
+float_t grad(int32_t hash, float_t x, float_t y, float_t z) {
 	int32_t h = hash & 15;
-	floatd u = h < 8 ? x : y;
-	floatd v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+	float_t u = h < 8 ? x : y;
+	float_t v = h < 4 ? y : h == 12 || h == 14 ? x : z;
 
 	return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
 }
-floatd grad(int32_t hash, floatd x, floatd y, floatd z, floatd w) {
+float_t grad(int32_t hash, float_t x, float_t y, float_t z, float_t w) {
 	return gradTable4d[hash][0] * x +
 		gradTable4d[hash][1] * y +
 		gradTable4d[hash][2] * z +
 		gradTable4d[hash][3] * w;
 }
 
-floatd simplexNoise(floatd x) {
+float_t simplexNoise(float_t x) {
 	int32_t i0 = fastfloor(x);
 	int32_t i1 = i0 + 1;
 
-	floatd x0 = x - i0;
-	floatd t0 = 1.0 - x0 * x0;
+	float_t x0 = x - i0;
+	float_t t0 = 1.0 - x0 * x0;
 	t0 *= t0;
-	floatd n0 = t0 * t0 * grad(hash(i0), x0);
+	float_t n0 = t0 * t0 * grad(hash(i0), x0);
 
-	floatd x1 = x0 - 1.0;
-	floatd t1 = 1.0 - x1 * x1;
+	float_t x1 = x0 - 1.0;
+	float_t t1 = 1.0 - x1 * x1;
 	t1 *= t1;
-	floatd n1 = t1 * t1 * grad(hash(i1), x1);
+	float_t n1 = t1 * t1 * grad(hash(i1), x1);
 
 	return 0.395f * (n0 + n1);
 }
-floatd simplexNoise(floatd x, floatd y) {
-	static const floatd F2 = 0.366025403;
-	static const floatd G2 = 0.211324865;
+float_t simplexNoise(float_t x, float_t y) {
+	static const float_t F2 = 0.366025403;
+	static const float_t G2 = 0.211324865;
 
-	const floatd s = (x + y) * F2;
-	const floatd xs = x + s;
-	const floatd ys = y + s;
+	const float_t s = (x + y) * F2;
+	const float_t xs = x + s;
+	const float_t ys = y + s;
 	const int32_t i = fastfloor(xs);
 	const int32_t j = fastfloor(ys);
 
-	const floatd t = static_cast<floatd>(i + j) * G2;
-	const floatd X0 = i - t;
-	const floatd Y0 = j - t;
-	const floatd x0 = x - X0;
-	const floatd y0 = y - Y0;
+	const float_t t = static_cast<float_t>(i + j) * G2;
+	const float_t X0 = i - t;
+	const float_t Y0 = j - t;
+	const float_t x0 = x - X0;
+	const float_t y0 = y - Y0;
 
 	int32_t i1, j1;
 	if (x0 > y0) {
@@ -118,17 +118,17 @@ floatd simplexNoise(floatd x, floatd y) {
 		j1 = 1;
 	}
 
-	const floatd x1 = x0 - i1 + G2;
-	const floatd y1 = y0 - j1 + G2;
-	const floatd x2 = x0 - 1.0 + 2.0 * G2;
-	const floatd y2 = y0 - 1.0 + 2.0 * G2;
+	const float_t x1 = x0 - i1 + G2;
+	const float_t y1 = y0 - j1 + G2;
+	const float_t x2 = x0 - 1.0 + 2.0 * G2;
+	const float_t y2 = y0 - 1.0 + 2.0 * G2;
 
 	const int32_t gi0 = hash(i + hash(j));
 	const int32_t gi1 = hash(i + i1 + hash(j + j1));
 	const int32_t gi2 = hash(i + 1 + hash(j + 1));
 
-	floatd n0;
-	floatd t0 = 0.5 - x0 * x0 - y0 * y0;
+	float_t n0;
+	float_t t0 = 0.5 - x0 * x0 - y0 * y0;
 	if(t0 < 0.0) {
 		n0 = 0.0;
 	}
@@ -137,8 +137,8 @@ floatd simplexNoise(floatd x, floatd y) {
 		n0 = t0 * t0 * grad(gi0, x0, y0);
 	}
 
-	floatd n1;
-	floatd t1 = 0.5 - x1*x1 - y1*y1;
+	float_t n1;
+	float_t t1 = 0.5 - x1*x1 - y1*y1;
 	if (t1 < 0.0) {
 		n1 = 0.0;
 	}
@@ -147,8 +147,8 @@ floatd simplexNoise(floatd x, floatd y) {
 		n1 = t1 * t1 * grad(gi1, x1, y1);
 	}
 
-	floatd n2;
-	floatd t2 = 0.5 - x2*x2 - y2*y2;
+	float_t n2;
+	float_t t2 = 0.5 - x2*x2 - y2*y2;
 	if (t2 < 0.0) {
 		n2 = 0.0;
 	}
@@ -159,21 +159,21 @@ floatd simplexNoise(floatd x, floatd y) {
 
 	return 45.23065 * (n0 + n1 + n2);
 }
-floatd simplexNoise(floatd x, floatd y, floatd z) {
-	static const floatd F3 = 1.0 / 3.0;
-	static const floatd G3 = 1.0 / 6.0;
+float_t simplexNoise(float_t x, float_t y, float_t z) {
+	static const float_t F3 = 1.0 / 3.0;
+	static const float_t G3 = 1.0 / 6.0;
 
-	floatd s = (x + y + z) * F3;
+	float_t s = (x + y + z) * F3;
 	int32_t i = fastfloor(x + s);
 	int32_t j = fastfloor(y + s);
 	int32_t k = fastfloor(z + s);
-	floatd t = (i + j + k) * G3;
-	floatd X0 = i - t;
-	floatd Y0 = j - t;
-	floatd Z0 = k - t;
-	floatd x0 = x - X0;
-	floatd y0 = y - Y0;
-	floatd z0 = z - Z0;
+	float_t t = (i + j + k) * G3;
+	float_t X0 = i - t;
+	float_t Y0 = j - t;
+	float_t Z0 = k - t;
+	float_t x0 = x - X0;
+	float_t y0 = y - Y0;
+	float_t z0 = z - Z0;
 
 	int32_t i1, j1, k1;
 	int32_t i2, j2, k2;
@@ -200,23 +200,23 @@ floatd simplexNoise(floatd x, floatd y, floatd z) {
 		}
 	}
 
-	floatd x1 = x0 - i1 + G3;
-	floatd y1 = y0 - j1 + G3;
-	floatd z1 = z0 - k1 + G3;
-	floatd x2 = x0 - i2 + 2.0 * G3;
-	floatd y2 = y0 - j2 + 2.0 * G3;
-	floatd z2 = z0 - k2 + 2.0 * G3;
-	floatd x3 = x0 - 1.0 + 3.0 * G3;
-	floatd y3 = y0 - 1.0 + 3.0 * G3;
-	floatd z3 = z0 - 1.0 + 3.0 * G3;
+	float_t x1 = x0 - i1 + G3;
+	float_t y1 = y0 - j1 + G3;
+	float_t z1 = z0 - k1 + G3;
+	float_t x2 = x0 - i2 + 2.0 * G3;
+	float_t y2 = y0 - j2 + 2.0 * G3;
+	float_t z2 = z0 - k2 + 2.0 * G3;
+	float_t x3 = x0 - 1.0 + 3.0 * G3;
+	float_t y3 = y0 - 1.0 + 3.0 * G3;
+	float_t z3 = z0 - 1.0 + 3.0 * G3;
 
 	int32_t gi0 = hash(i + hash(j + hash(k)));
 	int32_t gi1 = hash(i + i1 + hash(j + j1 + hash(k + k1)));
 	int32_t gi2 = hash(i + i2 + hash(j + j2 + hash(k + k2)));
 	int32_t gi3 = hash(i + 1 + hash(j + 1 + hash(k + 1)));
 
-	floatd n0;
-	floatd t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0;
+	float_t n0;
+	float_t t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0;
 	if (t0 < 0) {
 		n0 = 0.0;
 	}
@@ -225,8 +225,8 @@ floatd simplexNoise(floatd x, floatd y, floatd z) {
 		n0 = t0 * t0 * grad(gi0, x0, y0, z0);
 	}
 
-	floatd n1;
-	floatd t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1;
+	float_t n1;
+	float_t t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1;
 	if (t1 < 0) {
 		n1 = 0.0;
 	}
@@ -235,8 +235,8 @@ floatd simplexNoise(floatd x, floatd y, floatd z) {
 		n1 = t1 * t1 * grad(gi1, x1, y1, z1);
 	}
 
-	floatd n2;
-	floatd t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2;
+	float_t n2;
+	float_t t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2;
 	if (t2 < 0) {
 		n2 = 0.0;
 	}
@@ -245,8 +245,8 @@ floatd simplexNoise(floatd x, floatd y, floatd z) {
 		n2 = t2 * t2 * grad(gi2, x2, y2, z2);
 	}
 
-	floatd n3;
-	floatd t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3;
+	float_t n3;
+	float_t t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3;
 	if (t3 < 0) {
 		n3 = 0.0;
 	}
@@ -257,25 +257,25 @@ floatd simplexNoise(floatd x, floatd y, floatd z) {
 
 	return 32.0 * (n0 + n1 + n2 + n3);
 }
-floatd simplexNoise(floatd x, floatd y, floatd z, floatd w) {
-	static const floatd F4 = 0.3090169944;
-	static const floatd G4 = 0.1381966011;
+float_t simplexNoise(float_t x, float_t y, float_t z, float_t w) {
+	static const float_t F4 = 0.3090169944;
+	static const float_t G4 = 0.1381966011;
 
-	floatd s = (x + y + z + w) * F4;
+	float_t s = (x + y + z + w) * F4;
 	int32_t i = fastfloor(x + s);
 	int32_t j = fastfloor(y + s);
 	int32_t k = fastfloor(z + s);
 	int32_t l = fastfloor(w + s);
-	floatd t = (i + j + k + l) * G4;
+	float_t t = (i + j + k + l) * G4;
 
-	floatd X0 = i - t;
-	floatd Y0 = j - t;
-	floatd Z0 = k - t;
-	floatd W0 = l - t;
-	floatd x0 = x - X0;
-	floatd y0 = y - Y0;
-	floatd z0 = z - Z0;
-	floatd w0 = w - W0;
+	float_t X0 = i - t;
+	float_t Y0 = j - t;
+	float_t Z0 = k - t;
+	float_t W0 = l - t;
+	float_t x0 = x - X0;
+	float_t y0 = y - Y0;
+	float_t z0 = z - Z0;
+	float_t w0 = w - W0;
 
 	int32_t c1 = (x0 > y0) ? 32 : 0;
 	int32_t c2 = (x0 > z0) ? 16 : 0;
@@ -300,22 +300,22 @@ floatd simplexNoise(floatd x, floatd y, floatd z, floatd w) {
 	int32_t k3 = simplexTable4d[c][2] >= 1 ? 1 : 0;
 	int32_t l3 = simplexTable4d[c][3] >= 1 ? 1 : 0;
 
-	floatd x1 = x0 - i1 + G4;
-	floatd y1 = y0 - j1 + G4;
-	floatd z1 = z0 - k1 + G4;
-	floatd w1 = w0 - l1 + G4;
-	floatd x2 = x0 - i2 + 2.0 * G4;
-	floatd y2 = y0 - j2 + 2.0 * G4;
-	floatd z2 = z0 - k2 + 2.0 * G4;
-	floatd w2 = w0 - l2 + 2.0 * G4;
-	floatd x3 = x0 - i3 + 3.0 * G4;
-	floatd y3 = y0 - j3 + 3.0 * G4;
-	floatd z3 = z0 - k3 + 3.0 * G4;
-	floatd w3 = w0 - l3 + 3.0 * G4;
-	floatd x4 = x0 - 1.0 + 4.0 * G4;
-	floatd y4 = y0 - 1.0 + 4.0 * G4;
-	floatd z4 = z0 - 1.0 + 4.0 * G4;
-	floatd w4 = w0 - 1.0 + 4.0 * G4;
+	float_t x1 = x0 - i1 + G4;
+	float_t y1 = y0 - j1 + G4;
+	float_t z1 = z0 - k1 + G4;
+	float_t w1 = w0 - l1 + G4;
+	float_t x2 = x0 - i2 + 2.0 * G4;
+	float_t y2 = y0 - j2 + 2.0 * G4;
+	float_t z2 = z0 - k2 + 2.0 * G4;
+	float_t w2 = w0 - l2 + 2.0 * G4;
+	float_t x3 = x0 - i3 + 3.0 * G4;
+	float_t y3 = y0 - j3 + 3.0 * G4;
+	float_t z3 = z0 - k3 + 3.0 * G4;
+	float_t w3 = w0 - l3 + 3.0 * G4;
+	float_t x4 = x0 - 1.0 + 4.0 * G4;
+	float_t y4 = y0 - 1.0 + 4.0 * G4;
+	float_t z4 = z0 - 1.0 + 4.0 * G4;
+	float_t w4 = w0 - 1.0 + 4.0 * G4;
 
 	int32_t ii = i & 255;
 	int32_t jj = j & 255;
@@ -327,8 +327,8 @@ floatd simplexNoise(floatd x, floatd y, floatd z, floatd w) {
 	int32_t gi3 = hash(ii + i3 + hash(jj + j3 + hash(kk + k3 + hash(ll + l3)))) % 32;
 	int32_t gi4 = hash(ii + 1 + hash(jj + 1 + hash(kk + 1 + hash(ll + 1)))) % 32;
 
-	floatd n0;
-	floatd t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0 - w0 * w0;
+	float_t n0;
+	float_t t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0 - w0 * w0;
 	if(t0 < 0.0) {
 		n0 = 0.0;
 	}
@@ -337,8 +337,8 @@ floatd simplexNoise(floatd x, floatd y, floatd z, floatd w) {
 		n0 = t0 * t0 * grad(gi0, x0, y0, z0, w0);
 	}
 
-	floatd n1;
-	floatd t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1 - w1 * w1;
+	float_t n1;
+	float_t t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1 - w1 * w1;
 	if(t1 < 0.0) {
 		n1 = 0.0;
 	}
@@ -347,8 +347,8 @@ floatd simplexNoise(floatd x, floatd y, floatd z, floatd w) {
 		n1 = t1 * t1 * grad(gi1, x1, y1, z1, w1);
 	}
 
-	floatd n2;
-	floatd t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2 - w2 * w2;
+	float_t n2;
+	float_t t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2 - w2 * w2;
 	if(t2 < 0.0) {
 		n2 = 0.0;
 	}
@@ -357,8 +357,8 @@ floatd simplexNoise(floatd x, floatd y, floatd z, floatd w) {
 		n2 = t2 * t2 * grad(gi2, x2, y2, z2, w2);
 	}
 
-	floatd n3;
-	floatd t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3 - w3 * w3;
+	float_t n3;
+	float_t t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3 - w3 * w3;
 	if(t3 < 0.0) {
 		n3 = 0.0;
 	}
@@ -367,8 +367,8 @@ floatd simplexNoise(floatd x, floatd y, floatd z, floatd w) {
 		n3 = t3 * t3 * grad(gi3, x3, y3, z3, w3);
 	}
 
-	floatd n4;
-	floatd t4 = 0.6 - x4 * x4 - y4 * y4 - z4 * z4 - w4 * w4;
+	float_t n4;
+	float_t t4 = 0.6 - x4 * x4 - y4 * y4 - z4 * z4 - w4 * w4;
 	if(t4 < 0.0) {
 		n4 = 0.0;
 	}
@@ -380,10 +380,10 @@ floatd simplexNoise(floatd x, floatd y, floatd z, floatd w) {
 	return 27.0 * (n0 + n1 + n2 + n3 + n4);
 }
 
-floatd fBmSimplexNoise(uint32_t octaves, floatd frequency, floatd persistence, floatd lacunarity, floatd x) {
-	floatd result = 0.0;
-	floatd amplitude = 1.0;
-	floatd denom = 0.0;
+float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x) {
+	float_t result = 0.0;
+	float_t amplitude = 1.0;
+	float_t denom = 0.0;
 
 	for(uint32_t o = 0u; o < octaves; o++) {
 		result += amplitude * simplexNoise(x * frequency);
@@ -395,10 +395,10 @@ floatd fBmSimplexNoise(uint32_t octaves, floatd frequency, floatd persistence, f
 
 	return result / denom;
 }
-floatd fBmSimplexNoise(uint32_t octaves, floatd frequency, floatd persistence, floatd lacunarity, floatd x, floatd y) {
-	floatd result = 0.0;
-	floatd amplitude = 1.0;
-	floatd denom = 0.0;
+float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y) {
+	float_t result = 0.0;
+	float_t amplitude = 1.0;
+	float_t denom = 0.0;
 
 	for(uint32_t o = 0u; o < octaves; o++) {
 		result += amplitude * simplexNoise(x * frequency, y * frequency);
@@ -410,10 +410,10 @@ floatd fBmSimplexNoise(uint32_t octaves, floatd frequency, floatd persistence, f
 
 	return result / denom;
 }
-floatd fBmSimplexNoise(uint32_t octaves, floatd frequency, floatd persistence, floatd lacunarity, floatd x, floatd y, floatd z) {
-	floatd result = 0.0;
-	floatd amplitude = 1.0;
-	floatd denom = 0.0;
+float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y, float_t z) {
+	float_t result = 0.0;
+	float_t amplitude = 1.0;
+	float_t denom = 0.0;
 
 	for(uint32_t o = 0u; o < octaves; o++) {
 		result += amplitude * simplexNoise(x * frequency, y * frequency, z * frequency);
@@ -425,10 +425,10 @@ floatd fBmSimplexNoise(uint32_t octaves, floatd frequency, floatd persistence, f
 
 	return result / denom;
 }
-floatd fBmSimplexNoise(uint32_t octaves,  floatd frequency, floatd persistence, floatd lacunarity, floatd x, floatd y, floatd z, floatd w) {
-	floatd result = 0.0;
-	floatd amplitude = 1.0;
-	floatd denom = 0.0;
+float_t fBmSimplexNoise(uint32_t octaves,  float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y, float_t z, float_t w) {
+	float_t result = 0.0;
+	float_t amplitude = 1.0;
+	float_t denom = 0.0;
 
 	for(uint32_t o = 0u; o < octaves; o++) {
 		result += amplitude * simplexNoise(x * frequency, y * frequency, z * frequency, w * frequency);

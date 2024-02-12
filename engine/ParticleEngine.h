@@ -22,13 +22,13 @@ public:
 	ParticleEngine();
 	ParticleEngine(const Effect* fx, uint32_t capacity, std::unique_ptr<ParticleSolver> solver);
 
-	void step(floatd dt);
+	void step(float_t dt);
 
 	void reset();
 	void restart();
-	floatd getTime() const;
+	float_t getTime() const;
 
-	void spawnParticles(uint32_t particleTypeId, uint32_t count);
+	void spawnParticles(id_t particleTypeId, uint32_t count);
 
 	void setSeed(uint32_t sd);
 	void resetSeed();
@@ -53,22 +53,22 @@ public:
 	void refreshCollisionSolver();
 
 private:
-	uint32_t spawnParticles(uint32_t count, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, floatd dt, floatd t, floatd tParent);
+	uint32_t spawnParticles(uint32_t count, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, float_t dt, float_t t, float_t tParent);
 
-	void createParticle(uint32_t p, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, floatd dt, floatd t, floatd tParent);
+	void createParticle(uint32_t p, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, float_t dt, float_t t, float_t tParent);
 
 	const Effect* effect = nullptr;
 	std::vector<ParticleContainer> particleContainers;
 	std::vector<std::vector<uint32_t>> particleSubTypes;
-	std::vector<floatd> particleSpawnCount;
+	std::vector<float_t> particleSpawnCount;
 	std::vector<uint32_t> particleEmitterGridIndices;
-	uint32_t particleCapacity = 0;
-	uint32_t particleId = 0;
-	uint32_t seed = 0;
-	floatd time = 0.0;
+	uint32_t particleCapacity = 0u;
+	uint32_t particleId = 0u;
+	uint32_t seed = 0u;
+	float_t time = 0.0;
 
 	std::unique_ptr<ParticleSolver> particleSolver;
-	uint32_t numActiveThreads = 0;
+	uint32_t numActiveThreads = 0u;
 
 	std::mt19937 rng;
 };

@@ -15,7 +15,7 @@ template <typename T>
 class Curve {
 public:
 	struct Point {
-		floatd position;
+		float_t position;
 		T value;
 	};
 
@@ -29,7 +29,7 @@ public:
 	Curve(CurveInterpolation interp) : interpolation(interp) {
 		cache.resize(minCacheSize);
 	}
-	Curve(floatd initialPosition, const T& initialValue, CurveInterpolation interp = CurveInterpolation::linear) : Curve(interp) {
+	Curve(float_t initialPosition, const T& initialValue, CurveInterpolation interp = CurveInterpolation::linear) : Curve(interp) {
 		addPoint(initialPosition, initialValue);
 	}
 	Curve(const T& initialValue, CurveInterpolation interp = CurveInterpolation::linear) : Curve(interp) {
@@ -39,12 +39,12 @@ public:
 		setPoints(pointList);
 	}
 
-	T operator()(floatd position = 0.0) const {
+	T operator()(float_t position = 0.0) const {
 		return get(position);
 	}
 
-	T get(floatd position = 0.0) const {
-		return cache[static_cast<std::size_t>(std::min(std::max(position, 0.0), 1.0) * static_cast<floatd>(cache.size() - 1))];
+	T get(float_t position = 0.0) const {
+		return cache[static_cast<std::size_t>(std::min(std::max(position, 0.0), 1.0) * static_cast<float_t>(cache.size() - 1))];
 	}
 
 	void setPoints(const std::vector<Point>& pointList) {
@@ -59,7 +59,7 @@ public:
 	}
 
 	template <typename IntT>
-	void setPointsOrdered(const floatd* positionList, const T* valueList, const IntT* order, IntT numPoints) {
+	void setPointsOrdered(const float_t* positionList, const T* valueList, const IntT* order, IntT numPoints) {
 		points.clear();
 		if(positionList && valueList && order && numPoints > 0) {
 			points.resize(numPoints);
@@ -71,7 +71,7 @@ public:
 		refreshCache();
 	}
 
-	void addPoint(floatd position, const T& value) {
+	void addPoint(float_t position, const T& value) {
 		points.push_back(Point{ std::min(std::max(position, 0.0), 1.0), value });
 		refreshCache();
 	}
@@ -91,7 +91,7 @@ public:
 		points[index].value = value;
 		refreshCache();
 	}
-	void setPointPosition(std::size_t index, floatd position) {
+	void setPointPosition(std::size_t index, float_t position) {
 		if(index >= points.size()) {
 			return;
 		}
@@ -120,7 +120,7 @@ public:
 		return points.at(index);
 	}
 
-	std::ptrdiff_t getPointIndex(floatd position, floatd epsilon = 0.001) const {
+	std::ptrdiff_t getPointIndex(float_t position, float_t epsilon = 0.001) const {
 		if(points.empty()) {
 			return -1;
 		}
@@ -183,7 +183,7 @@ public:
 		}
 		else if(interpolation == CurveInterpolation::none) {
 			for(std::size_t i = 0u, k0 = 0u; i < cache.size(); i++) {
-				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1u);
+				float_t position = static_cast<float_t>(i) / static_cast<float_t>(cache.size() - 1u);
 				std::size_t k = findIndex(position, k0);
 
 				if(k == invalidIndex) {
@@ -203,7 +203,7 @@ public:
 		}
 		else if(interpolation == CurveInterpolation::linear) {
 			for(std::size_t i = 0u, k0 = 0u; i < cache.size(); i++) {
-				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1u);
+				float_t position = static_cast<float_t>(i) / static_cast<float_t>(cache.size() - 1u);
 				std::size_t k = findIndex(position, k0);
 
 				if(k == invalidIndex) {
@@ -213,7 +213,7 @@ public:
 					cache[i] = points.back().value;
 				}
 				else {
-					floatd t = (position - points[k].position) / (points[k + 1u].position - points[k].position);
+					float_t t = (position - points[k].position) / (points[k + 1u].position - points[k].position);
 					cache[i] =
 						(1.0 - t) * points[k].value +
 						t * points[k + 1u].value;
@@ -224,7 +224,7 @@ public:
 		}
 		else if(interpolation == CurveInterpolation::spline) {
 			for(std::size_t i = 0u, k0 = 0u; i < cache.size(); i++) {
-				floatd position = static_cast<floatd>(i) / static_cast<floatd>(cache.size() - 1u);
+				float_t position = static_cast<float_t>(i) / static_cast<float_t>(cache.size() - 1u);
 				std::size_t k = findIndex(position, k0);
 
 				if(k == invalidIndex) {
@@ -234,19 +234,19 @@ public:
 					cache[i] = points.back().value;
 				}
 				else {
-					const floatd alpha = 0.5;
-					const floatd tension = 0.0;
+					const float_t alpha = 0.5;
+					const float_t tension = 0.0;
 
 					Point p0 = (k > 0u) ? points[k - 1u] : Point{ -0.1, points[k].value };
 					Point p1 = points[k];
 					Point p2 = points[k + 1u];
 					Point p3 = (k + 2u < points.size()) ? points[k + 2u] : Point{ +1.1, points[k + 1u].value };
 
-					floatd t = (position - p1.position) / (p2.position - p1.position);
-					floatd t0 = 0.0;
-					floatd t1 = t0 + std::pow(p1.position - p0.position, alpha);
-					floatd t2 = t1 + std::pow(p2.position - p1.position, alpha);
-					floatd t3 = t2 + std::pow(p3.position - p2.position, alpha);
+					float_t t = (position - p1.position) / (p2.position - p1.position);
+					float_t t0 = 0.0;
+					float_t t1 = t0 + std::pow(p1.position - p0.position, alpha);
+					float_t t2 = t1 + std::pow(p2.position - p1.position, alpha);
+					float_t t3 = t2 + std::pow(p3.position - p2.position, alpha);
 
 					T m1 = (1.0 - tension) * (t2 - t1) * ((p1.value - p0.value) / (t1 - t0) - (p2.value - p0.value) / (t2 - t0) + (p2.value - p1.value) / (t2 - t1));
 					T m2 = (1.0 - tension) * (t2 - t1) * ((p2.value - p1.value) / (t2 - t1) - (p3.value - p1.value) / (t3 - t1) + (p3.value - p2.value) / (t3 - t2));
@@ -268,7 +268,7 @@ public:
 	}
 
 private:
-	std::size_t findIndex(floatd position, std::size_t indexStart) {
+	std::size_t findIndex(float_t position, std::size_t indexStart) {
 		for(std::size_t i = indexStart; i < points.size(); i++) {
 			if(points[i].position >= position) {
 				return (i > 0u) ? (i - 1u) : invalidIndex;

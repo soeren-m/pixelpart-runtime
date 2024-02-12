@@ -12,9 +12,9 @@
 namespace pixelpart {
 class ParticleSolverCPU : public ParticleSolver {
 public:
-	ParticleSolverCPU(uint32_t numThreads = 0);
+	ParticleSolverCPU(uint32_t numThreads = 0u);
 
-	virtual void solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType, ParticleData& particles, uint32_t numParticles, floatd t, floatd dt) override;
+	virtual void solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType, ParticleData& particles, uint32_t numParticles, float_t t, float_t dt) override;
 	virtual void refresh(const Effect* effect, uint32_t flags) override;
 
 	virtual uint32_t getNumActiveThreads() const override;
@@ -25,7 +25,7 @@ private:
 	static void simulateParticles(
 		const ParticleEmitter& particleEmitter, const ParticleType& particleType,
 		ParticleDataPointer particles, uint32_t workgroupSize,
-		floatd t, floatd dt,
+		float_t t, float_t dt,
 		const ForceSolver& forceSolver,
 		const CollisionSolver& collisionSolver,
 		const MotionPathSolver& motionPathSolver);
@@ -33,8 +33,8 @@ private:
 #ifndef __EMSCRIPTEN__
 	std::unique_ptr<ThreadPool> threadPool;
 #endif
-	uint32_t numActiveThreads = 0;
-	uint32_t numParticlesPerThread = 128;
+	uint32_t numActiveThreads = 0u;
+	uint32_t numParticlesPerThread = 128u;
 
 	ForceSolver forceSolver;
 	CollisionSolver collisionSolver;

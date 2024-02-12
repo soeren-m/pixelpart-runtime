@@ -8,21 +8,21 @@ VariantValue VariantValue::Bool(bool v) {
 
 	return value;
 }
-VariantValue VariantValue::Int(int64_t v) {
+VariantValue VariantValue::Int(int_t v) {
 	VariantValue value;
 	value.type = type_int;
 	value.data.integer = v;
 
 	return value;
 }
-VariantValue VariantValue::Float(floatd v) {
+VariantValue VariantValue::Float(float_t v) {
 	VariantValue value;
 	value.type = type_float;
 	value.data.number[0] = v;
 
 	return value;
 }
-VariantValue VariantValue::Float2(const vec2d& v) {
+VariantValue VariantValue::Float2(const vec2_t& v) {
 	VariantValue value;
 	value.type = type_float2;
 	value.data.number[0] = v.x;
@@ -30,7 +30,7 @@ VariantValue VariantValue::Float2(const vec2d& v) {
 
 	return value;
 }
-VariantValue VariantValue::Float3(const vec3d& v) {
+VariantValue VariantValue::Float3(const vec3_t& v) {
 	VariantValue value;
 	value.type = type_float3;
 	value.data.number[0] = v.x;
@@ -39,7 +39,7 @@ VariantValue VariantValue::Float3(const vec3d& v) {
 
 	return value;
 }
-VariantValue VariantValue::Float4(const vec4d& v) {
+VariantValue VariantValue::Float4(const vec4_t& v) {
 	VariantValue value;
 	value.type = type_float4;
 	value.data.number[0] = v.x;
@@ -78,39 +78,39 @@ VariantValue::VariantValue(Type t) : type(t) {
 bool VariantValue::get(BoolTag t) const {
 	return toBool();
 }
-int64_t VariantValue::get(IntTag t) const {
+int_t VariantValue::get(IntTag t) const {
 	return toInt();
 }
-floatd VariantValue::get(FloatTag t) const {
+float_t VariantValue::get(FloatTag t) const {
 	return toFloat();
 }
-vec2d VariantValue::get(Float2Tag t) const {
+vec2_t VariantValue::get(Float2Tag t) const {
 	return toFloat2();
 }
-vec3d VariantValue::get(Float3Tag t) const {
+vec3_t VariantValue::get(Float3Tag t) const {
 	return toFloat3();
 }
-vec4d VariantValue::get(Float4Tag t) const {
+vec4_t VariantValue::get(Float4Tag t) const {
 	return toFloat4();
 }
 
 bool VariantValue::getBool() const {
 	return data.boolean;
 }
-int64_t VariantValue::getInt() const {
+int_t VariantValue::getInt() const {
 	return data.integer;
 }
-floatd VariantValue::getFloat() const {
+float_t VariantValue::getFloat() const {
 	return data.number[0];
 }
-vec2d VariantValue::getFloat2() const {
-	return vec2d(data.number[0], data.number[1]);
+vec2_t VariantValue::getFloat2() const {
+	return vec2_t(data.number[0], data.number[1]);
 }
-vec3d VariantValue::getFloat3() const {
-	return vec3d(data.number[0], data.number[1], data.number[2]);
+vec3_t VariantValue::getFloat3() const {
+	return vec3_t(data.number[0], data.number[1], data.number[2]);
 }
-vec4d VariantValue::getFloat4() const {
-	return vec4d(data.number[0], data.number[1], data.number[2], data.number[3]);
+vec4_t VariantValue::getFloat4() const {
+	return vec4_t(data.number[0], data.number[1], data.number[2], data.number[3]);
 }
 
 bool VariantValue::toBool() const {
@@ -128,7 +128,7 @@ bool VariantValue::toBool() const {
 			return false;
 	}
 }
-int64_t VariantValue::toInt() const {
+int_t VariantValue::toInt() const {
 	switch(type) {
 		case type_bool:
 			return data.boolean ? 1 : 0;
@@ -138,17 +138,17 @@ int64_t VariantValue::toInt() const {
 		case type_float2:
 		case type_float3:
 		case type_float4:
-			return static_cast<int64_t>(data.number[0]);
+			return static_cast<int_t>(data.number[0]);
 		default:
 			return 0;
 	}
 }
-floatd VariantValue::toFloat() const {
+float_t VariantValue::toFloat() const {
 	switch(type) {
 		case type_bool:
 			return data.boolean ? 1.0 : 0.0;
 		case type_int:
-			return static_cast<floatd>(data.integer);
+			return static_cast<float_t>(data.integer);
 		case type_float:
 		case type_float2:
 		case type_float3:
@@ -158,52 +158,52 @@ floatd VariantValue::toFloat() const {
 			return 0.0;
 	}
 }
-vec2d VariantValue::toFloat2() const {
+vec2_t VariantValue::toFloat2() const {
 	switch(type) {
 		case type_bool:
-			return vec2d(data.boolean ? 1.0 : 0.0);
+			return vec2_t(data.boolean ? 1.0 : 0.0);
 		case type_int:
-			return vec2d(static_cast<floatd>(data.integer));
+			return vec2_t(static_cast<float_t>(data.integer));
 		case type_float:
-			return vec2d(data.number[0]);
+			return vec2_t(data.number[0]);
 		case type_float2:
 		case type_float3:
 		case type_float4:
-			return vec2d(data.number[0], data.number[1]);
+			return vec2_t(data.number[0], data.number[1]);
 		default:
-			return vec2d(0.0);
+			return vec2_t(0.0);
 	}
 }
-vec3d VariantValue::toFloat3() const {
+vec3_t VariantValue::toFloat3() const {
 	switch(type) {
 		case type_bool:
-			return vec3d(data.boolean ? 1.0 : 0.0);
+			return vec3_t(data.boolean ? 1.0 : 0.0);
 		case type_int:
-			return vec3d(static_cast<floatd>(data.integer));
+			return vec3_t(static_cast<float_t>(data.integer));
 		case type_float:
 		case type_float2:
-			return vec3d(data.number[0]);
+			return vec3_t(data.number[0]);
 		case type_float3:
 		case type_float4:
-			return vec3d(data.number[0], data.number[1], data.number[2]);
+			return vec3_t(data.number[0], data.number[1], data.number[2]);
 		default:
-			return vec3d(0.0);
+			return vec3_t(0.0);
 	}
 }
-vec4d VariantValue::toFloat4() const {
+vec4_t VariantValue::toFloat4() const {
 	switch(type) {
 		case type_bool:
-			return vec4d(data.boolean ? 1.0 : 0.0);
+			return vec4_t(data.boolean ? 1.0 : 0.0);
 		case type_int:
-			return vec4d(static_cast<floatd>(data.integer));
+			return vec4_t(static_cast<float_t>(data.integer));
 		case type_float:
 		case type_float2:
 		case type_float3:
-			return vec4d(data.number[0]);
+			return vec4_t(data.number[0]);
 		case type_float4:
-			return vec4d(data.number[0], data.number[1], data.number[2], data.number[3]);
+			return vec4_t(data.number[0], data.number[1], data.number[2], data.number[3]);
 		default:
-			return vec4d(0.0);
+			return vec4_t(0.0);
 	}
 }
 
@@ -397,19 +397,19 @@ void from_json(const nlohmann::ordered_json& j, VariantValue& value) {
 			value = VariantValue::Bool(j.at("value").get<bool>());
 			break;
 		case VariantValue::type_int:
-			value = VariantValue::Int(j.at("value").get<int64_t>());
+			value = VariantValue::Int(j.at("value").get<int_t>());
 			break;
 		case VariantValue::type_float:
-			value = VariantValue::Float(j.at("value").get<floatd>());
+			value = VariantValue::Float(j.at("value").get<float_t>());
 			break;
 		case VariantValue::type_float2:
-			value = VariantValue::Float2(j.at("value").get<vec2d>());
+			value = VariantValue::Float2(j.at("value").get<vec2_t>());
 			break;
 		case VariantValue::type_float3:
-			value = VariantValue::Float3(j.at("value").get<vec3d>());
+			value = VariantValue::Float3(j.at("value").get<vec3_t>());
 			break;
 		case VariantValue::type_float4:
-			value = VariantValue::Float4(j.at("value").get<vec4d>());
+			value = VariantValue::Float4(j.at("value").get<vec4_t>());
 			break;
 		default:
 			value = VariantValue();

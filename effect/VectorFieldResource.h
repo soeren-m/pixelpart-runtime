@@ -5,7 +5,7 @@
 
 namespace pixelpart {
 struct VectorFieldResource : public Resource {
-	Grid3d<vec3d> field;
+	Grid3d<vec3_t> field;
 };
 
 void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource);

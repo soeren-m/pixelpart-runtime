@@ -15,15 +15,15 @@ struct VariantTag;
 template <>
 struct VariantTag<bool> { typedef BoolTag Type; };
 template <>
-struct VariantTag<int64_t> { typedef IntTag Type; };
+struct VariantTag<int_t> { typedef IntTag Type; };
 template <>
-struct VariantTag<floatd> { typedef FloatTag Type; };
+struct VariantTag<float_t> { typedef FloatTag Type; };
 template <>
-struct VariantTag<vec2d> { typedef Float2Tag Type; };
+struct VariantTag<vec2_t> { typedef Float2Tag Type; };
 template <>
-struct VariantTag<vec3d> { typedef Float3Tag Type; };
+struct VariantTag<vec3_t> { typedef Float3Tag Type; };
 template <>
-struct VariantTag<vec4d> { typedef Float4Tag Type; };
+struct VariantTag<vec4_t> { typedef Float4Tag Type; };
 
 struct VariantValue {
 	enum Type : int32_t {
@@ -38,16 +38,16 @@ struct VariantValue {
 
 	union {
 		bool boolean;
-		int64_t integer;
-		floatd number[4];
+		int_t integer;
+		float_t number[4];
 	} data;
 
 	static VariantValue Bool(bool v);
-	static VariantValue Int(int64_t v);
-	static VariantValue Float(floatd v);
-	static VariantValue Float2(const vec2d& v);
-	static VariantValue Float3(const vec3d& v);
-	static VariantValue Float4(const vec4d& v);
+	static VariantValue Int(int_t v);
+	static VariantValue Float(float_t v);
+	static VariantValue Float2(const vec2_t& v);
+	static VariantValue Float3(const vec3_t& v);
+	static VariantValue Float4(const vec4_t& v);
 
 	VariantValue();
 	VariantValue(Type t);
@@ -60,25 +60,25 @@ struct VariantValue {
 	}
 
 	bool get(BoolTag t) const;
-	int64_t get(IntTag t) const;
-	floatd get(FloatTag t) const;
-	vec2d get(Float2Tag t) const;
-	vec3d get(Float3Tag t) const;
-	vec4d get(Float4Tag t) const;
+	int_t get(IntTag t) const;
+	float_t get(FloatTag t) const;
+	vec2_t get(Float2Tag t) const;
+	vec3_t get(Float3Tag t) const;
+	vec4_t get(Float4Tag t) const;
 
 	bool getBool() const;
-	int64_t getInt() const;
-	floatd getFloat() const;
-	vec2d getFloat2() const;
-	vec3d getFloat3() const;
-	vec4d getFloat4() const;
+	int_t getInt() const;
+	float_t getFloat() const;
+	vec2_t getFloat2() const;
+	vec3_t getFloat3() const;
+	vec4_t getFloat4() const;
 
 	bool toBool() const;
-	int64_t toInt() const;
-	floatd toFloat() const;
-	vec2d toFloat2() const;
-	vec3d toFloat3() const;
-	vec4d toFloat4() const;
+	int_t toInt() const;
+	float_t toFloat() const;
+	vec2_t toFloat2() const;
+	vec3_t toFloat3() const;
+	vec4_t toFloat4() const;
 
 	VariantValue cast(Type type) const;
 };

@@ -54,7 +54,7 @@ Vector2ConstantComputeNode::Vector2ConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float2 } } },
 	{ },
-	{ VariantParameter::createFloat2Parameter("compute_param_value", vec2d(0.0), vec2d(-FLT_MAX), vec2d(+FLT_MAX)) }) {
+	{ VariantParameter::createFloat2Parameter("compute_param_value", vec2_t(0.0), vec2_t(-FLT_MAX), vec2_t(+FLT_MAX)) }) {
 
 }
 std::vector<VariantValue> Vector2ConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
@@ -67,7 +67,7 @@ Vector3ConstantComputeNode::Vector3ConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float3 } } },
 	{ },
-	{ VariantParameter::createFloat3Parameter("compute_param_value", vec3d(0.0), vec3d(-FLT_MAX), vec3d(+FLT_MAX)) }) {
+	{ VariantParameter::createFloat3Parameter("compute_param_value", vec3_t(0.0), vec3_t(-FLT_MAX), vec3_t(+FLT_MAX)) }) {
 
 }
 std::vector<VariantValue> Vector3ConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
@@ -80,7 +80,7 @@ Vector4ConstantComputeNode::Vector4ConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float4 } } },
 	{ },
-	{ VariantParameter::createFloat4Parameter("compute_param_value", vec4d(0.0), vec4d(-FLT_MAX), vec4d(+FLT_MAX)) }) {
+	{ VariantParameter::createFloat4Parameter("compute_param_value", vec4_t(0.0), vec4_t(-FLT_MAX), vec4_t(+FLT_MAX)) }) {
 
 }
 std::vector<VariantValue> Vector4ConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
@@ -93,7 +93,7 @@ ColorConstantComputeNode::ColorConstantComputeNode() : ComputeNodeBase(typeName,
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float4 } } },
 	{ },
-	{ VariantParameter::createColorParameter("compute_param_value", vec4d(1.0)) }) {
+	{ VariantParameter::createColorParameter("compute_param_value", vec4_t(1.0)) }) {
 
 }
 std::vector<VariantValue> ColorConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {

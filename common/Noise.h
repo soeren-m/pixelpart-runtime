@@ -4,14 +4,14 @@
 
 namespace pixelpart {
 namespace noise {
-floatd simplexNoise(floatd x);
-floatd simplexNoise(floatd x, floatd y);
-floatd simplexNoise(floatd x, floatd y, floatd z);
-floatd simplexNoise(floatd x, floatd y, floatd z, floatd w);
+float_t simplexNoise(float_t x);
+float_t simplexNoise(float_t x, float_t y);
+float_t simplexNoise(float_t x, float_t y, float_t z);
+float_t simplexNoise(float_t x, float_t y, float_t z, float_t w);
 
-floatd fBmSimplexNoise(uint32_t octaves, floatd frequency, floatd persistence, floatd lacunarity, floatd x);
-floatd fBmSimplexNoise(uint32_t octaves, floatd frequency, floatd persistence, floatd lacunarity, floatd x, floatd y);
-floatd fBmSimplexNoise(uint32_t octaves, floatd frequency, floatd persistence, floatd lacunarity, floatd x, floatd y, floatd z);
-floatd fBmSimplexNoise(uint32_t octaves, floatd frequency, floatd persistence, floatd lacunarity, floatd x, floatd y, floatd z, floatd w);
+float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x);
+float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y);
+float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y, float_t z);
+float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y, float_t z, float_t w);
 }
 }

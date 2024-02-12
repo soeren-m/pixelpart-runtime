@@ -18,7 +18,7 @@ public:
 		computeGraph.addNode<OutputComputeNode>();
 		refresh();
 	}
-	AnimatedProperty(floatd initialPosition, const T& initialValue) : curve(initialPosition, initialValue) {
+	AnimatedProperty(float_t initialPosition, const T& initialValue) : curve(initialPosition, initialValue) {
 		computeGraph.addNode<OutputComputeNode>();
 		refresh();
 	}
@@ -30,11 +30,11 @@ public:
 		refresh();
 	}
 
-	T operator()(floatd position = 0.0) const {
+	T operator()(float_t position = 0.0) const {
 		return computedCurve.get(position);
 	}
 
-	T get(floatd position = 0.0) const {
+	T get(float_t position = 0.0) const {
 		return computedCurve.get(position);
 	}
 
@@ -140,12 +140,12 @@ public:
 		refresh();
 	}
 	template <typename IntT>
-	void setPointsOrdered(const floatd* positionList, const T* valueList, const IntT* order, IntT numPoints) {
+	void setPointsOrdered(const float_t* positionList, const T* valueList, const IntT* order, IntT numPoints) {
 		curve.setPointsOrdered(positionList, valueList, order, numPoints);
 		refresh();
 	}
 
-	void addPoint(floatd position, const T& value) {
+	void addPoint(float_t position, const T& value) {
 		curve.addPoint(position, value);
 		refresh();
 	}
@@ -157,7 +157,7 @@ public:
 		curve.setPoint(index, value);
 		refresh();
 	}
-	void setPointPosition(std::size_t index, floatd position) {
+	void setPointPosition(std::size_t index, float_t position) {
 		curve.setPointPosition(index, position);
 		refresh();
 	}
@@ -182,7 +182,7 @@ public:
 		return curve.getPoint(index);
 	}
 
-	std::ptrdiff_t getPointIndex(floatd position, floatd epsilon = 0.001) const {
+	std::ptrdiff_t getPointIndex(float_t position, float_t epsilon = 0.001) const {
 		return curve.getPointIndex(position, epsilon);
 	}
 

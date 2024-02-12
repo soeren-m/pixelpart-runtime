@@ -6,7 +6,7 @@ ForceSolver::ForceSolver() {
 
 }
 
-void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, floatd t, floatd dt) const {
+void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) const {
 	for(std::size_t f = 0u; f < forceFields.size(); f++) {
 		const ForceField& forceField = forceFields[f];
 		if(forceFieldExclusionSets[f][particleType.id] ||
@@ -19,16 +19,16 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& p
 	}
 }
 
-void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, floatd t, floatd dt, const ForceField& forceField) const {
-	floatd life = std::fmod(t - forceField.lifetimeStart, forceField.lifetimeDuration) / forceField.lifetimeDuration;
-	vec3d forceFieldCenter = forceField.position.get(life);
-	vec3d forceFieldSize = forceField.size.get(life) * 0.5;
-	floatd forceStrength = forceField.strength.get(life);
+void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const {
+	float_t life = std::fmod(t - forceField.lifetimeStart, forceField.lifetimeDuration) / forceField.lifetimeDuration;
+	vec3_t forceFieldCenter = forceField.position.get(life);
+	vec3_t forceFieldSize = forceField.size.get(life) * 0.5;
+	float_t forceStrength = forceField.strength.get(life);
 
 	switch(forceField.type) {
 		case ForceField::Type::attraction_field: {
 			for(uint32_t p = 0u; p < numParticles; p++) {
-				vec3d forceVector = sampleAttractionField(forceField.attractionField,
+				vec3_t forceVector = sampleAttractionField(forceField.attractionField,
 					forceFieldCenter, forceFieldSize.x,
 					particles.globalPosition[p]);
 
@@ -39,13 +39,13 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& p
 		}
 
 		case ForceField::Type::acceleration_field: {
-			vec3d forceFieldOrientation = glm::radians(forceField.orientation.get(life));
-			mat4d forceFieldOrientationMatrix = glm::yawPitchRoll(-forceFieldOrientation.y, -forceFieldOrientation.z, -forceFieldOrientation.x);
-			vec3d forceDirection = glm::radians(forceField.accelerationField.direction.get(life));
-			mat4d forceDirectionMatrix = glm::yawPitchRoll(forceDirection.y, forceDirection.z, forceDirection.x);
+			vec3_t forceFieldOrientation = glm::radians(forceField.orientation.get(life));
+			mat4_t forceFieldOrientationMatrix = glm::yawPitchRoll(-forceFieldOrientation.y, -forceFieldOrientation.z, -forceFieldOrientation.x);
+			vec3_t forceDirection = glm::radians(forceField.accelerationField.direction.get(life));
+			mat4_t forceDirectionMatrix = glm::yawPitchRoll(forceDirection.y, forceDirection.z, forceDirection.x);
 
 			for(uint32_t p = 0u; p < numParticles; p++) {
-				vec3d forceVector = sampleAccelerationField(forceField.accelerationField,
+				vec3_t forceVector = sampleAccelerationField(forceField.accelerationField,
 					forceFieldCenter, forceFieldSize,
 					forceFieldOrientationMatrix, forceDirectionMatrix,
 					particles.globalPosition[p]);
@@ -62,14 +62,14 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& p
 			}
 
 			const VectorFieldResource& vectorFieldResource = effectResources->vectorFields.at(forceField.vectorField.resourceId);
-			vec3d forceFieldOrientation = glm::radians(forceField.orientation.get(life));
-			mat4d forceFieldOrientationMatrix = glm::yawPitchRoll(-forceFieldOrientation.y, -forceFieldOrientation.z, -forceFieldOrientation.x);
-			mat4d forceFieldDirectionMatrix = glm::yawPitchRoll(forceFieldOrientation.y, forceFieldOrientation.z, forceFieldOrientation.x);
-			floatd vectorFieldTightness = glm::clamp(forceField.vectorField.tightness.get(life), 0.0, 1.0);
+			vec3_t forceFieldOrientation = glm::radians(forceField.orientation.get(life));
+			mat4_t forceFieldOrientationMatrix = glm::yawPitchRoll(-forceFieldOrientation.y, -forceFieldOrientation.z, -forceFieldOrientation.x);
+			mat4_t forceFieldDirectionMatrix = glm::yawPitchRoll(forceFieldOrientation.y, forceFieldOrientation.z, forceFieldOrientation.x);
+			float_t vectorFieldTightness = glm::clamp(forceField.vectorField.tightness.get(life), 0.0, 1.0);
 
 			for(uint32_t p = 0u; p < numParticles; p++) {
 				bool inside = false;
-				vec3d forceVector = sampleVectorField(forceField.vectorField, vectorFieldResource,
+				vec3_t forceVector = sampleVectorField(forceField.vectorField, vectorFieldResource,
 					forceFieldCenter, forceFieldSize,
 					forceFieldOrientationMatrix, forceFieldDirectionMatrix,
 					particles.globalPosition[p], inside);
@@ -86,11 +86,11 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& p
 		}
 
 		case ForceField::Type::noise_field: {
-			vec3d forceFieldOrientation = glm::radians(forceField.orientation.get(life));
-			mat4d forceFieldOrientationMatrix = glm::yawPitchRoll(-forceFieldOrientation.y, -forceFieldOrientation.z, -forceFieldOrientation.x);
+			vec3_t forceFieldOrientation = glm::radians(forceField.orientation.get(life));
+			mat4_t forceFieldOrientationMatrix = glm::yawPitchRoll(-forceFieldOrientation.y, -forceFieldOrientation.z, -forceFieldOrientation.x);
 
 			for(uint32_t p = 0u; p < numParticles; p++) {
-				vec3d forceVector = sampleNoiseField(forceField.noiseField,
+				vec3_t forceVector = sampleNoiseField(forceField.noiseField,
 					forceFieldCenter, forceFieldSize,
 					forceFieldOrientationMatrix,
 					particles.globalPosition[p],
@@ -103,11 +103,11 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& p
 		}
 
 		case ForceField::Type::drag_field: {
-			vec3d forceFieldOrientation = glm::radians(forceField.orientation.get(life));
-			mat4d forceFieldOrientationMatrix = glm::yawPitchRoll(-forceFieldOrientation.y, -forceFieldOrientation.z, -forceFieldOrientation.x);
+			vec3_t forceFieldOrientation = glm::radians(forceField.orientation.get(life));
+			mat4_t forceFieldOrientationMatrix = glm::yawPitchRoll(-forceFieldOrientation.y, -forceFieldOrientation.z, -forceFieldOrientation.x);
 
 			for(uint32_t p = 0u; p < numParticles; p++) {
-				vec3d forceVector = sampleDragField(forceField.dragField,
+				vec3_t forceVector = sampleDragField(forceField.dragField,
 					forceFieldCenter, forceFieldSize,
 					forceFieldOrientationMatrix,
 					particles.globalPosition[p], particles.velocity[p], particles.size[p]);
@@ -147,133 +147,133 @@ void ForceSolver::update(const Effect* effect) {
 	}
 }
 
-vec3d ForceSolver::sampleAttractionField(const ForceField::AttractionField& attractionField,
-	const vec3d& position, floatd size,
-	const vec3d& particlePosition) const {
-	floatd distanceToCenter = glm::distance(position, particlePosition);
+vec3_t ForceSolver::sampleAttractionField(const ForceField::AttractionField& attractionField,
+	const vec3_t& position, float_t size,
+	const vec3_t& particlePosition) const {
+	float_t distanceToCenter = glm::distance(position, particlePosition);
 	if(distanceToCenter > size && size > 0.0) {
-		return vec3d(0.0);
+		return vec3_t(0.0);
 	}
 
 	distanceToCenter = std::max(distanceToCenter, 0.01);
 
 	return (position - particlePosition) / (distanceToCenter * distanceToCenter);
 }
-vec3d ForceSolver::sampleAccelerationField(const ForceField::AccelerationField& accelerationField,
-	const vec3d& position, const vec3d& size, const mat4d& orientationMatrix, const mat4d& directionMatrix,
-	const vec3d& particlePosition) const {
-	vec3d rotatedParticlePosition = position + vec3d(orientationMatrix * vec4d(particlePosition - position, 1.0));
+vec3_t ForceSolver::sampleAccelerationField(const ForceField::AccelerationField& accelerationField,
+	const vec3_t& position, const vec3_t& size, const mat4_t& orientationMatrix, const mat4_t& directionMatrix,
+	const vec3_t& particlePosition) const {
+	vec3_t rotatedParticlePosition = position + vec3_t(orientationMatrix * vec4_t(particlePosition - position, 1.0));
 	if(((rotatedParticlePosition.x < position.x - size.x || rotatedParticlePosition.x > position.x + size.x) && size.x > 0.0) ||
 		((rotatedParticlePosition.y < position.y - size.y || rotatedParticlePosition.y > position.y + size.y) && size.y > 0.0) ||
 		((rotatedParticlePosition.z < position.z - size.z || rotatedParticlePosition.z > position.z + size.z) && size.z > 0.0)) {
-		return vec3d(0.0);
+		return vec3_t(0.0);
 	}
 
 	int32_t gridCellX = (size.x > 0.0)
-		? static_cast<int32_t>((rotatedParticlePosition.x - (position.x - size.x)) / (size.x * 2.0) * static_cast<floatd>(accelerationField.gridSize[0]))
+		? static_cast<int32_t>((rotatedParticlePosition.x - (position.x - size.x)) / (size.x * 2.0) * static_cast<float_t>(accelerationField.gridSize[0]))
 		: 0;
 	int32_t gridCellY = (size.y > 0.0)
-		? static_cast<int32_t>((rotatedParticlePosition.y - (position.y - size.y)) / (size.y * 2.0) * static_cast<floatd>(accelerationField.gridSize[1]))
+		? static_cast<int32_t>((rotatedParticlePosition.y - (position.y - size.y)) / (size.y * 2.0) * static_cast<float_t>(accelerationField.gridSize[1]))
 		: 0;
 	int32_t gridCellZ = (size.z > 0.0)
-		? static_cast<int32_t>((rotatedParticlePosition.z - (position.z - size.z)) / (size.z * 2.0) * static_cast<floatd>(accelerationField.gridSize[2]))
+		? static_cast<int32_t>((rotatedParticlePosition.z - (position.z - size.z)) / (size.z * 2.0) * static_cast<float_t>(accelerationField.gridSize[2]))
 		: 0;
 	uint32_t gridCellIndex = static_cast<uint32_t>(
 		gridCellZ * accelerationField.gridSize[1] * accelerationField.gridSize[0] +
 		gridCellY * accelerationField.gridSize[0] +
 		gridCellX);
 
-	vec3d gridDirectionOffset = glm::radians(accelerationField.directionVariance.get() * accelerationField.directionGrid[gridCellIndex]);
-	floatd gridStrengthOffset = accelerationField.strengthVariance.get() * accelerationField.strengthGrid[gridCellIndex] + 1.0;
+	vec3_t gridDirectionOffset = glm::radians(accelerationField.directionVariance.get() * accelerationField.directionGrid[gridCellIndex]);
+	float_t gridStrengthOffset = accelerationField.strengthVariance.get() * accelerationField.strengthGrid[gridCellIndex] + 1.0;
 
-	vec3d result = vec3d(glm::yawPitchRoll(gridDirectionOffset.y, gridDirectionOffset.z, gridDirectionOffset.x) *
-		vec4d(vec3d(directionMatrix * worldUpVector4), 0.0));
+	vec3_t result = vec3_t(glm::yawPitchRoll(gridDirectionOffset.y, gridDirectionOffset.z, gridDirectionOffset.x) *
+		vec4_t(vec3_t(directionMatrix * worldUpVector4), 0.0));
 	result *= gridStrengthOffset;
 
 	return result;
 }
-vec3d ForceSolver::sampleVectorField(const ForceField::VectorField& vectorField, const VectorFieldResource& resource,
-	const vec3d& position, const vec3d& size, const mat4d& orientationMatrix, const mat4d& directionMatrix,
-	const vec3d& particlePosition, bool& inside) const {
-	vec3d rotatedParticlePosition = position + vec3d(orientationMatrix * vec4d(particlePosition - position, 1.0));
+vec3_t ForceSolver::sampleVectorField(const ForceField::VectorField& vectorField, const VectorFieldResource& resource,
+	const vec3_t& position, const vec3_t& size, const mat4_t& orientationMatrix, const mat4_t& directionMatrix,
+	const vec3_t& particlePosition, bool& inside) const {
+	vec3_t rotatedParticlePosition = position + vec3_t(orientationMatrix * vec4_t(particlePosition - position, 1.0));
 	if(rotatedParticlePosition.x < position.x - size.x || rotatedParticlePosition.x > position.x + size.x ||
 		rotatedParticlePosition.y < position.y - size.y || rotatedParticlePosition.y > position.y + size.y ||
 		rotatedParticlePosition.z < position.z - size.z || rotatedParticlePosition.z > position.z + size.z) {
 		inside = false;
-		return vec3d(0.0);
+		return vec3_t(0.0);
 	}
 
-	vec3d result = vec3d(0.0);
-	vec3d samplePosition = (rotatedParticlePosition - position + size) / (size * 2.0);
+	vec3_t result = vec3_t(0.0);
+	vec3_t samplePosition = (rotatedParticlePosition - position + size) / (size * 2.0);
 
 	if(is3d) {
 		switch(vectorField.filter) {
 			case ForceField::VectorField::Filter::none: {
-				vec3d normalizedSamplePosition = vec3d(
-					samplePosition.x * static_cast<floatd>(resource.field.getWidth()),
-					samplePosition.y * static_cast<floatd>(resource.field.getHeight()),
-					samplePosition.z * static_cast<floatd>(resource.field.getDepth()));
+				vec3_t normalizedSamplePosition = vec3_t(
+					samplePosition.x * static_cast<float_t>(resource.field.getWidth()),
+					samplePosition.y * static_cast<float_t>(resource.field.getHeight()),
+					samplePosition.z * static_cast<float_t>(resource.field.getDepth()));
 
 				result = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z),
-					vec3d(0.0));
+					vec3_t(0.0));
 			}
 
 			case ForceField::VectorField::Filter::linear: {
-				vec3d normalizedSamplePosition = vec3d(
-					samplePosition.x * static_cast<floatd>(resource.field.getWidth()),
-					samplePosition.y * static_cast<floatd>(resource.field.getHeight()),
-					samplePosition.z * static_cast<floatd>(resource.field.getDepth()));
+				vec3_t normalizedSamplePosition = vec3_t(
+					samplePosition.x * static_cast<float_t>(resource.field.getWidth()),
+					samplePosition.y * static_cast<float_t>(resource.field.getHeight()),
+					samplePosition.z * static_cast<float_t>(resource.field.getDepth()));
 
-				floatd fractX = glm::fract(normalizedSamplePosition.x);
-				floatd fractY = glm::fract(normalizedSamplePosition.y);
-				floatd fractZ = glm::fract(normalizedSamplePosition.y);
+				float_t fractX = glm::fract(normalizedSamplePosition.x);
+				float_t fractY = glm::fract(normalizedSamplePosition.y);
+				float_t fractZ = glm::fract(normalizedSamplePosition.y);
 				int32_t nextOffsetX = fractX > 0.5 ? +1 : -1;
 				int32_t nextOffsetY = fractY > 0.5 ? +1 : -1;
 				int32_t nextOffsetZ = fractZ > 0.5 ? +1 : -1;
 
-				vec3d sample0 = resource.field.getOrDefault(
+				vec3_t sample0 = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z),
-					vec3d(0.0));
-				vec3d sample1 = resource.field.getOrDefault(
+					vec3_t(0.0));
+				vec3_t sample1 = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x) + nextOffsetX,
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z),
-					vec3d(0.0));
-				vec3d sample2 = resource.field.getOrDefault(
+					vec3_t(0.0));
+				vec3_t sample2 = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y) + nextOffsetY,
 					static_cast<int32_t>(normalizedSamplePosition.z),
-					vec3d(0.0));
-				vec3d sample3 = resource.field.getOrDefault(
+					vec3_t(0.0));
+				vec3_t sample3 = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x) + nextOffsetX,
 					static_cast<int32_t>(normalizedSamplePosition.y) + nextOffsetY,
 					static_cast<int32_t>(normalizedSamplePosition.z),
-					vec3d(0.0));
-				vec3d sample4 = resource.field.getOrDefault(
+					vec3_t(0.0));
+				vec3_t sample4 = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
-					vec3d(0.0));
-				vec3d sample5 = resource.field.getOrDefault(
+					vec3_t(0.0));
+				vec3_t sample5 = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x) + nextOffsetX,
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
-					vec3d(0.0));
-				vec3d sample6 = resource.field.getOrDefault(
+					vec3_t(0.0));
+				vec3_t sample6 = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y) + nextOffsetY,
 					static_cast<int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
-					vec3d(0.0));
-				vec3d sample7 = resource.field.getOrDefault(
+					vec3_t(0.0));
+				vec3_t sample7 = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x) + nextOffsetX,
 					static_cast<int32_t>(normalizedSamplePosition.y) + nextOffsetY,
 					static_cast<int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
-					vec3d(0.0));
+					vec3_t(0.0));
 
 				result = glm::lerp(
 					glm::lerp(
@@ -295,49 +295,49 @@ vec3d ForceSolver::sampleVectorField(const ForceField::VectorField& vectorField,
 	else {
 		switch(vectorField.filter) {
 			case ForceField::VectorField::Filter::none: {
-				vec3d normalizedSamplePosition = vec3d(
-					samplePosition.x * static_cast<floatd>(resource.field.getWidth()),
-					samplePosition.y * static_cast<floatd>(resource.field.getHeight()),
+				vec3_t normalizedSamplePosition = vec3_t(
+					samplePosition.x * static_cast<float_t>(resource.field.getWidth()),
+					samplePosition.y * static_cast<float_t>(resource.field.getHeight()),
 					0.0);
 
 				result = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z),
-					vec3d(0.0));
+					vec3_t(0.0));
 			}
 
 			case ForceField::VectorField::Filter::linear: {
-				vec3d normalizedSamplePosition = vec3d(
-					samplePosition.x * static_cast<floatd>(resource.field.getWidth()),
-					samplePosition.y * static_cast<floatd>(resource.field.getHeight()),
+				vec3_t normalizedSamplePosition = vec3_t(
+					samplePosition.x * static_cast<float_t>(resource.field.getWidth()),
+					samplePosition.y * static_cast<float_t>(resource.field.getHeight()),
 					0.0);
 
-				floatd fractX = glm::fract(normalizedSamplePosition.x);
-				floatd fractY = glm::fract(normalizedSamplePosition.y);
+				float_t fractX = glm::fract(normalizedSamplePosition.x);
+				float_t fractY = glm::fract(normalizedSamplePosition.y);
 				int32_t nextOffsetX = fractX > 0.5 ? +1 : -1;
 				int32_t nextOffsetY = fractY > 0.5 ? +1 : -1;
 
-				vec3d sample0 = resource.field.getOrDefault(
+				vec3_t sample0 = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z),
-					vec3d(0.0));
-				vec3d sample1 = resource.field.getOrDefault(
+					vec3_t(0.0));
+				vec3_t sample1 = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x) + nextOffsetX,
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z),
-					vec3d(0.0));
-				vec3d sample2 = resource.field.getOrDefault(
+					vec3_t(0.0));
+				vec3_t sample2 = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y) + nextOffsetY,
 					static_cast<int32_t>(normalizedSamplePosition.z),
-					vec3d(0.0));
-				vec3d sample3 = resource.field.getOrDefault(
+					vec3_t(0.0));
+				vec3_t sample3 = resource.field.getOrDefault(
 					static_cast<int32_t>(normalizedSamplePosition.x) + nextOffsetX,
 					static_cast<int32_t>(normalizedSamplePosition.y) + nextOffsetY,
 					static_cast<int32_t>(normalizedSamplePosition.z),
-					vec3d(0.0));
+					vec3_t(0.0));
 
 				result = glm::lerp(
 					glm::lerp(sample0, sample1, glm::abs(fractX - 0.5)),
@@ -353,26 +353,26 @@ vec3d ForceSolver::sampleVectorField(const ForceField::VectorField& vectorField,
 
 	inside = true;
 
-	return vec3d(directionMatrix * vec4d(result, 0.0));
+	return vec3_t(directionMatrix * vec4_t(result, 0.0));
 }
-vec3d ForceSolver::sampleNoiseField(const ForceField::NoiseField& noiseField,
-	const vec3d& position, const vec3d& size, const mat4d& orientationMatrix,
-	const vec3d& particlePosition, floatd life, floatd t) const {
-	vec3d rotatedParticlePosition = position + vec3d(orientationMatrix * vec4d(particlePosition - position, 1.0));
+vec3_t ForceSolver::sampleNoiseField(const ForceField::NoiseField& noiseField,
+	const vec3_t& position, const vec3_t& size, const mat4_t& orientationMatrix,
+	const vec3_t& particlePosition, float_t life, float_t t) const {
+	vec3_t rotatedParticlePosition = position + vec3_t(orientationMatrix * vec4_t(particlePosition - position, 1.0));
 	if(((rotatedParticlePosition.x < position.x - size.x || rotatedParticlePosition.x > position.x + size.x) && size.x > 0.0) ||
 		((rotatedParticlePosition.y < position.y - size.y || rotatedParticlePosition.y > position.y + size.y) && size.y > 0.0) ||
 		((rotatedParticlePosition.z < position.z - size.z || rotatedParticlePosition.z > position.z + size.z) && size.z > 0.0)) {
-		return vec3d(0.0);
+		return vec3_t(0.0);
 	}
 
-	vec3d samplePosition = rotatedParticlePosition - position;
-	uint32_t octaves = static_cast<uint32_t>(std::max(noiseField.octaves.get(), 0l));
-	floatd frequency = noiseField.frequency.get(life);
-	floatd persistence = noiseField.persistence.get(life);
-	floatd lacunarity = noiseField.lacunarity.get(life);
+	vec3_t samplePosition = rotatedParticlePosition - position;
+	uint32_t octaves = static_cast<uint32_t>(std::max(noiseField.octaves.get(), static_cast<int64_t>(0)));
+	float_t frequency = noiseField.frequency.get(life);
+	float_t persistence = noiseField.persistence.get(life);
+	float_t lacunarity = noiseField.lacunarity.get(life);
 
 	if(noiseField.animated) {
-		floatd animationTime = noiseField.animationTimeBase.get() + noiseField.animationTimeScale.get() * t;
+		float_t animationTime = noiseField.animationTimeBase.get() + noiseField.animationTimeScale.get() * t;
 
 		return is3d
 			? computeAnimatedCurlNoise3d(samplePosition, animationTime, octaves, frequency, persistence, lacunarity)
@@ -384,88 +384,88 @@ vec3d ForceSolver::sampleNoiseField(const ForceField::NoiseField& noiseField,
 			: computeStaticCurlNoise2d(samplePosition, octaves, frequency, persistence, lacunarity);
 	}
 }
-vec3d ForceSolver::sampleDragField(const ForceField::DragField& dragField,
-	const vec3d& position, const vec3d& size, const mat4d& orientationMatrix,
-	const vec3d& particlePosition, const vec3d& particleVelocity, const vec3d& particleSize) const {
-	vec3d rotatedParticlePosition = position + vec3d(orientationMatrix * vec4d(particlePosition - position, 1.0));
+vec3_t ForceSolver::sampleDragField(const ForceField::DragField& dragField,
+	const vec3_t& position, const vec3_t& size, const mat4_t& orientationMatrix,
+	const vec3_t& particlePosition, const vec3_t& particleVelocity, const vec3_t& particleSize) const {
+	vec3_t rotatedParticlePosition = position + vec3_t(orientationMatrix * vec4_t(particlePosition - position, 1.0));
 	if(((rotatedParticlePosition.x < position.x - size.x || rotatedParticlePosition.x > position.x + size.x) && size.x > 0.0) ||
 		((rotatedParticlePosition.y < position.y - size.y || rotatedParticlePosition.y > position.y + size.y) && size.y > 0.0) ||
 		((rotatedParticlePosition.z < position.z - size.z || rotatedParticlePosition.z > position.z + size.z) && size.z > 0.0)) {
-		return vec3d(0.0);
+		return vec3_t(0.0);
 	}
 
-	floatd particleSpeed = std::max(glm::length(particleVelocity), 0.001);
-	floatd particleArea = std::max(particleSize.x, std::max(particleSize.y, particleSize.z));
+	float_t particleSpeed = std::max(glm::length(particleVelocity), 0.001);
+	float_t particleArea = std::max(particleSize.x, std::max(particleSize.y, particleSize.z));
 
 	return -particleVelocity / particleSpeed *
 		(1.0 + (particleSpeed * particleSpeed - 1.0) * dragField.velocityInfluence.get()) *
 		(1.0 + (particleArea - 1.0) * dragField.sizeInfluence.get());
 }
 
-vec3d ForceSolver::computeStaticCurlNoise2d(const vec2d& samplePosition, uint32_t octaves, floatd frequency, floatd persistence, floatd lacunarity) const {
-	const floatd epsilon = 1.0e-4;
+vec3_t ForceSolver::computeStaticCurlNoise2d(const vec2_t& samplePosition, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const {
+	const float_t epsilon = 1.0e-4;
 
-	floatd x1 = noise::fBmSimplexNoise(
+	float_t x1 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x + epsilon,
 		samplePosition.y);
-	floatd x2 = noise::fBmSimplexNoise(
+	float_t x2 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x - epsilon,
 		samplePosition.y);
 
-	floatd y1 = noise::fBmSimplexNoise(
+	float_t y1 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x,
 		samplePosition.y + epsilon);
-	floatd y2 = noise::fBmSimplexNoise(
+	float_t y2 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x,
 		samplePosition.y - epsilon);
 
-	return vec3d(
+	return vec3_t(
 		(x1 - x2) / epsilon * 0.5,
 		(y1 - y2) / epsilon * 0.5,
 		0.0);
 }
-vec3d ForceSolver::computeStaticCurlNoise3d(const vec3d& samplePosition, uint32_t octaves, floatd frequency, floatd persistence, floatd lacunarity) const {
-	const floatd epsilon = 1.0e-4;
-	const floatd offset = 1000.0;
+vec3_t ForceSolver::computeStaticCurlNoise3d(const vec3_t& samplePosition, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const {
+	const float_t epsilon = 1.0e-4;
+	const float_t offset = 1000.0;
 
-	floatd x1 = noise::fBmSimplexNoise(
+	float_t x1 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x + epsilon,
 		samplePosition.y,
 		samplePosition.z);
-	floatd x2 = noise::fBmSimplexNoise(
+	float_t x2 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x - epsilon,
 		samplePosition.y,
 		samplePosition.z);
 
-	floatd y1 = noise::fBmSimplexNoise(
+	float_t y1 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x,
 		samplePosition.y + epsilon,
 		samplePosition.z);
-	floatd y2 = noise::fBmSimplexNoise(
+	float_t y2 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x,
 		samplePosition.y - epsilon,
 		samplePosition.z);
 
-	floatd z1 = noise::fBmSimplexNoise(
+	float_t z1 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x,
 		samplePosition.y,
 		samplePosition.z + epsilon);
-	floatd z2 = noise::fBmSimplexNoise(
+	float_t z2 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x,
 		samplePosition.y,
 		samplePosition.z - epsilon);
 
-	vec3d noiseGradient1 = vec3d(
+	vec3_t noiseGradient1 = vec3_t(
 		(x1 - x2) / epsilon * 0.5,
 		(y1 - y2) / epsilon * 0.5,
 		(z1 - z2) / epsilon * 0.5);
@@ -503,7 +503,7 @@ vec3d ForceSolver::computeStaticCurlNoise3d(const vec3d& samplePosition, uint32_
 		samplePosition.y + offset,
 		samplePosition.z + offset - epsilon);
 
-	vec3d noiseGradient2 = vec3d(
+	vec3_t noiseGradient2 = vec3_t(
 		(x1 - x2) / epsilon * 0.5,
 		(y1 - y2) / epsilon * 0.5,
 		(z1 - z2) / epsilon * 0.5);
@@ -512,80 +512,80 @@ vec3d ForceSolver::computeStaticCurlNoise3d(const vec3d& samplePosition, uint32_
 		glm::normalize(noiseGradient1),
 		glm::normalize(noiseGradient2)));
 }
-vec3d ForceSolver::computeAnimatedCurlNoise2d(const vec2d& samplePosition, floatd animationTime, uint32_t octaves, floatd frequency, floatd persistence, floatd lacunarity) const {
-	const floatd epsilon = 1.0e-4;
+vec3_t ForceSolver::computeAnimatedCurlNoise2d(const vec2_t& samplePosition, float_t animationTime, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const {
+	const float_t epsilon = 1.0e-4;
 
-	floatd x1 = noise::fBmSimplexNoise(
+	float_t x1 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x + epsilon,
 		samplePosition.y,
 		animationTime);
-	floatd x2 = noise::fBmSimplexNoise(
+	float_t x2 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x - epsilon,
 		samplePosition.y,
 		animationTime);
 
-	floatd y1 = noise::fBmSimplexNoise(
+	float_t y1 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x,
 		samplePosition.y + epsilon,
 		animationTime);
-	floatd y2 = noise::fBmSimplexNoise(
+	float_t y2 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x,
 		samplePosition.y - epsilon,
 		animationTime);
 
-	return vec3d(
+	return vec3_t(
 		(x1 - x2) / epsilon * 0.5,
 		(y1 - y2) / epsilon * 0.5,
 		0.0);
 }
-vec3d ForceSolver::computeAnimatedCurlNoise3d(const vec3d& samplePosition, floatd animationTime, uint32_t octaves, floatd frequency, floatd persistence, floatd lacunarity) const {
-	const floatd epsilon = 1.0e-4;
-	const floatd offset = 1000.0;
+vec3_t ForceSolver::computeAnimatedCurlNoise3d(const vec3_t& samplePosition, float_t animationTime, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const {
+	const float_t epsilon = 1.0e-4;
+	const float_t offset = 1000.0;
 
-	floatd x1 = noise::fBmSimplexNoise(
+	float_t x1 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x + epsilon,
 		samplePosition.y,
 		samplePosition.z,
 		animationTime);
-	floatd x2 = noise::fBmSimplexNoise(
+	float_t x2 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x - epsilon,
 		samplePosition.y,
 		samplePosition.z,
 		animationTime);
 
-	floatd y1 = noise::fBmSimplexNoise(
+	float_t y1 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x,
 		samplePosition.y + epsilon,
 		samplePosition.z,
 		animationTime);
-	floatd y2 = noise::fBmSimplexNoise(
+	float_t y2 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x,
 		samplePosition.y - epsilon,
 		samplePosition.z,
 		animationTime);
 
-	floatd z1 = noise::fBmSimplexNoise(
+	float_t z1 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x,
 		samplePosition.y,
 		samplePosition.z + epsilon,
 		animationTime);
-	floatd z2 = noise::fBmSimplexNoise(
+	float_t z2 = noise::fBmSimplexNoise(
 		octaves, frequency, persistence, lacunarity,
 		samplePosition.x,
 		samplePosition.y,
 		samplePosition.z - epsilon,
 		animationTime);
 
-	vec3d noiseGradient1 = vec3d(
+	vec3_t noiseGradient1 = vec3_t(
 		(x1 - x2) / epsilon * 0.5,
 		(y1 - y2) / epsilon * 0.5,
 		(z1 - z2) / epsilon * 0.5);
@@ -629,7 +629,7 @@ vec3d ForceSolver::computeAnimatedCurlNoise3d(const vec3d& samplePosition, float
 		samplePosition.z + offset - epsilon,
 		animationTime);
 
-	vec3d noiseGradient2 = vec3d(
+	vec3_t noiseGradient2 = vec3_t(
 		(x1 - x2) / epsilon * 0.5,
 		(y1 - y2) / epsilon * 0.5,
 		(z1 - z2) / epsilon * 0.5);

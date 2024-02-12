@@ -10,43 +10,43 @@
 
 namespace pixelpart {
 struct ParticleType : public Node {
-	AnimatedProperty<floatd> numParticles = AnimatedProperty<floatd>(0.0);
-	AnimatedProperty<floatd> lifespan = AnimatedProperty<floatd>(1.0);
-	StaticProperty<floatd> lifespanVariance = StaticProperty<floatd>(0.0);
+	AnimatedProperty<float_t> numParticles = AnimatedProperty<float_t>(0.0);
+	AnimatedProperty<float_t> lifespan = AnimatedProperty<float_t>(1.0);
+	StaticProperty<float_t> lifespanVariance = StaticProperty<float_t>(0.0);
 
 	bool positionRelative = false;
-	StaticProperty<floatd> motionPathForce = StaticProperty<floatd>(0.0);
-	AnimatedProperty<floatd> initialVelocity = AnimatedProperty<floatd>(1.0);
-	AnimatedProperty<floatd> inheritedVelocity = AnimatedProperty<floatd>(0.0);
-	StaticProperty<floatd> velocityVariance = StaticProperty<floatd>(0.0);
-	AnimatedProperty<floatd> acceleration = AnimatedProperty<floatd>(0.0);
-	AnimatedProperty<floatd> radialAcceleration = AnimatedProperty<floatd>(0.0);
-	AnimatedProperty<floatd> damping = AnimatedProperty<floatd>(1.0);
+	StaticProperty<float_t> motionPathForce = StaticProperty<float_t>(0.0);
+	AnimatedProperty<float_t> initialVelocity = AnimatedProperty<float_t>(1.0);
+	AnimatedProperty<float_t> inheritedVelocity = AnimatedProperty<float_t>(0.0);
+	StaticProperty<float_t> velocityVariance = StaticProperty<float_t>(0.0);
+	AnimatedProperty<float_t> acceleration = AnimatedProperty<float_t>(0.0);
+	AnimatedProperty<float_t> radialAcceleration = AnimatedProperty<float_t>(0.0);
+	AnimatedProperty<float_t> damping = AnimatedProperty<float_t>(1.0);
 	RotationMode rotationMode = RotationMode::angle;
 	AlignmentMode alignmentMode = AlignmentMode::camera;
-	AnimatedProperty<vec3d> initialRotation = AnimatedProperty<vec3d>(vec3d(0.0));
-	AnimatedProperty<vec3d> rotation = AnimatedProperty<vec3d>(vec3d(0.0));
-	AnimatedProperty<vec3d> rotationBySpeed = AnimatedProperty<vec3d>(vec3d(0.0));
-	StaticProperty<vec3d> rotationVariance = StaticProperty<vec3d>(vec3d(0.0));
-	StaticProperty<vec3d> angularVelocityVariance = StaticProperty<vec3d>(vec3d(0.0));
-	StaticProperty<vec3d> pivot = StaticProperty<vec3d>(vec3d(0.0));
+	AnimatedProperty<vec3_t> initialRotation = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	AnimatedProperty<vec3_t> rotation = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	AnimatedProperty<vec3_t> rotationBySpeed = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	StaticProperty<vec3_t> rotationVariance = StaticProperty<vec3_t>(vec3_t(0.0));
+	StaticProperty<vec3_t> angularVelocityVariance = StaticProperty<vec3_t>(vec3_t(0.0));
+	StaticProperty<vec3_t> pivot = StaticProperty<vec3_t>(vec3_t(0.0));
 
-	AnimatedProperty<floatd> weight = AnimatedProperty<floatd>(1.0);
-	AnimatedProperty<floatd> bounce = AnimatedProperty<floatd>(1.0);
-	AnimatedProperty<floatd> friction = AnimatedProperty<floatd>(1.0);
+	AnimatedProperty<float_t> weight = AnimatedProperty<float_t>(1.0);
+	AnimatedProperty<float_t> bounce = AnimatedProperty<float_t>(1.0);
+	AnimatedProperty<float_t> friction = AnimatedProperty<float_t>(1.0);
 
 	bool visible = true;
-	uint32_t layer = 0;
+	uint32_t layer = 0u;
 	BlendMode blendMode = BlendMode::normal;
-	AnimatedProperty<floatd> initialSize = AnimatedProperty<floatd>(0.1);
-	AnimatedProperty<vec3d> size = AnimatedProperty<vec3d>(vec3d(1.0));
-	StaticProperty<floatd> sizeVariance = StaticProperty<floatd>(0.0);
-	AnimatedProperty<vec3d> stretch = AnimatedProperty<vec3d>(vec3d(0.0));
-	AnimatedProperty<vec4d> color = AnimatedProperty<vec4d>(vec4d(1.0));
-	StaticProperty<vec4d> colorVariance = StaticProperty<vec4d>(vec4d(0.0));
-	AnimatedProperty<floatd> initialOpacity = AnimatedProperty<floatd>(1.0);
-	AnimatedProperty<floatd> opacity = AnimatedProperty<floatd>(1.0);
-	StaticProperty<floatd> opacityVariance = StaticProperty<floatd>(0.0);
+	AnimatedProperty<float_t> initialSize = AnimatedProperty<float_t>(0.1);
+	AnimatedProperty<vec3_t> size = AnimatedProperty<vec3_t>(vec3_t(1.0));
+	StaticProperty<float_t> sizeVariance = StaticProperty<float_t>(0.0);
+	AnimatedProperty<vec3_t> stretch = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	AnimatedProperty<vec4_t> color = AnimatedProperty<vec4_t>(vec4_t(1.0));
+	StaticProperty<vec4_t> colorVariance = StaticProperty<vec4_t>(vec4_t(0.0));
+	AnimatedProperty<float_t> initialOpacity = AnimatedProperty<float_t>(1.0);
+	AnimatedProperty<float_t> opacity = AnimatedProperty<float_t>(1.0);
+	StaticProperty<float_t> opacityVariance = StaticProperty<float_t>(0.0);
 
 	MaterialInstance materialInstance;
 	ParticleRendererType renderer = ParticleRendererType::sprite;

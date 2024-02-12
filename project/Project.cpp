@@ -27,7 +27,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 
 	for(ParticleEmitter& particleEmitter : project.effect.particleEmitters) {
 		if(particleEmitter.name.empty()) {
-			uint32_t counter = 1;
+			uint32_t counter = 1u;
 			std::string name = "Emitter";
 			while(isNameUsedInEffect(project.effect, name)) {
 				name = "Emitter" + std::to_string(counter++);
@@ -39,7 +39,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 
 	for(ParticleType& particleType : project.effect.particleTypes) {
 		if(particleType.name.empty()) {
-			uint32_t counter = 1;
+			uint32_t counter = 1u;
 			std::string name = "Particle";
 			while(isNameUsedInEffect(project.effect, name)) {
 				name = "Particle" + std::to_string(counter++);
@@ -51,7 +51,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 
 	for(ForceField& forceField : project.effect.forceFields) {
 		if(forceField.name.empty()) {
-			uint32_t counter = 1;
+			uint32_t counter = 1u;
 			std::string name = "Force";
 			while(isNameUsedInEffect(project.effect, name)) {
 				name = "Force" + std::to_string(counter++);
@@ -63,7 +63,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 
 	for(Collider& collider : project.effect.colliders) {
 		if(collider.name.empty()) {
-			uint32_t counter = 1;
+			uint32_t counter = 1u;
 			std::string name = "Collider";
 			while(isNameUsedInEffect(project.effect, name)) {
 				name = "Collider" + std::to_string(counter++);

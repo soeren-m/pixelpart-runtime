@@ -22,7 +22,7 @@ public:
 private:
 	ParticleData data;
 
-	uint32_t particleCapacity = 0;
-	uint32_t numParticles = 0;
+	uint32_t particleCapacity = 0u;
+	uint32_t numParticles = 0u;
 };
 }

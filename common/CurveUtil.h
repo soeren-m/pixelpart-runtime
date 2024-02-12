@@ -40,7 +40,7 @@ void scaleCurve(Curve<T>& curve, const T& factor) {
 }
 
 template <typename T>
-void shiftCurve(Curve<T>& curve, floatd delta) {
+void shiftCurve(Curve<T>& curve, float_t delta) {
 	for(typename Curve<T>::Point& point : curve.getPoints()) {
 		point.position = std::min(std::max(point.position + delta, 0.0), 1.0);
 	}
@@ -49,7 +49,7 @@ void shiftCurve(Curve<T>& curve, floatd delta) {
 }
 
 template <typename T>
-void shiftCurveByFactor(Curve<T>& curve, floatd factor) {
+void shiftCurveByFactor(Curve<T>& curve, float_t factor) {
 	for(typename Curve<T>::Point& point : curve.getPoints()) {
 		point.position = std::min(std::max(point.position * factor, 0.0), 1.0);
 	}

@@ -20,54 +20,54 @@ struct VariantParameter {
 		} type;
 
 		struct Data {
-			int32_t integer = 0;
-			floatd numbers[256] = { 0.0 };
+			int_t integer = 0;
+			float_t numbers[256] = { 0.0 };
 			std::string string;
 		} data;
 
-		static Value IntValue(int32_t v);
-		static Value FloatValue(floatd v);
-		static Value Float2Value(const vec2d& v);
-		static Value Float3Value(const vec3d& v);
-		static Value Float4Value(const vec4d& v);
+		static Value IntValue(int_t v);
+		static Value FloatValue(float_t v);
+		static Value Float2Value(const vec2_t& v);
+		static Value Float3Value(const vec3_t& v);
+		static Value Float4Value(const vec4_t& v);
 		static Value BoolValue(bool v);
-		static Value EnumValue(int32_t v);
-		static Value ColorValue(const vec4d& v);
-		static Value CurveValue(const Curve<floatd>& v);
-		static Value GradientValue(const Curve<vec3d>& v);
-		static Value GradientValue(const Curve<vec4d>& v);
+		static Value EnumValue(int_t v);
+		static Value ColorValue(const vec4_t& v);
+		static Value CurveValue(const Curve<float_t>& v);
+		static Value GradientValue(const Curve<vec3_t>& v);
+		static Value GradientValue(const Curve<vec4_t>& v);
 		static Value ImageResourceValue(const std::string& v);
 		static Value ImageResourceValue(const std::string& id, const std::string& path);
 
 		Value();
 
-		int32_t getInt() const;
-		floatd getFloat() const;
-		vec2d getFloat2() const;
-		vec3d getFloat3() const;
-		vec4d getFloat4() const;
+		int_t getInt() const;
+		float_t getFloat() const;
+		vec2_t getFloat2() const;
+		vec3_t getFloat3() const;
+		vec4_t getFloat4() const;
 		bool getBool() const;
-		int32_t getEnum() const;
-		vec4d getColor() const;
-		Curve<floatd> getCurve() const;
-		Curve<vec3d> getGradient() const;
-		Curve<vec4d> getGradient4() const;
+		int_t getEnum() const;
+		vec4_t getColor() const;
+		Curve<float_t> getCurve() const;
+		Curve<vec3_t> getGradient() const;
+		Curve<vec4_t> getGradient4() const;
 		std::string getResourceString() const;
 		std::string getResourceId() const;
 		std::string getResourcePath() const;
 	};
 
-	static VariantParameter createIntParameter(const std::string& name, int32_t def, int32_t min, int32_t max);
-	static VariantParameter createFloatParameter(const std::string& name, floatd def, floatd min, floatd max);
-	static VariantParameter createFloat2Parameter(const std::string& name, const vec2d& def, const vec2d& min, const vec2d& max);
-	static VariantParameter createFloat3Parameter(const std::string& name, const vec3d& def, const vec3d& min, const vec3d& max);
-	static VariantParameter createFloat4Parameter(const std::string& name, const vec4d& def, const vec4d& min, const vec4d& max);
+	static VariantParameter createIntParameter(const std::string& name, int_t def, int_t min, int_t max);
+	static VariantParameter createFloatParameter(const std::string& name, float_t def, float_t min, float_t max);
+	static VariantParameter createFloat2Parameter(const std::string& name, const vec2_t& def, const vec2_t& min, const vec2_t& max);
+	static VariantParameter createFloat3Parameter(const std::string& name, const vec3_t& def, const vec3_t& min, const vec3_t& max);
+	static VariantParameter createFloat4Parameter(const std::string& name, const vec4_t& def, const vec4_t& min, const vec4_t& max);
 	static VariantParameter createBoolParameter(const std::string& name, bool def);
-	static VariantParameter createEnumParameter(const std::string& name, int32_t def, const std::vector<std::string>& options);
-	static VariantParameter createColorParameter(const std::string& name, const vec4d& def);
-	static VariantParameter createCurveParameter(const std::string& name, const Curve<floatd>& def);
-	static VariantParameter createGradientParameter(const std::string& name, const Curve<vec3d>& def);
-	static VariantParameter createGradientParameter(const std::string& name, const Curve<vec4d>& def);
+	static VariantParameter createEnumParameter(const std::string& name, int_t def, const std::vector<std::string>& options);
+	static VariantParameter createColorParameter(const std::string& name, const vec4_t& def);
+	static VariantParameter createCurveParameter(const std::string& name, const Curve<float_t>& def);
+	static VariantParameter createGradientParameter(const std::string& name, const Curve<vec3_t>& def);
+	static VariantParameter createGradientParameter(const std::string& name, const Curve<vec4_t>& def);
 	static VariantParameter createImageResourceParameter(const std::string& name);
 
 	std::string name;

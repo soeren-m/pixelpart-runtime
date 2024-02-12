@@ -18,26 +18,26 @@ struct ForceField : public Node {
 	};
 
 	struct AccelerationField {
-		AnimatedProperty<vec3d> direction = AnimatedProperty<vec3d>(vec3d(0.0));
-		AnimatedProperty<floatd> directionVariance = AnimatedProperty<floatd>(0.0);
-		AnimatedProperty<floatd> strengthVariance = AnimatedProperty<floatd>(0.0);
+		AnimatedProperty<vec3_t> direction = AnimatedProperty<vec3_t>(vec3_t(0.0));
+		AnimatedProperty<float_t> directionVariance = AnimatedProperty<float_t>(0.0);
+		AnimatedProperty<float_t> strengthVariance = AnimatedProperty<float_t>(0.0);
 
 		int32_t gridSize[3] = { 1, 1, 1 };
-		std::vector<vec3d> directionGrid = std::vector<vec3d>{ vec3d(0.0) };
-		std::vector<floatd> strengthGrid = std::vector<floatd>{ 0.0 };
+		std::vector<vec3_t> directionGrid = std::vector<vec3_t>{ vec3_t(0.0) };
+		std::vector<float_t> strengthGrid = std::vector<float_t>{ 0.0 };
 
 		template <typename T>
 		void randomizeGrid(T& rng) {
-			std::uniform_real_distribution<floatd> uniformDistrib(-1.0, +1.0);
+			std::uniform_real_distribution<float_t> uniformDistrib(-1.0, +1.0);
 			directionGrid.resize(gridSize[0] * gridSize[1] * gridSize[2]);
 			strengthGrid.resize(gridSize[0] * gridSize[1] * gridSize[2]);
 
-			for(vec3d& value : directionGrid) {
+			for(vec3_t& value : directionGrid) {
 				value.x = uniformDistrib(rng);
 				value.y = uniformDistrib(rng);
 				value.z = uniformDistrib(rng);
 			}
-			for(floatd& value : strengthGrid) {
+			for(float_t& value : strengthGrid) {
 				value = uniformDistrib(rng);
 			}
 		}
@@ -52,31 +52,31 @@ struct ForceField : public Node {
 		std::string resourceId;
 		Filter filter = Filter::none;
 
-		AnimatedProperty<floatd> tightness = AnimatedProperty<floatd>(1.0);
+		AnimatedProperty<float_t> tightness = AnimatedProperty<float_t>(1.0);
 	};
 
 	struct NoiseField {
 		StaticProperty<int64_t> octaves = StaticProperty<int64_t>(4);
-		AnimatedProperty<floatd> frequency = AnimatedProperty<floatd>(1.0);
-		AnimatedProperty<floatd> persistence = AnimatedProperty<floatd>(0.5);
-		AnimatedProperty<floatd> lacunarity = AnimatedProperty<floatd>(2.0);
+		AnimatedProperty<float_t> frequency = AnimatedProperty<float_t>(1.0);
+		AnimatedProperty<float_t> persistence = AnimatedProperty<float_t>(0.5);
+		AnimatedProperty<float_t> lacunarity = AnimatedProperty<float_t>(2.0);
 
 		bool animated = false;
-		StaticProperty<floatd> animationTimeScale = StaticProperty<floatd>(1.0);
-		StaticProperty<floatd> animationTimeBase = StaticProperty<floatd>(0.0);
+		StaticProperty<float_t> animationTimeScale = StaticProperty<float_t>(1.0);
+		StaticProperty<float_t> animationTimeBase = StaticProperty<float_t>(0.0);
 	};
 
 	struct DragField {
-		StaticProperty<floatd> velocityInfluence = StaticProperty<floatd>(1.0);
-		StaticProperty<floatd> sizeInfluence = StaticProperty<floatd>(1.0);
+		StaticProperty<float_t> velocityInfluence = StaticProperty<float_t>(1.0);
+		StaticProperty<float_t> sizeInfluence = StaticProperty<float_t>(1.0);
 	};
 
 	Type type = Type::attraction_field;
-	std::vector<uint32_t> exclusionList;
-	AnimatedProperty<vec3d> size = AnimatedProperty<vec3d>(vec3d(1.0));
-	AnimatedProperty<vec3d> orientation = AnimatedProperty<vec3d>(vec3d(0.0));
+	std::vector<id_t> exclusionList;
+	AnimatedProperty<vec3_t> size = AnimatedProperty<vec3_t>(vec3_t(1.0));
+	AnimatedProperty<vec3_t> orientation = AnimatedProperty<vec3_t>(vec3_t(0.0));
 
-	AnimatedProperty<floatd> strength = AnimatedProperty<floatd>(1.0);
+	AnimatedProperty<float_t> strength = AnimatedProperty<float_t>(1.0);
 
 	AttractionField attractionField;
 	AccelerationField accelerationField;

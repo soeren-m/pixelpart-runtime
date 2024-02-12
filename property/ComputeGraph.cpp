@@ -2,12 +2,12 @@
 #include <algorithm>
 
 namespace pixelpart {
-ComputeGraph::EvaluationException::EvaluationException(const std::string& msg, uint32_t node, uint32_t slot) :
+ComputeGraph::EvaluationException::EvaluationException(const std::string& msg, id_t node, uint32_t slot) :
 	std::runtime_error(msg), nodeId(node), slotIndex(slot) {
 
 }
 
-uint32_t ComputeGraph::EvaluationException::getNodeId() const {
+id_t ComputeGraph::EvaluationException::getNodeId() const {
 	return nodeId;
 }
 uint32_t ComputeGraph::EvaluationException::getSlotIndex() const {
@@ -29,15 +29,15 @@ ComputeGraph::ComputeGraph(const ComputeGraph& other) {
 	nextNodeId = other.nextNodeId;
 	nextLinkId = other.nextLinkId;
 }
-ComputeGraph::ComputeGraph(const std::unordered_map<uint32_t, std::unique_ptr<ComputeNode>>& initialNodes) {
+ComputeGraph::ComputeGraph(const std::unordered_map<id_t, std::unique_ptr<ComputeNode>>& initialNodes) {
 	for(const auto& node : initialNodes) {
 		if(node.second) {
 			nodes[node.first] = std::move(node.second->clone());
 		}
 	}
 
-	uint32_t maxNodeId = 0u;
-	uint32_t maxLinkId = 0u;
+	id_t maxNodeId = 0u;
+	id_t maxLinkId = 0u;
 
 	for(const auto& node : nodes) {
 		maxNodeId = std::max(maxNodeId, node.first);
@@ -74,7 +74,7 @@ std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs) co
 
 	return evaluate(graphInputs, buildResult);
 }
-std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, BuildResult& result, uint32_t nodeId) const {
+std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, BuildResult& result, id_t nodeId) const {
 	const auto& nodeEntry = nodes.find(nodeId);
 	if(nodeEntry == nodes.end()) {
 		return std::vector<VariantValue>();
@@ -83,7 +83,7 @@ std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, Bu
 	const std::unique_ptr<ComputeNode>& node = nodeEntry->second;
 	std::vector<VariantValue> in(node->inputs.size());
 
-	for(uint32_t inputSlot = 0u; inputSlot < static_cast<uint32_t>(node->inputs.size()); inputSlot++) {
+	for(uint32_t inputSlot = 0u; inputSlot < node->inputs.size(); inputSlot++) {
 		const ComputeNode::Link& link = node->inputs[inputSlot];
 
 		VariantValue::Type sourceValueType = VariantValue::type_null;
@@ -108,7 +108,7 @@ std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, Bu
 			sourceValueType = graphInputs.at(link.slot).type;
 			inputValue = graphInputs.at(link.slot);
 		}
-		else if(inputSlot < static_cast<uint32_t>(node->defaultInputs.size()) && node->defaultInputs[inputSlot].type != VariantValue::type_null) {
+		else if(inputSlot < node->defaultInputs.size() && node->defaultInputs[inputSlot].type != VariantValue::type_null) {
 			sourceValueType = node->defaultInputs[inputSlot].type;
 			inputValue = node->defaultInputs[inputSlot];
 		}
@@ -125,7 +125,7 @@ std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, Bu
 		throw EvaluationException("No matching node signature found", nodeId);
 	}
 
-	for(uint32_t inputSlot = 0u; inputSlot < static_cast<uint32_t>(node->inputs.size()); inputSlot++) {
+	for(uint32_t inputSlot = 0u; inputSlot < node->inputs.size(); inputSlot++) {
 		if(typeMatch[inputSlot] == typematch_none) {
 			throw EvaluationException("Types do not match", nodeId, inputSlot);
 		}
@@ -134,8 +134,8 @@ std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, Bu
 	return node->evaluate(in);
 }
 
-uint32_t ComputeGraph::addNode(const std::string& typeName) {
-	uint32_t nodeId = nextNodeId;
+id_t ComputeGraph::addNode(const std::string& typeName) {
+	id_t nodeId = nextNodeId;
 
 	std::unique_ptr<ComputeNode> node = nodeFactory.create(typeName);
 	if(node) {
@@ -145,7 +145,7 @@ uint32_t ComputeGraph::addNode(const std::string& typeName) {
 
 	return nodeId;
 }
-void ComputeGraph::removeNode(uint32_t nodeId) {
+void ComputeGraph::removeNode(id_t nodeId) {
 	for(auto& nodeEntry : nodes) {
 		for(auto& link : nodeEntry.second->inputs) {
 			if(link.nodeId == nodeId) {
@@ -157,7 +157,7 @@ void ComputeGraph::removeNode(uint32_t nodeId) {
 	nodes.erase(nodeId);
 }
 
-void ComputeGraph::linkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, uint32_t sourceSlot, uint32_t targetSlot) {
+void ComputeGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t sourceSlot, uint32_t targetSlot) {
 	if(!hasNode(sourceNodeId) || !hasNode(targetNodeId)) {
 		return;
 	}
@@ -173,7 +173,7 @@ void ComputeGraph::linkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, uint3
 		sourceNodeId,
 		sourceSlot);
 }
-void ComputeGraph::linkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, const std::string& sourceSlotName, const std::string& targetSlotName) {
+void ComputeGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::string& sourceSlotName, const std::string& targetSlotName) {
 	if(!hasNode(sourceNodeId) || !hasNode(targetNodeId)) {
 		return;
 	}
@@ -191,7 +191,7 @@ void ComputeGraph::linkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, const
 			sourceSlot);
 	}
 }
-void ComputeGraph::linkNodeToInput(uint32_t targetNodeId, uint32_t targetSlot, uint32_t inputId) {
+void ComputeGraph::linkNodeToInput(id_t targetNodeId, uint32_t targetSlot, pixelpart::id_t inputId) {
 	if(!hasNode(targetNodeId)) {
 		return;
 	}
@@ -206,7 +206,7 @@ void ComputeGraph::linkNodeToInput(uint32_t targetNodeId, uint32_t targetSlot, u
 		nullId,
 		inputId);
 }
-void ComputeGraph::unlinkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, uint32_t targetSlot) {
+void ComputeGraph::unlinkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t targetSlot) {
 	if(!hasNode(sourceNodeId) || !hasNode(targetNodeId)) {
 		return;
 	}
@@ -218,7 +218,7 @@ void ComputeGraph::unlinkNodes(uint32_t sourceNodeId, uint32_t targetNodeId, uin
 
 	targetNode.inputs[targetSlot] = ComputeNode::Link();
 }
-void ComputeGraph::unlinkNodes(uint32_t linkId) {
+void ComputeGraph::unlinkNodes(id_t linkId) {
 	for(auto& nodeEntry : nodes) {
 		for(ComputeNode::Link& link : nodeEntry.second->inputs) {
 			if(link.id == linkId) {
@@ -238,7 +238,7 @@ void ComputeGraph::unlinkRemovedInputs(const InputSet& graphInputs) {
 	}
 }
 
-void ComputeGraph::setNodeName(uint32_t nodeId, const std::string& name) {
+void ComputeGraph::setNodeName(id_t nodeId, const std::string& name) {
 	if(!hasNode(nodeId)) {
 		return;
 	}
@@ -246,7 +246,7 @@ void ComputeGraph::setNodeName(uint32_t nodeId, const std::string& name) {
 	const auto& node = nodes.at(nodeId);
 	node->name = name;
 }
-void ComputeGraph::setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, VariantParameter::Value value) {
+void ComputeGraph::setNodeParameter(id_t nodeId, uint32_t parameterIndex, VariantParameter::Value value) {
 	if(!hasNode(nodeId)) {
 		return;
 	}
@@ -254,7 +254,7 @@ void ComputeGraph::setNodeParameter(uint32_t nodeId, uint32_t parameterIndex, Va
 	const auto& node = nodes.at(nodeId);
 	node->parameterValues[parameterIndex] = value;
 }
-void ComputeGraph::setNodeParameter(uint32_t nodeId, const std::string& parameterName, VariantParameter::Value value) {
+void ComputeGraph::setNodeParameter(id_t nodeId, const std::string& parameterName, VariantParameter::Value value) {
 	if(!hasNode(nodeId)) {
 		return;
 	}
@@ -267,7 +267,7 @@ void ComputeGraph::setNodeParameter(uint32_t nodeId, const std::string& paramete
 
 	node->parameterValues[parameterIndex] = value;
 }
-void ComputeGraph::setNodePosition(uint32_t nodeId, const vec2d& position) {
+void ComputeGraph::setNodePosition(id_t nodeId, const vec2_t& position) {
 	if(!hasNode(nodeId)) {
 		return;
 	}
@@ -276,7 +276,7 @@ void ComputeGraph::setNodePosition(uint32_t nodeId, const vec2d& position) {
 	node->position = position;
 }
 
-bool ComputeGraph::hasNode(uint32_t nodeId) const {
+bool ComputeGraph::hasNode(id_t nodeId) const {
 	const auto& nodeEntry = nodes.find(nodeId);
 	if(nodeEntry == nodes.end()) {
 		return false;
@@ -284,17 +284,17 @@ bool ComputeGraph::hasNode(uint32_t nodeId) const {
 
 	return nodeEntry->second != nullptr;
 }
-const ComputeNode& ComputeGraph::getNode(uint32_t nodeId) const {
+const ComputeNode& ComputeGraph::getNode(id_t nodeId) const {
 	return *(nodes.at(nodeId));
 }
-const std::unordered_map<uint32_t, std::unique_ptr<ComputeNode>>& ComputeGraph::getNodes() const {
+const std::unordered_map<id_t, std::unique_ptr<ComputeNode>>& ComputeGraph::getNodes() const {
 	return nodes;
 }
 
-uint32_t ComputeGraph::getNextNodeId() const {
+id_t ComputeGraph::getNextNodeId() const {
 	return nextNodeId;
 }
-uint32_t ComputeGraph::getNextLinkId() const {
+id_t ComputeGraph::getNextLinkId() const {
 	return nextLinkId;
 }
 
@@ -336,7 +336,7 @@ uint32_t ComputeGraph::findNodeSignature(const InputSet& graphInputs, const Buil
 		std::vector<TypeMatch> currentMatch(node.inputs.size(), typematch_none);
 		for(std::size_t i = 0u; i < node.inputs.size(); i++) {
 			VariantValue::Type inputType = VariantValue::type_null;
-			uint32_t sourceNodeId = node.inputs[i].nodeId;
+			id_t sourceNodeId = node.inputs[i].nodeId;
 
 			if(hasNode(sourceNodeId)) {
 				uint32_t sourceSlot = node.inputs[i].slot;
@@ -356,7 +356,7 @@ uint32_t ComputeGraph::findNodeSignature(const InputSet& graphInputs, const Buil
 
 		bool matchNotWorse = true;
 		bool matchBetterForAnyInput = node.inputs.empty();
-		for(uint32_t i = 0u; i < static_cast<uint32_t>(node.inputs.size()); i++) {
+		for(uint32_t i = 0u; i < node.inputs.size(); i++) {
 			if(currentMatch[i] == typematch_none || currentMatch[i] > typeMatch[i]) {
 				matchNotWorse = false;
 				break;
@@ -387,11 +387,11 @@ void to_json(nlohmann::ordered_json& j, const ComputeGraph& computeGraph) {
 	}
 }
 void from_json(const nlohmann::ordered_json& j, ComputeGraph& computeGraph) {
-	std::unordered_map<uint32_t, std::unique_ptr<ComputeNode>> nodes;
+	std::unordered_map<id_t, std::unique_ptr<ComputeNode>> nodes;
 
 	const nlohmann::ordered_json& jNodes = j.at("nodes");
 	for(const nlohmann::ordered_json& jNodeEntry : jNodes) {
-		uint32_t nodeId = jNodeEntry.at(0);
+		id_t nodeId = jNodeEntry.at(0);
 
 		const nlohmann::ordered_json& jNode = jNodeEntry.at(1);
 		std::string nodeType = jNode.at("type");

@@ -10,7 +10,7 @@ ParticleContainer::ParticleContainer(uint32_t capacity) {
 
 void ParticleContainer::reserve(uint32_t capacity) {
 	particleCapacity = capacity;
-	numParticles = 0;
+	numParticles = 0u;
 
 	data.resize(particleCapacity);
 }
@@ -29,7 +29,7 @@ void ParticleContainer::kill(uint32_t i) {
 	data.swap(i, numParticles);
 }
 void ParticleContainer::kill() {
-	numParticles = 0;
+	numParticles = 0u;
 }
 
 ParticleData& ParticleContainer::get() {

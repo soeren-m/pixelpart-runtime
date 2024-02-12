@@ -9,7 +9,7 @@ nlohmann::ordered_json toJson(const T& value) {
 }
 
 template <>
-nlohmann::ordered_json toJson<uint32_t>(const uint32_t& value);
+nlohmann::ordered_json toJson<id_t>(const id_t& value);
 
 template <typename T>
 bool fromJson(T& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey = "") {
@@ -26,13 +26,13 @@ bool fromJson(T& value, const nlohmann::ordered_json& j, const std::string& key,
 }
 
 template <>
-bool fromJson<uint32_t>(uint32_t& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey);
+bool fromJson<id_t>(id_t& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey);
 template <>
-bool fromJson<Curve<floatd>>(Curve<floatd>& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey);
+bool fromJson<Curve<float_t>>(Curve<float_t>& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey);
 template <>
-bool fromJson<Curve<vec2d>>(Curve<vec2d>& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey);
+bool fromJson<Curve<vec2_t>>(Curve<vec2_t>& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey);
 template <>
-bool fromJson<Curve<vec3d>>(Curve<vec3d>& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey);
+bool fromJson<Curve<vec3_t>>(Curve<vec3_t>& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey);
 template <>
-bool fromJson<Curve<vec4d>>(Curve<vec4d>& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey);
+bool fromJson<Curve<vec4_t>>(Curve<vec4_t>& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey);
 }

@@ -4,5 +4,5 @@
 #include <unordered_map>
 
 namespace pixelpart {
-using EffectInputSet = std::unordered_map<uint32_t, EffectInput>;
+using EffectInputSet = std::unordered_map<id_t, EffectInput>;
 }

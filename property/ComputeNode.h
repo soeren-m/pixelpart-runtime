@@ -26,12 +26,12 @@ public:
 		std::vector<VariantValue::Type> outputTypes;
 	};
 	struct Link {
-		uint32_t id = nullId;
-		uint32_t nodeId = nullId;
+		id_t id = nullId;
+		id_t nodeId = nullId;
 		uint32_t slot = nullId;
 
 		Link();
-		Link(uint32_t l, uint32_t n, uint32_t s);
+		Link(id_t l, id_t n, uint32_t s);
 	};
 
 	ComputeNode(
@@ -68,8 +68,8 @@ public:
 	const std::vector<VariantParameter>& getParameters() const;
 	const std::vector<VariantParameter::Value>& getParameterValues() const;
 
-	void setPosition(const vec2d& pos);
-	vec2d getPosition() const;
+	void setPosition(const vec2_t& pos);
+	vec2_t getPosition() const;
 
 protected:
 	virtual ComputeNode* cloneImpl() const = 0;
@@ -87,7 +87,7 @@ protected:
 	std::vector<VariantParameter> parameters;
 	std::vector<VariantParameter::Value> parameterValues;
 
-	vec2d position = vec2d(0.0);
+	vec2_t position = vec2_t(0.0);
 };
 
 void to_json(nlohmann::ordered_json& j, const ComputeNode::Signature& signature);

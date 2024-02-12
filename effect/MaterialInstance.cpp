@@ -10,7 +10,7 @@ MaterialInstance::MaterialInstance(const std::string& matId, const std::vector<V
 		materialParameters[index++] = parameter.defaultValue;
 	}
 }
-MaterialInstance::MaterialInstance(const std::string& matId, const std::unordered_map<uint32_t, VariantParameter>& shaderParameters) : materialId(matId) {
+MaterialInstance::MaterialInstance(const std::string& matId, const std::unordered_map<id_t, VariantParameter>& shaderParameters) : materialId(matId) {
 	for(const auto& parameterEntry : shaderParameters) {
 		materialParameters[parameterEntry.first] = parameterEntry.second.defaultValue;
 	}

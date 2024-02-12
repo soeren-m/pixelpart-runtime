@@ -5,41 +5,41 @@
 
 namespace pixelpart {
 struct ParticleData {
-	std::vector<uint32_t> id;
-	std::vector<uint32_t> parentId;
-	std::vector<floatd> life;
-	std::vector<floatd> lifespan;
-	std::vector<vec3d> position;
-	std::vector<vec3d> globalPosition;
-	std::vector<vec3d> velocity;
-	std::vector<vec3d> force;
-	std::vector<vec3d> rotation;
-	std::vector<vec3d> initialRotation;
-	std::vector<vec3d> initialAngularVelocity;
-	std::vector<vec3d> size;
-	std::vector<floatd> initialSize;
-	std::vector<vec4d> color;
-	std::vector<vec4d> initialColor;
+	std::vector<id_t> id;
+	std::vector<id_t> parentId;
+	std::vector<float_t> life;
+	std::vector<float_t> lifespan;
+	std::vector<vec3_t> position;
+	std::vector<vec3_t> globalPosition;
+	std::vector<vec3_t> velocity;
+	std::vector<vec3_t> force;
+	std::vector<vec3_t> rotation;
+	std::vector<vec3_t> initialRotation;
+	std::vector<vec3_t> initialAngularVelocity;
+	std::vector<vec3_t> size;
+	std::vector<float_t> initialSize;
+	std::vector<vec4_t> color;
+	std::vector<vec4_t> initialColor;
 
 	void resize(uint32_t n);
 	void swap(uint32_t i, uint32_t j);
 };
 
 struct ParticleDataPointer {
-	uint32_t* id;
-	uint32_t* parentId;
-	floatd* life;
-	floatd* lifespan;
-	vec3d* position;
-	vec3d* globalPosition;
-	vec3d* velocity;
-	vec3d* force;
-	vec3d* rotation;
-	vec3d* initialRotation;
-	vec3d* initialAngularVelocity;
-	vec3d* size;
-	floatd* initialSize;
-	vec4d* color;
-	vec4d* initialColor;
+	id_t* id;
+	id_t* parentId;
+	float_t* life;
+	float_t* lifespan;
+	vec3_t* position;
+	vec3_t* globalPosition;
+	vec3_t* velocity;
+	vec3_t* force;
+	vec3_t* rotation;
+	vec3_t* initialRotation;
+	vec3_t* initialAngularVelocity;
+	vec3_t* size;
+	float_t* initialSize;
+	vec4_t* color;
+	vec4_t* initialColor;
 };
 }

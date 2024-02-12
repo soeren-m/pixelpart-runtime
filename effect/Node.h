@@ -5,14 +5,14 @@
 
 namespace pixelpart {
 struct Node {
-	uint32_t id = nullId;
-	uint32_t parentId = nullId;
+	id_t id = nullId;
+	id_t parentId = nullId;
 	std::string name;
 
-	floatd lifetimeStart = 0.0;
-	floatd lifetimeDuration = 1.0;
+	float_t lifetimeStart = 0.0;
+	float_t lifetimeDuration = 1.0;
 	bool repeat = true;
 
-	AnimatedProperty<vec3d> position = AnimatedProperty<vec3d>(0.0, vec3d(0.0));
+	AnimatedProperty<vec3_t> position = AnimatedProperty<vec3_t>(0.0, vec3_t(0.0));
 };
 }

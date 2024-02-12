@@ -6,22 +6,22 @@
 namespace pixelpart {
 namespace random {
 template <typename T>
-floatd uniform(T& rng, floatd min, floatd max) {
-	return std::uniform_real_distribution<floatd>(min, max)(rng);
+float_t uniform(T& rng, float_t min, float_t max) {
+	return std::uniform_real_distribution<float_t>(min, max)(rng);
 }
 
 template <typename T>
-floatd uniformInt(T& rng, int32_t min, int32_t max) {
+float_t uniformInt(T& rng, int32_t min, int32_t max) {
 	return std::uniform_int_distribution<int32_t>(min, max)(rng);
 }
 
 template <typename T>
-floatd normal(T& rng, floatd min, floatd max) {
-	floatd m = (min + max) / 2.0;
-	floatd d = (max - min) / 6.0;
-	std::normal_distribution<floatd> distrib(m, d);
+float_t normal(T& rng, float_t min, float_t max) {
+	float_t m = (min + max) / 2.0;
+	float_t d = (max - min) / 6.0;
+	std::normal_distribution<float_t> distrib(m, d);
 
-	floatd x = distrib(rng);
+	float_t x = distrib(rng);
 	while(x < min || x > max) {
 		x = distrib(rng);
 	}
@@ -30,9 +30,9 @@ floatd normal(T& rng, floatd min, floatd max) {
 }
 
 template <typename T>
-floatd normalReverse(T& rng, floatd min, floatd max) {
-	floatd m = (min + max) / 2.0;
-	floatd x = normal(rng, min, max);
+float_t normalReverse(T& rng, float_t min, float_t max) {
+	float_t m = (min + max) / 2.0;
+	float_t x = normal(rng, min, max);
 
 	return (x > m)
 		? m + (max - x)
@@ -40,13 +40,13 @@ floatd normalReverse(T& rng, floatd min, floatd max) {
 }
 
 template <typename T>
-floatd uniformGrid(T& rng, uint32_t size) {
-	return static_cast<floatd>(uniformInt(rng, 0, size - 1u)) / static_cast<floatd>(size - 1u);
+float_t uniformGrid(T& rng, uint32_t size) {
+	return static_cast<float_t>(uniformInt(rng, 0, size - 1u)) / static_cast<float_t>(size - 1u);
 }
 
 template <typename T>
-floatd uniformGrid(T& rng, uint32_t size, floatd min, floatd max) {
-	return static_cast<floatd>(uniformInt(rng, 0, size - 1u)) / static_cast<floatd>(size - 1u) * (max - min) + min;
+float_t uniformGrid(T& rng, uint32_t size, float_t min, float_t max) {
+	return static_cast<float_t>(uniformInt(rng, 0, size - 1u)) / static_cast<float_t>(size - 1u) * (max - min) + min;
 }
 }
 }

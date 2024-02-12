@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Node.h"
-#include <vector>
 #include <algorithm>
 #include <type_traits>
 
@@ -36,11 +35,11 @@ public:
 		updateIndexMap();
 	}
 
-	uint32_t set(const T& node, uint32_t baseId) {
-		uint32_t nodeId = (node.id != nullId)
+	id_t set(const T& node, id_t baseId) {
+		id_t nodeId = node.id != nullId
 			? baseId + node.id
 			: baseId;
-		uint32_t parentId = (node.parentId != nullId)
+		id_t parentId = node.parentId != nullId
 			? baseId + node.parentId
 			: nullId;
 
@@ -54,8 +53,8 @@ public:
 		return nodeId;
 	}
 
-	uint32_t add(const T& node) {
-		uint32_t nodeId = (node.id != nullId) ? node.id : 0;
+	id_t add(const T& node) {
+		id_t nodeId = node.id != nullId ? node.id : 0u;
 		while(contains(nodeId)) {
 			nodeId++;
 		}
@@ -67,7 +66,7 @@ public:
 		return nodeId;
 	}
 
-	uint32_t duplicate(uint32_t nodeId, const std::string& nameExtension = " (copy)") {
+	id_t duplicate(id_t nodeId, const std::string& nameExtension = " (copy)") {
 		if(!contains(nodeId)) {
 			return nullId;
 		}
@@ -84,7 +83,7 @@ public:
 		return add(otherNode);
 	}
 
-	void remove(uint32_t nodeId) {
+	void remove(id_t nodeId) {
 		removeAt(findById(nodeId));
 	}
 	void removeAt(uint32_t index) {
@@ -100,13 +99,13 @@ public:
 		updateIndexMap();
 	}
 
-	uint32_t findById(uint32_t nodeId) const {
+	uint32_t findById(id_t nodeId) const {
 		return (nodeId < indexMap.size())
 			? indexMap[nodeId]
 			: nullId;
 	}
-	uint32_t findByParent(uint32_t parentId) const {
-		for(uint32_t i = 0; i < nodes.size(); i++) {
+	uint32_t findByParent(id_t parentId) const {
+		for(uint32_t i = 0u; i < nodes.size(); i++) {
 			if(nodes[i].parentId == parentId) {
 				return i;
 			}
@@ -115,7 +114,7 @@ public:
 		return nullId;
 	}
 	uint32_t findByName(const std::string& name) const {
-		for(uint32_t i = 0; i < nodes.size(); i++) {
+		for(uint32_t i = 0u; i < nodes.size(); i++) {
 			if(nodes[i].name == name) {
 				return i;
 			}
@@ -124,10 +123,10 @@ public:
 		return nullId;
 	}
 
-	bool contains(uint32_t nodeId) const {
+	bool contains(id_t nodeId) const {
 		return findById(nodeId) != nullId;
 	}
-	bool containsParent(uint32_t parentId) const {
+	bool containsParent(id_t parentId) const {
 		return findByParent(parentId) != nullId;
 	}
 	bool containsName(const std::string& name) const {
@@ -137,10 +136,10 @@ public:
 		return index < nodes.size();
 	}
 
-	T& get(uint32_t nodeId) {
+	T& get(id_t nodeId) {
 		return nodes.at(findById(nodeId));
 	}
-	T& getByParent(uint32_t parentId) {
+	T& getByParent(id_t parentId) {
 		return nodes.at(findByParent(parentId));
 	}
 	T& getByName(const std::string& name) {
@@ -152,10 +151,10 @@ public:
 	const std::vector<T>& get() const {
 		return nodes;
 	}
-	const T& get(uint32_t id) const {
+	const T& get(id_t id) const {
 		return nodes.at(findById(id));
 	}
-	const T& getByParent(uint32_t parentId) const {
+	const T& getByParent(id_t parentId) const {
 		return nodes.at(findByParent(parentId));
 	}
 	const T& getByName(const std::string& name) const {
@@ -166,10 +165,10 @@ public:
 	}
 
 	uint32_t getCount() const {
-		return nodes.size();
+		return static_cast<uint32_t>(nodes.size());
 	}
-	uint32_t getMaxId() const {
-		uint32_t maxId = 0;
+	id_t getMaxId() const {
+		id_t maxId = 0u;
 		for(const T& node : nodes) {
 			maxId = std::max(maxId, node.id);
 		}
@@ -190,7 +189,7 @@ public:
 	template <typename TFunc>
 	std::vector<uint32_t> getSortedIndices(TFunc compare) const {
 		std::vector<uint32_t> sortedIndices(nodes.size());
-		for(uint32_t i = 0; i < nodes.size(); i++) {
+		for(uint32_t i = 0u; i < nodes.size(); i++) {
 			sortedIndices[i] = i;
 		}
 
@@ -206,10 +205,10 @@ private:
 		indexMap.clear();
 		indexMap.reserve(nodes.size());
 
-		for(uint32_t i = 0; i < nodes.size(); i++) {
-			uint32_t nodeId = nodes[i].id;
+		for(uint32_t i = 0u; i < nodes.size(); i++) {
+			id_t nodeId = nodes[i].id;
 			if(nodeId >= indexMap.size()) {
-				indexMap.resize(nodeId + 1, nullId);
+				indexMap.resize(nodeId + 1u, nullId);
 			}
 
 			indexMap[nodeId] = i;

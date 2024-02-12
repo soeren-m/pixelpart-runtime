@@ -5,12 +5,12 @@
 namespace pixelpart {
 struct ShaderNode {
 	struct Link {
-		uint32_t id = nullId;
-		uint32_t nodeId = nullId;
+		id_t id = nullId;
+		id_t nodeId = nullId;
 		uint32_t slot = 0u;
 
 		Link();
-		Link(uint32_t l, uint32_t n, uint32_t s);
+		Link(id_t l, id_t n, uint32_t s);
 	};
 
 	ShaderNode();
@@ -22,7 +22,7 @@ struct ShaderNode {
 	std::vector<VariantParameter::Value> parameters;
 	bool isParameterNode = false;
 
-	vec2d position = vec2d(0.0);
+	vec2_t position = vec2_t(0.0);
 };
 
 void to_json(nlohmann::ordered_json& j, const ShaderNode::Link& link);

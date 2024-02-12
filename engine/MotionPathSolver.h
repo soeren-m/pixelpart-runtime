@@ -8,6 +8,6 @@ class MotionPathSolver {
 public:
 	MotionPathSolver();
 
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, floatd t, floatd dt) const;
+	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) const;
 };
 }
