@@ -6,20 +6,17 @@ namespace pixelpart {
 struct ShaderGraphLanguage {
 	std::vector<ShaderNodeType> nodes;
 
+	std::string variablePrefix;
+
 	std::vector<std::string> typeNames;
 	std::vector<std::string> typeConstructors;
 	std::vector<std::vector<std::string>> typeCasts;
 
-	std::string parameterTemplate;
-	std::vector<std::string> parameterTypeNames;
-	std::vector<std::string> textureSamplers;
-
-	std::string variablePrefix;
 	std::string parameterPrefix;
-	std::string parameterBlockName;
-	std::string parameterBlockTemplate;
+	std::string parameterDefinition;
+	std::vector<std::string> parameterTypeNames;
 
-	std::string shaderTemplate;
+	std::vector<std::string> textureSamplers;
 };
 
 void to_json(nlohmann::ordered_json& j, const ShaderGraphLanguage& graphLanguage);

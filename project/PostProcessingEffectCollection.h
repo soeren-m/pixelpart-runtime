@@ -16,8 +16,6 @@ public:
 	const std::string& getShaderTemplate() const;
 
 private:
-	static std::string replace(std::string str, const std::string& to, const std::string& from);
-
 	std::vector<PostProcessingEffectType> effects;
 	std::string shaderTemplate;
 };

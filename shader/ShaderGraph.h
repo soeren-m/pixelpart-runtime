@@ -28,7 +28,7 @@ public:
 		typematch_none
 	};
 	struct BuildResult {
-		std::string code;
+		std::string mainCode;
 		std::string parameterCode;
 		std::unordered_map<id_t, std::vector<std::string>> nodeOutputVariables;
 		std::unordered_map<id_t, uint32_t> nodeSignatures;

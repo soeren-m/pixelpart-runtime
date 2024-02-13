@@ -1,22 +1,7 @@
 #include "ShaderGraph.h"
+#include "../common/StringUtil.h"
 
 namespace pixelpart {
-namespace {
-std::string replace(std::string str, const std::string& to, const std::string& from) {
-	if(from.empty()) {
-		return str;
-	}
-
-	std::size_t pos = 0u;
-	while((pos = str.find(from, pos)) != std::string::npos) {
-		str.replace(pos, from.length(), to);
-		pos += to.length();
-	}
-
-	return str;
-}
-}
-
 ShaderGraph::BuildException::BuildException(const std::string& msg, id_t node, uint32_t slot) : std::runtime_error(msg), nodeId(node), slotIndex(slot) {
 
 }
@@ -103,7 +88,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 
 				result.parameterNames[nodeId] = parameterVariableName;
 
-				std::string parameterCode = graphLanguage.parameterTemplate;
+				std::string parameterCode = graphLanguage.parameterDefinition;
 				parameterCode = replace(parameterCode, graphLanguage.parameterTypeNames.at(parameterValue.type), "{type}");
 				parameterCode = replace(parameterCode, parameterVariableName, "{name}");
 				result.parameterCode += parameterCode;
@@ -319,17 +304,9 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 	result.resolvedNodes.insert(nodeId);
 
 	if(nodeId == 0u) {
-		std::string parameterBlock;
-		if(!result.parameterCode.empty()) {
-			parameterBlock = graphLanguage.parameterBlockTemplate;
-			parameterBlock = replace(parameterBlock, graphLanguage.parameterBlockName, "{block_name}");
-			parameterBlock = replace(parameterBlock, result.parameterCode, "{parameters}");
-		}
+		result.mainCode = inputCode + "\n" + code;
 
-		result.code = replace(graphLanguage.shaderTemplate, parameterBlock, "{parameter_block}");
-		result.code = replace(result.code, inputCode + "\n" + code, "{main}");
-
-		return result.code;
+		return result.mainCode;
 	}
 
 	return inputCode + "\n" + code;
