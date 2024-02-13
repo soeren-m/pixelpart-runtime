@@ -6,6 +6,7 @@ namespace pixelpart {
 struct PostProcessingEffect {
 	std::string type;
 	std::vector<VariantParameter::Value> parameters;
+	bool visible = true;
 
 	PostProcessingEffect();
 	PostProcessingEffect(const PostProcessingEffectType& effectType);

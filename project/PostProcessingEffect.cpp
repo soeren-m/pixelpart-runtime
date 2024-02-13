@@ -14,7 +14,8 @@ PostProcessingEffect::PostProcessingEffect(const PostProcessingEffectType& effec
 void to_json(nlohmann::ordered_json& j, const PostProcessingEffect& effect) {
 	j = nlohmann::ordered_json{
 		{ "type", effect.type },
-		{ "parameters", effect.parameters }
+		{ "parameters", effect.parameters },
+		{ "visible", effect.visible }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, PostProcessingEffect& effect) {
@@ -22,5 +23,6 @@ void from_json(const nlohmann::ordered_json& j, PostProcessingEffect& effect) {
 
 	fromJson(effect.type, j, "type");
 	fromJson(effect.parameters, j, "parameters");
+	fromJson(effect.visible, j, "visible");
 }
 }
