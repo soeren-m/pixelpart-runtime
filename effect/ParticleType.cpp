@@ -39,7 +39,6 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 
 		{ "visible", particleType.visible },
 		{ "layer", particleType.layer },
-		{ "blend_mode", particleType.blendMode },
 		{ "initial_size", particleType.initialSize },
 		{ "size", particleType.size },
 		{ "size_variance", particleType.sizeVariance },
@@ -95,7 +94,6 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 
 	fromJson(particleType.visible, j, "visible");
 	fromJson(particleType.layer, j, "layer");
-	fromJson(particleType.blendMode, j, "blend_mode");
 	fromJson(particleType.initialSize, j, "initial_size");
 	fromJson(particleType.size, j, "size");
 	fromJson(particleType.sizeVariance, j, "size_variance");

@@ -1,10 +1,14 @@
 #pragma once
 
 #include "Resource.h"
+#include "BlendMode.h"
+#include "LightingMode.h"
 #include "../shader/ShaderGraph.h"
 
 namespace pixelpart {
 struct MaterialResource : public Resource {
+	BlendMode blendMode = BlendMode::normal;
+	LightingMode lightingMode = LightingMode::unlit;
 	ShaderGraph shaderGraph;
 };
 

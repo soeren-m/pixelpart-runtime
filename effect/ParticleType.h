@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Node.h"
-#include "BlendMode.h"
 #include "RotationMode.h"
 #include "AlignmentMode.h"
 #include "MaterialInstance.h"
@@ -37,7 +36,6 @@ struct ParticleType : public Node {
 
 	bool visible = true;
 	uint32_t layer = 0u;
-	BlendMode blendMode = BlendMode::normal;
 	AnimatedProperty<float_t> initialSize = AnimatedProperty<float_t>(0.1);
 	AnimatedProperty<vec3_t> size = AnimatedProperty<vec3_t>(vec3_t(1.0));
 	StaticProperty<float_t> sizeVariance = StaticProperty<float_t>(0.0);
