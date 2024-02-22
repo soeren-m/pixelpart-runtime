@@ -23,6 +23,7 @@ void to_json(nlohmann::ordered_json& j, const RenderSettings& settings) {
 		{ "ambient_lighting", settings.ambientLighting },
 		{ "hdr_enabled", settings.hdrEnabled },
 		{ "hdr_bloom", settings.hdrBloom },
+		{ "hdr_bloom_threshold", settings.hdrBloomThreshold },
 		{ "hdr_exposure", settings.hdrExposure }
 	};
 }
@@ -49,6 +50,7 @@ void from_json(const nlohmann::ordered_json& j, RenderSettings& settings) {
 	fromJson(settings.ambientLighting, j, "ambient_lighting");
 	fromJson(settings.hdrEnabled, j, "hdr_enabled");
 	fromJson(settings.hdrBloom, j, "hdr_bloom");
+	fromJson(settings.hdrBloomThreshold, j, "hdr_bloom_threshold");
 	fromJson(settings.hdrExposure, j, "hdr_exposure");
 }
 }
