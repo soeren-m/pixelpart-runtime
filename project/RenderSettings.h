@@ -22,8 +22,7 @@ struct RenderSettings {
 
 	vec3_t ambientLighting = vec3_t(0.1);
 	bool hdrEnabled = true;
-	int_t hdrBloom = 1;
-	float_t hdrBloomThreshold = 1.0;
+	float_t hdrBloomIntensity = 0.1;
 	float_t hdrExposure = 1.0;
 };
 
