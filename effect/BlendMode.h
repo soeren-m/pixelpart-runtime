@@ -4,12 +4,14 @@
 
 namespace pixelpart {
 enum class BlendMode : uint32_t {
-	normal = 0,
-	additive = 1,
-	subtractive = 2
+	off = 0,
+	normal = 1,
+	additive = 2,
+	subtractive = 3
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(BlendMode, {
+	{ BlendMode::off, "off" },
 	{ BlendMode::normal, "normal" },
 	{ BlendMode::additive, "additive" },
 	{ BlendMode::subtractive, "subtractive" }
