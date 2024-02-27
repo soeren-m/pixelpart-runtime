@@ -4,6 +4,8 @@
 
 namespace pixelpart {
 struct RenderSettings {
+	uint32_t simulationSeed = 0u;
+
 	uint32_t frameWidth = 1u;
 	uint32_t frameHeight = 1u;
 
@@ -18,7 +20,10 @@ struct RenderSettings {
 	bool seamlessRenderingEnabled = false;
 	vec4_t backgroundColor = vec4_t(0.0);
 
-	uint32_t simulationSeed = 0u;
+	vec3_t ambientLighting = vec3_t(0.1);
+	bool hdrEnabled = true;
+	float_t hdrBloomIntensity = 0.1;
+	float_t hdrExposure = 1.0;
 };
 
 void to_json(nlohmann::ordered_json& j, const RenderSettings& settings);

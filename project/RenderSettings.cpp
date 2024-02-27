@@ -4,6 +4,8 @@
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const RenderSettings& settings) {
 	j = nlohmann::ordered_json{
+		{ "simulation_seed", settings.simulationSeed },
+
 		{ "frame_width", settings.frameWidth },
 		{ "frame_height", settings.frameHeight },
 
@@ -18,12 +20,17 @@ void to_json(nlohmann::ordered_json& j, const RenderSettings& settings) {
 		{ "seamlessrendering_enabled", settings.seamlessRenderingEnabled },
 		{ "background_color", settings.backgroundColor },
 
-		{ "simulation_seed", settings.simulationSeed }
+		{ "ambient_lighting", settings.ambientLighting },
+		{ "hdr_enabled", settings.hdrEnabled },
+		{ "hdr_bloom_intensity", settings.hdrBloomIntensity },
+		{ "hdr_exposure", settings.hdrExposure }
 	};
 }
 
 void from_json(const nlohmann::ordered_json& j, RenderSettings& settings) {
 	settings = RenderSettings();
+
+	fromJson(settings.simulationSeed, j, "simulation_seed");
 
 	fromJson(settings.frameWidth, j, "frame_width");
 	fromJson(settings.frameHeight, j, "frame_height");
@@ -39,6 +46,9 @@ void from_json(const nlohmann::ordered_json& j, RenderSettings& settings) {
 	fromJson(settings.seamlessRenderingEnabled, j, "seamlessrendering_enabled");
 	fromJson(settings.backgroundColor, j, "background_color");
 
-	fromJson(settings.simulationSeed, j, "simulation_seed");
+	fromJson(settings.ambientLighting, j, "ambient_lighting");
+	fromJson(settings.hdrEnabled, j, "hdr_enabled");
+	fromJson(settings.hdrBloomIntensity, j, "hdr_bloom_intensity");
+	fromJson(settings.hdrExposure, j, "hdr_exposure");
 }
 }
