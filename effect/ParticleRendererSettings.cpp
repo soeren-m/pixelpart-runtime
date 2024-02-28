@@ -18,7 +18,9 @@ void to_json(nlohmann::ordered_json& j, const ParticleTrailRendererSettings& ren
 }
 void to_json(nlohmann::ordered_json& j, const ParticleMeshRendererSettings& rendererSettings) {
 	j = nlohmann::ordered_json{
-		{ "mesh_resource", rendererSettings.meshResourceId }
+		{ "mesh_resource", rendererSettings.meshResourceId },
+
+		{ "sort_criterion", rendererSettings.sortCriterion }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ParticleSpriteRendererSettings& rendererSettings) {
@@ -39,5 +41,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleMeshRendererSettings& re
 	rendererSettings = ParticleMeshRendererSettings();
 
 	fromJson(rendererSettings.meshResourceId, j, "mesh_resource");
+
+	fromJson(rendererSettings.sortCriterion, j, "sort_criterion");
 }
 }

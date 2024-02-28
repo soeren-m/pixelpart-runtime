@@ -22,6 +22,8 @@ struct ParticleTrailRendererSettings {
 
 struct ParticleMeshRendererSettings {
 	std::string meshResourceId;
+
+	ParticleSortCriterion sortCriterion = ParticleSortCriterion::none;
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ParticleTrailRendererSettings::SmoothingMethod, {
