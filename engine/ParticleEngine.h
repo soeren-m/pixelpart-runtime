@@ -6,13 +6,27 @@
 namespace pixelpart {
 class ParticleEngine {
 public:
+	template <typename TSolver>
+	static ParticleEngine create(const Effect* fx, uint32_t capacity) {
+		return ParticleEngine(fx, capacity, std::unique_ptr<ParticleSolver>(new TSolver()));
+	}
 	template <typename TSolver, typename... Args>
 	static ParticleEngine create(const Effect* fx, uint32_t capacity, Args... args) {
 		return ParticleEngine(fx, capacity, std::unique_ptr<ParticleSolver>(new TSolver(std::forward<Args>(args)...)));
 	}
+
+	template <typename TSolver>
+	static std::unique_ptr<ParticleEngine> createUnique(const Effect* fx, uint32_t capacity) {
+		return std::unique_ptr<ParticleEngine>(new ParticleEngine(fx, capacity, std::unique_ptr<ParticleSolver>(new TSolver())));
+	}
 	template <typename TSolver, typename... Args>
 	static std::unique_ptr<ParticleEngine> createUnique(const Effect* fx, uint32_t capacity, Args... args) {
 		return std::unique_ptr<ParticleEngine>(new ParticleEngine(fx, capacity, std::unique_ptr<ParticleSolver>(new TSolver(std::forward<Args>(args)...))));
+	}
+
+	template <typename TSolver>
+	static std::shared_ptr<ParticleEngine> createShared(const Effect* fx, uint32_t capacity) {
+		return std::shared_ptr<ParticleEngine>(new ParticleEngine(fx, capacity, std::unique_ptr<ParticleSolver>(new TSolver())));
 	}
 	template <typename TSolver, typename... Args>
 	static std::shared_ptr<ParticleEngine> createShared(const Effect* fx, uint32_t capacity, Args... args) {

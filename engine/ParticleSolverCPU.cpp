@@ -2,16 +2,19 @@
 #include "../common/Color.h"
 
 namespace pixelpart {
-ParticleSolverCPU::ParticleSolverCPU(uint32_t numThreads) {
-#ifndef __EMSCRIPTEN__
-	threadPool = std::unique_ptr<ThreadPool>(
-		new ThreadPool(numThreads > 0u ? numThreads : std::thread::hardware_concurrency()));
-#endif
+ParticleSolverCPU::ParticleSolverCPU() {
+
 }
+#ifndef __EMSCRIPTEN__
+ParticleSolverCPU::ParticleSolverCPU(std::shared_ptr<ThreadPool> pool) : threadPool(pool) {
+
+}
+#endif
 
 void ParticleSolverCPU::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType, ParticleData& particles, uint32_t numParticles, float_t t, float_t dt) {
 #ifndef __EMSCRIPTEN__
-	numActiveThreads = std::min(std::max(numParticles / numParticlesPerThread, 1u), static_cast<uint32_t>(threadPool->getNumThreads()));
+	uint32_t numAvailableThreads = threadPool != nullptr ? static_cast<uint32_t>(threadPool->getNumThreads()) : 1u;
+	numActiveThreads = std::min(std::max(numParticles / numParticlesPerThread, 1u), numAvailableThreads);
 
 	if(numActiveThreads > 1u) {
 		uint32_t numParticlesPerThread = numParticles / numActiveThreads;
@@ -56,11 +59,13 @@ void ParticleSolverCPU::solve(const ParticleEmitter& particleEmitter, const Part
 			threadPool->wait(i);
 		}
 	}
+
 #else
-	numActiveThreads = 1;
+	numActiveThreads = 1u;
+
 #endif
 
-	if(numActiveThreads == 1u) {
+	if(numActiveThreads <= 1u) {
 		ParticleDataPointer workgroupParticles{
 			particles.id.data(),
 			particles.parentId.data(),
