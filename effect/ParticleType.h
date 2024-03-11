@@ -20,7 +20,6 @@ struct ParticleType : public Node {
 	StaticProperty<float_t> velocityVariance = StaticProperty<float_t>(0.0);
 	AnimatedProperty<float_t> acceleration = AnimatedProperty<float_t>(0.0);
 	AnimatedProperty<float_t> radialAcceleration = AnimatedProperty<float_t>(0.0);
-	AnimatedProperty<float_t> damping = AnimatedProperty<float_t>(1.0);
 	RotationMode rotationMode = RotationMode::angle;
 	AlignmentMode alignmentMode = AlignmentMode::camera;
 	AnimatedProperty<vec3_t> initialRotation = AnimatedProperty<vec3_t>(vec3_t(0.0));

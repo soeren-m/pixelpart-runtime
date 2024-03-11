@@ -47,7 +47,6 @@ void refreshEffectProperties(Effect& effect) {
 		particleType.velocityVariance.refresh(inputValues);
 		particleType.acceleration.refresh(inputValues);
 		particleType.radialAcceleration.refresh(inputValues);
-		particleType.damping.refresh(inputValues);
 		particleType.initialRotation.refresh(inputValues);
 		particleType.rotation.refresh(inputValues);
 		particleType.rotationBySpeed.refresh(inputValues);

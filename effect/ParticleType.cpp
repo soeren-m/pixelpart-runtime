@@ -23,7 +23,6 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "velocity_variance", particleType.velocityVariance },
 		{ "acceleration", particleType.acceleration },
 		{ "radial_acceleration", particleType.radialAcceleration },
-		{ "damping", particleType.damping },
 		{ "rotation_mode", particleType.rotationMode },
 		{ "alignment_mode", particleType.alignmentMode },
 		{ "initial_rotation", particleType.initialRotation },
@@ -78,7 +77,6 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	fromJson(particleType.velocityVariance, j, "velocity_variance");
 	fromJson(particleType.acceleration, j, "acceleration");
 	fromJson(particleType.radialAcceleration, j, "radial_acceleration");
-	fromJson(particleType.damping, j, "damping");
 	fromJson(particleType.rotationMode, j, "rotation_mode");
 	fromJson(particleType.alignmentMode, j, "alignment_mode");
 	fromJson(particleType.initialRotation, j, "initial_rotation");

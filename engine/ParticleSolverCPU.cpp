@@ -171,7 +171,6 @@ void ParticleSolverCPU::simulateParticles(const ParticleEmitter& particleEmitter
 
 	for(uint32_t p = 0u; p < workgroupSize; p++) {
 		particles.velocity[p] += particles.force[p] * dt;
-		particles.velocity[p] *= std::pow(particleType.damping.get(particles.life[p]), dt);
 		particles.position[p] += particles.velocity[p] * dt;
 
 		particles.globalPosition[p] = particleType.positionRelative
