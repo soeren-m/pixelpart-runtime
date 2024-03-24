@@ -142,13 +142,6 @@ VariantParameter::Value VariantParameter::Value::ImageResourceValue(const std::s
 
 	return value;
 }
-VariantParameter::Value VariantParameter::Value::ImageResourceValue(const std::string& id, const std::string& path) {
-	VariantParameter::Value value;
-	value.type = type_resource_image;
-	value.data.string = id + (!path.empty() ? "@" + path : "");
-
-	return value;
-}
 
 VariantParameter::Value::Value() : type(type_int) {
 	data.integer = 0;
@@ -230,17 +223,8 @@ Curve<vec4_t> VariantParameter::Value::getGradient4() const {
 
 	return Curve<vec4_t>(points, static_cast<CurveInterpolation>(data.integer));
 }
-std::string VariantParameter::Value::getResourceString() const {
-	return data.string;
-}
 std::string VariantParameter::Value::getResourceId() const {
-	return data.string.substr(0u, data.string.find("@"));
-}
-std::string VariantParameter::Value::getResourcePath() const {
-	std::size_t separatorPos = data.string.find("@");
-	return (separatorPos != std::string::npos)
-		? data.string.substr(separatorPos + 1u)
-		: std::string();
+	return data.string;
 }
 
 VariantParameter VariantParameter::createIntParameter(const std::string& name, int_t def, int_t min, int_t max) {
@@ -384,7 +368,7 @@ void to_json(nlohmann::ordered_json& j, const VariantParameter::Value& value) {
 			j["value"] = value.getGradient();
 			break;
 		case VariantParameter::Value::type_resource_image:
-			j["value"] = value.getResourceString();
+			j["value"] = value.getResourceId();
 			break;
 		default:
 			break;

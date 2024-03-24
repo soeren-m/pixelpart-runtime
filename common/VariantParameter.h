@@ -37,7 +37,6 @@ struct VariantParameter {
 		static Value GradientValue(const Curve<vec3_t>& v);
 		static Value GradientValue(const Curve<vec4_t>& v);
 		static Value ImageResourceValue(const std::string& v);
-		static Value ImageResourceValue(const std::string& id, const std::string& path);
 
 		Value();
 
@@ -52,9 +51,7 @@ struct VariantParameter {
 		Curve<float_t> getCurve() const;
 		Curve<vec3_t> getGradient() const;
 		Curve<vec4_t> getGradient4() const;
-		std::string getResourceString() const;
 		std::string getResourceId() const;
-		std::string getResourcePath() const;
 	};
 
 	static VariantParameter createIntParameter(const std::string& name, int_t def, int_t min, int_t max);
