@@ -36,7 +36,7 @@ private:
 	vec3_t computeAnimatedCurlNoise2d(const vec2_t& samplePosition, float_t animationTime, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
 	vec3_t computeAnimatedCurlNoise3d(const vec3_t& samplePosition, float_t animationTime, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
 
-	const EffectResourceSet* effectResources = nullptr;
+	const ResourceCollection* effectResources = nullptr;
 	bool is3d = false;
 
 	std::vector<ForceField> forceFields;

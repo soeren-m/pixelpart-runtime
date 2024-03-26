@@ -1,45 +1,9 @@
 #include "MeshResource.h"
-#include "../common/JsonUtil.h"
-#include "../common/Base64.h"
-#include "../zlib/zlib.h"
+#include "../common/Compression.h"
+#include "../common/Json.h"
 #include <utility>
 
 namespace pixelpart {
-std::string compressString(const std::string& stringData) {
-	uLong compressedSize = compressBound(static_cast<uLong>(stringData.size()));
-	std::vector<Byte> compressedData(compressedSize);
-
-	int result = compress(
-		reinterpret_cast<Bytef*>(compressedData.data()),
-		reinterpret_cast<uLongf*>(&compressedSize),
-		reinterpret_cast<const Bytef*>(stringData.data()),
-		static_cast<uLong>(stringData.size()));
-
-	if(result != Z_OK) {
-		throw std::runtime_error("Compression error, zlib returned " + std::to_string(result));
-	}
-
-	return encodeBase64(compressedData.data(), compressedData.size());
-}
-std::string decompressString(const std::string& compressedData, std::size_t uncompressedSize) {
-	std::string data;
-	data.resize(uncompressedSize);
-
-	uLong expectedUncompressedSize = uncompressedSize;
-
-	int result = uncompress(
-		reinterpret_cast<Bytef*>(data.data()),
-		reinterpret_cast<uLongf*>(&expectedUncompressedSize),
-		reinterpret_cast<const Bytef*>(compressedData.data()),
-		static_cast<uLong>(compressedData.size()));
-
-	if(result != Z_OK) {
-		throw std::runtime_error("Decompression error, zlib returned " + std::to_string(result));
-	}
-
-	return data;
-}
-
 std::pair<std::string, std::size_t> serializeIntegerData(const std::vector<uint32_t>& data) {
 	std::string stringData;
 	for(std::size_t i = 0u; i < data.size(); i++) {
@@ -51,7 +15,7 @@ std::pair<std::string, std::size_t> serializeIntegerData(const std::vector<uint3
 	}
 
 	return std::make_pair(
-		compressString(stringData),
+		compressAndEncodeString(stringData, CompressionMethod::zlib),
 		stringData.size());
 }
 std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::vec2>& data) {
@@ -67,7 +31,7 @@ std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::v
 	}
 
 	return std::make_pair(
-		compressString(stringData),
+		compressAndEncodeString(stringData, CompressionMethod::zlib),
 		stringData.size());
 }
 std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::vec3>& data) {
@@ -86,11 +50,12 @@ std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::v
 	}
 
 	return std::make_pair(
-		compressString(stringData),
+		compressAndEncodeString(stringData, CompressionMethod::zlib),
 		stringData.size());
 }
 
-void deserializeIntegerData(std::vector<uint32_t>& integerData, const std::string& stringData) {
+void deserializeIntegerData(std::vector<uint32_t>& integerData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
+	std::string stringData = decodeAndDecompressToString(compressedData, uncompressedSize, compressionMethod);
 	std::istringstream dataStream(stringData);
 
 	while(!dataStream.eof()) {
@@ -100,7 +65,8 @@ void deserializeIntegerData(std::vector<uint32_t>& integerData, const std::strin
 		integerData.push_back(static_cast<uint32_t>(std::stoul(token)));
 	}
 }
-void deserializeVectorData(std::vector<glm::vec2>& vectorData, const std::string& stringData) {
+void deserializeVectorData(std::vector<glm::vec2>& vectorData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
+	std::string stringData = decodeAndDecompressToString(compressedData, uncompressedSize, compressionMethod);
 	std::istringstream dataStream(stringData);
 
 	while(!dataStream.eof()) {
@@ -116,7 +82,8 @@ void deserializeVectorData(std::vector<glm::vec2>& vectorData, const std::string
 		vectorData.push_back(vector);
 	}
 }
-void deserializeVectorData(std::vector<glm::vec3>& vectorData, const std::string& stringData) {
+void deserializeVectorData(std::vector<glm::vec3>& vectorData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
+	std::string stringData = decodeAndDecompressToString(compressedData, uncompressedSize, compressionMethod);
 	std::istringstream dataStream(stringData);
 
 	while(!dataStream.eof()) {
@@ -152,7 +119,7 @@ void to_json(nlohmann::ordered_json& j, const MeshResource& resource) {
 		{ "normals_uncompressed_size", serializedNormals.second },
 		{ "texture_coords", serializedTextureCoords.first },
 		{ "texture_coords_uncompressed_size", serializedTextureCoords.second },
-		{ "compression", "zlib" }
+		{ "compression", CompressionMethod::zlib }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, MeshResource& resource) {
@@ -160,37 +127,12 @@ void from_json(const nlohmann::ordered_json& j, MeshResource& resource) {
 
 	fromJson(resource.name, j, "name");
 
-	std::string compression;
-	fromJson(compression, j, "compression");
+	CompressionMethod compressionMethod = CompressionMethod::none;
+	fromJson(compressionMethod, j, "compression");
 
-	std::string compressedFaceData = decodeBase64(j.at("faces").get<std::string>());
-	std::string compressedPositionData = decodeBase64(j.at("positions").get<std::string>());
-	std::string compressedNormalData = decodeBase64(j.at("normals").get<std::string>());
-	std::string compressedTextureCoordData = decodeBase64(j.at("texture_coords").get<std::string>());
-
-	std::string uncompressedFaceData;
-	std::string uncompressedPositionData;
-	std::string uncompressedNormalData;
-	std::string uncompressedTextureCoordData;
-	if(compression == "zlib") {
-		uncompressedFaceData = decompressString(compressedFaceData, j.at("faces_uncompressed_size").get<std::size_t>());
-		uncompressedPositionData = decompressString(compressedPositionData, j.at("positions_uncompressed_size").get<std::size_t>());
-		uncompressedNormalData = decompressString(compressedNormalData, j.at("normals_uncompressed_size").get<std::size_t>());
-		uncompressedTextureCoordData = decompressString(compressedTextureCoordData, j.at("texture_coords_uncompressed_size").get<std::size_t>());
-	}
-	else if(compression.empty()) {
-		uncompressedFaceData = compressedFaceData;
-		uncompressedPositionData = compressedPositionData;
-		uncompressedNormalData = compressedNormalData;
-		uncompressedTextureCoordData = compressedTextureCoordData;
-	}
-	else {
-		throw std::runtime_error("Decompression error, unknown compression method");
-	}
-
-	deserializeIntegerData(resource.faces, uncompressedFaceData);
-	deserializeVectorData(resource.positions, uncompressedPositionData);
-	deserializeVectorData(resource.normals, uncompressedNormalData);
-	deserializeVectorData(resource.textureCoords, uncompressedTextureCoordData);
+	deserializeIntegerData(resource.faces, j.at("faces"), j.at("faces_uncompressed_size"), compressionMethod);
+	deserializeVectorData(resource.positions, j.at("positions"), j.at("positions_uncompressed_size"), compressionMethod);
+	deserializeVectorData(resource.normals, j.at("normals"), j.at("normals_uncompressed_size"), compressionMethod);
+	deserializeVectorData(resource.textureCoords, j.at("texture_coords"), j.at("texture_coords_uncompressed_size"), compressionMethod);
 }
 }

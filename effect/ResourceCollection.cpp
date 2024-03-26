@@ -1,8 +1,8 @@
-#include "EffectResourceSet.h"
+#include "ResourceCollection.h"
 #include "../common/JsonUtil.h"
 
 namespace pixelpart {
-void to_json(nlohmann::ordered_json& j, const EffectResourceSet& resources) {
+void to_json(nlohmann::ordered_json& j, const ResourceCollection& resources) {
 	j = nlohmann::ordered_json{
 		{ "images", resources.images },
 		{ "meshes", resources.meshes },
@@ -10,8 +10,8 @@ void to_json(nlohmann::ordered_json& j, const EffectResourceSet& resources) {
 		{ "vector_fields", resources.vectorFields }
 	};
 }
-void from_json(const nlohmann::ordered_json& j, EffectResourceSet& resources) {
-	resources = EffectResourceSet();
+void from_json(const nlohmann::ordered_json& j, ResourceCollection& resources) {
+	resources = ResourceCollection();
 
 	fromJson(resources.images, j, "images");
 	fromJson(resources.meshes, j, "meshes");

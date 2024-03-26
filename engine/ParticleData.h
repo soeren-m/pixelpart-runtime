@@ -21,8 +21,8 @@ struct ParticleData {
 	std::vector<vec4_t> color;
 	std::vector<vec4_t> initialColor;
 
-	void resize(uint32_t n);
-	void swap(uint32_t i, uint32_t j);
+	void resize(std::size_t n);
+	void swap(std::size_t i, std::size_t j);
 };
 
 struct ParticleDataPointer {

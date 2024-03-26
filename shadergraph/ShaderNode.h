@@ -13,9 +13,6 @@ struct ShaderNode {
 		Link(id_t l, id_t n, uint32_t s);
 	};
 
-	ShaderNode();
-	ShaderNode(const ShaderNodeType& nodeType);
-
 	std::string type;
 	std::string name;
 	std::vector<Link> inputs;
@@ -23,6 +20,9 @@ struct ShaderNode {
 	bool isParameterNode = false;
 
 	vec2_t position = vec2_t(0.0);
+
+	ShaderNode();
+	ShaderNode(const ShaderNodeType& nodeType);
 };
 
 void to_json(nlohmann::ordered_json& j, const ShaderNode::Link& link);

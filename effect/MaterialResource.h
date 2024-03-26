@@ -3,7 +3,7 @@
 #include "Resource.h"
 #include "BlendMode.h"
 #include "LightingMode.h"
-#include "../shader/ShaderGraph.h"
+#include "../shadergraph/ShaderGraph.h"
 
 namespace pixelpart {
 struct MaterialResource : public Resource {

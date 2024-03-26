@@ -1,7 +1,7 @@
 #include "ParticleData.h"
 
 namespace pixelpart {
-void ParticleData::resize(uint32_t n) {
+void ParticleData::resize(std::size_t n) {
 	id.resize(n);
 	parentId.resize(n);
 	life.resize(n);
@@ -18,7 +18,7 @@ void ParticleData::resize(uint32_t n) {
 	color.resize(n);
 	initialColor.resize(n);
 }
-void ParticleData::swap(uint32_t i, uint32_t j) {
+void ParticleData::swap(std::size_t i, std::size_t j) {
 	std::swap(id[i], id[j]);
 	std::swap(parentId[i], parentId[j]);
 	std::swap(life[i], life[j]);

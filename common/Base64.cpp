@@ -2,19 +2,20 @@
 #include <stdexcept>
 
 namespace pixelpart {
-static const char* base64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+namespace base64 {
+std::string encode(const unsigned char* data, std::size_t size) {
+	static const char* base64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-std::string encodeBase64(const unsigned char* data, std::size_t size) {
 	std::string result;
-	result.reserve((size + 2) / 3 * 4);
+	result.reserve((size + 2u) / 3u * 4u);
 
-	for(std::size_t i = 0; i < size; i += 3) {
-		result += base64Table[(data[i + 0] & 0xfc) >> 2];
+	for(std::size_t i = 0u; i < size; i += 3u) {
+		result += base64Table[(data[i] & 0xfc) >> 2];
 
-		if(i + 1 < size) {
-			result += base64Table[((data[i + 0] & 0x03) << 4) + ((data[i + 1] & 0xf0) >> 4)];
+		if(i + 1u < size) {
+			result += base64Table[((data[i] & 0x03) << 4) + ((data[i + 1] & 0xf0) >> 4)];
 
-			if(i + 2 < size) {
+			if(i + 2u < size) {
 				result += base64Table[((data[i + 1] & 0x0f) << 2) + ((data[i + 2] & 0xc0) >> 6)];
 				result += base64Table[data[i + 2] & 0x3f];
 			}
@@ -24,7 +25,7 @@ std::string encodeBase64(const unsigned char* data, std::size_t size) {
 			}
 		}
 		else {
-			result += base64Table[(data[i + 0] & 0x03) << 4];
+			result += base64Table[(data[i] & 0x03) << 4];
 			result += '=';
 			result += '=';
 		}
@@ -33,7 +34,7 @@ std::string encodeBase64(const unsigned char* data, std::size_t size) {
 	return result;
 }
 
-std::string decodeBase64(const std::string& data) {
+std::string decode(const std::string& data) {
 	const auto decode = [](char c) -> unsigned int {
 		if(c >= 'A' && c <= 'Z') {
 			return c - 'A';
@@ -42,33 +43,34 @@ std::string decodeBase64(const std::string& data) {
 			return c - 'a' + ('Z' - 'A') + 1;
 		}
 		else if(c >= '0' && c <= '9') {
-			return c - '0' + ('Z' - 'A') + ('z' - 'a') + 2;
+			return c - '0' + ('Z' - 'A') + ('z' - 'a') + 2u;
 		}
 		else if(c == '+') {
-			return 62;
+			return 62u;
 		}
 		else if(c == '/') {
-			return 63;
+			return 63u;
 		}
 
 		throw std::runtime_error("base64 decoding error");
 	};
 
 	std::string result;
-	result.reserve(data.size() / 4 * 3);
+	result.reserve(data.size() / 4u * 3u);
 
-	for(std::size_t i = 0; i < data.size(); i += 4) {
-		result += static_cast<char>((decode(data[i + 0]) << 2) + ((decode(data[i + 1]) & 0x30) >> 4));
+	for(std::size_t i = 0u; i < data.size(); i += 4u) {
+		result += static_cast<char>((decode(data[i]) << 2) + ((decode(data[i + 1]) & 0x30) >> 4));
 
-		if(i + 2 < data.size() && data[i + 2] != '=') {
+		if(i + 2u < data.size() && data[i + 2] != '=') {
 			result += static_cast<char>(((decode(data[i + 1]) & 0x0f) << 4) + ((decode(data[i + 2]) & 0x3c) >> 2));
 
-			if(i + 3 < data.size() && data[i + 3] != '=') {
+			if(i + 3u < data.size() && data[i + 3] != '=') {
 				result += static_cast<char>(((decode(data[i + 2]) & 0x03) << 6) + decode(data[i + 3]));
 			}
 		}
 	}
 
 	return result;
+}
 }
 }

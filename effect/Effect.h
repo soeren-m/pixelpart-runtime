@@ -6,7 +6,7 @@
 #include "ForceField.h"
 #include "Collider.h"
 #include "LightSource.h"
-#include "EffectResourceSet.h"
+#include "ResourceCollection.h"
 #include "EffectInputSet.h"
 
 namespace pixelpart {
@@ -19,7 +19,7 @@ struct Effect {
 	NodeCollection<Collider> colliders;
 	NodeCollection<LightSource> lightSources;
 
-	EffectResourceSet resources;
+	ResourceCollection resources;
 
 	EffectInputSet inputs;
 };
