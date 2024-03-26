@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../common/Curve.h"
+#include "ComputeOutputOperation.h"
+#include "ComputeOutputTarget.h"
 #include "../computegraph/ComputeGraph.h"
-#include "../computegraph/ComputeOutputOperation.h"
-#include "../computegraph/ComputeOutputTarget.h"
 #include "../computegraph/OutputComputeNode.h"
+#include "../common/Curve.h"
 
 namespace pixelpart {
 template <typename T>

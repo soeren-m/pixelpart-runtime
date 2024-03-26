@@ -12,15 +12,18 @@ struct ParticleTrailRendererSettings {
 		none = 0,
 		spline = 1
 	};
-	enum class TextureOrientation : uint32_t {
-		top = 0,
+	enum class TextureRotation : uint32_t {
+		up = 0,
+		left = 1,
+		right = 2,
+		down = 3
 		// TODO
 	};
 
 	SmoothingMethod smoothingMethod = SmoothingMethod::none;
 	uint32_t numSmoothingSegments = 100u;
 
-	TextureOrientation textureOrientation = TextureOrientation::top;
+	TextureRotation textureRotation = TextureRotation::up;
 	float_t textureUVFactor = 1.0;
 };
 
@@ -34,8 +37,11 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ParticleTrailRendererSettings::SmoothingMethod, {
 	{ ParticleTrailRendererSettings::SmoothingMethod::none, "none" },
 	{ ParticleTrailRendererSettings::SmoothingMethod::spline, "spline" }
 })
-NLOHMANN_JSON_SERIALIZE_ENUM(ParticleTrailRendererSettings::TextureOrientation, {
-	{ ParticleTrailRendererSettings::TextureOrientation::top, "top" },
+NLOHMANN_JSON_SERIALIZE_ENUM(ParticleTrailRendererSettings::TextureRotation, {
+	{ ParticleTrailRendererSettings::TextureRotation::up, "up" },
+	{ ParticleTrailRendererSettings::TextureRotation::left, "left" },
+	{ ParticleTrailRendererSettings::TextureRotation::right, "right" },
+	{ ParticleTrailRendererSettings::TextureRotation::down, "down" },
 })
 
 void to_json(nlohmann::ordered_json& j, const ParticleSpriteRendererSettings& rendererSettings);

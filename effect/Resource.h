@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include "../common/Types.h"
 
 namespace pixelpart {
 struct Resource {

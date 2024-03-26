@@ -1,8 +1,8 @@
-#include "PostProcessingEffectType.h"
-#include "../common/JsonUtil.h"
+#include "ImageEffectType.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
-void to_json(nlohmann::ordered_json& j, const PostProcessingEffectType& effectType) {
+void to_json(nlohmann::ordered_json& j, const ImageEffectType& effectType) {
 	j = nlohmann::ordered_json{
 		{ "name", effectType.name },
 		{ "category", effectType.category },
@@ -10,8 +10,8 @@ void to_json(nlohmann::ordered_json& j, const PostProcessingEffectType& effectTy
 		{ "parameters", effectType.parameters }
 	};
 }
-void from_json(const nlohmann::ordered_json& j, PostProcessingEffectType& effectType) {
-	effectType = PostProcessingEffectType();
+void from_json(const nlohmann::ordered_json& j, ImageEffectType& effectType) {
+	effectType = ImageEffectType();
 
 	fromJson(effectType.name, j, "name");
 	fromJson(effectType.category, j, "category");

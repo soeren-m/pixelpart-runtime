@@ -1,5 +1,5 @@
 #include "ShaderNodeType.h"
-#include "../common/JsonUtil.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const ShaderNodeType::Signature& signature) {

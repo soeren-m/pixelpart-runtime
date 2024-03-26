@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ParticleData.h"
 #include "../effect/Effect.h"
 
 namespace pixelpart {

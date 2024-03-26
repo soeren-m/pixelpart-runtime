@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../effect/Effect.h"
-#include "PostProcessingPipeline.h"
+#include "ImageEffectSettings.h"
 #include "CameraSettings.h"
 #include "RenderSettings.h"
 
@@ -11,8 +11,7 @@ struct Project {
 
 	Effect effect;
 
-	PostProcessingPipeline postProcessingPipeline;
-
+	ImageEffectSettings imageEffectSettings;
 	CameraSettings cameraSettings;
 	RenderSettings renderSettings;
 	RenderSettings previewSettings;

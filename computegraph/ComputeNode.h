@@ -2,6 +2,7 @@
 
 #include "../common/VariantValue.h"
 #include "../common/VariantParameter.h"
+#include "../common/Constants.h"
 #include <memory>
 #include <unordered_map>
 #include <stdexcept>

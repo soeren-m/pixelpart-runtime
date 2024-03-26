@@ -1,4 +1,6 @@
 #include "CollisionSolver.h"
+#include "../glm/glm/gtx/norm.hpp"
+#include "../glm/glm/gtx/rotate_vector.hpp"
 
 namespace pixelpart {
 CollisionSolver::ColliderSegment::ColliderSegment(const Collider& collider) :
@@ -44,7 +46,8 @@ CollisionSolver::CollisionSolver() : grid(1u, 1u) {
 
 }
 
-void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) const {
+void CollisionSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+	ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) const {
 	if(!planeColliders.empty()) {
 		for(uint32_t p = 0u; p < numParticles; p++) {
 			for(const PlaneColliderSegment& collider : planeColliders) {
@@ -91,26 +94,25 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointe
 	}
 }
 
-void CollisionSolver::update(const Effect* effect) {
+void CollisionSolver::refresh(const Effect& effect) {
+	// TODO: can we do this every frame...
+	// TODO: just check if colliders have moved!
+
 	lineColliders.clear();
 	planeColliders.clear();
 	grid.clear();
 
-	if(!effect) {
-		return;
-	}
-
-	if(effect->is3d) {
-		planeColliders.reserve(effect->colliders.getCount());
-		for(const Collider& collider : effect->colliders) {
+	if(effect.is3d) {
+		planeColliders.reserve(effect.colliders.getCount());
+		for(const Collider& collider : effect.colliders) {
 			for(std::size_t i = 0u; i + 1u < collider.points.size(); i++) {
 				planeColliders.emplace_back(collider, i);
 			}
 		}
 	}
 	else {
-		lineColliders.reserve(effect->colliders.getCount());
-		for(const Collider& collider : effect->colliders) {
+		lineColliders.reserve(effect.colliders.getCount());
+		for(const Collider& collider : effect.colliders) {
 			for(std::size_t i = 0u; i + 1u < collider.points.size(); i++) {
 				lineColliders.emplace_back(collider, i);
 			}

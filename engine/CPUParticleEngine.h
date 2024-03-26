@@ -12,6 +12,9 @@ namespace pixelpart {
 class CPUParticleEngine : public ParticleEngine {
 public:
 	CPUParticleEngine(const Effect& fx, uint32_t capacity);
+#ifndef __EMSCRIPTEN__
+	CPUParticleEngine(const Effect& fx, uint32_t capacity, std::shared_ptr<ThreadPool> thPool);
+#endif
 
 	virtual void step(float_t dt) override;
 	virtual void restart(bool reset) override;
@@ -31,12 +34,17 @@ public:
 	uint32_t getNumActiveThreads() const;
 
 private:
-	uint32_t spawnParticles(uint32_t count, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, float_t dt, float_t t, float_t tParent);
+	void stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+		ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt);
 
-	void createParticle(uint32_t p, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, float_t dt, float_t t, float_t tParent);
+	uint32_t spawnParticles(uint32_t count, uint32_t pParent,
+		uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex,
+		float_t dt, float_t t, float_t tParent);
+	void spawnParticle(uint32_t p, uint32_t pParent,
+		uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex,
+		float_t dt, float_t t, float_t tParent);
 
 	std::vector<ParticleContainer> particleContainers;
-	std::vector<std::vector<uint32_t>> particleSubTypes;
 	std::vector<float_t> particleSpawnCount;
 	std::vector<uint32_t> particleEmitterGridIndices;
 	uint32_t particleCapacity = 0u;
@@ -45,7 +53,6 @@ private:
 	float_t time = 0.0;
 
 	std::vector<std::unique_ptr<ParticleSolver>> particleSolvers;
-	uint32_t numActiveThreads = 0u;
 
 #ifndef __EMSCRIPTEN__
 	std::shared_ptr<ThreadPool> threadPool;

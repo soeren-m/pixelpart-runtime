@@ -177,9 +177,9 @@ void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 		{ "colliders", effect.colliders.get() },
 		{ "light_sources", effect.lightSources.get() },
 
-		{ "resources", effect.resources },
+		{ "inputs", effect.inputs },
 
-		{ "inputs", effect.inputs }
+		{ "resources", effect.resources }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, Effect& effect) {
@@ -199,9 +199,9 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 	fromJson(colliders, j, "colliders");
 	fromJson(lightSources, j, "light_sources");
 
-	fromJson(effect.resources, j, "resources");
-
 	fromJson(effect.inputs, j, "inputs");
+
+	fromJson(effect.resources, j, "resources");
 
 	for(ParticleEmitter& particleEmitter : particleEmitters) {
 		if(particleEmitter.id == nullId) {

@@ -1,5 +1,5 @@
 #include "Project.h"
-#include "../common/JsonUtil.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 const uint32_t Project::version = 7;
@@ -10,8 +10,7 @@ void to_json(nlohmann::ordered_json& j, const Project& project) {
 
 		{ "effect", project.effect },
 
-		{ "post_processing", project.postProcessingPipeline },
-
+		{ "image_effects", project.imageEffectSettings },
 		{ "camera", project.cameraSettings },
 		{ "render", project.renderSettings },
 		{ "preview", project.previewSettings },
@@ -73,8 +72,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 		}
 	}
 
-	fromJson(project.postProcessingPipeline, j, "post_processing");
-
+	fromJson(project.imageEffectSettings, j, "image_effects");
 	fromJson(project.cameraSettings, j, "camera");
 	fromJson(project.renderSettings, j, "render");
 	fromJson(project.previewSettings, j, "preview");

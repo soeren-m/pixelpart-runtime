@@ -1,7 +1,7 @@
 #include "StringUtil.h"
 
 namespace pixelpart {
-std::string replace(std::string str, const std::string& to, const std::string& from) {
+std::string replaceString(std::string str, const std::string& to, const std::string& from) {
 	if(from.empty()) {
 		return str;
 	}

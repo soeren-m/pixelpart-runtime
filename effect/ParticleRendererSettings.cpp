@@ -1,5 +1,5 @@
 #include "ParticleRendererSettings.h"
-#include "../common/JsonUtil.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const ParticleSpriteRendererSettings& rendererSettings) {
@@ -12,8 +12,8 @@ void to_json(nlohmann::ordered_json& j, const ParticleTrailRendererSettings& ren
 		{ "smoothing_method", rendererSettings.smoothingMethod },
 		{ "smoothing_segments", rendererSettings.numSmoothingSegments },
 
-		{ "texture_uv_factor", rendererSettings.textureUVFactor },
-		{ "texture_rotation", rendererSettings.textureRotation }
+		{ "texture_rotation", rendererSettings.textureRotation },
+		{ "texture_uv_factor", rendererSettings.textureUVFactor }
 	};
 }
 void to_json(nlohmann::ordered_json& j, const ParticleMeshRendererSettings& rendererSettings) {
@@ -34,8 +34,8 @@ void from_json(const nlohmann::ordered_json& j, ParticleTrailRendererSettings& r
 	fromJson(rendererSettings.smoothingMethod, j, "smoothing_method");
 	fromJson(rendererSettings.numSmoothingSegments, j, "smoothing_segments");
 
-	fromJson(rendererSettings.textureUVFactor, j, "texture_uv_factor");
 	fromJson(rendererSettings.textureRotation, j, "texture_rotation");
+	fromJson(rendererSettings.textureUVFactor, j, "texture_uv_factor");
 }
 void from_json(const nlohmann::ordered_json& j, ParticleMeshRendererSettings& rendererSettings) {
 	rendererSettings = ParticleMeshRendererSettings();

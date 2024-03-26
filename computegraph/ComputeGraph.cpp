@@ -305,10 +305,6 @@ bool ComputeGraph::isEmpty() const {
 		}));
 }
 
-const ComputeNodeFactory& ComputeGraph::getNodeFactory() const {
-	return nodeFactory;
-}
-
 uint32_t ComputeGraph::findNodeSignature(const InputSet& graphInputs, const BuildResult& result, const ComputeNode& node, std::vector<TypeMatch>& typeMatch) const {
 	const auto matchTypes = [](VariantValue::Type type1, VariantValue::Type type2) {
 		if(type1 == VariantValue::type_null || type2 == VariantValue::type_null) {

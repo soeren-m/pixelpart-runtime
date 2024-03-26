@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ComputeNodeFactory.h"
-#include <memory>
 
 namespace pixelpart {
 class ComputeGraph {
@@ -75,8 +74,6 @@ public:
 	id_t getNextLinkId() const;
 
 	bool isEmpty() const;
-
-	const ComputeNodeFactory& getNodeFactory() const;
 
 private:
 	uint32_t findNodeType(const std::string& typeName) const;

@@ -1,4 +1,5 @@
 #include "Json.h"
+#include "Constants.h"
 
 namespace pixelpart {
 template <>
@@ -11,7 +12,7 @@ nlohmann::ordered_json toJson<id_t>(const id_t& value) {
 }
 
 template <>
-bool fromJson(id_t& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey) {
+bool fromJson(id_t& value, const nlohmann::ordered_json& j, const std::string& key) {
 	if(j.contains(key)) {
 		const nlohmann::ordered_json& jValue = j.at(key);
 		value = jValue.is_number_unsigned()
@@ -20,15 +21,12 @@ bool fromJson(id_t& value, const nlohmann::ordered_json& j, const std::string& k
 
 		return true;
 	}
-	else if(!alternativeKey.empty()) {
-		return fromJson<id_t>(value, j, alternativeKey, "");
-	}
 
 	return false;
 }
 
 template <>
-bool fromJson<Curve<float_t>>(Curve<float_t>& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey) {
+bool fromJson<Curve<float_t>>(Curve<float_t>& value, const nlohmann::ordered_json& j, const std::string& key) {
 	if(j.contains(key)) {
 		const nlohmann::ordered_json& jValue = j.at(key);
 
@@ -43,15 +41,12 @@ bool fromJson<Curve<float_t>>(Curve<float_t>& value, const nlohmann::ordered_jso
 			return true;
 		}
 	}
-	else if(!alternativeKey.empty()) {
-		return fromJson<Curve<float_t>>(value, j, alternativeKey, "");
-	}
 
 	return false;
 }
 
 template <>
-bool fromJson<Curve<vec2_t>>(Curve<vec2_t>& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey) {
+bool fromJson<Curve<vec2_t>>(Curve<vec2_t>& value, const nlohmann::ordered_json& j, const std::string& key) {
 	if(j.contains(key)) {
 		const nlohmann::ordered_json& jValue = j.at(key);
 
@@ -67,15 +62,12 @@ bool fromJson<Curve<vec2_t>>(Curve<vec2_t>& value, const nlohmann::ordered_json&
 			return true;
 		}
 	}
-	else if(!alternativeKey.empty()) {
-		return fromJson<Curve<vec2_t>>(value, j, alternativeKey, "");
-	}
 
 	return false;
 }
 
 template <>
-bool fromJson<Curve<vec3_t>>(Curve<vec3_t>& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey) {
+bool fromJson<Curve<vec3_t>>(Curve<vec3_t>& value, const nlohmann::ordered_json& j, const std::string& key) {
 	if(j.contains(key)) {
 		const nlohmann::ordered_json& jValue = j.at(key);
 
@@ -92,15 +84,12 @@ bool fromJson<Curve<vec3_t>>(Curve<vec3_t>& value, const nlohmann::ordered_json&
 			return true;
 		}
 	}
-	else if(!alternativeKey.empty()) {
-		return fromJson<Curve<vec3_t>>(value, j, alternativeKey, "");
-	}
 
 	return false;
 }
 
 template <>
-bool fromJson<Curve<vec4_t>>(Curve<vec4_t>& value, const nlohmann::ordered_json& j, const std::string& key, const std::string& alternativeKey) {
+bool fromJson<Curve<vec4_t>>(Curve<vec4_t>& value, const nlohmann::ordered_json& j, const std::string& key) {
 	if(j.contains(key)) {
 		const nlohmann::ordered_json& jValue = j.at(key);
 
@@ -117,9 +106,6 @@ bool fromJson<Curve<vec4_t>>(Curve<vec4_t>& value, const nlohmann::ordered_json&
 
 			return true;
 		}
-	}
-	else if(!alternativeKey.empty()) {
-		return fromJson<Curve<vec4_t>>(value, j, alternativeKey, "");
 	}
 
 	return false;

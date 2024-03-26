@@ -1,13 +1,12 @@
 #pragma once
 
-#include "../effect/Effect.h"
+#include "ParticleSolver.h"
 #include "../common/Grid.h"
-#include "ParticleData.h"
 #include <bitset>
 #include <unordered_set>
 
 namespace pixelpart {
-class CollisionSolver {
+class CollisionSolver : public ParticleSolver {
 public:
 	struct ColliderSegment {
 		std::bitset<256> exclusionSet;
@@ -40,9 +39,10 @@ public:
 
 	CollisionSolver();
 
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) const;
+	virtual void solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+		ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) const override;
 
-	void update(const Effect* effect);
+	virtual void refresh(const Effect& effect) override;
 
 	void setGridCellCountFactor(uint32_t factor);
 	void setGridPadding(float_t padding);

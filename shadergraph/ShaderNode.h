@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ShaderNodeType.h"
+#include "../common/Constants.h"
 
 namespace pixelpart {
 struct ShaderNode {

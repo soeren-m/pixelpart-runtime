@@ -1,23 +1,63 @@
 #include "CPUParticleEngine.h"
-#include "ForceSolver.h"
-#include "CollisionSolver.h"
-#include "IntegrationSolver.h"
-#include "AccelerationSolver.h"
-#include "MotionPathSolver.h"
 #include "SizeSolver.h"
 #include "ColorSolver.h"
+#include "AccelerationSolver.h"
+#include "ForceSolver.h"
+#include "CollisionSolver.h"
+#include "MotionPathSolver.h"
+#include "IntegrationSolver.h"
 #include "ParticleEmission.h"
+#include "../common/Constants.h"
+#include "../glm/glm/gtx/euler_angles.hpp"
+#include "../glm/glm/gtx/rotate_vector.hpp"
 
 namespace pixelpart {
 CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity) : ParticleEngine(fx), particleCapacity(capacity) {
+	particleSolvers.emplace_back(new SizeSolver());
+	particleSolvers.emplace_back(new ColorSolver());
+	particleSolvers.emplace_back(new AccelerationSolver());
+	particleSolvers.emplace_back(new ForceSolver());
+	particleSolvers.emplace_back(new CollisionSolver());
+	particleSolvers.emplace_back(new MotionPathSolver());
+	particleSolvers.emplace_back(new IntegrationSolver());
+
 	resetSeed();
 	restart(true);
-
-	// TODO: add solvers
 }
+#ifndef __EMSCRIPTEN__
+CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity, std::shared_ptr<ThreadPool> thPool) : CPUParticleEngine(fx, capacity) {
+	threadPool = thPool;
+}
+#endif
 
 void CPUParticleEngine::step(float_t dt) {
 	time += dt;
+
+	if(effect.particleTypes.getCount() != particleContainers.size()) {
+		particleSpawnCount.assign(effect.particleTypes.getCount(), 0.0);
+		particleContainers.assign(effect.particleTypes.getCount(), pixelpart::ParticleContainer());
+		for(ParticleContainer& particleContainer : particleContainers) {
+			particleContainer.reserve(particleCapacity);
+		}
+	}
+
+	if(effect.particleEmitters.getCount() != particleEmitterGridIndices.size()) {
+		particleEmitterGridIndices.assign(effect.particleEmitters.getCount(), 0u);
+	}
+
+	std::vector<std::vector<uint32_t>> particleSubTypes(effect.particleTypes.getCount(), std::vector<uint32_t>());
+	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
+		id_t parentParticleEmitterId = effect.particleTypes.getByIndex(particleTypeIndex).parentId;
+
+		if(effect.particleEmitters.contains(parentParticleEmitterId)) {
+			const ParticleEmitter& parentParticleEmitter = effect.particleEmitters.get(parentParticleEmitterId);
+
+			uint32_t parentParticleTypeIndex = effect.particleTypes.findById(parentParticleEmitter.parentId);
+			if(parentParticleTypeIndex != nullId) {
+				particleSubTypes[parentParticleTypeIndex].push_back(particleTypeIndex);
+			}
+		}
+	}
 
 	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
 		const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
@@ -156,20 +196,19 @@ void CPUParticleEngine::step(float_t dt) {
 		}
 	}
 
-	numActiveThreads = 1;
+	numActiveThreads = 1u;
+
+	for(const std::unique_ptr<ParticleSolver>& solver : particleSolvers) {
+		solver->refresh(effect);
+	}
 
 	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
 		const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
 		const ParticleEmitter& particleEmitter = effect.particleEmitters.get(particleType.parentId);
 		ParticleContainer& particleContainer = particleContainers[particleTypeIndex];
 
-		particleSolver->solve(
-			particleEmitter,
-			particleType,
-			particleContainer.get(),
-			particleContainer.getNumParticles(),
-			time,
-			dt);
+		ParticleData& particles = particleContainer.get();
+		uint32_t numParticles = particleContainer.getNumParticles();
 
 #ifndef __EMSCRIPTEN__
 		uint32_t numAvailableThreads = threadPool != nullptr ? static_cast<uint32_t>(threadPool->getNumThreads()) : 1u;
@@ -180,8 +219,8 @@ void CPUParticleEngine::step(float_t dt) {
 			uint32_t numThreadsWithLargerLoad = numParticles % numActiveThreads;
 			uint32_t workgroupIndex = 0u;
 
-			for(uint32_t i = 0u; i < numActiveThreads; i++) {
-				uint32_t workgroupSize = (i < numActiveThreads - numThreadsWithLargerLoad)
+			for(uint32_t threadIndex = 0u; threadIndex < numActiveThreads; threadIndex++) {
+				uint32_t workgroupSize = (threadIndex < numActiveThreads - numThreadsWithLargerLoad)
 					? numParticlesPerThread
 					: numParticlesPerThread + 1u;
 
@@ -203,19 +242,16 @@ void CPUParticleEngine::step(float_t dt) {
 					particles.initialColor.data() + workgroupIndex
 				};
 
-				threadPool->enqueue(i, &simulateParticles,
+				threadPool->enqueue(threadIndex, &CPUParticleEngine::stepParticles, this,
 					particleEmitter, particleType,
 					workgroupParticles, workgroupSize,
-					t, dt,
-					forceSolver,
-					collisionSolver,
-					motionPathSolver);
+					time, dt);
 
 				workgroupIndex += workgroupSize;
 			}
 
-			for(uint32_t i = 0u; i < numActiveThreads; i++) {
-				threadPool->wait(i);
+			for(uint32_t threadIndex = 0u; threadIndex < numActiveThreads; threadIndex++) {
+				threadPool->wait(threadIndex);
 			}
 		}
 
@@ -243,13 +279,9 @@ void CPUParticleEngine::step(float_t dt) {
 				particles.initialColor.data()
 			};
 
-			simulateParticles(
-				particleEmitter, particleType,
+			stepParticles(particleEmitter, particleType,
 				workgroupParticles, numParticles,
-				t, dt,
-				forceSolver,
-				collisionSolver,
-				motionPathSolver);
+				time, dt);
 		}
 
 		if(!effect.is3d) {
@@ -263,8 +295,6 @@ void CPUParticleEngine::step(float_t dt) {
 				particleData.globalPosition[p].z = 0.0;
 			}
 		}
-
-		numActiveThreads = std::max(numActiveThreads, particleSolver->getNumActiveThreads());
 	}
 }
 void CPUParticleEngine::restart(bool reset) {
@@ -273,7 +303,7 @@ void CPUParticleEngine::restart(bool reset) {
 	if(reset) {
 		particleId = 0u;
 
-		/*for(ParticleContainer& particleContainer : particleContainers) {
+		for(ParticleContainer& particleContainer : particleContainers) {
 			particleContainer.kill();
 		}
 		for(float_t& count : particleSpawnCount) {
@@ -281,35 +311,6 @@ void CPUParticleEngine::restart(bool reset) {
 		}
 		for(uint32_t& index : particleEmitterGridIndices) {
 			index = 0u;
-		}*/
-
-		particleContainers.clear();
-		particleSubTypes.clear();
-		particleSpawnCount.clear();
-		particleEmitterGridIndices.clear();
-
-		if(effect) {
-			particleContainers.resize(effect.particleTypes.getCount());
-			particleSubTypes.resize(effect.particleTypes.getCount());
-			particleSpawnCount.resize(effect.particleTypes.getCount());
-			particleEmitterGridIndices.resize(effect.particleEmitters.getCount());
-
-			for(ParticleContainer& particleContainer : particleContainers) {
-				particleContainer.reserve(particleCapacity);
-			}
-
-			for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
-				id_t parentParticleEmitterId = effect.particleTypes.getByIndex(particleTypeIndex).parentId;
-
-				if(effect.particleEmitters.contains(parentParticleEmitterId)) {
-					const ParticleEmitter& parentParticleEmitter = effect.particleEmitters.get(parentParticleEmitterId);
-
-					uint32_t parentParticleTypeIndex = effect.particleTypes.findById(parentParticleEmitter.parentId);
-					if(parentParticleTypeIndex != nullId) {
-						particleSubTypes[parentParticleTypeIndex].push_back(particleTypeIndex);
-					}
-				}
-			}
 		}
 	}
 }
@@ -318,17 +319,17 @@ float_t CPUParticleEngine::getTime() const {
 	return time;
 }
 
-void CPUParticleEngine::setSeed(uint32_t sd) {
-	seed = sd;
+void CPUParticleEngine::applySeed(uint32_t seed) {
+	activeSeed = seed;
 	resetSeed();
 }
 void CPUParticleEngine::resetSeed() {
-	rng = std::mt19937(seed);
+	rng = std::mt19937(activeSeed);
 }
 
 void CPUParticleEngine::spawnParticles(id_t particleTypeId, uint32_t count) {
 	uint32_t particleTypeIndex = effect.particleTypes.findById(particleTypeId);
-	if(!effect || particleTypeIndex == nullId) {
+	if(particleTypeIndex == nullId) {
 		return;
 	}
 
@@ -372,12 +373,21 @@ uint32_t CPUParticleEngine::getNumActiveThreads() const {
 	return numActiveThreads;
 }
 
-uint32_t CPUParticleEngine::spawnParticles(uint32_t count, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, float_t dt, float_t t, float_t tParent) {
+void CPUParticleEngine::stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+	ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) {
+	for(const std::unique_ptr<ParticleSolver>& solver : particleSolvers) {
+		solver->solve(particleEmitter, particleType, particles, numParticles, t, dt);
+	}
+}
+
+uint32_t CPUParticleEngine::spawnParticles(uint32_t count, uint32_t pParent,
+	uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex,
+	float_t dt, float_t t, float_t tParent) {
 	ParticleContainer& particleContainer = particleContainers[particleTypeIndex];
 	count = particleContainer.spawn(count);
 
 	for(uint32_t i = 0u; i < count; i++) {
-		createParticle(
+		spawnParticle(
 			particleContainer.getNumParticles() - count + i,
 			pParent,
 			particleTypeIndex,
@@ -388,8 +398,9 @@ uint32_t CPUParticleEngine::spawnParticles(uint32_t count, uint32_t pParent, uin
 
 	return count;
 }
-
-void CPUParticleEngine::createParticle(uint32_t p, uint32_t pParent, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, float_t dt, float_t t, float_t tParent) {
+void CPUParticleEngine::spawnParticle(uint32_t p, uint32_t pParent,
+	uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex,
+	float_t dt, float_t t, float_t tParent) {
 	const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
 	const ParticleEmitter& particleEmitter = effect.particleEmitters.getByIndex(particleEmitterIndex);
 	ParticleData& particles = particleContainers[particleTypeIndex].get();
@@ -536,7 +547,7 @@ void CPUParticleEngine::createParticle(uint32_t p, uint32_t pParent, uint32_t pa
 		}
 	}
 
-	particles.velocity[p] *= glm::lerp(
+	particles.velocity[p] *= glm::mix(
 		particleType.initialVelocity.get(alpha),
 		glm::length(particleParentVelocity),
 		particleType.inheritedVelocity.get(alpha)) + random::uniform(rng, -particleType.velocityVariance.get(), +particleType.velocityVariance.get());

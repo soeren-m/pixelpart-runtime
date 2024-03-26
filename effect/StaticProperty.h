@@ -1,7 +1,7 @@
 #pragma once
 
+#include "ComputeOutputOperation.h"
 #include "../computegraph/ComputeGraph.h"
-#include "../computegraph/ComputeOutputOperation.h"
 #include "../computegraph/OutputComputeNode.h"
 
 namespace pixelpart {
@@ -55,17 +55,7 @@ public:
 
 	void refresh() {
 		if(useGraphOutput) {
-			switch(computeOutputOperation) {
-				case ComputeOutputOperation::add:
-					computedValue = value + graphOutputValue;
-					break;
-				case ComputeOutputOperation::multiply:
-					computedValue = value * graphOutputValue;
-					break;
-				default:
-					computedValue = graphOutputValue;
-					break;
-			}
+			computedValue = applyComputeOutputOperation(value, graphOutputValue, computeOutputOperation);
 		}
 		else {
 			computedValue = value;
