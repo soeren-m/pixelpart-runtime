@@ -1,5 +1,5 @@
 #include "VariantParameter.h"
-#include "../common/JsonUtil.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 VariantParameter::Value VariantParameter::Value::IntValue(int_t v) {

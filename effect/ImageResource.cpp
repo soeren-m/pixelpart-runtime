@@ -16,15 +16,17 @@ void to_json(nlohmann::ordered_json& j, const ImageResource& resource) {
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ImageResource& resource) {
-	fromJson(resource.name, j, "name"); // TODO
+	resource = ImageResource();
 
-	resource.width = j.at("width");
-	resource.height = j.at("height");
-	resource.bpp = j.at("bpp");
+	fromJson(resource.name, j, "name");
+	fromJson(resource.width, j, "width");
+	fromJson(resource.height, j, "height");
+	fromJson(resource.bpp, j, "bpp");
 
-	CompressionMethod compressionMethod = j.contains("compression") ? j.at("compression") : CompressionMethod::none;
+	CompressionMethod compressionMethod = CompressionMethod::none;
+	fromJson(compressionMethod, j, "compression");
+
 	std::size_t uncompressedSize = resource.width * resource.height * resource.bpp / 8u;
-
-	resource.data = decodeAndDecompress(j.at("data"), uncompressedSize, compressionMethod);
+	resource.data = decodeAndDecompress(j.at("data").get<std::string>(), uncompressedSize, compressionMethod);
 }
 }

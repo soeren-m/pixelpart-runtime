@@ -1,5 +1,5 @@
 #include "Effect.h"
-#include "../common/JsonUtil.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 template <typename T>

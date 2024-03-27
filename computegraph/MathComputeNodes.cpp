@@ -14,7 +14,7 @@ std::string AbsComputeNode::typeName = "compute_node_abs";
 std::string MinComputeNode::typeName = "compute_node_min";
 std::string MaxComputeNode::typeName = "compute_node_max";
 std::string ClampComputeNode::typeName = "compute_node_clamp";
-std::string LerpComputeNode::typeName = "compute_node_lerp";
+std::string LerpComputeNode::typeName = "compute_node_mix";
 std::string FloorComputeNode::typeName = "compute_node_floor";
 std::string CeilComputeNode::typeName = "compute_node_ceil";
 std::string RoundComputeNode::typeName = "compute_node_round";
@@ -476,16 +476,16 @@ std::vector<VariantValue> LerpComputeNode::evaluate(const std::vector<VariantVal
 	VariantValue result;
 	switch(in[0].type) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::lerp(in[0].getFloat(), in[1].toFloat(), in[2].toFloat()));
+			result = VariantValue::Float(glm::mix(in[0].getFloat(), in[1].toFloat(), in[2].toFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::lerp(in[0].getFloat2(), in[1].toFloat2(), in[2].toFloat()));
+			result = VariantValue::Float2(glm::mix(in[0].getFloat2(), in[1].toFloat2(), in[2].toFloat()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::lerp(in[0].getFloat3(), in[1].toFloat3(), in[2].toFloat()));
+			result = VariantValue::Float3(glm::mix(in[0].getFloat3(), in[1].toFloat3(), in[2].toFloat()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::lerp(in[0].getFloat4(), in[1].toFloat4(), in[2].toFloat()));
+			result = VariantValue::Float4(glm::mix(in[0].getFloat4(), in[1].toFloat4(), in[2].toFloat()));
 			break;
 		default:
 			break;

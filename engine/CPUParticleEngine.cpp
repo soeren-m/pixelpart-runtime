@@ -1,11 +1,4 @@
 #include "CPUParticleEngine.h"
-#include "SizeSolver.h"
-#include "ColorSolver.h"
-#include "AccelerationSolver.h"
-#include "ForceSolver.h"
-#include "CollisionSolver.h"
-#include "MotionPathSolver.h"
-#include "IntegrationSolver.h"
 #include "ParticleEmission.h"
 #include "../common/Constants.h"
 #include "../glm/glm/gtx/euler_angles.hpp"
@@ -13,16 +6,7 @@
 
 namespace pixelpart {
 CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity) : ParticleEngine(fx), particleCapacity(capacity) {
-	particleSolvers.emplace_back(new SizeSolver());
-	particleSolvers.emplace_back(new ColorSolver());
-	particleSolvers.emplace_back(new AccelerationSolver());
-	particleSolvers.emplace_back(new ForceSolver());
-	particleSolvers.emplace_back(new CollisionSolver());
-	particleSolvers.emplace_back(new MotionPathSolver());
-	particleSolvers.emplace_back(new IntegrationSolver());
 
-	resetSeed();
-	restart(true);
 }
 #ifndef __EMSCRIPTEN__
 CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity, std::shared_ptr<ThreadPool> thPool) : CPUParticleEngine(fx, capacity) {
@@ -35,6 +19,7 @@ void CPUParticleEngine::step(float_t dt) {
 
 	if(effect.particleTypes.getCount() != particleContainers.size()) {
 		particleSpawnCount.assign(effect.particleTypes.getCount(), 0.0);
+
 		particleContainers.assign(effect.particleTypes.getCount(), pixelpart::ParticleContainer());
 		for(ParticleContainer& particleContainer : particleContainers) {
 			particleContainer.reserve(particleCapacity);
@@ -196,11 +181,16 @@ void CPUParticleEngine::step(float_t dt) {
 		}
 	}
 
-	numActiveThreads = 1u;
+	numActiveThreads = 1u; // TODO: per particle type?
 
-	for(const std::unique_ptr<ParticleSolver>& solver : particleSolvers) {
-		solver->refresh(effect);
-	}
+	sizeSolver.refresh(effect);
+	colorSolver.refresh(effect);
+	accelerationSolver.refresh(effect);
+	forceSolver.refresh(effect);
+	collisionSolver.refresh(effect);
+	motionPathSolver.refresh(effect);
+	rotationSolver.refresh(effect);
+	integrationSolver.refresh(effect);
 
 	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
 		const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
@@ -359,10 +349,18 @@ uint32_t CPUParticleEngine::getNumParticles() const {
 	return count;
 }
 uint32_t CPUParticleEngine::getNumParticles(uint32_t particleTypeIndex) const {
-	return particleContainers.at(particleTypeIndex).getNumParticles();
+	if(particleTypeIndex >= particleContainers.size()) {
+		return 0u;
+	}
+
+	return particleContainers[particleTypeIndex].getNumParticles();
 }
 const ParticleData& CPUParticleEngine::getParticles(uint32_t particleTypeIndex) const {
-	return particleContainers.at(particleTypeIndex).get();
+	if(particleTypeIndex >= particleContainers.size()) {
+		return emptyParticleData;
+	}
+
+	return particleContainers[particleTypeIndex].get();
 }
 
 uint32_t CPUParticleEngine::getParticleCapacity() const {
@@ -374,10 +372,16 @@ uint32_t CPUParticleEngine::getNumActiveThreads() const {
 }
 
 void CPUParticleEngine::stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) {
-	for(const std::unique_ptr<ParticleSolver>& solver : particleSolvers) {
-		solver->solve(particleEmitter, particleType, particles, numParticles, t, dt);
-	}
+	ParticleDataPointer particles, uint32_t numParticles,
+	float_t t, float_t dt) const {
+	sizeSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
+	colorSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
+	accelerationSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
+	forceSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
+	collisionSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
+	motionPathSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
+	rotationSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
+	integrationSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
 }
 
 uint32_t CPUParticleEngine::spawnParticles(uint32_t count, uint32_t pParent,

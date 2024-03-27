@@ -1,4 +1,5 @@
 #include "ComputeOutputTarget.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const ComputeOutputTarget& target) {
@@ -10,9 +11,7 @@ void to_json(nlohmann::ordered_json& j, const ComputeOutputTarget& target) {
 void from_json(const nlohmann::ordered_json& j, ComputeOutputTarget& target) {
 	target = ComputeOutputTarget();
 
-	target.type = j.at("type");
-	if(j.contains("index")) {
-		target.index = j.at("index");
-	}
+	fromJson(target.type, j, "type");
+	fromJson(target.index, j, "index");
 }
 }

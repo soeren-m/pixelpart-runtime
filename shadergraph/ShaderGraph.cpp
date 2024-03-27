@@ -80,7 +80,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 				}
 			}
 			else {
-				std::string nodeIdentifier = replace(nodeType.name, "_", " ");
+				std::string nodeIdentifier = replaceString(nodeType.name, "_", " ");
 				std::string parameterVariableName = graphLanguage.parameterPrefix
 					+ nodeIdentifier
 					+ "_" + std::to_string(nodeId)
@@ -89,8 +89,8 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 				result.parameterNames[nodeId] = parameterVariableName;
 
 				std::string parameterCode = graphLanguage.parameterDefinition;
-				parameterCode = replace(parameterCode, graphLanguage.parameterTypeNames.at(parameterValue.type), "{type}");
-				parameterCode = replace(parameterCode, parameterVariableName, "{name}");
+				parameterCode = replaceString(parameterCode, graphLanguage.parameterTypeNames.at(parameterValue.type), "{type}");
+				parameterCode = replaceString(parameterCode, parameterVariableName, "{name}");
 				result.parameterCode += parameterCode;
 				result.parameterCode += "\n";
 
@@ -102,39 +102,39 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 				case VariantParameter::Value::type_int:
 				case VariantParameter::Value::type_enum: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_int];
-					valueString = replace(valueString, std::to_string(parameterValue.data.integer), "{0}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.data.integer), "{0}");
 					break;
 				}
 				case VariantParameter::Value::type_float: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float];
-					valueString = replace(valueString, std::to_string(parameterValue.data.numbers[0]), "{0}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[0]), "{0}");
 					break;
 				}
 				case VariantParameter::Value::type_float2: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float2];
-					valueString = replace(valueString, std::to_string(parameterValue.data.numbers[0]), "{0}");
-					valueString = replace(valueString, std::to_string(parameterValue.data.numbers[1]), "{1}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[0]), "{0}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[1]), "{1}");
 					break;
 				}
 				case VariantParameter::Value::type_float3: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float3];
-					valueString = replace(valueString, std::to_string(parameterValue.data.numbers[0]), "{0}");
-					valueString = replace(valueString, std::to_string(parameterValue.data.numbers[1]), "{1}");
-					valueString = replace(valueString, std::to_string(parameterValue.data.numbers[2]), "{2}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[0]), "{0}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[1]), "{1}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[2]), "{2}");
 					break;
 				}
 				case VariantParameter::Value::type_float4:
 				case VariantParameter::Value::type_color: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float4];
-					valueString = replace(valueString, std::to_string(parameterValue.data.numbers[0]), "{0}");
-					valueString = replace(valueString, std::to_string(parameterValue.data.numbers[1]), "{1}");
-					valueString = replace(valueString, std::to_string(parameterValue.data.numbers[2]), "{2}");
-					valueString = replace(valueString, std::to_string(parameterValue.data.numbers[3]), "{3}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[0]), "{0}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[1]), "{1}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[2]), "{2}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[3]), "{3}");
 					break;
 				}
 				case VariantParameter::Value::type_bool: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_bool];
-					valueString = replace(valueString, (parameterValue.data.integer != 0) ? "true" : "false", "{0}");
+					valueString = replaceString(valueString, (parameterValue.data.integer != 0) ? "true" : "false", "{0}");
 					break;
 				}
 				case VariantParameter::Value::type_curve: {
@@ -143,7 +143,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 					for(uint32_t i = 0u; i < numCurveInterpolationPoints; i++) {
 						float_t pointValue = curve.get(static_cast<float_t>(i) / static_cast<float_t>(numCurveInterpolationPoints - 1u));
 						std::string pointValueString = graphLanguage.typeConstructors[VariantValue::type_float];
-						pointValueString = replace(pointValueString, std::to_string(pointValue), "{0}");
+						pointValueString = replaceString(pointValueString, std::to_string(pointValue), "{0}");
 
 						valueString += pointValueString;
 						if(i + 1u < numCurveInterpolationPoints) {
@@ -159,9 +159,9 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 					for(uint32_t i = 0u; i < numCurveInterpolationPoints; i++) {
 						vec3_t pointValue = gradient.get(static_cast<float_t>(i) / static_cast<float_t>(numCurveInterpolationPoints - 1u));
 						std::string pointValueString = graphLanguage.typeConstructors[VariantValue::type_float3];
-						pointValueString = replace(pointValueString, std::to_string(pointValue.x), "{0}");
-						pointValueString = replace(pointValueString, std::to_string(pointValue.y), "{1}");
-						pointValueString = replace(pointValueString, std::to_string(pointValue.z), "{2}");
+						pointValueString = replaceString(pointValueString, std::to_string(pointValue.x), "{0}");
+						pointValueString = replaceString(pointValueString, std::to_string(pointValue.y), "{1}");
+						pointValueString = replaceString(pointValueString, std::to_string(pointValue.z), "{2}");
 
 						valueString += pointValueString;
 						if(i + 1u < numCurveInterpolationPoints) {
@@ -190,7 +190,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 			}
 		}
 
-		code = replace(code, valueString, "{param" + std::to_string(parameterIndex) + "}");
+		code = replaceString(code, valueString, "{param" + std::to_string(parameterIndex) + "}");
 	}
 
 	std::string inputCode;
@@ -207,38 +207,38 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 			switch(nodeType.defaultInputs[inputSlot].type) {
 				case VariantValue::type_bool: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_bool];
-					valueString = replace(valueString, nodeType.defaultInputs[inputSlot].data.boolean ? "true" : "false", "{0}");
+					valueString = replaceString(valueString, nodeType.defaultInputs[inputSlot].data.boolean ? "true" : "false", "{0}");
 					break;
 				}
 				case VariantValue::type_int: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_int];
-					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.integer), "{0}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.integer), "{0}");
 					break;
 				}
 				case VariantValue::type_float: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float];
-					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[0]), "{0}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[0]), "{0}");
 					break;
 				}
 				case VariantValue::type_float2: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float2];
-					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[0]), "{0}");
-					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[1]), "{1}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[0]), "{0}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[1]), "{1}");
 					break;
 				}
 				case VariantValue::type_float3: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float3];
-					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[0]), "{0}");
-					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[1]), "{1}");
-					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[2]), "{2}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[0]), "{0}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[1]), "{1}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[2]), "{2}");
 					break;
 				}
 				case VariantValue::type_float4: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float4];
-					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[0]), "{0}");
-					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[1]), "{1}");
-					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[2]), "{2}");
-					valueString = replace(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[3]), "{3}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[0]), "{0}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[1]), "{1}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[2]), "{2}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[3]), "{3}");
 					break;
 				}
 				default: {
@@ -246,7 +246,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 				}
 			}
 
-			code = replace(code, valueString, "{in" + std::to_string(inputSlot) + "}");
+			code = replaceString(code, valueString, "{in" + std::to_string(inputSlot) + "}");
 		}
 		else {
 			throw BuildException("Input node not found", nodeId, static_cast<uint32_t>(inputSlot));
@@ -267,8 +267,8 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 		std::string outputVariableDefinition = graphLanguage.typeNames[static_cast<std::size_t>(signature.outputTypes[outputSlot])] + " " + outputVariableName;
 		result.nodeOutputVariables[nodeId].push_back(outputVariableName);
 
-		code = replace(code, outputVariableName, "{out" + std::to_string(outputSlot) + "}");
-		code = replace(code, outputVariableDefinition, "{outdef" + std::to_string(outputSlot) + "}");
+		code = replaceString(code, outputVariableName, "{out" + std::to_string(outputSlot) + "}");
+		code = replaceString(code, outputVariableDefinition, "{outdef" + std::to_string(outputSlot) + "}");
 		result.numVariables++;
 	}
 
@@ -294,11 +294,11 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 
 		if(typeMatch[inputSlot] != typematch_exact) {
 			std::string codeTypeCast = graphLanguage.typeCasts[signature.inputTypes[inputSlot]][sourceValueType];
-			codeTypeCast = replace(codeTypeCast, inputVariableTemplate, "{0}");
-			code = replace(code, codeTypeCast, inputVariableTemplate);
+			codeTypeCast = replaceString(codeTypeCast, inputVariableTemplate, "{0}");
+			code = replaceString(code, codeTypeCast, inputVariableTemplate);
 		}
 
-		code = replace(code, result.nodeOutputVariables[link.nodeId][link.slot], inputVariableTemplate);
+		code = replaceString(code, result.nodeOutputVariables[link.nodeId][link.slot], inputVariableTemplate);
 	}
 
 	result.resolvedNodes.insert(nodeId);

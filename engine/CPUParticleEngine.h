@@ -1,8 +1,15 @@
 #pragma once
 
 #include "ParticleEngine.h"
-#include "ParticleSolver.h"
 #include "ParticleContainer.h"
+#include "SizeSolver.h"
+#include "ColorSolver.h"
+#include "AccelerationSolver.h"
+#include "ForceSolver.h"
+#include "CollisionSolver.h"
+#include "MotionPathSolver.h"
+#include "RotationSolver.h"
+#include "IntegrationSolver.h"
 
 #ifndef __EMSCRIPTEN__
 #include "../common/ThreadPool.h"
@@ -35,7 +42,8 @@ public:
 
 private:
 	void stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt);
+		ParticleDataPointer particles, uint32_t numParticles,
+		float_t t, float_t dt) const;
 
 	uint32_t spawnParticles(uint32_t count, uint32_t pParent,
 		uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex,
@@ -45,6 +53,8 @@ private:
 		float_t dt, float_t t, float_t tParent);
 
 	std::vector<ParticleContainer> particleContainers;
+	ParticleData emptyParticleData;
+
 	std::vector<float_t> particleSpawnCount;
 	std::vector<uint32_t> particleEmitterGridIndices;
 	uint32_t particleCapacity = 0u;
@@ -52,7 +62,14 @@ private:
 	uint32_t activeSeed = 0u;
 	float_t time = 0.0;
 
-	std::vector<std::unique_ptr<ParticleSolver>> particleSolvers;
+	SizeSolver sizeSolver;
+	ColorSolver colorSolver;
+	AccelerationSolver accelerationSolver;
+	ForceSolver forceSolver;
+	CollisionSolver collisionSolver;
+	MotionPathSolver motionPathSolver;
+	RotationSolver rotationSolver;
+	IntegrationSolver integrationSolver;
 
 #ifndef __EMSCRIPTEN__
 	std::shared_ptr<ThreadPool> threadPool;

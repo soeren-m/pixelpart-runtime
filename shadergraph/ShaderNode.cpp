@@ -1,5 +1,5 @@
 #include "ShaderNode.h"
-#include "../common/JsonUtil.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 ShaderNode::Link::Link() {

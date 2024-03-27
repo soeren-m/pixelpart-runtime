@@ -41,7 +41,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ParticleTrailRendererSettings::TextureRotation, {
 	{ ParticleTrailRendererSettings::TextureRotation::up, "up" },
 	{ ParticleTrailRendererSettings::TextureRotation::left, "left" },
 	{ ParticleTrailRendererSettings::TextureRotation::right, "right" },
-	{ ParticleTrailRendererSettings::TextureRotation::down, "down" },
+	{ ParticleTrailRendererSettings::TextureRotation::down, "down" }
 })
 
 void to_json(nlohmann::ordered_json& j, const ParticleSpriteRendererSettings& rendererSettings);

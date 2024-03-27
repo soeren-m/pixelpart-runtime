@@ -85,16 +85,4 @@ vec4_t hsv2rgb(const vec4_t& colorHSV) {
 
 	return vec4_t(colorHSV.z, p, q, colorHSV.a);
 }
-
-vec4_t hsvAdd(const vec4_t& colorRGB, const vec4_t& colorHSV, float_t alpha) {
-	vec4_t hsv = rgb2hsv(colorRGB);
-
-	float_t hue = std::fmod(hsv.x + colorHSV.x, 360.0);
-	hsv.x = (hue < 0.0) ? hue + 360.0 : hue;
-	hsv.y = glm::clamp(hsv.y + colorHSV.y, 0.0, 1.0);
-	hsv.z = glm::clamp(hsv.z + colorHSV.z, 0.0, 1.0);
-	hsv.w = hsv.w * colorHSV.w * alpha;
-
-	return hsv2rgb(hsv);
-}
 }
