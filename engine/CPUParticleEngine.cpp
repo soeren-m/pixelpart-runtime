@@ -181,7 +181,7 @@ void CPUParticleEngine::step(float_t dt) {
 		}
 	}
 
-	numActiveThreads = 1u; // TODO: per particle type?
+	numTotalActiveThreads = 1u;
 
 	sizeSolver.refresh(effect);
 	colorSolver.refresh(effect);
@@ -202,7 +202,7 @@ void CPUParticleEngine::step(float_t dt) {
 
 #ifndef __EMSCRIPTEN__
 		uint32_t numAvailableThreads = threadPool != nullptr ? static_cast<uint32_t>(threadPool->getNumThreads()) : 1u;
-		numActiveThreads = std::min(std::max(numParticles / numParticlesPerThread, 1u), numAvailableThreads);
+		uint32_t numActiveThreads = std::min(std::max(numParticles / numParticlesPerThread, 1u), numAvailableThreads);
 
 		if(numActiveThreads > 1u) {
 			uint32_t numParticlesPerThread = numParticles / numActiveThreads;
@@ -285,6 +285,8 @@ void CPUParticleEngine::step(float_t dt) {
 				particleData.globalPosition[p].z = 0.0;
 			}
 		}
+
+		numTotalActiveThreads = std::max(numTotalActiveThreads, numActiveThreads);
 	}
 }
 void CPUParticleEngine::restart(bool reset) {
@@ -368,7 +370,7 @@ uint32_t CPUParticleEngine::getParticleCapacity() const {
 }
 
 uint32_t CPUParticleEngine::getNumActiveThreads() const {
-	return numActiveThreads;
+	return numTotalActiveThreads;
 }
 
 void CPUParticleEngine::stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,

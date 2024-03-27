@@ -74,7 +74,7 @@ private:
 #ifndef __EMSCRIPTEN__
 	std::shared_ptr<ThreadPool> threadPool;
 #endif
-	uint32_t numActiveThreads = 0u;
+	uint32_t numTotalActiveThreads = 0u;
 	uint32_t numParticlesPerThread = 128u;
 
 	std::mt19937 rng;

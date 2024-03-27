@@ -15,9 +15,8 @@ struct ParticleTrailRendererSettings {
 	enum class TextureRotation : uint32_t {
 		up = 0,
 		left = 1,
-		right = 2,
-		down = 3
-		// TODO
+		down = 2,
+		right = 3
 	};
 
 	SmoothingMethod smoothingMethod = SmoothingMethod::none;
@@ -40,8 +39,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ParticleTrailRendererSettings::SmoothingMethod, {
 NLOHMANN_JSON_SERIALIZE_ENUM(ParticleTrailRendererSettings::TextureRotation, {
 	{ ParticleTrailRendererSettings::TextureRotation::up, "up" },
 	{ ParticleTrailRendererSettings::TextureRotation::left, "left" },
-	{ ParticleTrailRendererSettings::TextureRotation::right, "right" },
-	{ ParticleTrailRendererSettings::TextureRotation::down, "down" }
+	{ ParticleTrailRendererSettings::TextureRotation::down, "down" },
+	{ ParticleTrailRendererSettings::TextureRotation::right, "right" }
 })
 
 void to_json(nlohmann::ordered_json& j, const ParticleSpriteRendererSettings& rendererSettings);

@@ -138,9 +138,18 @@ bool isNameUsedInEffect(const Effect& effect, const std::string& name) {
 }
 bool isResourceUsedInEffect(const Effect& effect, const std::string& resourceId) {
 	for(const ParticleType& particleType : effect.particleTypes) {
-		if(particleType.materialInstance.materialId == resourceId ||
-			particleType.meshRendererSettings.meshResourceId == resourceId) {
+		if(particleType.materialInstance.materialId == resourceId) {
 			return true;
+		}
+		if(particleType.meshRendererSettings.meshResourceId == resourceId) {
+			return true;
+		}
+
+		for(const auto& materialParameterEntry : particleType.materialInstance.materialParameters) {
+			if(materialParameterEntry.second.type == pixelpart::VariantParameter::Value::type_resource_image &&
+				resourceId == materialParameterEntry.second.getResourceId()) {
+				return true;
+			}
 		}
 	}
 
@@ -155,10 +164,9 @@ bool isResourceUsedInEffect(const Effect& effect, const std::string& resourceId)
 
 		for(const auto& nodeEntry : material.shaderGraph.getNodes()) {
 			for(const auto& nodeParameter : nodeEntry.second.parameters) {
-				if(nodeParameter.type == pixelpart::VariantParameter::Value::type_resource_image) {
-					if(resourceId == nodeParameter.getResourceId()) {
-						return true;
-					}
+				if(nodeParameter.type == pixelpart::VariantParameter::Value::type_resource_image &&
+					resourceId == nodeParameter.getResourceId()) {
+					return true;
 				}
 			}
 		}
