@@ -1,20 +1,21 @@
 #pragma once
 
-#include "../effect/Effect.h"
-#include "ParticleData.h"
+#include "ParticleSolver.h"
 #include <bitset>
 
 namespace pixelpart {
-class ForceSolver {
+class ForceSolver : public ParticleSolver {
 public:
 	ForceSolver();
 
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) const;
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const;
+	virtual void solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+		ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt) const override;
 
-	void update(const Effect* effect);
+	virtual void refresh(const Effect& effect) override;
 
 private:
+	void solve(const ParticleType& particleType, ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const;
+
 	vec3_t sampleAttractionField(const ForceField::AttractionField& attractionField,
 		const vec3_t& position, float_t size,
 		const vec3_t& particlePosition) const;
@@ -36,7 +37,7 @@ private:
 	vec3_t computeAnimatedCurlNoise2d(const vec2_t& samplePosition, float_t animationTime, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
 	vec3_t computeAnimatedCurlNoise3d(const vec3_t& samplePosition, float_t animationTime, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
 
-	const EffectResourceSet* effectResources = nullptr;
+	const ResourceCollection* effectResources = nullptr;
 	bool is3d = false;
 
 	std::vector<ForceField> forceFields;

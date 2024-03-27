@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../property/StaticProperty.h"
-#include "../property/AnimatedProperty.h"
+#include "StaticProperty.h"
+#include "AnimatedProperty.h"
 
 namespace pixelpart {
 struct Node {

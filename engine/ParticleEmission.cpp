@@ -1,5 +1,7 @@
 #define _USE_MATH_DEFINES
 #include "ParticleEmission.h"
+#include "../glm/glm/gtx/euler_angles.hpp"
+#include "../glm/glm/gtx/rotate_vector.hpp"
 #include <cmath>
 
 namespace pixelpart {

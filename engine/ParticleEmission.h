@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Random.h"
 #include "../effect/ParticleEmitter.h"
-#include "../common/Random.h"
 
 namespace pixelpart {
 vec3_t rotate2d(const vec3_t& v, float_t a);

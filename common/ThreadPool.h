@@ -20,10 +20,10 @@ public:
 	using Task = std::function<void()>;
 
 	ThreadPool(std::size_t numThreads) {
-		for(std::size_t i = 0; i < numThreads; i++) {
+		for(std::size_t i = 0u; i < numThreads; i++) {
 			workers.emplace_back([this]() {
 				while(true) {
-					uint32_t taskId = 0;
+					uint32_t taskId = 0u;
 					Task task;
 
 					{
@@ -94,7 +94,7 @@ public:
 		std::unique_lock<std::mutex> lock(stateMutex);
 
 		completionCondition.wait(lock, [this, taskId]() {
-			return runningTasks.count(taskId) == 0;
+			return runningTasks.count(taskId) == 0u;
 		});
 	}
 

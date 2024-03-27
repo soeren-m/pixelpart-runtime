@@ -5,7 +5,8 @@ MotionPathSolver::MotionPathSolver() {
 
 }
 
-void MotionPathSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) const {
+void MotionPathSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+	ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt) const {
 	const float_t positionLookahead = 0.1;
 	const float_t targetLookahead = 0.01;
 
@@ -24,5 +25,9 @@ void MotionPathSolver::solve(const ParticleType& particleType, ParticleDataPoint
 
 		particles.force[p] += targetVelocity - particles.velocity[p];
 	}
+}
+
+void MotionPathSolver::refresh(const Effect& effect) {
+
 }
 }

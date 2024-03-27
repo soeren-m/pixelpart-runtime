@@ -1,12 +1,14 @@
 #include "ForceSolver.h"
-#include "../common/Noise.h"
+#include "Noise.h"
+#include "../glm/glm/gtx/euler_angles.hpp"
 
 namespace pixelpart {
 ForceSolver::ForceSolver() {
 
 }
 
-void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) const {
+void ForceSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+	ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt) const {
 	for(std::size_t f = 0u; f < forceFields.size(); f++) {
 		const ForceField& forceField = forceFields[f];
 		if(forceFieldExclusionSets[f][particleType.id] ||
@@ -19,7 +21,22 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& p
 	}
 }
 
-void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const {
+void ForceSolver::refresh(const Effect& effect) {
+	effectResources = &effect.resources;
+	is3d = effect.is3d;
+
+	forceFields = effect.forceFields.get();
+
+	forceFieldExclusionSets.resize(forceFields.size());
+	for(std::size_t f = 0u; f < forceFields.size(); f++) {
+		forceFieldExclusionSets[f].reset();
+		for(uint32_t particleTypeId : forceFields[f].exclusionList) {
+			forceFieldExclusionSets[f].set(particleTypeId);
+		}
+	}
+}
+
+void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const {
 	float_t life = std::fmod(t - forceField.lifetimeStart, forceField.lifetimeDuration) / forceField.lifetimeDuration;
 	vec3_t forceFieldCenter = forceField.position.get(life);
 	vec3_t forceFieldSize = forceField.size.get(life) * 0.5;
@@ -120,29 +137,6 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer& p
 
 		default: {
 			break;
-		}
-	}
-}
-
-void ForceSolver::update(const Effect* effect) {
-	if(!effect) {
-		effectResources = nullptr;
-		is3d = false;
-		forceFields.clear();
-		forceFieldExclusionSets.clear();
-		return;
-	}
-
-	effectResources = &effect->resources;
-	is3d = effect->is3d;
-
-	forceFields = effect->forceFields.get();
-
-	forceFieldExclusionSets.resize(forceFields.size());
-	for(std::size_t f = 0u; f < forceFields.size(); f++) {
-		forceFieldExclusionSets[f].reset();
-		for(uint32_t particleTypeId : forceFields[f].exclusionList) {
-			forceFieldExclusionSets[f].set(particleTypeId);
 		}
 	}
 }
@@ -275,14 +269,14 @@ vec3_t ForceSolver::sampleVectorField(const ForceField::VectorField& vectorField
 					static_cast<int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
 					vec3_t(0.0));
 
-				result = glm::lerp(
-					glm::lerp(
-						glm::lerp(sample0, sample1, glm::abs(fractX - 0.5)),
-						glm::lerp(sample2, sample3, glm::abs(fractX - 0.5)),
+				result = glm::mix(
+					glm::mix(
+						glm::mix(sample0, sample1, glm::abs(fractX - 0.5)),
+						glm::mix(sample2, sample3, glm::abs(fractX - 0.5)),
 						glm::abs(fractY - 0.5)),
-					glm::lerp(
-						glm::lerp(sample4, sample5, glm::abs(fractX - 0.5)),
-						glm::lerp(sample6, sample7, glm::abs(fractX - 0.5)),
+					glm::mix(
+						glm::mix(sample4, sample5, glm::abs(fractX - 0.5)),
+						glm::mix(sample6, sample7, glm::abs(fractX - 0.5)),
 						glm::abs(fractY - 0.5)),
 					glm::abs(fractZ - 0.5));
 			}
@@ -339,9 +333,9 @@ vec3_t ForceSolver::sampleVectorField(const ForceField::VectorField& vectorField
 					static_cast<int32_t>(normalizedSamplePosition.z),
 					vec3_t(0.0));
 
-				result = glm::lerp(
-					glm::lerp(sample0, sample1, glm::abs(fractX - 0.5)),
-					glm::lerp(sample2, sample3, glm::abs(fractX - 0.5)),
+				result = glm::mix(
+					glm::mix(sample0, sample1, glm::abs(fractX - 0.5)),
+					glm::mix(sample2, sample3, glm::abs(fractX - 0.5)),
 					glm::abs(fractY - 0.5));
 			}
 

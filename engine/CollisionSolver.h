@@ -1,13 +1,12 @@
 #pragma once
 
-#include "../effect/Effect.h"
+#include "ParticleSolver.h"
 #include "../common/Grid.h"
-#include "ParticleData.h"
 #include <bitset>
 #include <unordered_set>
 
 namespace pixelpart {
-class CollisionSolver {
+class CollisionSolver : public ParticleSolver {
 public:
 	struct ColliderSegment {
 		std::bitset<256> exclusionSet;
@@ -40,9 +39,10 @@ public:
 
 	CollisionSolver();
 
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) const;
+	virtual void solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+		ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt) const override;
 
-	void update(const Effect* effect);
+	virtual void refresh(const Effect& effect) override;
 
 	void setGridCellCountFactor(uint32_t factor);
 	void setGridPadding(float_t padding);
@@ -64,8 +64,8 @@ private:
 	static Intersection calculateRayColliderIntersection(const LineColliderSegment& collider, const vec2_t& rayOrigin, const vec2_t& rayEnd);
 	static Intersection calculateRayColliderIntersection(const PlaneColliderSegment& collider, const vec3_t& rayOrigin, const vec3_t& rayEnd);
 
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t p, float_t t, float_t dt, const LineColliderSegment& collider) const;
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t p, float_t t, float_t dt, const PlaneColliderSegment& collider) const;
+	void solve(const ParticleType& particleType, ParticleDataPointer particles, uint32_t p, float_t t, float_t dt, const LineColliderSegment& collider) const;
+	void solve(const ParticleType& particleType, ParticleDataPointer particles, uint32_t p, float_t t, float_t dt, const PlaneColliderSegment& collider) const;
 
 	GridIndex<int32_t> toGridIndex(const vec3_t& position) const;
 
@@ -78,7 +78,7 @@ private:
 	vec2_t gridBottom = vec2_t(0.0);
 	vec2_t gridTop = vec2_t(0.0);
 	vec2_t gridCellDimension = vec2_t(1.0);
-	uint32_t gridCellCountFactor = 3;
+	uint32_t gridCellCountFactor = 3u;
 	float_t gridPadding = 0.25;
 };
 }

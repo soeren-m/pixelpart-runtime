@@ -1,13 +1,15 @@
 #pragma once
 
-#include "../effect/Effect.h"
-#include "ParticleData.h"
+#include "ParticleSolver.h"
 
 namespace pixelpart {
-class MotionPathSolver {
+class MotionPathSolver : public ParticleSolver {
 public:
 	MotionPathSolver();
 
-	void solve(const ParticleType& particleType, ParticleDataPointer& particles, uint32_t numParticles, float_t t, float_t dt) const;
+	virtual void solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+		ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt) const override;
+
+	virtual void refresh(const Effect& effect) override;
 };
 }

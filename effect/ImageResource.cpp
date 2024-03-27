@@ -1,70 +1,32 @@
 #include "ImageResource.h"
-#include "../common/Base64.h"
-#include "../common/JsonUtil.h"
-#include "../zlib/zlib.h"
+#include "../common/Compression.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const ImageResource& resource) {
-	if(resource.data.empty()) {
-		throw std::runtime_error("Compression error, no data available");
-	}
-
-	uLongf compressedSize = (resource.data.size() * 1.1) + 12;
-	std::vector<Bytef> compressedData(compressedSize);
-
-	int result = compress(
-		compressedData.data(),
-		&compressedSize,
-		&resource.data[0],
-		resource.data.size());
-
-	if(result != Z_OK) {
-		throw std::runtime_error("Compression error, zlib returned " + std::to_string(result));
-	}
+	std::string compressedData = compressAndEncode(resource.data.data(), resource.data.size(), CompressionMethod::zlib);
 
 	j = nlohmann::ordered_json{
 		{ "name", resource.name },
 		{ "width", resource.width },
 		{ "height", resource.height },
 		{ "bpp", resource.bpp },
-		{ "compression", "zlib" },
-		{ "data", encodeBase64(static_cast<const unsigned char*>(compressedData.data()), static_cast<std::size_t>(compressedSize)) }
+		{ "compression", CompressionMethod::zlib },
+		{ "data", compressedData }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ImageResource& resource) {
+	resource = ImageResource();
+
 	fromJson(resource.name, j, "name");
+	fromJson(resource.width, j, "width");
+	fromJson(resource.height, j, "height");
+	fromJson(resource.bpp, j, "bpp");
 
-	resource.width = j.at("width");
-	resource.height = j.at("height");
-	resource.bpp = j.at("bpp");
-	resource.data.clear();
+	CompressionMethod compressionMethod = CompressionMethod::none;
+	fromJson(compressionMethod, j, "compression");
 
-	std::string compression = j.contains("compression") ? j.at("compression").get<std::string>() : "";
-	std::string compressedData = decodeBase64(j.at("data").get<std::string>());
-
-	if(compressedData.empty()) {
-		throw std::runtime_error("Decompression error, compressed data is empty");
-	}
-
-	if(compression == "zlib") {
-		uLongf uncompressedSize = resource.width * resource.height * resource.bpp / 8;
-		resource.data.resize(uncompressedSize);
-
-		int result = uncompress(
-			&resource.data[0],
-			&uncompressedSize,
-			reinterpret_cast<const Bytef*>(compressedData.data()),
-			static_cast<uLong>(compressedData.size()));
-
-		if(result != Z_OK) {
-			throw std::runtime_error("Decompression error, zlib returned " + std::to_string(result));
-		}
-	}
-	else if(compression.empty()) {
-		resource.data = std::vector<unsigned char>(compressedData.begin(), compressedData.end());
-	}
-	else {
-		throw std::runtime_error("Decompression error, unknown compression method");
-	}
+	std::size_t uncompressedSize = resource.width * resource.height * resource.bpp / 8u;
+	resource.data = decodeAndDecompress(j.at("data").get<std::string>(), uncompressedSize, compressionMethod);
 }
 }

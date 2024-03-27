@@ -1,4 +1,5 @@
 #include "MaterialInstance.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 MaterialInstance::MaterialInstance() {
@@ -25,7 +26,7 @@ void to_json(nlohmann::ordered_json& j, const MaterialInstance& materialInstance
 void from_json(const nlohmann::ordered_json& j, MaterialInstance& materialInstance) {
 	materialInstance = MaterialInstance();
 
-	materialInstance.materialId = j.at("material_id");
-	materialInstance.materialParameters = j.at("material_parameters");
+	fromJson(materialInstance.materialId, j, "material_id");
+	fromJson(materialInstance.materialParameters, j, "material_parameters");
 }
 }

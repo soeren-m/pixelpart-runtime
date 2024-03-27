@@ -1,5 +1,5 @@
 #include "Effect.h"
-#include "../common/JsonUtil.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 template <typename T>
@@ -138,9 +138,18 @@ bool isNameUsedInEffect(const Effect& effect, const std::string& name) {
 }
 bool isResourceUsedInEffect(const Effect& effect, const std::string& resourceId) {
 	for(const ParticleType& particleType : effect.particleTypes) {
-		if(particleType.materialInstance.materialId == resourceId ||
-			particleType.meshRendererSettings.meshResourceId == resourceId) {
+		if(particleType.materialInstance.materialId == resourceId) {
 			return true;
+		}
+		if(particleType.meshRendererSettings.meshResourceId == resourceId) {
+			return true;
+		}
+
+		for(const auto& materialParameterEntry : particleType.materialInstance.materialParameters) {
+			if(materialParameterEntry.second.type == pixelpart::VariantParameter::Value::type_resource_image &&
+				resourceId == materialParameterEntry.second.getResourceId()) {
+				return true;
+			}
 		}
 	}
 
@@ -155,10 +164,9 @@ bool isResourceUsedInEffect(const Effect& effect, const std::string& resourceId)
 
 		for(const auto& nodeEntry : material.shaderGraph.getNodes()) {
 			for(const auto& nodeParameter : nodeEntry.second.parameters) {
-				if(nodeParameter.type == pixelpart::VariantParameter::Value::type_resource_image) {
-					if(resourceId == nodeParameter.getResourceId()) {
-						return true;
-					}
+				if(nodeParameter.type == pixelpart::VariantParameter::Value::type_resource_image &&
+					resourceId == nodeParameter.getResourceId()) {
+					return true;
 				}
 			}
 		}
@@ -177,9 +185,9 @@ void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 		{ "colliders", effect.colliders.get() },
 		{ "light_sources", effect.lightSources.get() },
 
-		{ "resources", effect.resources },
+		{ "inputs", effect.inputs },
 
-		{ "inputs", effect.inputs }
+		{ "resources", effect.resources }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, Effect& effect) {
@@ -199,9 +207,9 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 	fromJson(colliders, j, "colliders");
 	fromJson(lightSources, j, "light_sources");
 
-	fromJson(effect.resources, j, "resources");
-
 	fromJson(effect.inputs, j, "inputs");
+
+	fromJson(effect.resources, j, "resources");
 
 	for(ParticleEmitter& particleEmitter : particleEmitters) {
 		if(particleEmitter.id == nullId) {

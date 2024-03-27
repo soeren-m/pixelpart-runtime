@@ -1,7 +1,6 @@
 #include "VectorFieldResource.h"
-#include "../common/JsonUtil.h"
-#include "../common/Base64.h"
-#include "../zlib/zlib.h"
+#include "../common/Compression.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
@@ -21,65 +20,40 @@ void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
 		}
 	}
 
-	uLong compressedSize = compressBound(static_cast<uLong>(dataString.size()));
-	std::vector<Byte> compressedData(compressedSize);
-
-	int result = compress(
-		compressedData.data(), &compressedSize,
-		reinterpret_cast<const Bytef*>(&dataString[0]), static_cast<uLong>(dataString.size()));
-
-	if(result != Z_OK) {
-		throw std::runtime_error("Compression error, zlib returned " + std::to_string(result));
-	}
+	std::string compressedData = compressAndEncodeString(dataString, CompressionMethod::zlib);
 
 	j = nlohmann::ordered_json{
 		{ "name", resource.name },
 		{ "width", resource.field.getWidth() },
 		{ "height", resource.field.getHeight() },
 		{ "depth", resource.field.getDepth() },
-		{ "compression", "zlib" },
+		{ "compression", CompressionMethod::zlib },
 		{ "uncompressed_size", dataString.size() },
-		{ "field", encodeBase64(static_cast<const unsigned char*>(compressedData.data()), static_cast<std::size_t>(compressedSize)) }
+		{ "field", compressedData }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
+	resource = VectorFieldResource();
+
 	fromJson(resource.name, j, "name");
 
-	std::size_t width = j.at("width");
-	std::size_t height = j.at("height");
-	std::size_t depth = j.at("depth");
+	std::size_t width = 0u;
+	std::size_t height = 0u;
+	std::size_t depth = 0u;
+	fromJson(width, j, "width");
+	fromJson(height, j, "height");
+	fromJson(depth, j, "depth");
+
 	resource.field = Grid3d<vec3_t>(width, height, depth, vec3_t(0.0));
 
-	std::string compression;
-	fromJson(compression, j, "compression");
+	CompressionMethod compressionMethod = CompressionMethod::none;
+	fromJson(compressionMethod, j, "compression");
 
-	std::string compressedData = decodeBase64(j.at("field").get<std::string>());
-	if(compressedData.empty()) {
-		throw std::runtime_error("Decompression error, compressed data is empty");
-	}
+	std::size_t uncompressedSize = 0u;
+	fromJson(uncompressedSize, j, "uncompressed_size");
 
-	std::string stringData;
-
-	if(compression == "zlib") {
-		uLong uncompressedSize = j.at("uncompressed_size");
-		stringData.resize(uncompressedSize);
-
-		int result = uncompress(
-			reinterpret_cast<Bytef*>(stringData.data()), &uncompressedSize,
-			reinterpret_cast<const Bytef*>(compressedData.data()), static_cast<uLong>(compressedData.size()));
-
-		if(result != Z_OK) {
-			throw std::runtime_error("Decompression error, zlib returned " + std::to_string(result));
-		}
-	}
-	else if(compression.empty()) {
-		stringData = compressedData;
-	}
-	else {
-		throw std::runtime_error("Decompression error, unknown compression method");
-	}
-
-	std::istringstream dataStream(stringData);
+	std::istringstream dataStream(
+		decodeAndDecompressToString(j.at("field").get<std::string>(), uncompressedSize, compressionMethod));
 
 	bool finished = false;
 	for(std::size_t z = 0u; z < resource.field.getDepth() && !finished; z++) {
