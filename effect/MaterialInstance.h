@@ -5,12 +5,9 @@
 
 namespace pixelpart {
 struct MaterialInstance {
+	bool isBuiltInMaterial = true;
 	std::string materialId;
 	std::unordered_map<id_t, VariantParameter::Value> materialParameters;
-
-	MaterialInstance();
-	MaterialInstance(const std::string& matId, const std::vector<VariantParameter>& shaderParameters);
-	MaterialInstance(const std::string& matId, const std::unordered_map<id_t, VariantParameter>& shaderParameters);
 };
 
 void to_json(nlohmann::ordered_json& j, const MaterialInstance& materialInstance);
