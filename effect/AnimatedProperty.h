@@ -5,6 +5,7 @@
 #include "../computegraph/ComputeGraph.h"
 #include "../computegraph/OutputComputeNode.h"
 #include "../common/Curve.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 template <typename T>
@@ -236,24 +237,16 @@ void to_json(nlohmann::ordered_json& j, const AnimatedProperty<T>& property) {
 template <typename T>
 void from_json(const nlohmann::ordered_json& j, AnimatedProperty<T>& property) {
 	Curve<T> curve;
-	if(j.contains("curve")) {
-		curve = j.at("curve").get<Curve<T>>();
-	}
+	fromJson(curve, j, "curve");
 
 	ComputeGraph graph;
-	if(j.contains("compute_graph")) {
-		graph = j.at("compute_graph").get<ComputeGraph>();
-	}
+	fromJson(graph, j, "compute_graph");
 
 	ComputeOutputOperation outputOperation = ComputeOutputOperation::set;
-	if(j.contains("compute_operation")) {
-		outputOperation = j.at("compute_operation").get<ComputeOutputOperation>();
-	}
+	fromJson(outputOperation, j, "compute_operation");
 
 	ComputeOutputTarget outputTarget;
-	if(j.contains("compute_target")) {
-		outputTarget = j.at("compute_target").get<ComputeOutputTarget>();
-	}
+	fromJson(outputTarget, j, "compute_target");
 
 	property = AnimatedProperty<T>(curve, graph, outputOperation, outputTarget);
 }

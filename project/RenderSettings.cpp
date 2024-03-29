@@ -40,7 +40,7 @@ void from_json(const nlohmann::ordered_json& j, RenderSettings& settings) {
 	fromJson(settings.delay, j, "delay");
 	fromJson(settings.playbackSpeed, j, "playback_speed");
 
-	fromJson(settings.loop, j, "loop", "looping");
+	fromJson(settings.loop, j, "loop");
 	fromJson(settings.backgroundEnabled, j, "background_enabled");
 	fromJson(settings.postProcessingEnabled, j, "postprocessing_enabled");
 	fromJson(settings.seamlessRenderingEnabled, j, "seamlessrendering_enabled");

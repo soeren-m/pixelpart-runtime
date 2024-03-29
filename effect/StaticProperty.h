@@ -3,6 +3,7 @@
 #include "ComputeOutputOperation.h"
 #include "../computegraph/ComputeGraph.h"
 #include "../computegraph/OutputComputeNode.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 template <typename T>
@@ -110,19 +111,13 @@ void to_json(nlohmann::ordered_json& j, const StaticProperty<T>& property) {
 template <typename T>
 void from_json(const nlohmann::ordered_json& j, StaticProperty<T>& property) {
 	T value = T();
-	if(j.contains("value")) {
-		value = j.at("value").get<T>();
-	}
+	fromJson(value, j, "value");
 
 	ComputeGraph graph;
-	if(j.contains("compute_graph")) {
-		graph = j.at("compute_graph").get<ComputeGraph>();
-	}
+	fromJson(graph, j, "compute_graph");
 
 	ComputeOutputOperation outputOperation = ComputeOutputOperation::set;
-	if(j.contains("compute_operation")) {
-		outputOperation = j.at("compute_operation").get<ComputeOutputOperation>();
-	}
+	fromJson(outputOperation, j, "compute_operation");
 
 	property = StaticProperty<T>(value, graph, outputOperation);
 }

@@ -1,4 +1,5 @@
 #include "ComputeNode.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 ComputeNode::InputException::InputException(const std::string& msg, uint32_t index) :
@@ -167,28 +168,29 @@ void to_json(nlohmann::ordered_json& j, const ComputeNode& node) {
 }
 void from_json(const nlohmann::ordered_json& j, ComputeNode::Signature& signature) {
 	signature = ComputeNode::Signature();
-	signature.inputTypes = j.at("input_types").get<std::vector<VariantValue::Type>>();
-	signature.outputTypes = j.at("output_types").get<std::vector<VariantValue::Type>>();
+
+	fromJson(signature.inputTypes, j, "input_types");
+	fromJson(signature.outputTypes, j, "output_types");
 }
 void from_json(const nlohmann::ordered_json& j, ComputeNode::Link& link) {
 	link = ComputeNode::Link();
-	link.id = j.at("id");
-	link.nodeId = j.at("node");
-	link.slot = j.at("slot");
+
+	fromJson(link.id, j, "id");
+	fromJson(link.nodeId, j, "node");
+	fromJson(link.slot, j, "slot");
 }
 void from_json(const nlohmann::ordered_json& j, ComputeNode& node) {
 	std::string name;
+	fromJson(name, j, "name");
+
 	std::vector<ComputeNode::Link> inputs;
+	fromJson(inputs, j, "inputs");
+
 	std::vector<VariantParameter::Value> parameterValues;
+	fromJson(parameterValues, j, "parameter_values");
+
 	vec2_t position = vec2_t(0.0);
-
-	name = j.at("name");
-	inputs = j.at("inputs");
-	parameterValues = j.at("parameter_values");
-
-	if(j.contains("position")) {
-		position = j.at("position");
-	}
+	fromJson(position, j, "position");
 
 	node.setName(name);
 	node.setInputs(inputs);
