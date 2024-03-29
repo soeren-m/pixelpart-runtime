@@ -2,7 +2,7 @@
 #include "../common/Json.h"
 
 namespace pixelpart {
-const uint32_t Project::version = 7;
+const uint32_t Project::version = 8u;
 
 void to_json(nlohmann::ordered_json& j, const Project& project) {
 	j = nlohmann::ordered_json{
