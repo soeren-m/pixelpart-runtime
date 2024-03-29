@@ -194,8 +194,11 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 	}
 
 	std::string inputCode;
-	for(std::size_t inputSlot = 0u; inputSlot < node.inputs.size(); inputSlot++) {
-		const ShaderNode::Link& link = node.inputs[inputSlot];
+	for(std::size_t inputSlot = 0u; inputSlot < nodeType.inputs.size(); inputSlot++) {
+		ShaderNode::Link link;
+		if(inputSlot < node.inputs.size()) {
+			link = node.inputs[inputSlot];
+		}
 
 		if(nodes.count(link.nodeId) != 0u) {
 			if(result.resolvedNodes.count(link.nodeId) == 0u) {
