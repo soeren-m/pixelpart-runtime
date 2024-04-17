@@ -9,12 +9,12 @@ public:
 	ForceSolver();
 
 	virtual void solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt) const override;
+		ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const override;
 
 	virtual void refresh(const Effect& effect) override;
 
 private:
-	void solve(const ParticleType& particleType, ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const;
+	void solve(const ParticleType& particleType, ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const;
 
 	vec3_t sampleAttractionField(const ForceField::AttractionField& attractionField,
 		const vec3_t& position, float_t size,

@@ -35,14 +35,14 @@ public:
 
 	virtual uint32_t getNumParticles() const override;
 	virtual uint32_t getNumParticles(uint32_t particleTypeIndex) const override;
-	virtual const ParticleData& getParticles(uint32_t particleTypeIndex) const override;
+	virtual ParticleReadPtr getParticles(uint32_t particleTypeIndex) const override;
 
 	uint32_t getParticleCapacity() const;
 	uint32_t getNumActiveThreads() const;
 
 private:
 	void stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleDataPointer particles, uint32_t numParticles,
+		ParticleWritePtr particles, uint32_t numParticles,
 		float_t t, float_t dt) const;
 
 	uint32_t spawnParticles(uint32_t count, uint32_t pParent,
@@ -53,7 +53,6 @@ private:
 		float_t dt, float_t t, float_t tParent);
 
 	std::vector<ParticleContainer> particleContainers;
-	ParticleData emptyParticleData;
 
 	std::vector<float_t> particleSpawnCount;
 	std::vector<uint32_t> particleEmitterGridIndices;

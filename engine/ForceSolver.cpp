@@ -8,7 +8,7 @@ ForceSolver::ForceSolver() {
 }
 
 void ForceSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt) const {
+	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
 	for(std::size_t f = 0u; f < forceFields.size(); f++) {
 		const ForceField& forceField = forceFields[f];
 		if(forceFieldExclusionSets[f][particleType.id] ||
@@ -36,7 +36,7 @@ void ForceSolver::refresh(const Effect& effect) {
 	}
 }
 
-void ForceSolver::solve(const ParticleType& particleType, ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const {
+void ForceSolver::solve(const ParticleType& particleType, ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const {
 	float_t life = std::fmod(t - forceField.lifetimeStart, forceField.lifetimeDuration) / forceField.lifetimeDuration;
 	vec3_t forceFieldCenter = forceField.position.get(life);
 	vec3_t forceFieldSize = forceField.size.get(life) * 0.5;

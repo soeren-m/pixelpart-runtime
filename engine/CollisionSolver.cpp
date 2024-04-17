@@ -47,7 +47,7 @@ CollisionSolver::CollisionSolver() : grid(1u, 1u) {
 }
 
 void CollisionSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt) const {
+	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
 	if(!planeColliders.empty()) {
 		for(uint32_t p = 0u; p < numParticles; p++) {
 			for(const PlaneColliderSegment& collider : planeColliders) {
@@ -294,7 +294,7 @@ CollisionSolver::Intersection CollisionSolver::calculateRayColliderIntersection(
 	return Intersection(point);
 }
 
-void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointer particles, uint32_t p, float_t t, float_t dt, const LineColliderSegment& collider) const {
+void CollisionSolver::solve(const ParticleType& particleType, ParticleWritePtr particles, uint32_t p, float_t t, float_t dt, const LineColliderSegment& collider) const {
 	vec2_t closestPoint = calculateClosestPointOnLine(particles.globalPosition[p], collider);
 	if(!isPointOnLineSegment(closestPoint, collider.startPoint, collider.endPoint)) {
 		return;
@@ -346,7 +346,7 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointe
 		}
 	}
 }
-void CollisionSolver::solve(const ParticleType& particleType, ParticleDataPointer particles, uint32_t p, float_t t, float_t dt, const PlaneColliderSegment& collider) const {
+void CollisionSolver::solve(const ParticleType& particleType, ParticleWritePtr particles, uint32_t p, float_t t, float_t dt, const PlaneColliderSegment& collider) const {
 	vec3_t closestPoint = calculateClosestPointOnPlane(particles.globalPosition[p], collider);
 	if(!isPointOnCollider(closestPoint, collider)) {
 		return;

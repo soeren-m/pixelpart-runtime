@@ -6,7 +6,7 @@ IntegrationSolver::IntegrationSolver() {
 }
 
 void IntegrationSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt) const {
+	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
 	float_t particleEmitterLife = std::fmod(t - particleEmitter.lifetimeStart, particleEmitter.lifetimeDuration) / particleEmitter.lifetimeDuration;
 	vec3_t particleEmitterPosition = particleEmitter.position.get(particleEmitterLife);
 

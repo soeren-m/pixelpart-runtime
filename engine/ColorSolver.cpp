@@ -7,7 +7,7 @@ ColorSolver::ColorSolver() {
 }
 
 void ColorSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleDataPointer particles, uint32_t numParticles, float_t t, float_t dt) const {
+	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
 	for(uint32_t p = 0u; p < numParticles; p++) {
 		vec4_t hsv = rgb2hsv(particleType.color.get(particles.life[p]));
 

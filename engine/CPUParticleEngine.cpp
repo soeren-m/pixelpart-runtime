@@ -19,11 +19,7 @@ void CPUParticleEngine::step(float_t dt) {
 
 	if(effect.particleTypes.getCount() != particleContainers.size()) {
 		particleSpawnCount.assign(effect.particleTypes.getCount(), 0.0);
-
-		particleContainers.assign(effect.particleTypes.getCount(), pixelpart::ParticleContainer());
-		for(ParticleContainer& particleContainer : particleContainers) {
-			particleContainer.reserve(particleCapacity);
-		}
+		particleContainers.assign(effect.particleTypes.getCount(), ParticleContainer(particleCapacity));
 	}
 
 	if(effect.particleEmitters.getCount() != particleEmitterGridIndices.size()) {
@@ -107,7 +103,7 @@ void CPUParticleEngine::step(float_t dt) {
 		const ParticleEmitter& particleEmitter = effect.particleEmitters.get(particleType.parentId);
 		const std::vector<uint32_t>& subTypes = particleSubTypes[particleTypeIndex];
 		ParticleContainer& particleContainer = particleContainers[particleTypeIndex];
-		ParticleData& particleData = particleContainer.get();
+		ParticleWritePtr particleData = particleContainer.getParticleWritePtr();
 
 		for(uint32_t p = 0u; p < particleContainer.getNumParticles(); p++) {
 			particleData.life[p] += dt / particleData.lifespan[p];
@@ -171,8 +167,10 @@ void CPUParticleEngine::step(float_t dt) {
 	}
 
 	for(ParticleContainer& particleContainer : particleContainers) {
+		ParticleReadPtr particleData = particleContainer.getParticleReadPtr();
+
 		for(uint32_t p = 0u; p < particleContainer.getNumParticles(); ) {
-			if(particleContainer.get().life[p] > 1.0) {
+			if(particleData.life[p] > 1.0) {
 				particleContainer.kill(p);
 			}
 			else {
@@ -197,7 +195,6 @@ void CPUParticleEngine::step(float_t dt) {
 		const ParticleEmitter& particleEmitter = effect.particleEmitters.get(particleType.parentId);
 		ParticleContainer& particleContainer = particleContainers[particleTypeIndex];
 
-		ParticleData& particles = particleContainer.get();
 		uint32_t numParticles = particleContainer.getNumParticles();
 
 #ifndef __EMSCRIPTEN__
@@ -214,27 +211,9 @@ void CPUParticleEngine::step(float_t dt) {
 					? numParticlesPerThread
 					: numParticlesPerThread + 1u;
 
-				ParticleDataPointer workgroupParticles{
-					particles.id.data() + workgroupIndex,
-					particles.parentId.data() + workgroupIndex,
-					particles.life.data() + workgroupIndex,
-					particles.lifespan.data() + workgroupIndex,
-					particles.position.data() + workgroupIndex,
-					particles.globalPosition.data() + workgroupIndex,
-					particles.velocity.data() + workgroupIndex,
-					particles.force.data() + workgroupIndex,
-					particles.rotation.data() + workgroupIndex,
-					particles.initialRotation.data() + workgroupIndex,
-					particles.initialAngularVelocity.data() + workgroupIndex,
-					particles.size.data() + workgroupIndex,
-					particles.initialSize.data() + workgroupIndex,
-					particles.color.data() + workgroupIndex,
-					particles.initialColor.data() + workgroupIndex
-				};
-
 				threadPool->enqueue(threadIndex, &CPUParticleEngine::stepParticles, this,
 					particleEmitter, particleType,
-					workgroupParticles, workgroupSize,
+					particleContainer.getParticleWritePtr(workgroupIndex), workgroupSize,
 					time, dt);
 
 				workgroupIndex += workgroupSize;
@@ -251,31 +230,13 @@ void CPUParticleEngine::step(float_t dt) {
 #endif
 
 		if(numActiveThreads <= 1u) {
-			ParticleDataPointer workgroupParticles{
-				particles.id.data(),
-				particles.parentId.data(),
-				particles.life.data(),
-				particles.lifespan.data(),
-				particles.position.data(),
-				particles.globalPosition.data(),
-				particles.velocity.data(),
-				particles.force.data(),
-				particles.rotation.data(),
-				particles.initialRotation.data(),
-				particles.initialAngularVelocity.data(),
-				particles.size.data(),
-				particles.initialSize.data(),
-				particles.color.data(),
-				particles.initialColor.data()
-			};
-
 			stepParticles(particleEmitter, particleType,
-				workgroupParticles, numParticles,
+				particleContainer.getParticleWritePtr(), numParticles,
 				time, dt);
 		}
 
 		if(!effect.is3d) {
-			ParticleData& particleData = particleContainer.get();
+			ParticleWritePtr particleData = particleContainer.getParticleWritePtr();
 			for(uint32_t p = 0u; p < particleContainer.getNumParticles(); p++) {
 				particleData.rotation[p].y = 0.0;
 				particleData.rotation[p].z = 0.0;
@@ -296,7 +257,7 @@ void CPUParticleEngine::restart(bool reset) {
 		particleId = 0u;
 
 		for(ParticleContainer& particleContainer : particleContainers) {
-			particleContainer.kill();
+			particleContainer.killAll();
 		}
 		for(float_t& count : particleSpawnCount) {
 			count = 0.0;
@@ -357,12 +318,12 @@ uint32_t CPUParticleEngine::getNumParticles(uint32_t particleTypeIndex) const {
 
 	return particleContainers[particleTypeIndex].getNumParticles();
 }
-const ParticleData& CPUParticleEngine::getParticles(uint32_t particleTypeIndex) const {
+ParticleReadPtr CPUParticleEngine::getParticles(uint32_t particleTypeIndex) const {
 	if(particleTypeIndex >= particleContainers.size()) {
-		return emptyParticleData;
+		return ParticleReadPtr();
 	}
 
-	return particleContainers[particleTypeIndex].get();
+	return particleContainers[particleTypeIndex].getParticleReadPtr();
 }
 
 uint32_t CPUParticleEngine::getParticleCapacity() const {
@@ -374,7 +335,7 @@ uint32_t CPUParticleEngine::getNumActiveThreads() const {
 }
 
 void CPUParticleEngine::stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleDataPointer particles, uint32_t numParticles,
+	ParticleWritePtr particles, uint32_t numParticles,
 	float_t t, float_t dt) const {
 	sizeSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
 	colorSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
@@ -409,12 +370,12 @@ void CPUParticleEngine::spawnParticle(uint32_t p, uint32_t pParent,
 	float_t dt, float_t t, float_t tParent) {
 	const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
 	const ParticleEmitter& particleEmitter = effect.particleEmitters.getByIndex(particleEmitterIndex);
-	ParticleData& particles = particleContainers[particleTypeIndex].get();
+	ParticleWritePtr particles = particleContainers[particleTypeIndex].getParticleWritePtr();
 
 	float_t alpha = t / particleEmitter.lifetimeDuration;
 
 	particles.id[p] = particleId++;
-	particles.parentId[p] = (pParent != nullId) ? particleContainers[parentParticleTypeIndex].get().id[pParent] : nullId;
+	particles.parentId[p] = (pParent != nullId) ? particleContainers[parentParticleTypeIndex].getParticleReadPtr().id[pParent] : nullId;
 
 	particles.life[p] = 0.0;
 	particles.lifespan[p] = std::max(particleType.lifespan.get(alpha) + random::uniform(rng, -particleType.lifespanVariance.get(), +particleType.lifespanVariance.get()), 0.000001);
@@ -489,7 +450,7 @@ void CPUParticleEngine::spawnParticle(uint32_t p, uint32_t pParent,
 		: rotate2d(particleSpawnPosition, particleEmitter.orientation.get(alpha).x);
 
 	vec3_t particleSpawnCenter = pParent != nullId
-		? (particleContainers[parentParticleTypeIndex].get().globalPosition[pParent] + particleEmitterPosition)
+		? (particleContainers[parentParticleTypeIndex].getParticleReadPtr().globalPosition[pParent] + particleEmitterPosition)
 		: (particleType.positionRelative ? vec3_t(0.0) : particleEmitterPosition);
 
 	particles.position[p] = particleSpawnCenter + particleSpawnPosition;
@@ -498,7 +459,7 @@ void CPUParticleEngine::spawnParticle(uint32_t p, uint32_t pParent,
 		: particles.position[p];
 
 	vec3_t particleParentVelocity = pParent != nullId
-		? particleContainers[parentParticleTypeIndex].get().velocity[pParent]
+		? particleContainers[parentParticleTypeIndex].getParticleReadPtr().velocity[pParent]
 		: particleEmitterVelocity;
 
 	if(effect.is3d) {

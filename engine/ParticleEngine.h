@@ -20,7 +20,7 @@ public:
 
 	virtual uint32_t getNumParticles() const = 0;
 	virtual uint32_t getNumParticles(uint32_t particleTypeIndex) const = 0;
-	virtual const ParticleData& getParticles(uint32_t particleTypeIndex) const = 0;
+	virtual ParticleReadPtr getParticles(uint32_t particleTypeIndex) const = 0;
 
 	const Effect& getEffect() const;
 
