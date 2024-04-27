@@ -374,7 +374,12 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleWritePtr p
 		else {
 			float_t distance = std::sqrt(distanceSqr);
 			vec3_t reflectedVelocity = glm::reflect(globalParticleVelocity, colliderNormal);
-			vec3_t slideVector = glm::normalize(calculateClosestPointOnPlane(closestPoint + normalizedParticleForce, collider) - closestPoint);
+
+			vec3_t slideVector = calculateClosestPointOnPlane(closestPoint + normalizedParticleForce, collider) - closestPoint;
+			if(slideVector != vec3_t(0.0)) {
+				slideVector = glm::normalize(slideVector);
+			}
+
 			float_t slideFactor = glm::dot(normalizedParticleForce, slideVector) * glm::length(globalParticleForce) * distance / particleRadius;
 			float_t bounce = collider.bounce.get(colliderLife) * particleType.bounce.get(particles.life[p]);
 			float_t friction = std::min(collider.friction.get(colliderLife) * particleType.friction.get(particles.life[p]), 1.0);
