@@ -61,7 +61,6 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 	std::string code = nodeType.code;
 
 	for(std::size_t parameterIndex = 0u; parameterIndex < node.parameters.size(); parameterIndex++) {
-		const VariantParameter& parameter = nodeType.parameters.at(parameterIndex);
 		const VariantParameter::Value& parameterValue = node.parameters.at(parameterIndex);
 		std::string valueString;
 
@@ -70,7 +69,6 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 				std::size_t samplerIndex = result.textureResourceIds.size();
 				if(samplerIndex < graphLanguage.textureSamplers.size()) {
 					result.textureResourceIds.push_back(parameterValue.getResourceId());
-					result.textureParameterNames.push_back(parameter.name);
 					result.parameterNames[nodeId] = graphLanguage.textureSamplers[samplerIndex];
 
 					valueString = graphLanguage.textureSamplers[samplerIndex];
@@ -175,7 +173,6 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 					std::size_t samplerIndex = result.textureResourceIds.size();
 					if(samplerIndex < graphLanguage.textureSamplers.size()) {
 						result.textureResourceIds.push_back(parameterValue.getResourceId());
-						result.textureParameterNames.push_back(parameter.name);
 						valueString = graphLanguage.textureSamplers[samplerIndex];
 					}
 					else {
