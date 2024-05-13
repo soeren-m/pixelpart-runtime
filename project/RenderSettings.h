@@ -15,10 +15,10 @@ struct RenderSettings {
 	float_t playbackSpeed = 1.0;
 
 	bool loop = false;
-	bool backgroundEnabled = true;
+	bool backgroundEnabled = false;
 	bool postProcessingEnabled = true;
 	bool seamlessRenderingEnabled = false;
-	vec4_t backgroundColor = vec4_t(0.0);
+	vec4_t backgroundColor = vec4_t(0.0, 0.0, 0.0, 1.0);
 
 	vec3_t ambientLighting = vec3_t(0.1);
 	bool hdrEnabled = true;
