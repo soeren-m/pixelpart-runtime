@@ -29,6 +29,7 @@ struct ParticleType : public Node {
 	StaticProperty<vec3_t> angularVelocityVariance = StaticProperty<vec3_t>(vec3_t(0.0));
 	StaticProperty<vec3_t> pivot = StaticProperty<vec3_t>(vec3_t(0.0));
 
+	AnimatedProperty<float_t> physicalSize = AnimatedProperty<float_t>(1.0);
 	AnimatedProperty<float_t> weight = AnimatedProperty<float_t>(1.0);
 	AnimatedProperty<float_t> bounce = AnimatedProperty<float_t>(1.0);
 	AnimatedProperty<float_t> friction = AnimatedProperty<float_t>(1.0);

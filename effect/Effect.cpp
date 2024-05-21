@@ -53,6 +53,7 @@ void refreshEffectProperties(Effect& effect) {
 		particleType.rotationVariance.refresh(inputValues);
 		particleType.angularVelocityVariance.refresh(inputValues);
 		particleType.pivot.refresh(inputValues);
+		particleType.physicalSize.refresh(inputValues);
 		particleType.weight.refresh(inputValues);
 		particleType.bounce.refresh(inputValues);
 		particleType.friction.refresh(inputValues);

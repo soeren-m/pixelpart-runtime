@@ -127,7 +127,7 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleWritePtr parti
 				vec3_t forceVector = sampleDragField(forceField.dragField,
 					forceFieldCenter, forceFieldSize,
 					forceFieldOrientationMatrix,
-					particles.globalPosition[p], particles.velocity[p], particles.size[p]);
+					particles.globalPosition[p], particles.velocity[p], particles.size[p] * particleType.physicalSize.get(particles.life[p]));
 
 				particles.force[p] += forceVector * forceStrength * particleType.weight.get(particles.life[p]);
 			}

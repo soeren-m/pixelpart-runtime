@@ -76,7 +76,7 @@ void CollisionSolver::solve(const ParticleEmitter& particleEmitter, const Partic
 			std::unordered_set<uint32_t> potentialColliders;
 			for(int32_t cy = startIndex.y; cy <= endIndex.y; cy++) {
 				for(int32_t cx = startIndex.x; cx <= endIndex.x; cx++) {
-					findPotentialColliders(potentialColliders, cx, cy, particles.size[p]);
+					findPotentialColliders(potentialColliders, cx, cy, particles.size[p] * particleType.physicalSize.get(particles.life[p]));
 				}
 			}
 
@@ -307,9 +307,8 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleWritePtr p
 	vec2_t globalParticleForce = vec2_t(particles.force[p]);
 	vec2_t colliderToParticle = globalParticlePosition - closestPoint;
 	float_t distanceSqr = glm::length2(colliderToParticle);
-	float_t particleRadius = std::max(std::min(
-			particles.size[p].x,
-			particles.size[p].y) * 0.5, 0.01);
+	float_t particleRadius = std::min(particles.size[p].x, particles.size[p].y) * 0.5;
+	particleRadius = std::max(particleRadius * particleType.physicalSize.get(particles.life[p]), 0.01);
 
 	if(distanceSqr <= particleRadius * particleRadius) {
 		if(collider.killOnContact) {
@@ -362,10 +361,8 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleWritePtr p
 	vec3_t colliderToParticle = globalParticlePosition - closestPoint;
 	vec3_t colliderNormal = glm::normalize(colliderToParticle);
 	float_t distanceSqr = glm::length2(colliderToParticle);
-	float_t particleRadius = std::max(std::min(
-		particles.size[p].x, std::min(
-			particles.size[p].y,
-			particles.size[p].z)) * 0.5, 0.01);
+	float_t particleRadius = std::min(particles.size[p].x, std::min(particles.size[p].y, particles.size[p].z)) * 0.5;
+	particleRadius = std::max(particleRadius * particleType.physicalSize.get(particles.life[p]), 0.01);
 
 	if(distanceSqr <= particleRadius * particleRadius) {
 		if(collider.killOnContact) {

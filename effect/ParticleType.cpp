@@ -31,6 +31,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "angular_velocity_variance", particleType.angularVelocityVariance },
 		{ "pivot", particleType.pivot },
 
+		{ "physical_size", particleType.physicalSize },
 		{ "weight", particleType.weight },
 		{ "bounce", particleType.bounce },
 		{ "friction", particleType.friction },
@@ -85,6 +86,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	fromJson(particleType.angularVelocityVariance, j, "angular_velocity_variance");
 	fromJson(particleType.pivot, j, "pivot");
 
+	fromJson(particleType.physicalSize, j, "physical_size");
 	fromJson(particleType.weight, j, "weight");
 	fromJson(particleType.bounce, j, "bounce");
 	fromJson(particleType.friction, j, "friction");
