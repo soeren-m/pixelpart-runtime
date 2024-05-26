@@ -164,13 +164,13 @@ vec3_t ForceSolver::sampleAccelerationField(const ForceField::AccelerationField&
 	}
 
 	int32_t gridCellX = (size.x > 0.0)
-		? static_cast<int32_t>((rotatedParticlePosition.x - (position.x - size.x)) / (size.x * 2.0) * static_cast<float_t>(accelerationField.gridSize[0]))
+		? glm::clamp(static_cast<int32_t>((rotatedParticlePosition.x - (position.x - size.x)) / (size.x * 2.0) * static_cast<float_t>(accelerationField.gridSize[0])), 0, accelerationField.gridSize[0] - 1)
 		: 0;
 	int32_t gridCellY = (size.y > 0.0)
-		? static_cast<int32_t>((rotatedParticlePosition.y - (position.y - size.y)) / (size.y * 2.0) * static_cast<float_t>(accelerationField.gridSize[1]))
+		? glm::clamp(static_cast<int32_t>((rotatedParticlePosition.y - (position.y - size.y)) / (size.y * 2.0) * static_cast<float_t>(accelerationField.gridSize[1])), 0, accelerationField.gridSize[1] - 1)
 		: 0;
 	int32_t gridCellZ = (size.z > 0.0)
-		? static_cast<int32_t>((rotatedParticlePosition.z - (position.z - size.z)) / (size.z * 2.0) * static_cast<float_t>(accelerationField.gridSize[2]))
+		? glm::clamp(static_cast<int32_t>((rotatedParticlePosition.z - (position.z - size.z)) / (size.z * 2.0) * static_cast<float_t>(accelerationField.gridSize[2])), 0, accelerationField.gridSize[2] - 1)
 		: 0;
 	uint32_t gridCellIndex = static_cast<uint32_t>(
 		gridCellZ * accelerationField.gridSize[1] * accelerationField.gridSize[0] +
