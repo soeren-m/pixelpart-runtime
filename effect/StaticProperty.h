@@ -43,7 +43,7 @@ public:
 		computeGraph.unlinkRemovedInputs(inputs);
 
 		try {
-			graphOutputValue = computeGraph.evaluate(inputs).at(0u).get<T>();
+			graphOutputValue = computeGraph.evaluate(inputs).at(0u).template get<T>();
 
 			useGraphOutput = true;
 			refresh();

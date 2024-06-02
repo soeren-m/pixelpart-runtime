@@ -7,7 +7,7 @@
 namespace pixelpart {
 template <typename T>
 class NodeCollection {
-static_assert(std::is_base_of<Node, T>::value);
+static_assert(std::is_base_of<Node, T>::value, "T must have base class Node");
 
 public:
 	using iterator = typename std::vector<T>::iterator;

@@ -43,6 +43,7 @@ public:
 		const std::vector<Signature>& nodeSignatures,
 		const std::vector<VariantValue>& nodeDefaultInputs,
 		const std::vector<VariantParameter>& nodeParameters);
+	virtual ~ComputeNode() = default;
 
 	virtual std::vector<VariantValue> evaluate(const std::vector<VariantValue>& in) const = 0;
 

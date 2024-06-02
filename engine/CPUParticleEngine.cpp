@@ -196,10 +196,11 @@ void CPUParticleEngine::step(float_t dt) {
 		ParticleContainer& particleContainer = particleContainers[particleTypeIndex];
 
 		uint32_t numParticles = particleContainer.getNumParticles();
+		uint32_t numActiveThreads = 1u;
 
 #ifndef __EMSCRIPTEN__
 		uint32_t numAvailableThreads = threadPool != nullptr ? static_cast<uint32_t>(threadPool->getNumThreads()) : 1u;
-		uint32_t numActiveThreads = std::min(std::max(numParticles / numParticlesPerThread, 1u), numAvailableThreads);
+		numActiveThreads = std::min(std::max(numParticles / numParticlesPerThread, 1u), numAvailableThreads);
 
 		if(numActiveThreads > 1u) {
 			uint32_t numParticlesPerThread = numParticles / numActiveThreads;
@@ -223,10 +224,6 @@ void CPUParticleEngine::step(float_t dt) {
 				threadPool->wait(threadIndex);
 			}
 		}
-
-#else
-		numActiveThreads = 1u;
-
 #endif
 
 		if(numActiveThreads <= 1u) {
