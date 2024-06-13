@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ParticleEngine.h"
-#include "ParticleContainer.h"
+#include "ParticleGenerator.h"
 #include "SizeSolver.h"
 #include "ColorSolver.h"
 #include "AccelerationSolver.h"
@@ -45,21 +45,14 @@ private:
 		ParticleWritePtr particles, uint32_t numParticles,
 		float_t t, float_t dt) const;
 
-	uint32_t spawnParticles(uint32_t count, uint32_t pParent,
-		uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex,
-		float_t dt, float_t t, float_t tParent);
-	void spawnParticle(uint32_t p, uint32_t pParent,
-		uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex,
-		float_t dt, float_t t, float_t tParent);
-
 	std::vector<ParticleContainer> particleContainers;
 
 	std::vector<float_t> particleSpawnCount;
-	std::vector<uint32_t> particleEmitterGridIndices;
 	uint32_t particleCapacity = 0u;
-	uint32_t particleId = 0u;
 	uint32_t activeSeed = 0u;
 	float_t time = 0.0;
+
+	ParticleGenerator particleGenerator;
 
 	SizeSolver sizeSolver;
 	ColorSolver colorSolver;
@@ -75,7 +68,5 @@ private:
 #endif
 	uint32_t numTotalActiveThreads = 0u;
 	uint32_t numParticlesPerThread = 128u;
-
-	std::mt19937 rng;
 };
 }
