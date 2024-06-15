@@ -45,7 +45,10 @@ public:
 	}
 
 	T get(float_t position = 0.0) const {
-		return cache[static_cast<std::size_t>(std::min(std::max(position, 0.0), 1.0) * static_cast<float_t>(cache.size() - 1))];
+		float_t cacheIndex =
+			std::min(std::max(position, 0.0), 1.0) * static_cast<float_t>(cache.size() - 1);
+
+		return cache[static_cast<std::size_t>(cacheIndex)];
 	}
 
 	void setPoints(const std::vector<Point>& pointList) {
@@ -196,6 +199,7 @@ public:
 				fillCacheSpline();
 				break;
 			case CurveInterpolation::bezier:
+				fillCacheBezier();
 				break;
 			default:
 				break;
@@ -214,118 +218,136 @@ private:
 	}
 
 	void fillCacheNone() {
-		for(std::size_t i = 0u, k0 = 0u; i < cache.size(); i++) {
-			float_t position = static_cast<float_t>(i) / static_cast<float_t>(cache.size() - 1u);
-			std::size_t k = findIndex(position, k0);
+		for(std::size_t cacheIndex = 0u, pointStartIndex = 0u; cacheIndex < cache.size(); cacheIndex++) {
+			float_t position = static_cast<float_t>(cacheIndex) / static_cast<float_t>(cache.size() - 1u);
+			std::size_t pointIndex = findIndex(position, pointStartIndex);
 
-			if(k == invalidIndex) {
-				cache[i] = points.front().value;
+			if(pointIndex == invalidIndex) {
+				cache[cacheIndex] = points.front().value;
+				continue;
 			}
-			else if(k + 1u == points.size()) {
-				cache[i] = points.back().value;
+			else if(pointIndex + 1u == points.size()) {
+				cache[cacheIndex] = points.back().value;
+				continue;
 			}
-			else {
-				cache[i] = (std::abs(position - points[k].position) < std::abs(position - points[k + 1u].position))
-					? points[k].value
-					: points[k + 1u].value;
 
-				k0 = k;
-			}
+			cache[cacheIndex] = (std::abs(position - points[pointIndex].position) < std::abs(position - points[pointIndex + 1u].position))
+				? points[pointIndex].value
+				: points[pointIndex + 1u].value;
+
+			pointStartIndex = pointIndex;
 		}
 	}
 	void fillCacheLinear() {
-		for(std::size_t i = 0u, k0 = 0u; i < cache.size(); i++) {
-			float_t position = static_cast<float_t>(i) / static_cast<float_t>(cache.size() - 1u);
-			std::size_t k = findIndex(position, k0);
+		for(std::size_t cacheIndex = 0u, pointStartIndex = 0u; cacheIndex < cache.size(); cacheIndex++) {
+			float_t position = static_cast<float_t>(cacheIndex) / static_cast<float_t>(cache.size() - 1u);
+			std::size_t pointIndex = findIndex(position, pointStartIndex);
 
-			if(k == invalidIndex) {
-				cache[i] = points.front().value;
+			if(pointIndex == invalidIndex) {
+				cache[cacheIndex] = points.front().value;
+				continue;
 			}
-			else if(k + 1u == points.size()) {
-				cache[i] = points.back().value;
+			else if(pointIndex + 1u == points.size()) {
+				cache[cacheIndex] = points.back().value;
+				continue;
 			}
-			else {
-				float_t t = (position - points[k].position) / (points[k + 1u].position - points[k].position);
-				cache[i] =
-					(1.0 - t) * points[k].value +
-					t * points[k + 1u].value;
 
-				k0 = k;
-			}
+			float_t t = (position - points[pointIndex].position) / (points[pointIndex + 1u].position - points[pointIndex].position);
+			cache[cacheIndex] =
+				(1.0 - t) * points[pointIndex].value +
+				t * points[pointIndex + 1u].value;
+
+			pointStartIndex = pointIndex;
 		}
 	}
 	void fillCacheSpline() {
-		for(std::size_t i = 0u, k0 = 0u; i < cache.size(); i++) {
-			float_t position = static_cast<float_t>(i) / static_cast<float_t>(cache.size() - 1u);
-			std::size_t k = findIndex(position, k0);
+		const float_t alpha = 0.5;
+		const float_t tension = 0.0;
+		const float_t epsilon = 0.001;
 
-			if(k == invalidIndex) {
-				cache[i] = points.front().value;
+		for(std::size_t cacheIndex = 0u, pointStartIndex = 0u; cacheIndex < cache.size(); cacheIndex++) {
+			float_t position = static_cast<float_t>(cacheIndex) / static_cast<float_t>(cache.size() - 1u);
+			std::size_t pointIndex = findIndex(position, pointStartIndex);
+
+			if(pointIndex == invalidIndex) {
+				cache[cacheIndex] = points.front().value;
+				continue;
 			}
-			else if(k + 1u == points.size()) {
-				cache[i] = points.back().value;
+			else if(pointIndex + 1u == points.size()) {
+				cache[cacheIndex] = points.back().value;
+				continue;
 			}
-			else {
-				const float_t alpha = 0.5;
-				const float_t tension = 0.0;
 
-				Point p0 = (k > 0u) ? points[k - 1u] : Point{ -0.1, points[k].value };
-				Point p1 = points[k];
-				Point p2 = points[k + 1u];
-				Point p3 = (k + 2u < points.size()) ? points[k + 2u] : Point{ +1.1, points[k + 1u].value };
+			const Point& p0 = points[pointIndex > 0u ? pointIndex - 1u : pointIndex];
+			const Point& p1 = points[pointIndex];
+			const Point& p2 = points[pointIndex + 1u];
+			const Point& p3 = points[pointIndex + 2u < points.size() ? pointIndex + 2u : pointIndex + 1u];
 
-				float_t t = (position - p1.position) / (p2.position - p1.position);
-				float_t t0 = 0.0;
-				float_t t1 = t0 + std::pow(p1.position - p0.position, alpha);
-				float_t t2 = t1 + std::pow(p2.position - p1.position, alpha);
-				float_t t3 = t2 + std::pow(p3.position - p2.position, alpha);
+			float_t t0 = 0.0;
+			float_t t1 = t0 + std::pow(glm::distance(p0.value, p1.value), alpha);
+			float_t t2 = t1 + std::pow(glm::distance(p1.value, p2.value), alpha);
+			float_t t3 = t2 + std::pow(glm::distance(p2.value, p3.value), alpha);
 
-				T m1 = (1.0 - tension) * (t2 - t1) * ((p1.value - p0.value) / (t1 - t0) - (p2.value - p0.value) / (t2 - t0) + (p2.value - p1.value) / (t2 - t1));
-				T m2 = (1.0 - tension) * (t2 - t1) * ((p2.value - p1.value) / (t2 - t1) - (p3.value - p1.value) / (t3 - t1) + (p3.value - p2.value) / (t3 - t2));
-				T a = +2.0 * (p1.value - p2.value) + m1 + m2;
-				T b = -3.0 * (p1.value - p2.value) - m1 - m1 - m2;
-				T c = m1;
-				T d = p1.value;
-
-				cache[i] =
-					a * t * t * t +
-					b * t * t +
-					c * t +
-					d;
-
-				k0 = k;
+			if(t1 < epsilon || t2 < epsilon || t3 < epsilon) {
+				cache[cacheIndex] = p1.value;
+				pointStartIndex = pointIndex;
+				continue;
 			}
+
+			T m1 = (1.0 - tension) * (t2 - t1) * ((p1.value - p0.value) / (t1 - t0) - (p2.value - p0.value) / (t2 - t0) + (p2.value - p1.value) / (t2 - t1));
+			T m2 = (1.0 - tension) * (t2 - t1) * ((p2.value - p1.value) / (t2 - t1) - (p3.value - p1.value) / (t3 - t1) + (p3.value - p2.value) / (t3 - t2));
+			T a = +2.0 * (p1.value - p2.value) + m1 + m2;
+			T b = -3.0 * (p1.value - p2.value) - m1 - m1 - m2;
+			T c = m1;
+			T d = p1.value;
+
+			float_t t = (position - p1.position) / (p2.position - p1.position);
+			cache[cacheIndex] =
+				a * t * t * t +
+				b * t * t +
+				c * t +
+				d;
+
+			pointStartIndex = pointIndex;
 		}
 	}
 	void fillCacheBezier() {
-		for(std::size_t i = 0u, k0 = 0u; i < cache.size(); i++) {
-			float_t position = static_cast<float_t>(i) / static_cast<float_t>(cache.size() - 1u);
-			std::size_t k = findIndex(position, k0);
+		for(std::size_t cacheIndex = 0u, pointStartIndex = 0u; cacheIndex < cache.size(); cacheIndex++) {
+			float_t position = static_cast<float_t>(cacheIndex) / static_cast<float_t>(cache.size() - 1u);
+			std::size_t pointIndex = findIndex(position, pointStartIndex);
 
-			if(k == invalidIndex) {
-				cache[i] = points.front().value;
+			if(pointIndex == invalidIndex) {
+				cache[cacheIndex] = points.front().value;
+				continue;
 			}
-			else if(k + 1u == points.size()) {
-				cache[i] = points.back().value;
+			else if(pointIndex + 1u == points.size()) {
+				cache[cacheIndex] = points.back().value;
+				continue;
 			}
-			else {
-				Point p0 = points[k];
-				Point p1 = points[k + 1u];
-				Point c0 = controlPoints[k];
-				Point c1 = controlPoints[k + 1u];
 
-				float_t t = (position - p0.position) / (p1.position - p0.position);
-				float_t oneMinusT = 1.0 - t;
+			const Point& p1 = points[pointIndex];
+			const Point& p2 = points[pointIndex + 1u];
 
-				cache[i] =
-					1.0 * p0.value * oneMinusT * oneMinusT * oneMinusT +
-					3.0 * c0.value * oneMinusT * oneMinusT * t +
-					3.0 * c1.value * oneMinusT * t * t +
-					1.0 * p1.value * t * t * t;
+			Point c1 = Point { p1.position, p1.value + T(0.1) };
+			Point c2 = Point { p1.position, p1.value - T(0.1) };
+			// TODO
+			/*Point controlLeft = Point{
+				left.position + controlPoints[k].position,
+				left.value + controlPoints[k].value,
+			};
+			Point controlRight = Point{
+				right.position + controlPoints[k + 1u].position,
+				right.value + controlPoints[k + 1u].value,
+			};*/
 
+			float_t t = (position - p1.position) / (p2.position - p1.position);
+			cache[cacheIndex] =
+				1.0 * p1.value * (1.0 - t) * (1.0 - t) * (1.0 - t) +
+				3.0 * c1.value * (1.0 - t) * (1.0 - t) * t +
+				3.0 * c2.value * (1.0 - t) * t * t +
+				1.0 * p2.value * t * t * t;
 
-				k0 = k;
-			}
+			pointStartIndex = pointIndex;
 		}
 	}
 
