@@ -14,8 +14,8 @@ void CPUParticleEngine::step(float_t dt) {
 	time += dt;
 
 	if(effect.particleTypes.getCount() != particleContainers.size()) {
-		particleSpawnCount.assign(effect.particleTypes.getCount(), 0.0);
 		particleContainers.assign(effect.particleTypes.getCount(), ParticleContainer(particleCapacity));
+		emissionCount.assign(effect.particleTypes.getCount(), 0.0);
 	}
 
 	particleGenerator.prepare();
@@ -47,47 +47,47 @@ void CPUParticleEngine::step(float_t dt) {
 			continue;
 		}
 
-		float_t localTime = time - particleEmitter.lifetimeStart;
-		float_t localTimeWrapped = std::fmod(localTime, particleEmitter.lifetimeDuration);
-		float_t internalTime = particleEmitter.repeat ? localTimeWrapped : localTime;
+		float_t timeSinceStart = time - particleEmitter.lifetimeStart;
+		if(timeSinceStart <= 0.0) {
+			continue;
+		}
 
-		if(localTime > 0.0) {
-			switch(particleEmitter.emissionMode) {
-				case ParticleEmitter::EmissionMode::continuous: {
-					if(particleEmitter.repeat || localTime < particleEmitter.lifetimeDuration) {
-						particleSpawnCount[particleTypeIndex] += particleType.numParticles.get(localTimeWrapped / particleEmitter.lifetimeDuration) * dt;
-					}
+		float_t repeatedTime = std::fmod(timeSinceStart, particleEmitter.lifetimeDuration);
+		float_t emissionTime = particleEmitter.repeat ? repeatedTime : timeSinceStart;
 
-					break;
+		switch(particleEmitter.emissionMode) {
+			case ParticleEmitter::EmissionMode::continuous: {
+				if(emissionTime <= particleEmitter.lifetimeDuration) {
+					emissionCount[particleTypeIndex] += particleType.numParticles.get(repeatedTime / particleEmitter.lifetimeDuration) * dt;
 				}
 
-				case ParticleEmitter::EmissionMode::burst_start: {
-					if(internalTime <= dt) {
-						particleSpawnCount[particleTypeIndex] += particleType.numParticles.get();
-					}
-
-					break;
+				break;
+			}
+			case ParticleEmitter::EmissionMode::burst_start: {
+				if(emissionTime <= dt) {
+					emissionCount[particleTypeIndex] += particleType.numParticles.get();
 				}
 
-				case ParticleEmitter::EmissionMode::burst_end: {
-					if(internalTime >= particleEmitter.lifetimeDuration - dt && internalTime < particleEmitter.lifetimeDuration) {
-						particleSpawnCount[particleTypeIndex] += particleType.numParticles.get();
-					}
-
-					break;
+				break;
+			}
+			case ParticleEmitter::EmissionMode::burst_end: {
+				if(emissionTime >= particleEmitter.lifetimeDuration - dt && emissionTime < particleEmitter.lifetimeDuration) {
+					emissionCount[particleTypeIndex] += particleType.numParticles.get();
 				}
+
+				break;
+			}
+			default: {
+				break;
 			}
 		}
 
-		int32_t particlesSpawned = static_cast<int32_t>(particleSpawnCount[particleTypeIndex]);
-		if(particlesSpawned > 0) {
-			particlesSpawned = particleGenerator.generate(particlesSpawned,
-				nullId,
-				particleTypeIndex, nullId,
-				particleEmitterIndex,
-				dt, localTimeWrapped);
+		int32_t particlesEmitted = static_cast<int32_t>(emissionCount[particleTypeIndex]);
+		if(particlesEmitted > 0) {
+			particlesEmitted = particleGenerator.generate(particlesEmitted,
+				nullId, particleTypeIndex, nullId, particleEmitterIndex, dt, repeatedTime);
 
-			particleSpawnCount[particleTypeIndex] -= static_cast<float_t>(particlesSpawned);
+			emissionCount[particleTypeIndex] -= static_cast<float_t>(particlesEmitted);
 		}
 	}
 
@@ -96,10 +96,6 @@ void CPUParticleEngine::step(float_t dt) {
 		const ParticleEmitter& particleEmitter = effect.particleEmitters.get(particleType.parentId);
 		ParticleContainer& particleContainer = particleContainers[particleTypeIndex];
 		ParticleWritePtr particles = particleContainer.getParticleWritePtr();
-
-		for(uint32_t p = 0u; p < particleContainer.getNumParticles(); p++) {
-			particles.life[p] += dt / particles.lifespan[p];
-		}
 
 		const std::vector<uint32_t>& subTypes = particleSubTypes[particleTypeIndex];
 		if(subTypes.empty()) {
@@ -112,47 +108,48 @@ void CPUParticleEngine::step(float_t dt) {
 
 				uint32_t subParticleEmitterIndex = effect.particleEmitters.findById(subParticleType.parentId);
 				const ParticleEmitter& subParticleEmitter = effect.particleEmitters.getByIndex(subParticleEmitterIndex);
-				float_t localTimeSubEmitter = particles.life[p] * particles.lifespan[p] - subParticleEmitter.lifetimeStart;
-				float_t localTimeSubEmitterWrapped = std::fmod(localTimeSubEmitter, subParticleEmitter.lifetimeDuration);
-				float_t internalTimeSubEmitter = subParticleEmitter.repeat ? localTimeSubEmitterWrapped : localTimeSubEmitter;
 
-				if(localTimeSubEmitter > 0.0) {
-					switch(subParticleEmitter.emissionMode) {
-						case ParticleEmitter::EmissionMode::continuous: {
-							if(subParticleEmitter.repeat || localTimeSubEmitter < subParticleEmitter.lifetimeDuration) {
-								particleSpawnCount[subParticleTypeIndex] += subParticleType.numParticles.get(localTimeSubEmitterWrapped / particleEmitter.lifetimeDuration) * dt;
-							}
+				float_t subTimeSinceStart = particles.life[p] * particles.lifespan[p] - subParticleEmitter.lifetimeStart;
+				if(subTimeSinceStart <= 0.0) {
+					continue;
+				}
 
-							break;
+				float_t subRepeatedTime = std::fmod(subTimeSinceStart, subParticleEmitter.lifetimeDuration);
+				float_t subEmissionTime = subParticleEmitter.repeat ? subRepeatedTime : subTimeSinceStart;
+
+				switch(subParticleEmitter.emissionMode) {
+					case ParticleEmitter::EmissionMode::continuous: {
+						if(subEmissionTime <= subParticleEmitter.lifetimeDuration) {
+							emissionCount[subParticleTypeIndex] += subParticleType.numParticles.get(subRepeatedTime / particleEmitter.lifetimeDuration) * dt;
 						}
 
-						case ParticleEmitter::EmissionMode::burst_start: {
-							if(internalTimeSubEmitter <= dt) {
-								particleSpawnCount[subParticleTypeIndex] += subParticleType.numParticles.get();
-							}
-
-							break;
+						break;
+					}
+					case ParticleEmitter::EmissionMode::burst_start: {
+						if(subEmissionTime <= dt) {
+							emissionCount[subParticleTypeIndex] += subParticleType.numParticles.get();
 						}
 
-						case ParticleEmitter::EmissionMode::burst_end: {
-							if(particles.life[p] > 1.0) {
-								particleSpawnCount[subParticleTypeIndex] += subParticleType.numParticles.get();
-							}
-
-							break;
+						break;
+					}
+					case ParticleEmitter::EmissionMode::burst_end: {
+						if(particles.life[p] > 1.0) {
+							emissionCount[subParticleTypeIndex] += subParticleType.numParticles.get();
 						}
+
+						break;
+					}
+					default: {
+						break;
 					}
 				}
 
-				int32_t particlesSpawned = static_cast<int32_t>(particleSpawnCount[subParticleTypeIndex]);
-				if(particlesSpawned > 0) {
-					particlesSpawned = particleGenerator.generate(particlesSpawned,
-						p,
-						subParticleTypeIndex, particleTypeIndex,
-						subParticleEmitterIndex,
-						dt, localTimeSubEmitterWrapped);
+				int32_t particlesEmitted = static_cast<int32_t>(emissionCount[subParticleTypeIndex]);
+				if(particlesEmitted > 0) {
+					particlesEmitted = particleGenerator.generate(particlesEmitted,
+						p, subParticleTypeIndex, particleTypeIndex, subParticleEmitterIndex, dt, subRepeatedTime);
 
-					particleSpawnCount[subParticleTypeIndex] -= static_cast<float_t>(particlesSpawned);
+					emissionCount[subParticleTypeIndex] -= static_cast<float_t>(particlesEmitted);
 				}
 			}
 		}
@@ -181,6 +178,7 @@ void CPUParticleEngine::step(float_t dt) {
 	motionPathSolver.refresh(effect);
 	rotationSolver.refresh(effect);
 	integrationSolver.refresh(effect);
+	lifeSolver.refresh(effect);
 
 	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
 		const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
@@ -246,7 +244,7 @@ void CPUParticleEngine::restart(bool reset) {
 		for(ParticleContainer& particleContainer : particleContainers) {
 			particleContainer.killAll();
 		}
-		for(float_t& count : particleSpawnCount) {
+		for(float_t& count : emissionCount) {
 			count = 0.0;
 		}
 
@@ -279,13 +277,13 @@ void CPUParticleEngine::spawnParticles(id_t particleTypeId, uint32_t count) {
 	}
 
 	const ParticleEmitter& particleEmitter = effect.particleEmitters.getByIndex(particleEmitterIndex);
-	float_t localTime = std::fmod(time - particleEmitter.lifetimeStart, particleEmitter.lifetimeDuration);
+	float_t objectTime = std::fmod(time - particleEmitter.lifetimeStart, particleEmitter.lifetimeDuration);
 
 	particleGenerator.generate(count,
 		nullId,
 		particleTypeIndex, nullId,
 		particleEmitterIndex,
-		0.0, localTime);
+		0.0, objectTime);
 }
 
 
@@ -331,5 +329,6 @@ void CPUParticleEngine::stepParticles(const ParticleEmitter& particleEmitter, co
 	motionPathSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
 	rotationSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
 	integrationSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
+	lifeSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
 }
 }

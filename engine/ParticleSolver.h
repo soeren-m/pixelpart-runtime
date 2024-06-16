@@ -6,6 +6,8 @@
 namespace pixelpart {
 class ParticleSolver {
 public:
+	virtual ~ParticleSolver() = default;
+
 	virtual void solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
 		ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const = 0;
 

@@ -10,6 +10,7 @@
 #include "MotionPathSolver.h"
 #include "RotationSolver.h"
 #include "IntegrationSolver.h"
+#include "LifeSolver.h"
 
 #ifndef __EMSCRIPTEN__
 #include "../common/ThreadPool.h"
@@ -47,7 +48,7 @@ private:
 
 	std::vector<ParticleContainer> particleContainers;
 
-	std::vector<float_t> particleSpawnCount;
+	std::vector<float_t> emissionCount;
 	uint32_t particleCapacity = 0u;
 	uint32_t activeSeed = 0u;
 	float_t time = 0.0;
@@ -62,6 +63,7 @@ private:
 	MotionPathSolver motionPathSolver;
 	RotationSolver rotationSolver;
 	IntegrationSolver integrationSolver;
+	LifeSolver lifeSolver;
 
 #ifndef __EMSCRIPTEN__
 	std::shared_ptr<ThreadPool> threadPool;

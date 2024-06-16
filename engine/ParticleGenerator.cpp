@@ -17,7 +17,7 @@ uint32_t ParticleGenerator::generate(uint32_t count, uint32_t parentParticle, ui
 	const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
 	const ParticleEmitter& particleEmitter = effect.particleEmitters.getByIndex(particleEmitterIndex);
 	ParticleWritePtr particles = particleState[particleTypeIndex].getParticleWritePtr();
-	ParticleReadPtr parentParticles = particleState[parentParticleTypeIndex].getParticleReadPtr();
+	ParticleReadPtr parentParticles = parentParticleTypeIndex != nullId ? particleState[parentParticleTypeIndex].getParticleReadPtr() : ParticleReadPtr();
 	float_t alpha = t / particleEmitter.lifetimeDuration;
 
 	for(uint32_t i = 0u; i < count; i++) {
