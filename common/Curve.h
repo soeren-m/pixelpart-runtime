@@ -329,7 +329,7 @@ private:
 			const Point& p2 = points[pointIndex + 1u];
 
 			Point c1 = Point { p1.position, p1.value + T(0.1) };
-			Point c2 = Point { p1.position, p1.value - T(0.1) };
+			Point c2 = Point { p2.position, p2.value - T(0.1) };
 			// TODO
 			/*Point controlLeft = Point{
 				left.position + controlPoints[k].position,
