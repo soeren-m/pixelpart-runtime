@@ -52,8 +52,8 @@ void CollisionSolver::solve(const ParticleEmitter& particleEmitter, const Partic
 		for(uint32_t p = 0u; p < numParticles; p++) {
 			for(const PlaneColliderSegment& collider : planeColliders) {
 				if(collider.exclusionSet[particleType.id] ||
-					t < collider.lifetimeStart ||
-					t > collider.lifetimeStart + collider.lifetimeDuration && !collider.repeat) {
+					(t < collider.lifetimeStart) ||
+					(t > collider.lifetimeStart + collider.lifetimeDuration && !collider.repeat)) {
 					continue;
 				}
 

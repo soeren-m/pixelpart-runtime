@@ -207,8 +207,8 @@ vec4_t VariantValue::toFloat4() const {
 	}
 }
 
-VariantValue VariantValue::cast(Type type) const {
-	switch(type) {
+VariantValue VariantValue::cast(Type targetType) const {
+	switch(targetType) {
 		case type_bool:
 			return VariantValue::Bool(toBool());
 		case type_int:

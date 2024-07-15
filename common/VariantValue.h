@@ -80,7 +80,7 @@ struct VariantValue {
 	vec3_t toFloat3() const;
 	vec4_t toFloat4() const;
 
-	VariantValue cast(Type type) const;
+	VariantValue cast(Type targetType) const;
 };
 
 VariantValue operator+(const VariantValue& v1, const VariantValue& v2);
