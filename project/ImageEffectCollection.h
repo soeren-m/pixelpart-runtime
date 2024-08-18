@@ -1,6 +1,9 @@
 #pragma once
 
 #include "ImageEffectType.h"
+#include "../json/json.hpp"
+#include <string>
+#include <vector>
 
 namespace pixelpart {
 class ImageEffectCollection {

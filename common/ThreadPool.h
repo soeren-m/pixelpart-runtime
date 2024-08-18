@@ -1,18 +1,18 @@
 #pragma once
 
-#ifndef __EMSCRIPTEN__
+#ifdef PIXELPART_MULTITHREADING
 
-#include "Types.h"
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <utility>
 #include <vector>
 #include <queue>
 #include <unordered_set>
-#include <utility>
-#include <memory>
 #include <thread>
+#include <future>
 #include <mutex>
 #include <condition_variable>
-#include <functional>
-#include <future>
 
 namespace pixelpart {
 class ThreadPool {

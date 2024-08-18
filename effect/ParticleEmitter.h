@@ -1,6 +1,11 @@
 #pragma once
 
 #include "Node.h"
+#include "../common/Types.h"
+#include "../common/Math.h"
+#include "../common/Curve.h"
+#include "AnimatedProperty.h"
+#include "../json/json.hpp"
 
 namespace pixelpart {
 struct ParticleEmitter : public Node {

@@ -1,5 +1,7 @@
 #include "ColorSolver.h"
+#include "../common/Math.h"
 #include "../common/Color.h"
+#include <cmath>
 
 namespace pixelpart {
 ColorSolver::ColorSolver() {
@@ -7,7 +9,7 @@ ColorSolver::ColorSolver() {
 }
 
 void ColorSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
+	ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
 	for(uint32_t p = 0u; p < numParticles; p++) {
 		vec4_t hsv = rgb2hsv(particleType.color.get(particles.life[p]));
 
@@ -21,7 +23,7 @@ void ColorSolver::solve(const ParticleEmitter& particleEmitter, const ParticleTy
 	}
 }
 
-void ColorSolver::refresh(const Effect& effect) {
+void ColorSolver::prepare(const Effect& effect) {
 
 }
 }

@@ -1,5 +1,6 @@
 #include "VariantParameter.h"
 #include "../common/Json.h"
+#include <algorithm>
 
 namespace pixelpart {
 VariantParameter::Value VariantParameter::Value::IntValue(int_t v) {
@@ -141,10 +142,6 @@ VariantParameter::Value VariantParameter::Value::ImageResourceValue(const std::s
 	value.data.string = v;
 
 	return value;
-}
-
-VariantParameter::Value::Value() : type(type_int) {
-	data.integer = 0;
 }
 
 int_t VariantParameter::Value::getInt() const {

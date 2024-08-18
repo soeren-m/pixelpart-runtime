@@ -4,6 +4,7 @@
 #include "BlendMode.h"
 #include "LightingMode.h"
 #include "../shadergraph/ShaderGraph.h"
+#include "../json/json.hpp"
 
 namespace pixelpart {
 struct MaterialResource : public Resource {

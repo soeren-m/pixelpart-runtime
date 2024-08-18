@@ -1,7 +1,14 @@
 #pragma once
 
 #include "Node.h"
+#include "../common/Types.h"
+#include "../common/Math.h"
+#include "StaticProperty.h"
+#include "AnimatedProperty.h"
+#include "../json/json.hpp"
 #include <random>
+#include <string>
+#include <vector>
 
 namespace pixelpart {
 struct ForceField : public Node {

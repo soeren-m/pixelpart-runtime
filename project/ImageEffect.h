@@ -1,6 +1,10 @@
 #pragma once
 
+#include "../common/VariantParameter.h"
 #include "ImageEffectType.h"
+#include "../json/json.hpp"
+#include <string>
+#include <vector>
 
 namespace pixelpart {
 struct ImageEffect {
@@ -8,7 +12,7 @@ struct ImageEffect {
 	std::vector<VariantParameter::Value> parameters;
 	bool visible = true;
 
-	ImageEffect();
+	ImageEffect() = default;
 	ImageEffect(const ImageEffectType& effectType);
 };
 

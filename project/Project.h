@@ -1,9 +1,13 @@
 #pragma once
 
+#include "../common/Types.h"
 #include "../effect/Effect.h"
 #include "ImageEffectSettings.h"
 #include "CameraSettings.h"
 #include "RenderSettings.h"
+#include "../json/json.hpp"
+#include <string>
+#include <istream>
 
 namespace pixelpart {
 struct Project {
@@ -15,6 +19,9 @@ struct Project {
 	CameraSettings cameraSettings;
 	RenderSettings renderSettings;
 	RenderSettings previewSettings;
+
+	bool isNameUsed(const std::string& name) const;
+	bool isResourceUsed(const std::string& resourceId) const;
 };
 
 void to_json(nlohmann::ordered_json& j, const Project& project);

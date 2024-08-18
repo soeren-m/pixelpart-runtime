@@ -1,13 +1,17 @@
 #pragma once
 
+#include "../common/Types.h"
+#include "../common/Math.h"
 #include "../effect/Effect.h"
-#include "ParticleContainer.h"
+#include "../effect/ParticleEmitter.h"
+#include "ParticleCollection.h"
 #include "Random.h"
+#include <vector>
 
 namespace pixelpart {
 class ParticleGenerator {
 public:
-	ParticleGenerator(const Effect& fx, std::vector<ParticleContainer>& state);
+	ParticleGenerator(const Effect& fx, std::vector<ParticleCollection>& particleColl);
 
 	uint32_t generate(uint32_t count, uint32_t parentParticle, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, float_t dt, float_t t);
 
@@ -60,7 +64,7 @@ private:
 		uint32_t gridSizeX, uint32_t gridSizeY, uint32_t gridSizeZ, uint32_t& gridIndex);
 
 	const Effect& effect;
-	std::vector<ParticleContainer>& particleState;
+	std::vector<ParticleCollection>& particleCollections;
 
 	uint32_t nextParticleId = 0u;
 	std::vector<uint32_t> particleEmitterGridIndices;

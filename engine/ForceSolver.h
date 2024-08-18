@@ -1,7 +1,12 @@
 #pragma once
 
 #include "ParticleSolver.h"
+#include "../common/Math.h"
+#include "../effect/ForceField.h"
+#include "../effect/ResourceCollection.h"
+#include "../effect/VectorFieldResource.h"
 #include <bitset>
+#include <vector>
 
 namespace pixelpart {
 class ForceSolver : public ParticleSolver {
@@ -9,12 +14,12 @@ public:
 	ForceSolver();
 
 	virtual void solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const override;
+		ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt) const override;
 
-	virtual void refresh(const Effect& effect) override;
+	virtual void prepare(const Effect& effect) override;
 
 private:
-	void solve(const ParticleType& particleType, ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const;
+	void solve(const ParticleType& particleType, ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const;
 
 	vec3_t sampleAttractionField(const ForceField::AttractionField& attractionField,
 		const vec3_t& position, float_t size,

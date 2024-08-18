@@ -1,10 +1,8 @@
 #include "ImageEffect.h"
 #include "../common/Json.h"
+#include <cstddef>
 
 namespace pixelpart {
-ImageEffect::ImageEffect() {
-
-}
 ImageEffect::ImageEffect(const ImageEffectType& effectType) : type(effectType.name), parameters(effectType.parameters.size()) {
 	for(std::size_t p = 0u; p < parameters.size(); p++) {
 		parameters[p] = effectType.parameters[p].defaultValue;

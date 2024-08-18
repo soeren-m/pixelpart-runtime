@@ -1,6 +1,9 @@
 #pragma once
 
+#include "Types.h"
+#include "Math.h"
 #include "Curve.h"
+#include "../json/json.hpp"
 
 namespace pixelpart {
 template <typename T>

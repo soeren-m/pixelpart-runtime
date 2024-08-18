@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Types.h"
+#include "Math.h"
+#include "../json/json.hpp"
 
 namespace pixelpart {
 struct BoolTag { };
@@ -49,7 +51,7 @@ struct VariantValue {
 	static VariantValue Float3(const vec3_t& v);
 	static VariantValue Float4(const vec4_t& v);
 
-	VariantValue();
+	VariantValue() = default;
 	VariantValue(Type t);
 
 	template <typename T>

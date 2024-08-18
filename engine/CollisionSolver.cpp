@@ -1,6 +1,8 @@
 #include "CollisionSolver.h"
 #include "../glm/gtx/norm.hpp"
 #include "../glm/gtx/rotate_vector.hpp"
+#include <cmath>
+#include <algorithm>
 
 namespace pixelpart {
 CollisionSolver::ColliderSegment::ColliderSegment(const Collider& collider) :
@@ -47,7 +49,7 @@ CollisionSolver::CollisionSolver() : grid(1u, 1u) {
 }
 
 void CollisionSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
+	ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
 	if(!planeColliders.empty()) {
 		for(uint32_t p = 0u; p < numParticles; p++) {
 			for(const PlaneColliderSegment& collider : planeColliders) {
@@ -94,7 +96,7 @@ void CollisionSolver::solve(const ParticleEmitter& particleEmitter, const Partic
 	}
 }
 
-void CollisionSolver::refresh(const Effect& effect) {
+void CollisionSolver::prepare(const Effect& effect) {
 	lineColliders.clear();
 	planeColliders.clear();
 	grid.clear();
@@ -294,7 +296,7 @@ CollisionSolver::Intersection CollisionSolver::calculateRayColliderIntersection(
 	return Intersection(point);
 }
 
-void CollisionSolver::solve(const ParticleType& particleType, ParticleWritePtr particles, uint32_t p, float_t t, float_t dt, const LineColliderSegment& collider) const {
+void CollisionSolver::solve(const ParticleType& particleType, ParticleCollection::WritePtr particles, uint32_t p, float_t t, float_t dt, const LineColliderSegment& collider) const {
 	vec2_t closestPoint = calculateClosestPointOnLine(particles.globalPosition[p], collider);
 	if(!isPointOnLineSegment(closestPoint, collider.startPoint, collider.endPoint)) {
 		return;
@@ -345,7 +347,7 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleWritePtr p
 		}
 	}
 }
-void CollisionSolver::solve(const ParticleType& particleType, ParticleWritePtr particles, uint32_t p, float_t t, float_t dt, const PlaneColliderSegment& collider) const {
+void CollisionSolver::solve(const ParticleType& particleType, ParticleCollection::WritePtr particles, uint32_t p, float_t t, float_t dt, const PlaneColliderSegment& collider) const {
 	vec3_t closestPoint = calculateClosestPointOnPlane(particles.globalPosition[p], collider);
 	if(!isPointOnCollider(closestPoint, collider)) {
 		return;

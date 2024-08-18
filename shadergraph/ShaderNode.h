@@ -1,7 +1,13 @@
 #pragma once
 
-#include "ShaderNodeType.h"
+#include "../common/Types.h"
+#include "../common/Math.h"
+#include "../common/VariantParameter.h"
 #include "../common/Constants.h"
+#include "ShaderNodeType.h"
+#include "../json/json.hpp"
+#include <string>
+#include <vector>
 
 namespace pixelpart {
 struct ShaderNode {
@@ -10,7 +16,7 @@ struct ShaderNode {
 		id_t nodeId = nullId;
 		uint32_t slot = 0u;
 
-		Link();
+		Link() = default;
 		Link(id_t l, id_t n, uint32_t s);
 	};
 
@@ -22,7 +28,7 @@ struct ShaderNode {
 
 	vec2_t position = vec2_t(0.0);
 
-	ShaderNode();
+	ShaderNode() = default;
 	ShaderNode(const ShaderNodeType& nodeType);
 };
 

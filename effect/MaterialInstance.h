@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../common/VariantParameter.h"
+#include "../json/json.hpp"
+#include <string>
 #include <unordered_map>
 
 namespace pixelpart {

@@ -1,6 +1,11 @@
 #pragma once
 
+#include "Types.h"
+#include "Math.h"
 #include "Curve.h"
+#include "../json/json.hpp"
+#include <string>
+#include <vector>
 
 namespace pixelpart {
 struct VariantParameter {
@@ -17,7 +22,7 @@ struct VariantParameter {
 			type_curve,
 			type_gradient,
 			type_resource_image
-		} type;
+		} type = type_int;
 
 		struct Data {
 			int_t integer = 0;
@@ -37,8 +42,6 @@ struct VariantParameter {
 		static Value GradientValue(const Curve<vec3_t>& v);
 		static Value GradientValue(const Curve<vec4_t>& v);
 		static Value ImageResourceValue(const std::string& v);
-
-		Value();
 
 		int_t getInt() const;
 		float_t getFloat() const;

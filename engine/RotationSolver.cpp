@@ -1,4 +1,5 @@
 #include "RotationSolver.h"
+#include "../common/Math.h"
 
 namespace pixelpart {
 RotationSolver::RotationSolver() {
@@ -6,7 +7,7 @@ RotationSolver::RotationSolver() {
 }
 
 void RotationSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
+	ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
 	switch(particleType.rotationMode) {
 		case RotationMode::angle: {
 			for(uint32_t p = 0u; p < numParticles; p++) {
@@ -32,7 +33,7 @@ void RotationSolver::solve(const ParticleEmitter& particleEmitter, const Particl
 	}
 }
 
-void RotationSolver::refresh(const Effect& effect) {
+void RotationSolver::prepare(const Effect& effect) {
 
 }
 }

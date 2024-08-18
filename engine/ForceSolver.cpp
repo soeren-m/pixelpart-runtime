@@ -1,6 +1,8 @@
 #include "ForceSolver.h"
 #include "Noise.h"
 #include "../glm/gtx/euler_angles.hpp"
+#include <cmath>
+#include <algorithm>
 
 namespace pixelpart {
 ForceSolver::ForceSolver() {
@@ -8,7 +10,7 @@ ForceSolver::ForceSolver() {
 }
 
 void ForceSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
+	ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
 	for(std::size_t f = 0u; f < forceFields.size(); f++) {
 		const ForceField& forceField = forceFields[f];
 		if(forceFieldExclusionSets[f][particleType.id] ||
@@ -21,7 +23,7 @@ void ForceSolver::solve(const ParticleEmitter& particleEmitter, const ParticleTy
 	}
 }
 
-void ForceSolver::refresh(const Effect& effect) {
+void ForceSolver::prepare(const Effect& effect) {
 	effectResources = &effect.resources;
 	is3d = effect.is3d;
 
@@ -36,7 +38,7 @@ void ForceSolver::refresh(const Effect& effect) {
 	}
 }
 
-void ForceSolver::solve(const ParticleType& particleType, ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const {
+void ForceSolver::solve(const ParticleType& particleType, ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const {
 	float_t life = std::fmod(t - forceField.lifetimeStart, forceField.lifetimeDuration) / forceField.lifetimeDuration;
 	vec3_t forceFieldCenter = forceField.position.get(life);
 	vec3_t forceFieldSize = forceField.size.get(life) * 0.5;

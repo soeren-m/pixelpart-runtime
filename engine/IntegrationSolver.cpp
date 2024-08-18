@@ -1,4 +1,6 @@
 #include "IntegrationSolver.h"
+#include "../common/Math.h"
+#include <cmath>
 
 namespace pixelpart {
 IntegrationSolver::IntegrationSolver() {
@@ -6,7 +8,7 @@ IntegrationSolver::IntegrationSolver() {
 }
 
 void IntegrationSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
+	ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
 	float_t particleEmitterLife = std::fmod(t - particleEmitter.lifetimeStart, particleEmitter.lifetimeDuration) / particleEmitter.lifetimeDuration;
 	vec3_t particleEmitterPosition = particleEmitter.position.get(particleEmitterLife);
 
@@ -20,7 +22,7 @@ void IntegrationSolver::solve(const ParticleEmitter& particleEmitter, const Part
 	}
 }
 
-void IntegrationSolver::refresh(const Effect& effect) {
+void IntegrationSolver::prepare(const Effect& effect) {
 
 }
 }

@@ -2,26 +2,28 @@
 #include "../common/Constants.h"
 #include "../glm/gtx/euler_angles.hpp"
 #include "../glm/gtx/rotate_vector.hpp"
+#include <cmath>
+#include <algorithm>
 
 namespace pixelpart {
 const float_t pi = 3.14159265358979323846;
 
-ParticleGenerator::ParticleGenerator(const Effect& fx, std::vector<ParticleContainer>& state) : effect(fx), particleState(state) {
+ParticleGenerator::ParticleGenerator(const Effect& fx, std::vector<ParticleCollection>& particleColl) : effect(fx), particleCollections(particleColl) {
 
 }
 
 uint32_t ParticleGenerator::generate(uint32_t count, uint32_t parentParticle, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, float_t dt, float_t t) {
-	ParticleContainer& particleContainer = particleState[particleTypeIndex];
-	count = particleContainer.spawn(count);
+	ParticleCollection& particleCollection = particleCollections[particleTypeIndex];
+	count = particleCollection.add(count);
 
 	const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
 	const ParticleEmitter& particleEmitter = effect.particleEmitters.getByIndex(particleEmitterIndex);
-	ParticleWritePtr particles = particleState[particleTypeIndex].getParticleWritePtr();
-	ParticleReadPtr parentParticles = parentParticleTypeIndex != nullId ? particleState[parentParticleTypeIndex].getParticleReadPtr() : ParticleReadPtr();
+	ParticleCollection::WritePtr particles = particleCollections[particleTypeIndex].getWritePtr();
+	ParticleCollection::ReadPtr parentParticles = parentParticleTypeIndex != nullId ? particleCollections[parentParticleTypeIndex].getReadPtr() : ParticleCollection::ReadPtr();
 	float_t alpha = t / particleEmitter.lifetimeDuration;
 
 	for(uint32_t i = 0u; i < count; i++) {
-		uint32_t p = particleContainer.getNumParticles() - count + i;
+		uint32_t p = particleCollection.getCount() - count + i;
 
 		particles.id[p] = nextParticleId++;
 		particles.parentId[p] = parentParticle != nullId ? parentParticles.id[parentParticle] : nullId;

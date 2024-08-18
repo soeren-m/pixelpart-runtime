@@ -50,9 +50,6 @@ VariantValue VariantValue::Float4(const vec4_t& v) {
 	return value;
 }
 
-VariantValue::VariantValue() {
-
-}
 VariantValue::VariantValue(Type t) : type(t) {
 	switch(type) {
 		case type_bool:

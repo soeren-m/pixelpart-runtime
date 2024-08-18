@@ -1,10 +1,13 @@
 #include "CPUParticleEngine.h"
+#include "../common/Constants.h"
+#include <cmath>
+#include <algorithm>
 
 namespace pixelpart {
-CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity) : ParticleEngine(fx), particleCapacity(capacity), particleGenerator(fx, particleContainers) {
+CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity) : ParticleEngine(fx), particleCapacity(capacity), particleGenerator(fx, particleCollections) {
 
 }
-#ifndef __EMSCRIPTEN__
+#ifdef PIXELPART_MULTITHREADING
 CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity, std::shared_ptr<ThreadPool> thPool) : CPUParticleEngine(fx, capacity) {
 	threadPool = thPool;
 }
@@ -13,8 +16,8 @@ CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity, std::s
 void CPUParticleEngine::step(float_t dt) {
 	time += dt;
 
-	if(effect.particleTypes.getCount() != particleContainers.size()) {
-		particleContainers.assign(effect.particleTypes.getCount(), ParticleContainer(particleCapacity));
+	if(effect.particleTypes.getCount() != particleCollections.size()) {
+		particleCollections.assign(effect.particleTypes.getCount(), ParticleCollection(particleCapacity));
 		emissionCount.assign(effect.particleTypes.getCount(), 0.0);
 	}
 
@@ -94,15 +97,15 @@ void CPUParticleEngine::step(float_t dt) {
 	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
 		const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
 		const ParticleEmitter& particleEmitter = effect.particleEmitters.get(particleType.parentId);
-		ParticleContainer& particleContainer = particleContainers[particleTypeIndex];
-		ParticleWritePtr particles = particleContainer.getParticleWritePtr();
+		ParticleCollection& particleCollection = particleCollections[particleTypeIndex];
+		ParticleCollection::WritePtr particles = particleCollection.getWritePtr();
 
 		const std::vector<uint32_t>& subTypes = particleSubTypes[particleTypeIndex];
 		if(subTypes.empty()) {
 			continue;
 		}
 
-		for(uint32_t p = 0u; p < particleContainer.getNumParticles(); p++) {
+		for(uint32_t p = 0u; p < particleCollection.getCount(); p++) {
 			for(uint32_t subParticleTypeIndex : subTypes) {
 				const ParticleType& subParticleType = effect.particleTypes.getByIndex(subParticleTypeIndex);
 
@@ -155,12 +158,12 @@ void CPUParticleEngine::step(float_t dt) {
 		}
 	}
 
-	for(ParticleContainer& particleContainer : particleContainers) {
-		ParticleReadPtr particles = particleContainer.getParticleReadPtr();
+	for(ParticleCollection& particleCollection : particleCollections) {
+		ParticleCollection::ReadPtr particles = particleCollection.getReadPtr();
 
-		for(uint32_t p = 0u; p < particleContainer.getNumParticles(); ) {
+		for(uint32_t p = 0u; p < particleCollection.getCount(); ) {
 			if(particles.life[p] > 1.0) {
-				particleContainer.kill(p);
+				particleCollection.remove(p);
 			}
 			else {
 				p++;
@@ -170,25 +173,25 @@ void CPUParticleEngine::step(float_t dt) {
 
 	numTotalActiveThreads = 1u;
 
-	sizeSolver.refresh(effect);
-	colorSolver.refresh(effect);
-	accelerationSolver.refresh(effect);
-	forceSolver.refresh(effect);
-	collisionSolver.refresh(effect);
-	motionPathSolver.refresh(effect);
-	rotationSolver.refresh(effect);
-	integrationSolver.refresh(effect);
-	lifeSolver.refresh(effect);
+	sizeSolver.prepare(effect);
+	colorSolver.prepare(effect);
+	accelerationSolver.prepare(effect);
+	forceSolver.prepare(effect);
+	collisionSolver.prepare(effect);
+	motionPathSolver.prepare(effect);
+	rotationSolver.prepare(effect);
+	integrationSolver.prepare(effect);
+	lifeSolver.prepare(effect);
 
 	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
 		const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
 		const ParticleEmitter& particleEmitter = effect.particleEmitters.get(particleType.parentId);
-		ParticleContainer& particleContainer = particleContainers[particleTypeIndex];
+		ParticleCollection& particleCollection = particleCollections[particleTypeIndex];
 
-		uint32_t numParticles = particleContainer.getNumParticles();
+		uint32_t numParticles = particleCollection.getCount();
 		uint32_t numActiveThreads = 1u;
 
-#ifndef __EMSCRIPTEN__
+#ifdef PIXELPART_MULTITHREADING
 		uint32_t numAvailableThreads = threadPool != nullptr ? static_cast<uint32_t>(threadPool->getNumThreads()) : 1u;
 		numActiveThreads = std::min(std::max(numParticles / numParticlesPerThread, 1u), numAvailableThreads);
 
@@ -204,7 +207,7 @@ void CPUParticleEngine::step(float_t dt) {
 
 				threadPool->enqueue(threadIndex, &CPUParticleEngine::stepParticles, this,
 					particleEmitter, particleType,
-					particleContainer.getParticleWritePtr(workgroupIndex), workgroupSize,
+					particleCollection.getWritePtr(workgroupIndex), workgroupSize,
 					time, dt);
 
 				workgroupIndex += workgroupSize;
@@ -218,13 +221,13 @@ void CPUParticleEngine::step(float_t dt) {
 
 		if(numActiveThreads <= 1u) {
 			stepParticles(particleEmitter, particleType,
-				particleContainer.getParticleWritePtr(), numParticles,
+				particleCollection.getWritePtr(), numParticles,
 				time, dt);
 		}
 
 		if(!effect.is3d) {
-			ParticleWritePtr particles = particleContainer.getParticleWritePtr();
-			for(uint32_t p = 0u; p < particleContainer.getNumParticles(); p++) {
+			ParticleCollection::WritePtr particles = particleCollection.getWritePtr();
+			for(uint32_t p = 0u; p < particleCollection.getCount(); p++) {
 				particles.rotation[p].y = 0.0;
 				particles.rotation[p].z = 0.0;
 				particles.force[p].z = 0.0;
@@ -241,8 +244,8 @@ void CPUParticleEngine::restart(bool reset) {
 	time = 0.0;
 
 	if(reset) {
-		for(ParticleContainer& particleContainer : particleContainers) {
-			particleContainer.killAll();
+		for(ParticleCollection& particleCollection : particleCollections) {
+			particleCollection.removeAll();
 		}
 		for(float_t& count : emissionCount) {
 			count = 0.0;
@@ -289,25 +292,25 @@ void CPUParticleEngine::spawnParticles(id_t particleTypeId, uint32_t count) {
 
 uint32_t CPUParticleEngine::getNumParticles() const {
 	uint32_t count = 0u;
-	for(const ParticleContainer& particleContainer : particleContainers) {
-		count += particleContainer.getNumParticles();
+	for(const ParticleCollection& particleCollection : particleCollections) {
+		count += particleCollection.getCount();
 	}
 
 	return count;
 }
 uint32_t CPUParticleEngine::getNumParticles(uint32_t particleTypeIndex) const {
-	if(particleTypeIndex >= particleContainers.size()) {
+	if(particleTypeIndex >= particleCollections.size()) {
 		return 0u;
 	}
 
-	return particleContainers[particleTypeIndex].getNumParticles();
+	return particleCollections[particleTypeIndex].getCount();
 }
-ParticleReadPtr CPUParticleEngine::getParticles(uint32_t particleTypeIndex) const {
-	if(particleTypeIndex >= particleContainers.size()) {
-		return ParticleReadPtr();
+ParticleCollection::ReadPtr CPUParticleEngine::getParticles(uint32_t particleTypeIndex) const {
+	if(particleTypeIndex >= particleCollections.size()) {
+		return ParticleCollection::ReadPtr();
 	}
 
-	return particleContainers[particleTypeIndex].getParticleReadPtr();
+	return particleCollections[particleTypeIndex].getReadPtr();
 }
 
 uint32_t CPUParticleEngine::getParticleCapacity() const {
@@ -319,7 +322,7 @@ uint32_t CPUParticleEngine::getNumActiveThreads() const {
 }
 
 void CPUParticleEngine::stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleWritePtr particles, uint32_t numParticles,
+	ParticleCollection::WritePtr particles, uint32_t numParticles,
 	float_t t, float_t dt) const {
 	sizeSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
 	colorSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);

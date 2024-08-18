@@ -4,6 +4,74 @@
 namespace pixelpart {
 const uint32_t Project::version = 8u;
 
+bool Project::isNameUsed(const std::string& name) const {
+	for(const ParticleEmitter& particleEmitter : effect.particleEmitters) {
+		if(particleEmitter.name == name) {
+			return true;
+		}
+	}
+	for(const ParticleType& particleType : effect.particleTypes) {
+		if(particleType.name == name) {
+			return true;
+		}
+	}
+	for(const ForceField& forceField : effect.forceFields) {
+		if(forceField.name == name) {
+			return true;
+		}
+	}
+	for(const Collider& collider : effect.colliders) {
+		if(collider.name == name) {
+			return true;
+		}
+	}
+	for(const LightSource& lightSource : effect.lightSources) {
+		if(lightSource.name == name) {
+			return true;
+		}
+	}
+
+	return false;
+}
+bool Project::isResourceUsed(const std::string& resourceId) const {
+	for(const ParticleType& particleType : effect.particleTypes) {
+		if(particleType.materialInstance.materialId == resourceId) {
+			return true;
+		}
+		if(particleType.meshRendererSettings.meshResourceId == resourceId) {
+			return true;
+		}
+
+		for(const auto& materialParameterEntry : particleType.materialInstance.materialParameters) {
+			if(materialParameterEntry.second.type == pixelpart::VariantParameter::Value::type_resource_image &&
+				resourceId == materialParameterEntry.second.getResourceId()) {
+				return true;
+			}
+		}
+	}
+
+	for(const ForceField& forceField : effect.forceFields) {
+		if(resourceId == forceField.vectorField.resourceId) {
+			return true;
+		}
+	}
+
+	for(const auto& resourceEntry : effect.resources.materials) {
+		const MaterialResource& material = resourceEntry.second;
+
+		for(const auto& nodeEntry : material.shaderGraph.getNodes()) {
+			for(const auto& nodeParameter : nodeEntry.second.parameters) {
+				if(nodeParameter.type == pixelpart::VariantParameter::Value::type_resource_image &&
+					resourceId == nodeParameter.getResourceId()) {
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
 void to_json(nlohmann::ordered_json& j, const Project& project) {
 	j = nlohmann::ordered_json{
 		{ "version", Project::version },
@@ -28,7 +96,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 		if(particleEmitter.name.empty()) {
 			uint32_t counter = 1u;
 			std::string name = "Emitter";
-			while(isNameUsedInEffect(project.effect, name)) {
+			while(project.isNameUsed( name)) {
 				name = "Emitter" + std::to_string(counter++);
 			}
 
@@ -40,7 +108,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 		if(particleType.name.empty()) {
 			uint32_t counter = 1u;
 			std::string name = "Particle";
-			while(isNameUsedInEffect(project.effect, name)) {
+			while(project.isNameUsed(name)) {
 				name = "Particle" + std::to_string(counter++);
 			}
 
@@ -52,7 +120,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 		if(forceField.name.empty()) {
 			uint32_t counter = 1u;
 			std::string name = "Force";
-			while(isNameUsedInEffect(project.effect, name)) {
+			while(project.isNameUsed(name)) {
 				name = "Force" + std::to_string(counter++);
 			}
 
@@ -64,7 +132,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 		if(collider.name.empty()) {
 			uint32_t counter = 1u;
 			std::string name = "Collider";
-			while(isNameUsedInEffect(project.effect, name)) {
+			while(project.isNameUsed(name)) {
 				name = "Collider" + std::to_string(counter++);
 			}
 

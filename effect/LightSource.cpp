@@ -1,4 +1,5 @@
 #include "LightSource.h"
+#include "../common/Json.h"
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const LightSource& lightSource) {

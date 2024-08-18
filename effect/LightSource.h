@@ -1,6 +1,10 @@
 #pragma once
 
 #include "Node.h"
+#include "../common/Types.h"
+#include "../common/Math.h"
+#include "AnimatedProperty.h"
+#include "../json/json.hpp"
 
 namespace pixelpart {
 struct LightSource : public Node {

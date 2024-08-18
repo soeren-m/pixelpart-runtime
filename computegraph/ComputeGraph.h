@@ -1,6 +1,16 @@
 #pragma once
 
+#include "../common/Types.h"
+#include "../common/VariantValue.h"
+#include "../common/Constants.h"
+#include "ComputeNode.h"
 #include "ComputeNodeFactory.h"
+#include "../json/json.hpp"
+#include <memory>
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <stdexcept>
 
 namespace pixelpart {
 class ComputeGraph {

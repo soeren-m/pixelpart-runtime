@@ -1,6 +1,10 @@
 #include "VectorFieldResource.h"
 #include "../common/Compression.h"
 #include "../common/Json.h"
+#include <cstddef>
+#include <string>
+#include <sstream>
+#include <vector>
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
@@ -20,7 +24,7 @@ void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
 		}
 	}
 
-	std::string compressedData = compressAndEncodeString(dataString, CompressionMethod::zlib);
+	std::string compressedData = compressAndEncode(reinterpret_cast<const uint8_t*>(dataString.data()), dataString.size(), CompressionMethod::zlib);
 
 	j = nlohmann::ordered_json{
 		{ "name", resource.name },
@@ -52,8 +56,9 @@ void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
 	std::size_t uncompressedSize = 0u;
 	fromJson(uncompressedSize, j, "uncompressed_size");
 
+	std::vector<uint8_t> uncompressedData = decodeAndDecompress(j.at("field").get<std::string>(), uncompressedSize, compressionMethod);
 	std::istringstream dataStream(
-		decodeAndDecompressToString(j.at("field").get<std::string>(), uncompressedSize, compressionMethod));
+		std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
 	bool finished = false;
 	for(std::size_t z = 0u; z < resource.field.getDepth() && !finished; z++) {

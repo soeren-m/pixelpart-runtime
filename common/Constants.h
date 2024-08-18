@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Types.h"
+#include "Math.h"
 
 namespace pixelpart {
 extern const id_t nullId;

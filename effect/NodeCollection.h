@@ -1,6 +1,10 @@
 #pragma once
 
+#include "../common/Types.h"
+#include "../common/Constants.h"
 #include "Node.h"
+#include <string>
+#include <vector>
 #include <algorithm>
 #include <type_traits>
 

@@ -1,6 +1,8 @@
 #include "ImageResource.h"
 #include "../common/Compression.h"
 #include "../common/Json.h"
+#include <cstddef>
+#include <string>
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const ImageResource& resource) {

@@ -1,6 +1,9 @@
 #include "MeshResource.h"
 #include "../common/Compression.h"
 #include "../common/Json.h"
+#include <cstddef>
+#include <string>
+#include <sstream>
 #include <utility>
 
 namespace pixelpart {
@@ -15,7 +18,7 @@ std::pair<std::string, std::size_t> serializeIntegerData(const std::vector<uint3
 	}
 
 	return std::make_pair(
-		compressAndEncodeString(stringData, CompressionMethod::zlib),
+		compressAndEncode(reinterpret_cast<const uint8_t*>(stringData.data()), stringData.size(), CompressionMethod::zlib),
 		stringData.size());
 }
 std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::vec2>& data) {
@@ -31,7 +34,7 @@ std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::v
 	}
 
 	return std::make_pair(
-		compressAndEncodeString(stringData, CompressionMethod::zlib),
+		compressAndEncode(reinterpret_cast<const uint8_t*>(stringData.data()), stringData.size(), CompressionMethod::zlib),
 		stringData.size());
 }
 std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::vec3>& data) {
@@ -50,13 +53,13 @@ std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::v
 	}
 
 	return std::make_pair(
-		compressAndEncodeString(stringData, CompressionMethod::zlib),
+		compressAndEncode(reinterpret_cast<const uint8_t*>(stringData.data()), stringData.size(), CompressionMethod::zlib),
 		stringData.size());
 }
 
 void deserializeIntegerData(std::vector<uint32_t>& integerData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
-	std::string stringData = decodeAndDecompressToString(compressedData, uncompressedSize, compressionMethod);
-	std::istringstream dataStream(stringData);
+	std::vector<uint8_t> uncompressedData = decodeAndDecompress(compressedData, uncompressedSize, compressionMethod);
+	std::istringstream dataStream(std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
 	while(!dataStream.eof()) {
 		std::string token;
@@ -66,8 +69,8 @@ void deserializeIntegerData(std::vector<uint32_t>& integerData, const std::strin
 	}
 }
 void deserializeVectorData(std::vector<glm::vec2>& vectorData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
-	std::string stringData = decodeAndDecompressToString(compressedData, uncompressedSize, compressionMethod);
-	std::istringstream dataStream(stringData);
+	std::vector<uint8_t> uncompressedData = decodeAndDecompress(compressedData, uncompressedSize, compressionMethod);
+	std::istringstream dataStream(std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
 	while(!dataStream.eof()) {
 		glm::vec2 vector = glm::vec2(0.0);
@@ -83,8 +86,8 @@ void deserializeVectorData(std::vector<glm::vec2>& vectorData, const std::string
 	}
 }
 void deserializeVectorData(std::vector<glm::vec3>& vectorData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
-	std::string stringData = decodeAndDecompressToString(compressedData, uncompressedSize, compressionMethod);
-	std::istringstream dataStream(stringData);
+	std::vector<uint8_t> uncompressedData = decodeAndDecompress(compressedData, uncompressedSize, compressionMethod);
+	std::istringstream dataStream(std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
 	while(!dataStream.eof()) {
 		glm::vec3 vector = glm::vec3(0.0);

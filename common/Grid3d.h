@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstddef>
 #include <vector>
+#include <algorithm>
 
 namespace pixelpart {
 template <typename IntT = std::size_t>

@@ -1,7 +1,10 @@
 #pragma once
 
-#include "StaticProperty.h"
+#include "../common/Types.h"
+#include "../common/Math.h"
+#include "../common/Constants.h"
 #include "AnimatedProperty.h"
+#include <string>
 
 namespace pixelpart {
 struct Node {

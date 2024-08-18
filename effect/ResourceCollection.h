@@ -4,6 +4,8 @@
 #include "MeshResource.h"
 #include "MaterialResource.h"
 #include "VectorFieldResource.h"
+#include "../json/json.hpp"
+#include <string>
 #include <unordered_map>
 
 namespace pixelpart {

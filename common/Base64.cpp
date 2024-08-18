@@ -2,8 +2,7 @@
 #include <stdexcept>
 
 namespace pixelpart {
-namespace base64 {
-std::string encode(const unsigned char* data, std::size_t size) {
+std::string encodeBase64(const unsigned char* data, std::size_t size) {
 	static const char* base64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 	std::string result;
@@ -34,7 +33,7 @@ std::string encode(const unsigned char* data, std::size_t size) {
 	return result;
 }
 
-std::string decode(const std::string& data) {
+std::string decodeBase64(const std::string& data) {
 	const auto decode = [](char c) -> unsigned int {
 		if(c >= 'A' && c <= 'Z') {
 			return c - 'A';
@@ -71,6 +70,5 @@ std::string decode(const std::string& data) {
 	}
 
 	return result;
-}
 }
 }

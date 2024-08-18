@@ -1,4 +1,5 @@
 #include "MotionPathSolver.h"
+#include "../common/Math.h"
 
 namespace pixelpart {
 MotionPathSolver::MotionPathSolver() {
@@ -6,7 +7,7 @@ MotionPathSolver::MotionPathSolver() {
 }
 
 void MotionPathSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
+	ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
 	const float_t positionLookahead = 0.1;
 	const float_t targetLookahead = 0.01;
 
@@ -27,7 +28,7 @@ void MotionPathSolver::solve(const ParticleEmitter& particleEmitter, const Parti
 	}
 }
 
-void MotionPathSolver::refresh(const Effect& effect) {
+void MotionPathSolver::prepare(const Effect& effect) {
 
 }
 }

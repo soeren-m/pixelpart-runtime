@@ -1,5 +1,7 @@
 #include "ShaderGraph.h"
+#include "../common/VariantValue.h"
 #include "../common/StringUtil.h"
+#include <algorithm>
 
 namespace pixelpart {
 ShaderGraph::BuildException::BuildException(const std::string& msg, id_t node, uint32_t slot) : std::runtime_error(msg), nodeId(node), slotIndex(slot) {

@@ -11,8 +11,9 @@
 #include "RotationSolver.h"
 #include "IntegrationSolver.h"
 #include "LifeSolver.h"
+#include <vector>
 
-#ifndef __EMSCRIPTEN__
+#ifdef PIXELPART_MULTITHREADING
 #include "../common/ThreadPool.h"
 #endif
 
@@ -20,7 +21,7 @@ namespace pixelpart {
 class CPUParticleEngine : public ParticleEngine {
 public:
 	CPUParticleEngine(const Effect& fx, uint32_t capacity);
-#ifndef __EMSCRIPTEN__
+#ifdef PIXELPART_MULTITHREADING
 	CPUParticleEngine(const Effect& fx, uint32_t capacity, std::shared_ptr<ThreadPool> thPool);
 #endif
 
@@ -36,17 +37,17 @@ public:
 
 	virtual uint32_t getNumParticles() const override;
 	virtual uint32_t getNumParticles(uint32_t particleTypeIndex) const override;
-	virtual ParticleReadPtr getParticles(uint32_t particleTypeIndex) const override;
+	virtual ParticleCollection::ReadPtr getParticles(uint32_t particleTypeIndex) const override;
 
 	uint32_t getParticleCapacity() const;
 	uint32_t getNumActiveThreads() const;
 
 private:
 	void stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleWritePtr particles, uint32_t numParticles,
+		ParticleCollection::WritePtr particles, uint32_t numParticles,
 		float_t t, float_t dt) const;
 
-	std::vector<ParticleContainer> particleContainers;
+	std::vector<ParticleCollection> particleCollections;
 
 	std::vector<float_t> emissionCount;
 	uint32_t particleCapacity = 0u;
@@ -65,7 +66,7 @@ private:
 	IntegrationSolver integrationSolver;
 	LifeSolver lifeSolver;
 
-#ifndef __EMSCRIPTEN__
+#ifdef PIXELPART_MULTITHREADING
 	std::shared_ptr<ThreadPool> threadPool;
 #endif
 	uint32_t numTotalActiveThreads = 0u;

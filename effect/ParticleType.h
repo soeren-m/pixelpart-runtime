@@ -1,11 +1,16 @@
 #pragma once
 
 #include "Node.h"
+#include "../common/Types.h"
+#include "../common/Math.h"
 #include "RotationMode.h"
 #include "AlignmentMode.h"
 #include "MaterialInstance.h"
 #include "ParticleRendererType.h"
 #include "ParticleRendererSettings.h"
+#include "StaticProperty.h"
+#include "AnimatedProperty.h"
+#include "../json/json.hpp"
 
 namespace pixelpart {
 struct ParticleType : public Node {

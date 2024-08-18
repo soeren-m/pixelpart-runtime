@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../common/VariantValue.h"
+#include "../json/json.hpp"
+#include <string>
 
 namespace pixelpart {
 struct EffectInput {

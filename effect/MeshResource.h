@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Resource.h"
+#include "../glm/glm.hpp"
+#include "../json/json.hpp"
+#include <cstdint>
 #include <vector>
 
 namespace pixelpart {

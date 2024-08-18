@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Types.h"
+#include "../json/json.hpp"
+#include <cmath>
 #include <vector>
 #include <algorithm>
 

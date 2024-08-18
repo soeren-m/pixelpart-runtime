@@ -2,11 +2,15 @@
 
 #include "ComputeNode.h"
 #include <functional>
+#include <memory>
+#include <string>
+#include <vector>
+#include <unordered_map>
 
 namespace pixelpart {
 class ComputeNodeFactory {
 public:
-	ComputeNodeFactory();
+	ComputeNodeFactory() = default;
 
 	template <typename T>
 	void registerNode() {

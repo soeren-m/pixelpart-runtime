@@ -1,6 +1,12 @@
 #pragma once
 
 #include "Node.h"
+#include "../common/Types.h"
+#include "../common/Math.h"
+#include "StaticProperty.h"
+#include "AnimatedProperty.h"
+#include "../json/json.hpp"
+#include <vector>
 
 namespace pixelpart {
 struct Collider : public Node {

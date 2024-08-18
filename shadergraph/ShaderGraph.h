@@ -1,7 +1,15 @@
 #pragma once
 
+#include "../common/Types.h"
+#include "../common/Math.h"
+#include "../common/VariantParameter.h"
+#include "../common/Constants.h"
 #include "ShaderNode.h"
+#include "ShaderNodeType.h"
 #include "ShaderGraphLanguage.h"
+#include "../json/json.hpp"
+#include <string>
+#include <vector>
 #include <unordered_map>
 #include <unordered_set>
 #include <stdexcept>

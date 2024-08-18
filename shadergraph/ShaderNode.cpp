@@ -2,16 +2,10 @@
 #include "../common/Json.h"
 
 namespace pixelpart {
-ShaderNode::Link::Link() {
-
-}
 ShaderNode::Link::Link(id_t l, id_t n, uint32_t s) : id(l), nodeId(n), slot(s) {
 
 }
 
-ShaderNode::ShaderNode() {
-
-}
 ShaderNode::ShaderNode(const ShaderNodeType& nodeType) : type(nodeType.name), inputs(nodeType.inputs.size()), parameters(nodeType.parameters.size()) {
 	for(std::size_t p = 0u; p < parameters.size(); p++) {
 		parameters[p] = nodeType.parameters[p].defaultValue;

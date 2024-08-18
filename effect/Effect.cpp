@@ -1,5 +1,7 @@
 #include "Effect.h"
+#include "../common/Constants.h"
 #include "../common/Json.h"
+#include <vector>
 
 namespace pixelpart {
 template <typename T>
@@ -22,13 +24,13 @@ id_t findUnusedNodeId(const std::vector<T>& nodes) {
 	return id;
 }
 
-void refreshEffectProperties(Effect& effect) {
+void Effect::refreshProperties() {
 	ComputeGraph::InputSet inputValues;
-	for(const auto& entry : effect.inputs) {
+	for(const auto& entry : inputs) {
 		inputValues[entry.first] = entry.second.value;
 	}
 
-	for(ParticleEmitter& particleEmitter : effect.particleEmitters) {
+	for(ParticleEmitter& particleEmitter : particleEmitters) {
 		particleEmitter.position.refresh(inputValues);
 		particleEmitter.size.refresh(inputValues);
 		particleEmitter.orientation.refresh(inputValues);
@@ -36,7 +38,7 @@ void refreshEffectProperties(Effect& effect) {
 		particleEmitter.spread.refresh(inputValues);
 	}
 
-	for(ParticleType& particleType : effect.particleTypes) {
+	for(ParticleType& particleType : particleTypes) {
 		particleType.position.refresh(inputValues);
 		particleType.numParticles.refresh(inputValues);
 		particleType.lifespan.refresh(inputValues);
@@ -68,7 +70,7 @@ void refreshEffectProperties(Effect& effect) {
 		particleType.opacityVariance.refresh(inputValues);
 	}
 
-	for(ForceField& forceField : effect.forceFields) {
+	for(ForceField& forceField : forceFields) {
 		forceField.position.refresh(inputValues);
 		forceField.size.refresh(inputValues);
 		forceField.orientation.refresh(inputValues);
@@ -87,7 +89,7 @@ void refreshEffectProperties(Effect& effect) {
 		forceField.dragField.sizeInfluence.refresh(inputValues);
 	}
 
-	for(Collider& collider : effect.colliders) {
+	for(Collider& collider : colliders) {
 		collider.position.refresh(inputValues);
 		collider.width.refresh(inputValues);
 		collider.orientation.refresh(inputValues);
@@ -96,7 +98,7 @@ void refreshEffectProperties(Effect& effect) {
 		collider.friction.refresh(inputValues);
 	}
 
-	for(LightSource& lightSource : effect.lightSources) {
+	for(LightSource& lightSource : lightSources) {
 		lightSource.position.refresh(inputValues);
 		lightSource.direction.refresh(inputValues);
 		lightSource.range.refresh(inputValues);
@@ -106,74 +108,6 @@ void refreshEffectProperties(Effect& effect) {
 		lightSource.color.refresh(inputValues);
 		lightSource.intensity.refresh(inputValues);
 	}
-}
-
-bool isNameUsedInEffect(const Effect& effect, const std::string& name) {
-	for(const ParticleEmitter& particleEmitter : effect.particleEmitters) {
-		if(particleEmitter.name == name) {
-			return true;
-		}
-	}
-	for(const ParticleType& particleType : effect.particleTypes) {
-		if(particleType.name == name) {
-			return true;
-		}
-	}
-	for(const ForceField& forceField : effect.forceFields) {
-		if(forceField.name == name) {
-			return true;
-		}
-	}
-	for(const Collider& collider : effect.colliders) {
-		if(collider.name == name) {
-			return true;
-		}
-	}
-	for(const LightSource& lightSource : effect.lightSources) {
-		if(lightSource.name == name) {
-			return true;
-		}
-	}
-
-	return false;
-}
-bool isResourceUsedInEffect(const Effect& effect, const std::string& resourceId) {
-	for(const ParticleType& particleType : effect.particleTypes) {
-		if(particleType.materialInstance.materialId == resourceId) {
-			return true;
-		}
-		if(particleType.meshRendererSettings.meshResourceId == resourceId) {
-			return true;
-		}
-
-		for(const auto& materialParameterEntry : particleType.materialInstance.materialParameters) {
-			if(materialParameterEntry.second.type == pixelpart::VariantParameter::Value::type_resource_image &&
-				resourceId == materialParameterEntry.second.getResourceId()) {
-				return true;
-			}
-		}
-	}
-
-	for(const ForceField& forceField : effect.forceFields) {
-		if(resourceId == forceField.vectorField.resourceId) {
-			return true;
-		}
-	}
-
-	for(const auto& resourceEntry : effect.resources.materials) {
-		const MaterialResource& material = resourceEntry.second;
-
-		for(const auto& nodeEntry : material.shaderGraph.getNodes()) {
-			for(const auto& nodeParameter : nodeEntry.second.parameters) {
-				if(nodeParameter.type == pixelpart::VariantParameter::Value::type_resource_image &&
-					resourceId == nodeParameter.getResourceId()) {
-					return true;
-				}
-			}
-		}
-	}
-
-	return false;
 }
 
 void to_json(nlohmann::ordered_json& j, const Effect& effect) {

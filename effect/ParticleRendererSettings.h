@@ -1,6 +1,9 @@
 #pragma once
 
+#include "../common/Types.h"
 #include "ParticleSortCriterion.h"
+#include "../json/json.hpp"
+#include <string>
 
 namespace pixelpart {
 struct ParticleSpriteRendererSettings {

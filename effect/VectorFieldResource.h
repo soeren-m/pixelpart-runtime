@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Resource.h"
+#include "../common/Math.h"
 #include "../common/Grid3d.h"
+#include "../json/json.hpp"
 
 namespace pixelpart {
 struct VectorFieldResource : public Resource {
