@@ -1,7 +1,7 @@
 #include "ParticleGenerator.h"
 #include "../common/Constants.h"
-#include "../glm/glm/gtx/euler_angles.hpp"
-#include "../glm/glm/gtx/rotate_vector.hpp"
+#include "../glm/gtx/euler_angles.hpp"
+#include "../glm/gtx/rotate_vector.hpp"
 
 namespace pixelpart {
 const float_t pi = 3.14159265358979323846;

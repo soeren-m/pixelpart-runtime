@@ -1,6 +1,6 @@
 #include "ForceSolver.h"
 #include "Noise.h"
-#include "../glm/glm/gtx/euler_angles.hpp"
+#include "../glm/gtx/euler_angles.hpp"
 
 namespace pixelpart {
 ForceSolver::ForceSolver() {

@@ -1,6 +1,6 @@
 #include "CollisionSolver.h"
-#include "../glm/glm/gtx/norm.hpp"
-#include "../glm/glm/gtx/rotate_vector.hpp"
+#include "../glm/gtx/norm.hpp"
+#include "../glm/gtx/rotate_vector.hpp"
 
 namespace pixelpart {
 CollisionSolver::ColliderSegment::ColliderSegment(const Collider& collider) :

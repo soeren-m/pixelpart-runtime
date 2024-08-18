@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include "../glm/glm/glm.hpp"
-#include "../json/single_include/nlohmann/json.hpp"
+#include "../glm/glm.hpp"
+#include "../json/json.hpp"
 
 namespace pixelpart {
 using id_t = uint32_t;
