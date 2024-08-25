@@ -7,14 +7,14 @@ template <typename TDerived>
 class ComputeNodeBase : public ComputeNode {
 public:
 	ComputeNodeBase(
-		const std::string& nodeType,
-		const std::string& nodeCategory,
-		const std::vector<std::string>& nodeInputs,
-		const std::vector<std::string>& nodeOutputs,
-		const std::vector<Signature>& nodeSignatures,
-		const std::vector<VariantValue>& nodeDefaultInputs,
-		const std::vector<VariantParameter>& nodeParameters) :
-		ComputeNode(nodeType, nodeCategory, nodeInputs, nodeOutputs, nodeSignatures, nodeDefaultInputs, nodeParameters) {
+		const std::string& type,
+		const std::string& category,
+		const std::vector<std::string>& inputSlots,
+		const std::vector<std::string>& outputSlots,
+		const std::vector<Signature>& signatures,
+		const std::vector<VariantValue>& defaultInputs,
+		const std::vector<VariantParameter>& parameters) :
+		ComputeNode(type, category, inputSlots, outputSlots, signatures, defaultInputs, parameters) {
 
 	}
 

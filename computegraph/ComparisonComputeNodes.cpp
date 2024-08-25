@@ -58,12 +58,12 @@ ApproxEqualComputeNode::ApproxEqualComputeNode() : ComputeNodeBase(typeName,
 		Signature{ { VariantValue::type_float, VariantValue::type_float }, { VariantValue::type_bool } }
 	},
 	{ VariantValue(), VariantValue() },
-	{ VariantParameter::createFloatParameter("compute_param_epsilon", 0.001, 0.0, FLT_MAX) }) {
+	{ VariantParameter::FloatParameter("compute_param_epsilon", 0.001, 0.0, FLT_MAX) }) {
 
 }
 std::vector<VariantValue> ApproxEqualComputeNode::evaluate(const std::vector<VariantValue>& in) const {
 	return std::vector<VariantValue>{
-		VariantValue::Bool(glm::abs(in[0].toFloat() - in[1].toFloat()) <= parameterValues[0].getFloat())
+		VariantValue::Bool(glm::abs(in[0].toFloat() - in[1].toFloat()) <= parameterValue(0).valueFloat())
 	};
 }
 

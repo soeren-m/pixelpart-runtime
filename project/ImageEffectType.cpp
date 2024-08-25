@@ -1,5 +1,4 @@
 #include "ImageEffectType.h"
-#include "../common/Json.h"
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const ImageEffectType& effectType) {
@@ -12,10 +11,9 @@ void to_json(nlohmann::ordered_json& j, const ImageEffectType& effectType) {
 }
 void from_json(const nlohmann::ordered_json& j, ImageEffectType& effectType) {
 	effectType = ImageEffectType();
-
-	fromJson(effectType.name, j, "name");
-	fromJson(effectType.category, j, "category");
-	fromJson(effectType.code, j, "code");
-	fromJson(effectType.parameters, j, "parameters");
+	effectType.name = j.at("name");
+	effectType.category = j.value("category", "");
+	effectType.code = j.value("code", "");
+	effectType.parameters = j.value("parameters", std::vector<VariantParameter>());
 }
 }

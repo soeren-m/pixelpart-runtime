@@ -1,25 +1,24 @@
 #include "VariantParameter.h"
-#include "../common/Json.h"
 #include <algorithm>
 
 namespace pixelpart {
 VariantParameter::Value VariantParameter::Value::IntValue(int_t v) {
 	VariantParameter::Value value;
-	value.type = type_int;
+	value.valueType = type_int;
 	value.data.integer = v;
 
 	return value;
 }
 VariantParameter::Value VariantParameter::Value::FloatValue(float_t v) {
 	VariantParameter::Value value;
-	value.type = type_float;
+	value.valueType = type_float;
 	value.data.numbers[0] = v;
 
 	return value;
 }
 VariantParameter::Value VariantParameter::Value::Float2Value(const vec2_t& v) {
 	VariantParameter::Value value;
-	value.type = type_float2;
+	value.valueType = type_float2;
 	value.data.numbers[0] = v.x;
 	value.data.numbers[1] = v.y;
 
@@ -27,7 +26,7 @@ VariantParameter::Value VariantParameter::Value::Float2Value(const vec2_t& v) {
 }
 VariantParameter::Value VariantParameter::Value::Float3Value(const vec3_t& v) {
 	VariantParameter::Value value;
-	value.type = type_float3;
+	value.valueType = type_float3;
 	value.data.numbers[0] = v.x;
 	value.data.numbers[1] = v.y;
 	value.data.numbers[2] = v.z;
@@ -36,7 +35,7 @@ VariantParameter::Value VariantParameter::Value::Float3Value(const vec3_t& v) {
 }
 VariantParameter::Value VariantParameter::Value::Float4Value(const vec4_t& v) {
 	VariantParameter::Value value;
-	value.type = type_float4;
+	value.valueType = type_float4;
 	value.data.numbers[0] = v.x;
 	value.data.numbers[1] = v.y;
 	value.data.numbers[2] = v.z;
@@ -46,21 +45,21 @@ VariantParameter::Value VariantParameter::Value::Float4Value(const vec4_t& v) {
 }
 VariantParameter::Value VariantParameter::Value::BoolValue(bool v) {
 	VariantParameter::Value value;
-	value.type = type_bool;
+	value.valueType = type_bool;
 	value.data.integer = v ? 1 : 0;
 
 	return value;
 }
 VariantParameter::Value VariantParameter::Value::EnumValue(int_t v) {
 	VariantParameter::Value value;
-	value.type = type_enum;
+	value.valueType = type_enum;
 	value.data.integer = v;
 
 	return value;
 }
 VariantParameter::Value VariantParameter::Value::ColorValue(const vec4_t& v) {
 	VariantParameter::Value value;
-	value.type = type_color;
+	value.valueType = type_color;
 	value.data.numbers[0] = v.x;
 	value.data.numbers[1] = v.y;
 	value.data.numbers[2] = v.z;
@@ -70,12 +69,12 @@ VariantParameter::Value VariantParameter::Value::ColorValue(const vec4_t& v) {
 }
 VariantParameter::Value VariantParameter::Value::CurveValue(const Curve<float_t>& v) {
 	VariantParameter::Value value;
-	value.type = type_curve;
-	value.data.integer = static_cast<int_t>(v.getInterpolation());
+	value.valueType = type_curve;
+	value.data.integer = static_cast<int_t>(v.interpolation());
 
 	for(std::size_t i = 0u; i < 64u; i++) {
-		if(i < v.getNumPoints()) {
-			const Curve<float_t>::Point& point = v.getPoint(i);
+		if(i < v.numPoints()) {
+			const Curve<float_t>::Point& point = v.point(i);
 
 			value.data.numbers[i * 2u + 0u] = point.position;
 			value.data.numbers[i * 2u + 1u] = point.value;
@@ -90,12 +89,12 @@ VariantParameter::Value VariantParameter::Value::CurveValue(const Curve<float_t>
 }
 VariantParameter::Value VariantParameter::Value::GradientValue(const Curve<vec3_t>& v) {
 	VariantParameter::Value value;
-	value.type = type_gradient;
-	value.data.integer = static_cast<int_t>(v.getInterpolation());
+	value.valueType = type_gradient;
+	value.data.integer = static_cast<int_t>(v.interpolation());
 
 	for(std::size_t i = 0u; i < 64u; i++) {
-		if(i < v.getNumPoints()) {
-			const Curve<vec3_t>::Point& point = v.getPoint(i);
+		if(i < v.numPoints()) {
+			const Curve<vec3_t>::Point& point = v.point(i);
 
 			value.data.numbers[i * 4u + 0u] = point.position;
 			value.data.numbers[i * 4u + 1u] = point.value.x;
@@ -114,12 +113,12 @@ VariantParameter::Value VariantParameter::Value::GradientValue(const Curve<vec3_
 }
 VariantParameter::Value VariantParameter::Value::GradientValue(const Curve<vec4_t>& v) {
 	VariantParameter::Value value;
-	value.type = type_gradient;
-	value.data.integer = static_cast<int_t>(v.getInterpolation());
+	value.valueType = type_gradient;
+	value.data.integer = static_cast<int_t>(v.interpolation());
 
 	for(std::size_t i = 0u; i < 64u; i++) {
-		if(i < v.getNumPoints()) {
-			const Curve<vec4_t>::Point& point = v.getPoint(i);
+		if(i < v.numPoints()) {
+			const Curve<vec4_t>::Point& point = v.point(i);
 
 			value.data.numbers[i * 4u + 0u] = point.position;
 			value.data.numbers[i * 4u + 1u] = point.value.x;
@@ -138,37 +137,41 @@ VariantParameter::Value VariantParameter::Value::GradientValue(const Curve<vec4_
 }
 VariantParameter::Value VariantParameter::Value::ImageResourceValue(const std::string& v) {
 	VariantParameter::Value value;
-	value.type = type_resource_image;
+	value.valueType = type_resource_image;
 	value.data.string = v;
 
 	return value;
 }
 
-int_t VariantParameter::Value::getInt() const {
+VariantParameter::Value::Type VariantParameter::Value::type() const {
+	return valueType;
+}
+
+int_t VariantParameter::Value::valueInt() const {
 	return data.integer;
 }
-float_t VariantParameter::Value::getFloat() const {
+float_t VariantParameter::Value::valueFloat() const {
 	return data.numbers[0];
 }
-vec2_t VariantParameter::Value::getFloat2() const {
+vec2_t VariantParameter::Value::valueFloat2() const {
 	return vec2_t(data.numbers[0], data.numbers[1]);
 }
-vec3_t VariantParameter::Value::getFloat3() const {
+vec3_t VariantParameter::Value::valueFloat3() const {
 	return vec3_t(data.numbers[0], data.numbers[1], data.numbers[2]);
 }
-vec4_t VariantParameter::Value::getFloat4() const {
+vec4_t VariantParameter::Value::valueFloat4() const {
 	return vec4_t(data.numbers[0], data.numbers[1], data.numbers[2], data.numbers[3]);
 }
-bool VariantParameter::Value::getBool() const {
+bool VariantParameter::Value::valueBool() const {
 	return data.integer != 0;
 }
-int_t VariantParameter::Value::getEnum() const {
+int_t VariantParameter::Value::valueEnum() const {
 	return data.integer;
 }
-vec4_t VariantParameter::Value::getColor() const {
+vec4_t VariantParameter::Value::valueColor() const {
 	return vec4_t(data.numbers[0], data.numbers[1], data.numbers[2], data.numbers[3]);
 }
-Curve<float_t> VariantParameter::Value::getCurve() const {
+Curve<float_t> VariantParameter::Value::valueCurve() const {
 	std::vector<Curve<float_t>::Point> points;
 	for(std::size_t i = 0u; i < 64u; i++) {
 		if(data.numbers[i * 2u] < 0.0) {
@@ -183,7 +186,7 @@ Curve<float_t> VariantParameter::Value::getCurve() const {
 
 	return Curve<float_t>(points, static_cast<CurveInterpolation>(data.integer));
 }
-Curve<vec3_t> VariantParameter::Value::getGradient() const {
+Curve<vec3_t> VariantParameter::Value::valueGradient() const {
 	std::vector<Curve<vec3_t>::Point> points;
 	for(std::size_t i = 0u; i < 64u; i++) {
 		if(data.numbers[i * 4u] < 0.0) {
@@ -201,7 +204,7 @@ Curve<vec3_t> VariantParameter::Value::getGradient() const {
 
 	return Curve<vec3_t>(points, static_cast<CurveInterpolation>(data.integer));
 }
-Curve<vec4_t> VariantParameter::Value::getGradient4() const {
+Curve<vec4_t> VariantParameter::Value::valueGradient4() const {
 	std::vector<Curve<vec4_t>::Point> points;
 	for(std::size_t i = 0u; i < 64u; i++) {
 		if(data.numbers[i * 4u] < 0.0) {
@@ -220,11 +223,11 @@ Curve<vec4_t> VariantParameter::Value::getGradient4() const {
 
 	return Curve<vec4_t>(points, static_cast<CurveInterpolation>(data.integer));
 }
-std::string VariantParameter::Value::getResourceId() const {
+std::string VariantParameter::Value::valueResourceId() const {
 	return data.string;
 }
 
-VariantParameter VariantParameter::createIntParameter(const std::string& name, int_t def, int_t min, int_t max) {
+VariantParameter VariantParameter::IntParameter(const std::string& name, int_t def, int_t min, int_t max) {
 	return VariantParameter{
 		name,
 		Value::IntValue(def),
@@ -233,7 +236,7 @@ VariantParameter VariantParameter::createIntParameter(const std::string& name, i
 		std::vector<std::string>()
 	};
 }
-VariantParameter VariantParameter::createFloatParameter(const std::string& name, float_t def, float_t min, float_t max) {
+VariantParameter VariantParameter::FloatParameter(const std::string& name, float_t def, float_t min, float_t max) {
 	return VariantParameter{
 		name,
 		Value::FloatValue(def),
@@ -242,7 +245,7 @@ VariantParameter VariantParameter::createFloatParameter(const std::string& name,
 		std::vector<std::string>()
 	};
 }
-VariantParameter VariantParameter::createFloat2Parameter(const std::string& name, const vec2_t& def, const vec2_t& min, const vec2_t& max) {
+VariantParameter VariantParameter::Float2Parameter(const std::string& name, const vec2_t& def, const vec2_t& min, const vec2_t& max) {
 	return VariantParameter{
 		name,
 		Value::Float2Value(def),
@@ -251,7 +254,7 @@ VariantParameter VariantParameter::createFloat2Parameter(const std::string& name
 		std::vector<std::string>()
 	};
 }
-VariantParameter VariantParameter::createFloat3Parameter(const std::string& name, const vec3_t& def, const vec3_t& min, const vec3_t& max) {
+VariantParameter VariantParameter::Float3Parameter(const std::string& name, const vec3_t& def, const vec3_t& min, const vec3_t& max) {
 	return VariantParameter{
 		name,
 		Value::Float3Value(def),
@@ -260,7 +263,7 @@ VariantParameter VariantParameter::createFloat3Parameter(const std::string& name
 		std::vector<std::string>()
 	};
 }
-VariantParameter VariantParameter::createFloat4Parameter(const std::string& name, const vec4_t& def, const vec4_t& min, const vec4_t& max) {
+VariantParameter VariantParameter::Float4Parameter(const std::string& name, const vec4_t& def, const vec4_t& min, const vec4_t& max) {
 	return VariantParameter{
 		name,
 		Value::Float4Value(def),
@@ -269,7 +272,7 @@ VariantParameter VariantParameter::createFloat4Parameter(const std::string& name
 		std::vector<std::string>()
 	};
 }
-VariantParameter VariantParameter::createBoolParameter(const std::string& name, bool def) {
+VariantParameter VariantParameter::BoolParameter(const std::string& name, bool def) {
 	return VariantParameter{
 		name,
 		Value::BoolValue(def),
@@ -278,7 +281,7 @@ VariantParameter VariantParameter::createBoolParameter(const std::string& name, 
 		std::vector<std::string>()
 	};
 }
-VariantParameter VariantParameter::createEnumParameter(const std::string& name, int_t def, const std::vector<std::string>& options) {
+VariantParameter VariantParameter::EnumParameter(const std::string& name, int_t def, const std::vector<std::string>& options) {
 	return VariantParameter{
 		name,
 		Value::EnumValue(std::max(def, static_cast<int_t>(0))),
@@ -287,7 +290,7 @@ VariantParameter VariantParameter::createEnumParameter(const std::string& name, 
 		options
 	};
 }
-VariantParameter VariantParameter::createColorParameter(const std::string& name, const vec4_t& def) {
+VariantParameter VariantParameter::ColorParameter(const std::string& name, const vec4_t& def) {
 	return VariantParameter{
 		name,
 		Value::ColorValue(def),
@@ -296,7 +299,7 @@ VariantParameter VariantParameter::createColorParameter(const std::string& name,
 		std::vector<std::string>()
 	};
 }
-VariantParameter VariantParameter::createCurveParameter(const std::string& name, const Curve<float_t>& def) {
+VariantParameter VariantParameter::CurveParameter(const std::string& name, const Curve<float_t>& def) {
 	return VariantParameter{
 		name,
 		Value::CurveValue(def),
@@ -305,7 +308,7 @@ VariantParameter VariantParameter::createCurveParameter(const std::string& name,
 		std::vector<std::string>()
 	};
 }
-VariantParameter VariantParameter::createGradientParameter(const std::string& name, const Curve<vec3_t>& def) {
+VariantParameter VariantParameter::GradientParameter(const std::string& name, const Curve<vec3_t>& def) {
 	return VariantParameter{
 		name,
 		Value::GradientValue(def),
@@ -314,7 +317,7 @@ VariantParameter VariantParameter::createGradientParameter(const std::string& na
 		std::vector<std::string>()
 	};
 }
-VariantParameter VariantParameter::createGradientParameter(const std::string& name, const Curve<vec4_t>& def) {
+VariantParameter VariantParameter::GradientParameter(const std::string& name, const Curve<vec4_t>& def) {
 	return VariantParameter{
 		name,
 		Value::GradientValue(def),
@@ -323,7 +326,7 @@ VariantParameter VariantParameter::createGradientParameter(const std::string& na
 		std::vector<std::string>()
 	};
 }
-VariantParameter VariantParameter::createImageResourceParameter(const std::string& name) {
+VariantParameter VariantParameter::ImageResourceParameter(const std::string& name) {
 	return VariantParameter{
 		name,
 		Value::ImageResourceValue(""),
@@ -331,41 +334,64 @@ VariantParameter VariantParameter::createImageResourceParameter(const std::strin
 		Value::ImageResourceValue(""),
 		std::vector<std::string>()
 	};
+}
+
+VariantParameter::VariantParameter(const std::string& paramName,
+	const Value& paramDefault, const Value& paramMin, const Value& paramMax,
+	const std::vector<std::string>& paramValueNames) :
+	parameterName(paramName), defaultValue(paramDefault), minValue(paramMin), maxValue(paramMax), valueNames(paramValueNames) {
+
+}
+
+const std::string& VariantParameter::name() const {
+	return parameterName;
+}
+const VariantParameter::Value& VariantParameter::def() const {
+	return defaultValue;
+}
+const VariantParameter::Value& VariantParameter::min() const {
+	return minValue;
+}
+const VariantParameter::Value& VariantParameter::max() const {
+	return maxValue;
+}
+const std::vector<std::string>& VariantParameter::options() const {
+	return valueNames;
 }
 
 void to_json(nlohmann::ordered_json& j, const VariantParameter::Value& value) {
 	j = nlohmann::ordered_json{
-		{ "type", value.type },
+		{ "type", value.type() },
 		{ "value", nullptr }
 	};
 
-	switch(value.type) {
+	switch(value.type()) {
 		case VariantParameter::Value::type_int:
 		case VariantParameter::Value::type_bool:
 		case VariantParameter::Value::type_enum:
-			j["value"] = value.getInt();
+			j["value"] = value.valueInt();
 			break;
 		case VariantParameter::Value::type_float:
-			j["value"] = value.getFloat();
+			j["value"] = value.valueFloat();
 			break;
 		case VariantParameter::Value::type_float2:
-			j["value"] = value.getFloat2();
+			j["value"] = value.valueFloat2();
 			break;
 		case VariantParameter::Value::type_float3:
-			j["value"] = value.getFloat3();
+			j["value"] = value.valueFloat3();
 			break;
 		case VariantParameter::Value::type_float4:
 		case VariantParameter::Value::type_color:
-			j["value"] = value.getFloat4();
+			j["value"] = value.valueFloat4();
 			break;
 		case VariantParameter::Value::type_curve:
-			j["value"] = value.getCurve();
+			j["value"] = value.valueCurve();
 			break;
 		case VariantParameter::Value::type_gradient:
-			j["value"] = value.getGradient();
+			j["value"] = value.valueGradient();
 			break;
 		case VariantParameter::Value::type_resource_image:
-			j["value"] = value.getResourceId();
+			j["value"] = value.valueResourceId();
 			break;
 		default:
 			break;
@@ -373,11 +399,11 @@ void to_json(nlohmann::ordered_json& j, const VariantParameter::Value& value) {
 }
 void to_json(nlohmann::ordered_json& j, const VariantParameter& parameter) {
 	j = nlohmann::ordered_json{
-		{ "name", parameter.name },
-		{ "default_value", parameter.defaultValue },
-		{ "min_value", parameter.minValue },
-		{ "max_value", parameter.maxValue },
-		{ "value_names", parameter.valueNames }
+		{ "name", parameter.name() },
+		{ "default_value", parameter.def() },
+		{ "min_value", parameter.min() },
+		{ "max_value", parameter.max() },
+		{ "value_names", parameter.options() }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, VariantParameter::Value& value) {
@@ -423,12 +449,11 @@ void from_json(const nlohmann::ordered_json& j, VariantParameter::Value& value) 
 	}
 }
 void from_json(const nlohmann::ordered_json& j, VariantParameter& parameter) {
-	parameter = VariantParameter();
-
-	fromJson(parameter.name, j, "name");
-	fromJson(parameter.defaultValue, j, "default_value");
-	fromJson(parameter.minValue, j, "min_value");
-	fromJson(parameter.maxValue, j, "max_value");
-	fromJson(parameter.valueNames, j, "value_names");
+	parameter = VariantParameter(
+		j.at("name"),
+		j.value("default_value", VariantParameter::Value()),
+		j.value("min_value", VariantParameter::Value()),
+		j.value("max_value", VariantParameter::Value()),
+		j.value("value_names", std::vector<std::string>()));
 }
 }

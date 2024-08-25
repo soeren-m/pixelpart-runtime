@@ -6,7 +6,11 @@
 #include <unordered_map>
 
 namespace pixelpart {
-struct MaterialInstance {
+class MaterialInstance {
+public:
+	//MaterialInstance
+
+private:
 	bool isBuiltInMaterial = true;
 	std::string materialId;
 	std::unordered_map<id_t, VariantParameter::Value> materialParameters;

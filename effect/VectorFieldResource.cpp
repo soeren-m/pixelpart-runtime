@@ -7,12 +7,21 @@
 #include <vector>
 
 namespace pixelpart {
+VectorFieldResource::VectorFieldResource(const std::string& resName, const Grid3d<vec3_t>& data) : Resource(resName),
+	fieldData(data) {
+
+}
+
+const Grid3d<vec3_t>& VectorFieldResource::field() const {
+	return fieldData;
+}
+
 void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
 	std::string dataString;
-	for(std::size_t z = 0u; z < resource.field.getDepth(); z++) {
-		for(std::size_t y = 0u; y < resource.field.getHeight(); y++) {
-			for(std::size_t x = 0u; x < resource.field.getWidth(); x++) {
-				const vec3_t& vector = resource.field(x, y, z);
+	for(std::size_t z = 0u; z < resource.field().depth(); z++) {
+		for(std::size_t y = 0u; y < resource.field().height(); y++) {
+			for(std::size_t x = 0u; x < resource.field().width(); x++) {
+				const vec3_t& vector = resource.field()(x, y, z);
 
 				dataString += std::to_string(vector.x);
 				dataString += ' ';
@@ -27,19 +36,18 @@ void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
 	std::string compressedData = compressAndEncode(reinterpret_cast<const uint8_t*>(dataString.data()), dataString.size(), CompressionMethod::zlib);
 
 	j = nlohmann::ordered_json{
-		{ "name", resource.name },
-		{ "width", resource.field.getWidth() },
-		{ "height", resource.field.getHeight() },
-		{ "depth", resource.field.getDepth() },
+		{ "name", resource.name() },
+		{ "width", resource.field().width() },
+		{ "height", resource.field().height() },
+		{ "depth", resource.field().depth() },
 		{ "compression", CompressionMethod::zlib },
 		{ "uncompressed_size", dataString.size() },
 		{ "field", compressedData }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
-	resource = VectorFieldResource();
-
-	fromJson(resource.name, j, "name");
+	std::string name;
+	fromJson(name, j, "name");
 
 	std::size_t width = 0u;
 	std::size_t height = 0u;
@@ -48,7 +56,7 @@ void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
 	fromJson(height, j, "height");
 	fromJson(depth, j, "depth");
 
-	resource.field = Grid3d<vec3_t>(width, height, depth, vec3_t(0.0));
+	Grid3d<vec3_t> field = Grid3d<vec3_t>(width, height, depth, vec3_t(0.0));
 
 	CompressionMethod compressionMethod = CompressionMethod::none;
 	fromJson(compressionMethod, j, "compression");
@@ -61,9 +69,9 @@ void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
 		std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
 	bool finished = false;
-	for(std::size_t z = 0u; z < resource.field.getDepth() && !finished; z++) {
-		for(std::size_t y = 0u; y < resource.field.getHeight() && !finished; y++) {
-			for(std::size_t x = 0u; x < resource.field.getWidth() && !finished; x++) {
+	for(std::size_t z = 0u; z < field.depth() && !finished; z++) {
+		for(std::size_t y = 0u; y < field.height() && !finished; y++) {
+			for(std::size_t x = 0u; x < field.width() && !finished; x++) {
 				if(dataStream.eof()) {
 					finished = true;
 					break;
@@ -81,9 +89,11 @@ void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
 				std::getline(dataStream, token, ' ');
 				vector.z = std::stod(token);
 
-				resource.field(x, y, z) = vector;
+				field(x, y, z) = vector;
 			}
 		}
 	}
+
+	resource = VectorFieldResource(name, field);
 }
 }

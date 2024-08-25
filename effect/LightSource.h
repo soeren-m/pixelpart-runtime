@@ -7,23 +7,52 @@
 #include "../json/json.hpp"
 
 namespace pixelpart {
-struct LightSource : public Node {
+class LightSource : public Node {
+public:
 	enum class Type {
 		directional = 0,
 		point = 1,
 		spot = 2
 	};
 
-	Type type = Type::directional;
+	LightSource() = default;
+	LightSource(id_t ownId, id_t parentId = nullId);
 
-	AnimatedProperty<vec3_t> direction = AnimatedProperty<vec3_t>(vec3_t(0.0));
-	AnimatedProperty<float_t> range = AnimatedProperty<float_t>(1.0);
-	AnimatedProperty<float_t> attenuation = AnimatedProperty<float_t>(1.0);
-	AnimatedProperty<float_t> spotAngle = AnimatedProperty<float_t>(45.0);
-	AnimatedProperty<float_t> spotAngleAttenuation = AnimatedProperty<float_t>(1.0);
+	void type(Type type);
+	Type type() const;
 
-	AnimatedProperty<vec4_t> color = AnimatedProperty<vec4_t>(vec4_t(1.0));
-	AnimatedProperty<float_t> intensity = AnimatedProperty<float_t>(1.0);
+	AnimatedProperty<vec3_t>& direction();
+	const AnimatedProperty<vec3_t>& direction() const;
+
+	AnimatedProperty<float_t>& range();
+	const AnimatedProperty<float_t>& range() const;
+
+	AnimatedProperty<float_t>& attenuation();
+	const AnimatedProperty<float_t>& attenuation() const;
+
+	AnimatedProperty<float_t>& spotAngle();
+	const AnimatedProperty<float_t>& spotAngle() const;
+
+	AnimatedProperty<float_t>& spotAngleAttenuation();
+	const AnimatedProperty<float_t>& spotAngleAttenuation() const;
+
+	AnimatedProperty<vec4_t>& color();
+	const AnimatedProperty<vec4_t>& color() const;
+
+	AnimatedProperty<float_t>& intensity();
+	const AnimatedProperty<float_t>& intensity() const;
+
+private:
+	Type lightType = Type::directional;
+
+	AnimatedProperty<vec3_t> lightDirection = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	AnimatedProperty<float_t> lightRange = AnimatedProperty<float_t>(1.0);
+	AnimatedProperty<float_t> lightAttenuation = AnimatedProperty<float_t>(1.0);
+	AnimatedProperty<float_t> lightSpotAngle = AnimatedProperty<float_t>(45.0);
+	AnimatedProperty<float_t> lightSpotAngleAttenuation = AnimatedProperty<float_t>(1.0);
+
+	AnimatedProperty<vec4_t> lightColor = AnimatedProperty<vec4_t>(vec4_t(1.0));
+	AnimatedProperty<float_t> lightIntensity = AnimatedProperty<float_t>(1.0);
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(LightSource::Type, {

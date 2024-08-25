@@ -6,8 +6,16 @@
 #include "../json/json.hpp"
 
 namespace pixelpart {
-struct VectorFieldResource : public Resource {
-	Grid3d<vec3_t> field;
+class VectorFieldResource : public Resource {
+public:
+	VectorFieldResource() = default;
+	VectorFieldResource(const std::string& resName, const Grid3d<vec3_t>& data);
+
+	//Grid3d<vec3_t>& field();
+	const Grid3d<vec3_t>& field() const;
+
+private:
+	Grid3d<vec3_t> fieldData;
 };
 
 void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource);

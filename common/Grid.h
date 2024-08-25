@@ -22,47 +22,47 @@ public:
 	Grid() {
 
 	}
-	Grid(std::size_t w, std::size_t h) : width(w), height(h) {
-		cells.resize(width * height);
+	Grid(std::size_t w, std::size_t h) : sizeX(w), sizeY(h) {
+		data.resize(sizeX * sizeY);
 	}
-	Grid(std::size_t w, std::size_t h, const T& value) : width(w), height(h) {
-		cells.resize(width * height, value);
+	Grid(std::size_t w, std::size_t h, const T& value) : sizeX(w), sizeY(h) {
+		data.resize(sizeX * sizeY, value);
 	}
 
 	T& operator()(std::size_t i) {
-		return cells[i];
+		return data[i];
 	}
 	template <typename IntT>
 	T& operator()(IntT x, IntT y) {
-		return cells[
-			static_cast<std::size_t>(y) * width +
+		return data[
+			static_cast<std::size_t>(y) * sizeX +
 			static_cast<std::size_t>(x)];
 	}
 	template <typename IntT>
 	T& operator()(const GridIndex<IntT>& index) {
-		return cells[
-			static_cast<std::size_t>(index.y) * width +
+		return data[
+			static_cast<std::size_t>(index.y) * sizeX +
 			static_cast<std::size_t>(index.x)];
 	}
 
 	const T& operator()(std::size_t i) const {
-		return cells[i];
+		return data[i];
 	}
 	template <typename IntT>
 	const T& operator()(IntT x, IntT y) const {
-		return cells[
-			static_cast<std::size_t>(y) * width +
+		return data[
+			static_cast<std::size_t>(y) * sizeX +
 			static_cast<std::size_t>(x)];
 	}
 	template <typename IntT>
 	const T& operator()(const GridIndex<IntT>& index) const {
-		return cells[
-			static_cast<std::size_t>(index.y) * width +
+		return data[
+			static_cast<std::size_t>(index.y) * sizeX +
 			static_cast<std::size_t>(index.x)];
 	}
 
 	template <typename IntT>
-	T& getOrDefault(IntT x, IntT y, const T& defaultValue) {
+	T& valueOrDefault(IntT x, IntT y, const T& defaultValue) {
 		if(contains(x, y)) {
 			return operator()<IntT>(x, y);
 		}
@@ -70,7 +70,7 @@ public:
 		return defaultValue;
 	}
 	template <typename IntT>
-	T& getOrDefault(const GridIndex<IntT>& index, const T& defaultValue) {
+	T& valueOrDefault(const GridIndex<IntT>& index, const T& defaultValue) {
 		if(contains(index.x, index.y)) {
 			return operator()<IntT>(index);
 		}
@@ -78,7 +78,7 @@ public:
 		return defaultValue;
 	}
 	template <typename IntT>
-	const T& getOrDefault(IntT x, IntT y, const T& defaultValue) const {
+	const T& valueOrDefault(IntT x, IntT y, const T& defaultValue) const {
 		if(contains(x, y)) {
 			return operator()<IntT>(x, y);
 		}
@@ -86,7 +86,7 @@ public:
 		return defaultValue;
 	}
 	template <typename IntT>
-	const T& getOrDefault(const GridIndex3d<IntT>& index, const T& defaultValue) const {
+	const T& valueOrDefault(const GridIndex3d<IntT>& index, const T& defaultValue) const {
 		if(contains(index.x, index.y)) {
 			return operator()<IntT>(index);
 		}
@@ -95,73 +95,73 @@ public:
 	}
 
 	void resize(std::size_t w, std::size_t h) {
-		width = w;
-		height = h;
-		cells.resize(width * height);
+		sizeX = w;
+		sizeY = h;
+		data.resize(sizeX * sizeY);
 	}
 	void clear() {
-		for(T& cell : cells) {
+		for(T& cell : data) {
 			cell = T();
 		}
 	}
 	void assign(const T& value) {
-		cells.assign(cells.size(), value);
+		data.assign(data.size(), value);
 	}
 
 	template <typename IntT>
 	bool contains(IntT x, IntT y) const {
 		return
-			x >= 0 && static_cast<std::size_t>(x) < width &&
-			y >= 0 && static_cast<std::size_t>(y) < height;
+			x >= 0 && static_cast<std::size_t>(x) < sizeX &&
+			y >= 0 && static_cast<std::size_t>(y) < sizeY;
 	}
 
-	const std::vector<T>& getCells() const {
-		return cells;
+	const std::vector<T>& cells() const {
+		return data;
 	}
-	std::size_t getWidth() const {
-		return width;
+	std::size_t width() const {
+		return sizeX;
 	}
-	std::size_t getHeight() const {
-		return height;
+	std::size_t height() const {
+		return sizeY;
 	}
-	std::size_t getSize() const {
-		return width * height;
+	std::size_t size() const {
+		return sizeX * sizeY;
 	}
 
 	template <typename Fn>
 	void loop1d(Fn&& func) const {
-		for(std::size_t i = 0u; i < width * height; i++) {
+		for(std::size_t i = 0u; i < sizeX * sizeY; i++) {
 			func(i);
 		}
 	}
 	template <typename Fn>
 	void loop1d(Fn&& func, std::size_t from, std::size_t to) const {
-		for(std::size_t i = from; i < std::min(to, width * height); i++) {
+		for(std::size_t i = from; i < std::min(to, sizeX * sizeY); i++) {
 			func(i);
 		}
 	}
 
 	template <typename Fn>
 	void loop2d(Fn&& func) const {
-		for(std::size_t y = 0u; y < height; y++) {
-			for(std::size_t x = 0u; x < width; x++) {
+		for(std::size_t y = 0u; y < sizeY; y++) {
+			for(std::size_t x = 0u; x < sizeX; x++) {
 				func(x, y);
 			}
 		}
 	}
 	template <typename Fn>
 	void loop2d(Fn&& func, std::size_t fromX, std::size_t toX, std::size_t fromY, std::size_t toY) const {
-		for(std::size_t y = fromY; y < std::min(toY, height); y++) {
-			for(std::size_t x = fromX; x < std::min(toX, width); x++) {
+		for(std::size_t y = fromY; y < std::min(toY, sizeY); y++) {
+			for(std::size_t x = fromX; x < std::min(toX, sizeX); x++) {
 				func(x, y);
 			}
 		}
 	}
 
 private:
-	std::size_t width = 0u;
-	std::size_t height = 0u;
+	std::size_t sizeX = 0u;
+	std::size_t sizeY = 0u;
 
-	std::vector<T> cells;
+	std::vector<T> data;
 };
 }

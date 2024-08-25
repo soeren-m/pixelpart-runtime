@@ -2,57 +2,57 @@
 #include <algorithm>
 
 namespace pixelpart {
-ParticleCollection::ParticleCollection(uint32_t cap) : capacity(cap) {
-	id.resize(capacity);
-	parentId.resize(capacity);
-	life.resize(capacity);
-	lifespan.resize(capacity);
-	position.resize(capacity);
-	globalPosition.resize(capacity);
-	velocity.resize(capacity);
-	force.resize(capacity);
-	rotation.resize(capacity);
-	initialRotation.resize(capacity);
-	initialAngularVelocity.resize(capacity);
-	size.resize(capacity);
-	initialSize.resize(capacity);
-	color.resize(capacity);
-	initialColor.resize(capacity);
+ParticleCollection::ParticleCollection(uint32_t cap) : particleCapacity(cap) {
+	id.resize(particleCapacity);
+	parentId.resize(particleCapacity);
+	life.resize(particleCapacity);
+	lifespan.resize(particleCapacity);
+	position.resize(particleCapacity);
+	globalPosition.resize(particleCapacity);
+	velocity.resize(particleCapacity);
+	force.resize(particleCapacity);
+	rotation.resize(particleCapacity);
+	initialRotation.resize(particleCapacity);
+	initialAngularVelocity.resize(particleCapacity);
+	size.resize(particleCapacity);
+	initialSize.resize(particleCapacity);
+	color.resize(particleCapacity);
+	initialColor.resize(particleCapacity);
 }
 
 uint32_t ParticleCollection::add(uint32_t number) {
-	number = (count + number > capacity)
-		? capacity - count
+	number = (particleCount + number > particleCapacity)
+		? particleCapacity - particleCount
 		: number;
 
-	count += number;
+	particleCount += number;
 
 	return number;
 }
 void ParticleCollection::remove(uint32_t index) {
-	count--;
+	particleCount--;
 
-	std::swap(id[index], id[count]);
-	std::swap(parentId[index], parentId[count]);
-	std::swap(life[index], life[count]);
-	std::swap(lifespan[index], lifespan[count]);
-	std::swap(position[index], position[count]);
-	std::swap(globalPosition[index], globalPosition[count]);
-	std::swap(velocity[index], velocity[count]);
-	std::swap(force[index], force[count]);
-	std::swap(rotation[index], rotation[count]);
-	std::swap(initialRotation[index], initialRotation[count]);
-	std::swap(initialAngularVelocity[index], initialAngularVelocity[count]);
-	std::swap(size[index], size[count]);
-	std::swap(initialSize[index], initialSize[count]);
-	std::swap(color[index], color[count]);
-	std::swap(initialColor[index], initialColor[count]);
+	std::swap(id[index], id[particleCount]);
+	std::swap(parentId[index], parentId[particleCount]);
+	std::swap(life[index], life[particleCount]);
+	std::swap(lifespan[index], lifespan[particleCount]);
+	std::swap(position[index], position[particleCount]);
+	std::swap(globalPosition[index], globalPosition[particleCount]);
+	std::swap(velocity[index], velocity[particleCount]);
+	std::swap(force[index], force[particleCount]);
+	std::swap(rotation[index], rotation[particleCount]);
+	std::swap(initialRotation[index], initialRotation[particleCount]);
+	std::swap(initialAngularVelocity[index], initialAngularVelocity[particleCount]);
+	std::swap(size[index], size[particleCount]);
+	std::swap(initialSize[index], initialSize[particleCount]);
+	std::swap(color[index], color[particleCount]);
+	std::swap(initialColor[index], initialColor[particleCount]);
 }
 void ParticleCollection::removeAll() {
-	count = 0u;
+	particleCount = 0u;
 }
 
-ParticleCollection::WritePtr ParticleCollection::getWritePtr(uint32_t index) {
+ParticleCollection::WritePtr ParticleCollection::writePtr(uint32_t index) {
 	return WritePtr{
 		id.data() + index,
 		parentId.data() + index,
@@ -71,7 +71,7 @@ ParticleCollection::WritePtr ParticleCollection::getWritePtr(uint32_t index) {
 		initialColor.data() + index
 	};
 }
-ParticleCollection::ReadPtr ParticleCollection::getReadPtr(uint32_t index) const {
+ParticleCollection::ReadPtr ParticleCollection::readPtr(uint32_t index) const {
 	return ReadPtr{
 		id.data() + index,
 		parentId.data() + index,
@@ -90,10 +90,10 @@ ParticleCollection::ReadPtr ParticleCollection::getReadPtr(uint32_t index) const
 		initialColor.data() + index
 	};
 }
-uint32_t ParticleCollection::getCapacity() const {
-	return capacity;
+uint32_t ParticleCollection::capacity() const {
+	return particleCapacity;
 }
-uint32_t ParticleCollection::getCount() const {
-	return count;
+uint32_t ParticleCollection::count() const {
+	return particleCount;
 }
 }

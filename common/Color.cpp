@@ -1,4 +1,5 @@
 #include "Color.h"
+#include <cstdint>
 
 namespace pixelpart {
 vec4_t rgb2hsv(const vec4_t& colorRGB) {

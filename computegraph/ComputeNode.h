@@ -20,7 +20,7 @@ public:
 	public:
 		InputException(const std::string& msg, uint32_t index = nullId);
 
-		uint32_t getInputIndex() const;
+		uint32_t index() const;
 
 	private:
 		uint32_t inputIndex = nullId;
@@ -34,66 +34,68 @@ public:
 		id_t id = nullId;
 		id_t nodeId = nullId;
 		uint32_t slot = nullId;
-
-		Link();
-		Link(id_t l, id_t n, uint32_t s);
 	};
 
 	ComputeNode(
-		const std::string& nodeType,
-		const std::string& nodeCategory,
-		const std::vector<std::string>& nodeInputs,
-		const std::vector<std::string>& nodeOutputs,
-		const std::vector<Signature>& nodeSignatures,
-		const std::vector<VariantValue>& nodeDefaultInputs,
-		const std::vector<VariantParameter>& nodeParameters);
+		const std::string& type,
+		const std::string& category,
+		const std::vector<std::string>& inputSlots,
+		const std::vector<std::string>& ouputSlots,
+		const std::vector<Signature>& signatures,
+		const std::vector<VariantValue>& defaultInputs,
+		const std::vector<VariantParameter>& parameters);
 	virtual ~ComputeNode() = default;
 
 	virtual std::vector<VariantValue> evaluate(const std::vector<VariantValue>& in) const = 0;
 
 	std::unique_ptr<ComputeNode> clone();
 
-	void setName(const std::string& nodeName);
-	void setInputs(const std::vector<Link>& nodeInputs);
-	void setParameterValues(const std::vector<VariantParameter::Value>& values);
+	const std::string& type() const;
+	const std::string& category() const;
+
+	void name(const std::string& name);
+	const std::string& name() const;
+
+	const std::vector<std::string>& inputSlots() const;
+	const std::vector<std::string>& outputSlots() const;
+
+	const std::vector<Signature>& signatures() const;
+
+	const std::vector<VariantValue>& defaultInputs() const;
+
+	void inputLinks(const std::vector<Link>& inputLinks);
+	const std::vector<Link>& inputLinks() const;
+
+	const std::vector<VariantParameter>& parameters() const;
+
+	void parameterValues(const std::vector<VariantParameter::Value>& values);
+	const std::vector<VariantParameter::Value>& parameterValues() const;
+	const VariantParameter::Value& parameterValue(std::size_t index) const;
 
 	uint32_t findInputSlot(const std::string& slotName) const;
 	uint32_t findOutputSlot(const std::string& slotName) const;
 	uint32_t findParameter(const std::string& parameterName) const;
 
-	const std::string& getType() const;
-	const std::string& getName() const;
-	const std::string& getCategory() const;
-
-	const std::vector<std::string>& getInputSlots() const;
-	const std::vector<std::string>& getOutputSlots() const;
-	const std::vector<Signature>& getSignatures() const;
-	const std::vector<VariantValue>& getDefaultInputs() const;
-	const std::vector<Link>& getInputs() const;
-
-	const std::vector<VariantParameter>& getParameters() const;
-	const std::vector<VariantParameter::Value>& getParameterValues() const;
-
-	void setPosition(const vec2_t& pos);
-	vec2_t getPosition() const;
+	void move(const vec2_t& pos);
+	vec2_t position() const;
 
 protected:
 	virtual ComputeNode* cloneImpl() const = 0;
 
-	std::string type;
-	std::string name;
-	std::string category;
+	std::string nodeType;
+	std::string nodeCategory;
+	std::string nodeName;
 
-	std::vector<std::string> inputSlots;
-	std::vector<std::string> outputSlots;
-	std::vector<Signature> signatures;
-	std::vector<VariantValue> defaultInputs;
-	std::vector<Link> inputs;
+	std::vector<std::string> nodeInputSlots;
+	std::vector<std::string> nodeOutputSlots;
+	std::vector<Signature> nodeSignatures;
+	std::vector<VariantValue> nodeDefaultInputs;
+	std::vector<Link> nodeInputLinks;
 
-	std::vector<VariantParameter> parameters;
-	std::vector<VariantParameter::Value> parameterValues;
+	std::vector<VariantParameter> nodeParameters;
+	std::vector<VariantParameter::Value> nodeParameterValues;
 
-	vec2_t position = vec2_t(0.0);
+	vec2_t nodePosition = vec2_t(0.0);
 };
 
 void to_json(nlohmann::ordered_json& j, const ComputeNode::Signature& signature);

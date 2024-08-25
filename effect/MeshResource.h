@@ -7,7 +7,17 @@
 #include <vector>
 
 namespace pixelpart {
-struct MeshResource : public Resource {
+class MeshResource : public Resource {
+public:
+
+	// TODO: clear, ...
+
+	const std::vector<uint32_t>& faces() const;
+	const std::vector<glm::vec3>& positions() const;
+	const std::vector<glm::vec3>& normals() const;
+	const std::vector<glm::vec2>& textureCoords() const;
+
+private:
 	std::vector<uint32_t> faces;
 	std::vector<glm::vec3> positions;
 	std::vector<glm::vec3> normals;

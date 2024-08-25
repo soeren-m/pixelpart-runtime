@@ -75,8 +75,8 @@ public:
 	std::unordered_map<id_t, VariantParameter> getShaderParameters() const;
 
 	bool hasNodeType(const std::string& typeName) const;
-	const ShaderNodeType& getNodeType(const std::string& typeName) const;
-	const ShaderNodeType& getNodeTypeOfNode(id_t nodeId) const;
+	const ShaderNodeType& nodeType(const std::string& typeName) const;
+	const ShaderNodeType& nodeTypeOfNode(id_t nodeId) const;
 
 private:
 	uint32_t findNodeType(const std::string& typeName) const;

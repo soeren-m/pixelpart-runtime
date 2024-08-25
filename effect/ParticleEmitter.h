@@ -8,7 +8,8 @@
 #include "../json/json.hpp"
 
 namespace pixelpart {
-struct ParticleEmitter : public Node {
+class ParticleEmitter : public Node {
+public:
 	enum class Shape : uint32_t {
 		point = 0,
 		line = 1,
@@ -47,6 +48,9 @@ struct ParticleEmitter : public Node {
 		inherit = 3,
 		inherit_inverse = 4
 	};
+
+	ParticleEmitter() = default;
+	ParticleEmitter(id_t ownId, id_t parId = nullId);
 
 	Shape shape = Shape::point;
 	Curve<vec3_t> path = Curve<vec3_t>();

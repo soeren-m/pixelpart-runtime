@@ -1,26 +1,29 @@
 #include "ImageEffect.h"
-#include "../common/Json.h"
 #include <cstddef>
 
 namespace pixelpart {
-ImageEffect::ImageEffect(const ImageEffectType& effectType) : type(effectType.name), parameters(effectType.parameters.size()) {
-	for(std::size_t p = 0u; p < parameters.size(); p++) {
-		parameters[p] = effectType.parameters[p].defaultValue;
+ImageEffect::ImageEffect(const ImageEffectType& type) :
+	effectTypeId(type.name), effectParameters(type.parameters.size()) {
+	for(std::size_t p = 0u; p < effectParameters.size(); p++) {
+		effectParameters[p] = type.parameters[p].def();
 	}
+}
+ImageEffect::ImageEffect(const std::string& typeId, const std::vector<VariantParameter::Value>& parameters, bool visible) :
+	effectTypeId(typeId), effectParameters(parameters), effectIsVisible(visible) {
+
 }
 
 void to_json(nlohmann::ordered_json& j, const ImageEffect& effect) {
 	j = nlohmann::ordered_json{
-		{ "type", effect.type },
-		{ "parameters", effect.parameters },
-		{ "visible", effect.visible }
+		{ "type", effect.type() },
+		{ "parameters", effect.parameters() },
+		{ "visible", effect.visible() }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ImageEffect& effect) {
-	effect = ImageEffect();
-
-	fromJson(effect.type, j, "type");
-	fromJson(effect.parameters, j, "parameters");
-	fromJson(effect.visible, j, "visible");
+	effect = ImageEffect(
+		j.at("type"),
+		j.value("parameters", std::vector<VariantParameter::Value>()),
+		j.value("visible", true));
 }
 }

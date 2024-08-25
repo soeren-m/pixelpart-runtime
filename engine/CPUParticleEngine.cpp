@@ -27,7 +27,7 @@ void CPUParticleEngine::step(float_t dt) {
 	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
 		id_t parentParticleEmitterId = effect.particleTypes.getByIndex(particleTypeIndex).parentId;
 
-		if(effect.particleEmitters.contains(parentParticleEmitterId)) {
+		if(effect.particleEmitters().contains(parentParticleEmitterId)) {
 			const ParticleEmitter& parentParticleEmitter = effect.particleEmitters.get(parentParticleEmitterId);
 
 			uint32_t parentParticleTypeIndex = effect.particleTypes.findById(parentParticleEmitter.parentId);

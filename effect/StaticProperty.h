@@ -35,7 +35,7 @@ public:
 		return computedValue;
 	}
 
-	void refresh(const std::unordered_map<uint32_t, VariantValue>& inputs) {
+	void refresh(const ComputeGraph::InputSet& inputs) {
 		if(computeGraph.isEmpty()) {
 			useGraphOutput = false;
 			refresh();
@@ -66,28 +66,26 @@ public:
 		}
 	}
 
-	void setValue(T v) {
+	void baseValue(T v) {
 		value = v;
 		refresh();
 	}
-	T getValue() const {
+	T baseValue() const {
 		return value;
 	}
 
-	void setComputeGraph(const ComputeGraph& graph) {
+	void computeGraph(const ComputeGraph& graph) {
 		computeGraph = graph;
 	}
-	void setComputeOutputOperation(ComputeOutputOperation operation) {
+	const ComputeGraph& computeGraph() const {
+		return computeGraph;
+	}
+
+	void computeOutputOperation(ComputeOutputOperation operation) {
 		computeOutputOperation = operation;
 		refresh();
 	}
-	ComputeGraph& getComputeGraph() {
-		return computeGraph;
-	}
-	const ComputeGraph& getComputeGraph() const {
-		return computeGraph;
-	}
-	ComputeOutputOperation getComputeOutputOperation() const {
+	ComputeOutputOperation computeOutputOperation() const {
 		return computeOutputOperation;
 	}
 
@@ -106,8 +104,8 @@ template <typename T>
 void to_json(nlohmann::ordered_json& j, const StaticProperty<T>& property) {
 	j = nlohmann::ordered_json{
 		{ "value", property.getValue() },
-		{ "compute_graph", property.getComputeGraph() },
-		{ "compute_operation", property.getComputeOutputOperation() },
+		{ "compute_graph", property.computeGraph() },
+		{ "compute_operation", property.computeOutputOperation() },
 	};
 }
 

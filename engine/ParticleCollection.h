@@ -50,14 +50,14 @@ public:
 	void remove(uint32_t index);
 	void removeAll();
 
-	WritePtr getWritePtr(uint32_t index = 0u);
-	ReadPtr getReadPtr(uint32_t index = 0u) const;
-	uint32_t getCapacity() const;
-	uint32_t getCount() const;
+	WritePtr writePtr(uint32_t index = 0u);
+	ReadPtr readPtr(uint32_t index = 0u) const;
+	uint32_t capacity() const;
+	uint32_t count() const;
 
 private:
-	uint32_t capacity = 0u;
-	uint32_t count = 0u;
+	uint32_t particleCapacity = 0u;
+	uint32_t particleCount = 0u;
 
 	std::vector<id_t> id;
 	std::vector<id_t> parentId;

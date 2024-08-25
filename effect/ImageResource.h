@@ -6,7 +6,23 @@
 #include <vector>
 
 namespace pixelpart {
-struct ImageResource : public Resource {
+class ImageResource : public Resource {
+public:
+	ImageResource() = default;
+	ImageResource(const std::string& n, uint32_t w, uint32_t h, uint32_t bpp);
+
+	// TODO: operator
+
+	void resize(uint32_t w, uint32_t h);
+
+	uint32_t imageWidth() const;
+	uint32_t imageHeight() const;
+	uint32_t imageBpp() const;
+
+	std::vector<unsigned char>& imageData();
+	const std::vector<unsigned char>& imageData() const;
+
+private:
 	uint32_t width = 0u;
 	uint32_t height = 0u;
 	uint32_t bpp = 0u;

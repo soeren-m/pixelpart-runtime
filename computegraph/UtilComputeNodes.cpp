@@ -15,11 +15,11 @@ CurveComputeNode::CurveComputeNode() : ComputeNodeBase(typeName,
 	{ "compute_slot_result" },
 	{ Signature{ { VariantValue::type_float }, { VariantValue::type_float } } },
 	{ VariantValue::Float(0.0) },
-	{ VariantParameter::createCurveParameter("compute_param_curve", Curve<float_t>(0.5, CurveInterpolation::linear)) }) {
+	{ VariantParameter::CurveParameter("compute_param_curve", Curve<float_t>(0.5, CurveInterpolation::linear)) }) {
 
 }
 std::vector<VariantValue> CurveComputeNode::evaluate(const std::vector<VariantValue>& in) const {
-	return std::vector<VariantValue>{ VariantValue::Float(parameterValues[0].getCurve().get(in[0].toFloat())) };
+	return std::vector<VariantValue>{ VariantValue::Float(parameterValue(0).valueCurve().at(in[0].toFloat())) };
 }
 
 Split2ComputeNode::Split2ComputeNode() : ComputeNodeBase(typeName,

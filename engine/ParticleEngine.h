@@ -12,7 +12,7 @@ public:
 	virtual void step(float_t dt) = 0;
 	virtual void restart(bool reset) = 0;
 
-	virtual float_t getTime() const = 0;
+	virtual float_t currentTime() const = 0;
 
 	virtual void applySeed(uint32_t seed) = 0;
 	virtual void resetSeed() = 0;

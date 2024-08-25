@@ -10,26 +10,43 @@
 #include <vector>
 
 namespace pixelpart {
-struct ShaderNode {
+class ShaderGraph;
+
+class ShaderNode {
+	friend class ShaderGraph;
+
+public:
 	struct Link {
 		id_t id = nullId;
 		id_t nodeId = nullId;
 		uint32_t slot = 0u;
-
-		Link() = default;
-		Link(id_t l, id_t n, uint32_t s);
 	};
-
-	std::string type;
-	std::string name;
-	std::vector<Link> inputs;
-	std::vector<VariantParameter::Value> parameters;
-	bool isParameterNode = false;
-
-	vec2_t position = vec2_t(0.0);
 
 	ShaderNode() = default;
 	ShaderNode(const ShaderNodeType& nodeType);
+	ShaderNode(const std::string& typeId, const std::string& name,
+		const std::vector<Link>& inputs,
+		const std::vector<VariantParameter::Value>& parameters,
+		bool parameterNode, const vec2_t& position);
+
+	const std::string& type() const;
+	const std::string& name() const;
+	const std::vector<Link>& inputs() const;
+	const std::vector<VariantParameter::Value>& parameters() const;
+
+	bool parameterNode() const;
+
+	const vec2_t& position() const;
+
+private:
+	std::string nodeTypeId;
+	std::string nodeName;
+	std::vector<Link> nodeInputs;
+	std::vector<VariantParameter::Value> nodeParameters;
+
+	bool nodeIsParameterNode = false;
+
+	vec2_t nodePosition = vec2_t(0.0);
 };
 
 void to_json(nlohmann::ordered_json& j, const ShaderNode::Link& link);

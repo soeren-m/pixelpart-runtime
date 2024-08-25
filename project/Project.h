@@ -10,18 +10,26 @@
 #include <istream>
 
 namespace pixelpart {
-struct Project {
+class Project {
+public:
 	static const uint32_t version;
 
+	Project() = default;
+
+	Effect& effect();
+
+	// TODO
+
+	bool isNameUsed(const std::string& name) const;
+	bool isResourceUsed(const std::string& resourceId) const;
+
+private:
 	Effect effect;
 
 	ImageEffectSettings imageEffectSettings;
 	CameraSettings cameraSettings;
 	RenderSettings renderSettings;
 	RenderSettings previewSettings;
-
-	bool isNameUsed(const std::string& name) const;
-	bool isResourceUsed(const std::string& resourceId) const;
 };
 
 void to_json(nlohmann::ordered_json& j, const Project& project);

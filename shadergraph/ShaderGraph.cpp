@@ -28,7 +28,7 @@ ShaderGraph::ShaderGraph(const std::unordered_map<id_t, ShaderNode>& initialNode
 	for(const auto& nodeEntry : nodes) {
 		maxNodeId = std::max(maxNodeId, nodeEntry.first);
 
-		for(const auto& link : nodeEntry.second.inputs) {
+		for(const auto& link : nodeEntry.second.inputs()) {
 			if(link.id == pixelpart::nullId) {
 				continue;
 			}
@@ -53,21 +53,21 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 
 	const ShaderNode& node = nodeEntry->second;
 
-	uint32_t nodeTypeIndex = findNodeType(node.type);
+	uint32_t nodeTypeIndex = findNodeType(node.type());
 	if(nodeTypeIndex == nullId) {
-		throw BuildException("Unknown node type \"" + node.type + "\"", nodeId);
+		throw BuildException("Unknown node type \"" + node.type() + "\"", nodeId);
 	}
 
 	const ShaderNodeType& nodeType = graphLanguage.nodes.at(nodeTypeIndex);
 
 	std::string code = nodeType.code;
 
-	for(std::size_t parameterIndex = 0u; parameterIndex < node.parameters.size(); parameterIndex++) {
-		const VariantParameter::Value& parameterValue = node.parameters.at(parameterIndex);
+	for(std::size_t parameterIndex = 0u; parameterIndex < node.parameters().size(); parameterIndex++) {
+		const VariantParameter::Value& parameterValue = node.parameters().at(parameterIndex);
 		std::string valueString;
 
-		if(node.isParameterNode) {
-			if(parameterValue.type == VariantParameter::Value::type_resource_image) {
+		if(node.isParameterNode()) {
+			if(parameterValue.type() == VariantParameter::Value::type_resource_image) {
 				std::size_t samplerIndex = result.textureResourceIds.size();
 				if(samplerIndex < graphLanguage.textureSamplers.size()) {
 					result.textureResourceIds.push_back(parameterValue.getResourceId());
@@ -98,43 +98,43 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 			}
 		}
 		else {
-			switch(parameterValue.type) {
+			switch(parameterValue.type()) {
 				case VariantParameter::Value::type_int:
 				case VariantParameter::Value::type_enum: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_int];
-					valueString = replaceString(valueString, std::to_string(parameterValue.data.integer), "{0}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.getInt()), "{0}");
 					break;
 				}
 				case VariantParameter::Value::type_float: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float];
-					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[0]), "{0}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.getFloat()), "{0}");
 					break;
 				}
 				case VariantParameter::Value::type_float2: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float2];
-					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[0]), "{0}");
-					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[1]), "{1}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.getFloat2().x), "{0}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.getFloat2().y), "{1}");
 					break;
 				}
 				case VariantParameter::Value::type_float3: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float3];
-					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[0]), "{0}");
-					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[1]), "{1}");
-					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[2]), "{2}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.getFloat3().x), "{0}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.getFloat3().y), "{1}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.getFloat3().z), "{2}");
 					break;
 				}
 				case VariantParameter::Value::type_float4:
 				case VariantParameter::Value::type_color: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float4];
-					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[0]), "{0}");
-					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[1]), "{1}");
-					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[2]), "{2}");
-					valueString = replaceString(valueString, std::to_string(parameterValue.data.numbers[3]), "{3}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.getFloat4().x), "{0}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.getFloat4().y), "{1}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.getFloat4().z), "{2}");
+					valueString = replaceString(valueString, std::to_string(parameterValue.getFloat4().w), "{3}");
 					break;
 				}
 				case VariantParameter::Value::type_bool: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_bool];
-					valueString = replaceString(valueString, (parameterValue.data.integer != 0) ? "true" : "false", "{0}");
+					valueString = replaceString(valueString, parameterValue.getBool() ? "true" : "false", "{0}");
 					break;
 				}
 				case VariantParameter::Value::type_curve: {
@@ -195,8 +195,8 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 	std::string inputCode;
 	for(std::size_t inputSlot = 0u; inputSlot < nodeType.inputs.size(); inputSlot++) {
 		ShaderNode::Link link;
-		if(inputSlot < node.inputs.size()) {
-			link = node.inputs[inputSlot];
+		if(inputSlot < node.inputs().size()) {
+			link = node.inputs()[inputSlot];
 		}
 
 		if(nodes.count(link.nodeId) != 0u) {
@@ -204,43 +204,43 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 				inputCode += build(result, link.nodeId);
 			}
 		}
-		else if(nodeType.defaultInputs[inputSlot].type != VariantValue::type_null) {
+		else if(nodeType.defaultInputs[inputSlot].type() != VariantValue::type_null) {
 			std::string valueString;
-			switch(nodeType.defaultInputs[inputSlot].type) {
+			switch(nodeType.defaultInputs[inputSlot].type()) {
 				case VariantValue::type_bool: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_bool];
-					valueString = replaceString(valueString, nodeType.defaultInputs[inputSlot].data.boolean ? "true" : "false", "{0}");
+					valueString = replaceString(valueString, nodeType.defaultInputs[inputSlot].getBool() ? "true" : "false", "{0}");
 					break;
 				}
 				case VariantValue::type_int: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_int];
-					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.integer), "{0}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].getInt()), "{0}");
 					break;
 				}
 				case VariantValue::type_float: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float];
-					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[0]), "{0}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].getFloat()), "{0}");
 					break;
 				}
 				case VariantValue::type_float2: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float2];
-					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[0]), "{0}");
-					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[1]), "{1}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].getFloat2().x), "{0}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].getFloat2().y), "{1}");
 					break;
 				}
 				case VariantValue::type_float3: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float3];
-					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[0]), "{0}");
-					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[1]), "{1}");
-					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[2]), "{2}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].getFloat3().x), "{0}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].getFloat3().y), "{1}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].getFloat3().z), "{2}");
 					break;
 				}
 				case VariantValue::type_float4: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float4];
-					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[0]), "{0}");
-					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[1]), "{1}");
-					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[2]), "{2}");
-					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].data.number[3]), "{3}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].getFloat4().x), "{0}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].getFloat4().y), "{1}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].getFloat4().z), "{2}");
+					valueString = replaceString(valueString, std::to_string(nodeType.defaultInputs[inputSlot].getFloat4().w), "{3}");
 					break;
 				}
 				default: {
@@ -274,8 +274,8 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 		result.numVariables++;
 	}
 
-	for(std::size_t inputSlot = 0u; inputSlot < node.inputs.size(); inputSlot++) {
-		const ShaderNode::Link& link = node.inputs[inputSlot];
+	for(std::size_t inputSlot = 0u; inputSlot < node.inputs().size(); inputSlot++) {
+		const ShaderNode::Link& link = node.inputs()[inputSlot];
 		if(typeMatch[inputSlot] == typematch_none) {
 			throw BuildException("Types do not match", nodeId, inputSlot);
 		}
@@ -289,7 +289,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 			sourceValueType = sourceNodeSignature.outputTypes[link.slot];
 		}
 		else {
-			sourceValueType = nodeType.defaultInputs[inputSlot].type;
+			sourceValueType = nodeType.defaultInputs[inputSlot].type();
 		}
 
 		std::string inputVariableTemplate = "{in" + std::to_string(inputSlot) + "}";
@@ -327,7 +327,7 @@ id_t ShaderGraph::addNode(const std::string& typeName) {
 }
 void ShaderGraph::removeNode(id_t nodeId) {
 	for(auto& nodeEntry : nodes) {
-		for(auto& link : nodeEntry.second.inputs) {
+		for(auto& link : nodeEntry.second.inputs()) {
 			if(link.nodeId == nodeId) {
 				link = ShaderNode::Link();
 			}
@@ -343,11 +343,11 @@ void ShaderGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t sourc
 
 	ShaderNode& sourceNode = nodes[sourceNodeId];
 	ShaderNode& targetNode = nodes[targetNodeId];
-	if(targetSlot >= targetNode.inputs.size() || sourceSlot >= getNodeType(sourceNode.type).outputs.size()) {
+	if(targetSlot >= targetNode.inputs().size() || sourceSlot >= getNodeType(sourceNode.type()).outputs.size()) {
 		return;
 	}
 
-	targetNode.inputs[targetSlot] = ShaderNode::Link(
+	targetNode.inputs()[targetSlot] = ShaderNode::Link(
 		nextLinkId++,
 		sourceNodeId,
 		sourceSlot);
@@ -436,14 +436,14 @@ void ShaderGraph::setNodeParameterNode(id_t nodeId, bool enable) {
 		return;
 	}
 
-	nodes[nodeId].isParameterNode = enable;
+	nodes[nodeId].nodeIsParameterNode = enable;
 }
 void ShaderGraph::setNodePosition(id_t nodeId, const vec2_t& position) {
 	if(!hasNode(nodeId)) {
 		return;
 	}
 
-	nodes[nodeId].position = position;
+	nodes[nodeId].nodePosition = position;
 }
 bool ShaderGraph::hasNode(id_t nodeId) const {
 	return nodes.count(nodeId) != 0u;
@@ -466,9 +466,9 @@ std::unordered_map<id_t, VariantParameter> ShaderGraph::getShaderParameters() co
 
 	for(const auto& nodeEntry : nodes) {
 		const ShaderNode& node = nodeEntry.second;
-		const ShaderNodeType& nodeType = getNodeType(node.type);
+		const ShaderNodeType& nodeType = getNodeType(node.type());
 
-		if(node.isParameterNode && !nodeType.parameters.empty()) {
+		if(node.isParameterNode() && !nodeType.parameters.empty()) {
 			parameters[nodeEntry.first] = nodeType.parameters[0];
 		}
 	}
@@ -483,7 +483,7 @@ const ShaderNodeType& ShaderGraph::getNodeType(const std::string& typeName) cons
 	return graphLanguage.nodes.at(findNodeType(typeName));
 }
 const ShaderNodeType& ShaderGraph::getNodeTypeOfNode(uint32_t nodeId) const {
-	return graphLanguage.nodes.at(findNodeType(nodes.at(nodeId).type));
+	return graphLanguage.nodes.at(findNodeType(nodes.at(nodeId).type()));
 }
 
 uint32_t ShaderGraph::findNodeType(const std::string& typeName) const {
@@ -513,7 +513,7 @@ uint32_t ShaderGraph::findNodeSignature(const BuildResult& result, const ShaderN
 		return ShaderGraph::typematch_none;
 	};
 
-	const ShaderNodeType& nodeType = getNodeType(node.type);
+	const ShaderNodeType& nodeType = getNodeType(node.type());
 
 	uint32_t bestSignature = nullId;
 	typeMatch = std::vector<TypeMatch>(nodeType.inputs.size(), typematch_none);
@@ -521,28 +521,28 @@ uint32_t ShaderGraph::findNodeSignature(const BuildResult& result, const ShaderN
 	for(std::size_t s = 0u; s < nodeType.signatures.size(); s++) {
 		const ShaderNodeType::Signature& signature = nodeType.signatures[s];
 
-		std::vector<TypeMatch> currentMatch(node.inputs.size(), typematch_none);
-		for(std::size_t i = 0u; i < node.inputs.size(); i++) {
+		std::vector<TypeMatch> currentMatch(node.inputs().size(), typematch_none);
+		for(std::size_t i = 0u; i < node.inputs().size(); i++) {
 			VariantValue::Type inputType = VariantValue::type_null;
-			id_t sourceNodeId = node.inputs[i].nodeId;
+			id_t sourceNodeId = node.inputs()[i].nodeId;
 
 			if(nodes.count(sourceNodeId) != 0u) {
-				uint32_t sourceSlot = node.inputs[i].slot;
+				uint32_t sourceSlot = node.inputs()[i].slot;
 				uint32_t sourceSignature = result.nodeSignatures.at(sourceNodeId);
 				const ShaderNodeType& sourceNodeType = getNodeTypeOfNode(sourceNodeId);
 
 				inputType = sourceNodeType.signatures[sourceSignature].outputTypes[sourceSlot];
 			}
 			else {
-				inputType = nodeType.defaultInputs[i].type;
+				inputType = nodeType.defaultInputs[i].type();
 			}
 
 			currentMatch[i] = matchTypes(inputType, signature.inputTypes[i]);
 		}
 
 		bool matchNotWorse = true;
-		bool matchBetterForAnyInput = node.inputs.empty();
-		for(std::size_t i = 0u; i < node.inputs.size(); i++) {
+		bool matchBetterForAnyInput = node.inputs().empty();
+		for(std::size_t i = 0u; i < node.inputs().size(); i++) {
 			if(currentMatch[i] == typematch_none || currentMatch[i] > typeMatch[i]) {
 				matchNotWorse = false;
 				break;
