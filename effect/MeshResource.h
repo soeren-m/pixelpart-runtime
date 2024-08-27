@@ -9,7 +9,8 @@
 namespace pixelpart {
 class MeshResource : public Resource {
 public:
-
+	MeshResource() = default;
+	MeshResource(const std::string& name);
 	// TODO: clear, ...
 
 	const std::vector<uint32_t>& faces() const;
@@ -18,10 +19,10 @@ public:
 	const std::vector<glm::vec2>& textureCoords() const;
 
 private:
-	std::vector<uint32_t> faces;
-	std::vector<glm::vec3> positions;
-	std::vector<glm::vec3> normals;
-	std::vector<glm::vec2> textureCoords;
+	std::vector<uint32_t> meshFaces;
+	std::vector<glm::vec3> meshPositions;
+	std::vector<glm::vec3> meshNormals;
+	std::vector<glm::vec2> meshTextureCoords;
 };
 
 void to_json(nlohmann::ordered_json& j, const MeshResource& resource);

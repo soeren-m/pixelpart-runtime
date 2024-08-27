@@ -1,14 +1,13 @@
 #include "VectorFieldResource.h"
 #include "../common/Compression.h"
-#include "../common/Json.h"
 #include <cstddef>
 #include <string>
 #include <sstream>
 #include <vector>
 
 namespace pixelpart {
-VectorFieldResource::VectorFieldResource(const std::string& resName, const Grid3d<vec3_t>& data) : Resource(resName),
-	fieldData(data) {
+VectorFieldResource::VectorFieldResource(const std::string& name, const Grid3d<vec3_t>& field) : Resource(name),
+	fieldData(field) {
 
 }
 
@@ -46,27 +45,19 @@ void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
 	};
 }
 void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
-	std::string name;
-	fromJson(name, j, "name");
+	std::string name = j.at("name");
+	std::size_t width = j.value("width", 0u);
+	std::size_t height = j.value("height", 0u);
+	std::size_t depth = j.value("depth", 0u);
 
-	std::size_t width = 0u;
-	std::size_t height = 0u;
-	std::size_t depth = 0u;
-	fromJson(width, j, "width");
-	fromJson(height, j, "height");
-	fromJson(depth, j, "depth");
-
-	Grid3d<vec3_t> field = Grid3d<vec3_t>(width, height, depth, vec3_t(0.0));
-
-	CompressionMethod compressionMethod = CompressionMethod::none;
-	fromJson(compressionMethod, j, "compression");
-
-	std::size_t uncompressedSize = 0u;
-	fromJson(uncompressedSize, j, "uncompressed_size");
+	CompressionMethod compressionMethod = j.value("compression", CompressionMethod::none);
+	std::size_t uncompressedSize = j.value("uncompressed_size", 0u);
 
 	std::vector<uint8_t> uncompressedData = decodeAndDecompress(j.at("field").get<std::string>(), uncompressedSize, compressionMethod);
 	std::istringstream dataStream(
 		std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
+
+	Grid3d<vec3_t> field = Grid3d<vec3_t>(width, height, depth, vec3_t(0.0));
 
 	bool finished = false;
 	for(std::size_t z = 0u; z < field.depth() && !finished; z++) {

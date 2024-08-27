@@ -2,7 +2,7 @@
 #include <algorithm>
 
 namespace pixelpart {
-ParticleCollection::ParticleCollection(uint32_t cap) : particleCapacity(cap) {
+ParticleCollection::ParticleCollection(uint32_t capacity) : particleCapacity(capacity) {
 	id.resize(particleCapacity);
 	parentId.resize(particleCapacity);
 	life.resize(particleCapacity);
@@ -90,6 +90,7 @@ ParticleCollection::ReadPtr ParticleCollection::readPtr(uint32_t index) const {
 		initialColor.data() + index
 	};
 }
+
 uint32_t ParticleCollection::capacity() const {
 	return particleCapacity;
 }

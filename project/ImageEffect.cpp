@@ -9,8 +9,26 @@ ImageEffect::ImageEffect(const ImageEffectType& type) :
 	}
 }
 ImageEffect::ImageEffect(const std::string& typeId, const std::vector<VariantParameter::Value>& parameters, bool visible) :
-	effectTypeId(typeId), effectParameters(parameters), effectIsVisible(visible) {
+	effectTypeId(typeId), effectParameters(parameters), effectVisible(visible) {
 
+}
+
+const std::string& ImageEffect::type() const {
+	return effectTypeId;
+}
+
+std::vector<VariantParameter::Value>& ImageEffect::parameters() {
+	return effectParameters;
+}
+const std::vector<VariantParameter::Value>& ImageEffect::parameters() const {
+	return effectParameters;
+}
+
+void ImageEffect::visible(bool visible) {
+	effectVisible = visible;
+}
+bool ImageEffect::visible() const {
+	return effectVisible;
 }
 
 void to_json(nlohmann::ordered_json& j, const ImageEffect& effect) {

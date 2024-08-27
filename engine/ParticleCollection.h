@@ -43,8 +43,8 @@ public:
 		const vec4_t* initialColor = nullptr;
 	};
 
-	ParticleCollection() = default;
-	ParticleCollection(uint32_t cap);
+	//ParticleCollection() = default;
+	ParticleCollection(uint32_t capacity);
 
 	uint32_t add(uint32_t number);
 	void remove(uint32_t index);
@@ -52,6 +52,7 @@ public:
 
 	WritePtr writePtr(uint32_t index = 0u);
 	ReadPtr readPtr(uint32_t index = 0u) const;
+
 	uint32_t capacity() const;
 	uint32_t count() const;
 

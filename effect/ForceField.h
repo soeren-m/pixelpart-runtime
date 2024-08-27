@@ -3,6 +3,7 @@
 #include "Node.h"
 #include "../common/Types.h"
 #include "../common/Math.h"
+#include "NodeExclusionSet.h"
 #include "StaticProperty.h"
 #include "AnimatedProperty.h"
 #include "../json/json.hpp"
@@ -11,7 +12,8 @@
 #include <vector>
 
 namespace pixelpart {
-struct ForceField : public Node {
+class ForceField : public Node {
+public:
 	enum class Type : uint32_t {
 		attraction_field = 0,
 		acceleration_field = 1,
@@ -19,19 +21,13 @@ struct ForceField : public Node {
 		noise_field = 3,
 		drag_field = 4
 	};
-
-	struct AttractionField {
-
+	enum class Filter : uint32_t {
+		none = 0,
+		linear = 1
 	};
 
 	struct AccelerationField {
-		AnimatedProperty<vec3_t> direction = AnimatedProperty<vec3_t>(vec3_t(0.0));
-		AnimatedProperty<float_t> directionVariance = AnimatedProperty<float_t>(0.0);
-		AnimatedProperty<float_t> strengthVariance = AnimatedProperty<float_t>(0.0);
-
-		int32_t gridSize[3] = { 1, 1, 1 };
-		std::vector<vec3_t> directionGrid = std::vector<vec3_t>{ vec3_t(0.0) };
-		std::vector<float_t> strengthGrid = std::vector<float_t>{ 0.0 };
+		
 
 		template <typename T>
 		void randomizeGrid(T& rng) {
@@ -50,46 +46,60 @@ struct ForceField : public Node {
 		}
 	};
 
-	struct VectorField {
-		enum class Filter : uint32_t {
-			none = 0,
-			linear = 1
-		};
+	ForceField() = default;
+	ForceField(id_t ownId, id_t parentId = nullId);
 
-		std::string resourceId;
-		Filter filter = Filter::none;
+	void type(Type type);
+	Type type() const;
 
-		AnimatedProperty<float_t> tightness = AnimatedProperty<float_t>(1.0);
-	};
+	NodeExclusionSet& exclusionSet();
+	const NodeExclusionSet& exclusionSet() const;
 
-	struct NoiseField {
-		StaticProperty<int64_t> octaves = StaticProperty<int64_t>(4);
-		AnimatedProperty<float_t> frequency = AnimatedProperty<float_t>(1.0);
-		AnimatedProperty<float_t> persistence = AnimatedProperty<float_t>(0.5);
-		AnimatedProperty<float_t> lacunarity = AnimatedProperty<float_t>(2.0);
+	AnimatedProperty<vec3_t>& size();
+	const AnimatedProperty<vec3_t>& size() const;
 
-		bool animated = false;
-		StaticProperty<float_t> animationTimeScale = StaticProperty<float_t>(1.0);
-		StaticProperty<float_t> animationTimeBase = StaticProperty<float_t>(0.0);
-	};
+	AnimatedProperty<vec3_t>& orientation();
+	const AnimatedProperty<vec3_t>& orientation() const;
 
-	struct DragField {
-		StaticProperty<float_t> velocityInfluence = StaticProperty<float_t>(1.0);
-		StaticProperty<float_t> sizeInfluence = StaticProperty<float_t>(1.0);
-	};
+	AnimatedProperty<float_t>& strength();
+	const AnimatedProperty<float_t>& strength() const;
 
-	Type type = Type::attraction_field;
-	std::vector<id_t> exclusionList;
-	AnimatedProperty<vec3_t> size = AnimatedProperty<vec3_t>(vec3_t(1.0));
-	AnimatedProperty<vec3_t> orientation = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	// TODO:
 
-	AnimatedProperty<float_t> strength = AnimatedProperty<float_t>(1.0);
+	StaticProperty<float_t>& dragVelocityInfluence();
+	const StaticProperty<float_t>& dragVelocityInfluence() const;
 
-	AttractionField attractionField;
-	AccelerationField accelerationField;
-	VectorField vectorField;
-	NoiseField noiseField;
-	DragField dragField;
+	StaticProperty<float_t>& dragSizeInfluence();
+	const StaticProperty<float_t>& dragSizeInfluence() const;
+
+private:
+	Type fieldType = Type::attraction_field;
+	NodeExclusionSet fieldExclusionSet;
+	AnimatedProperty<vec3_t> fieldSize = AnimatedProperty<vec3_t>(vec3_t(1.0));
+	AnimatedProperty<vec3_t> fieldOrientation = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	AnimatedProperty<float_t> fieldStrength = AnimatedProperty<float_t>(1.0);
+
+	AnimatedProperty<vec3_t> fieldDirection = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	AnimatedProperty<float_t> fieldDirectionVariance = AnimatedProperty<float_t>(0.0);
+	AnimatedProperty<float_t> fieldStrengthVariance = AnimatedProperty<float_t>(0.0);
+	int32_t accelerationGridSize[3] = { 1, 1, 1 };
+	std::vector<vec3_t> accelerationDirectionGrid = std::vector<vec3_t>{ vec3_t(0.0) };
+	std::vector<float_t> accelerationStrengthGrid = std::vector<float_t>{ 0.0 };
+
+	std::string vectorFieldResourceId;
+	Filter vectorFieldFilter = Filter::none;
+	AnimatedProperty<float_t> vectorFieldTightness = AnimatedProperty<float_t>(1.0);
+
+	StaticProperty<int64_t> fieldNoiseOctaves = StaticProperty<int64_t>(4);
+	AnimatedProperty<float_t> fieldNoiseFrequency = AnimatedProperty<float_t>(1.0);
+	AnimatedProperty<float_t> fieldNoisePersistence = AnimatedProperty<float_t>(0.5);
+	AnimatedProperty<float_t> fieldNoiseLacunarity = AnimatedProperty<float_t>(2.0);
+	bool fieldNoiseAnimated = false;
+	StaticProperty<float_t> fieldNoiseAnimationTimeScale = StaticProperty<float_t>(1.0);
+	StaticProperty<float_t> fieldNoiseAnimationTimeBase = StaticProperty<float_t>(0.0);
+
+	StaticProperty<float_t> fieldDragVelocityInfluence = StaticProperty<float_t>(1.0);
+	StaticProperty<float_t> fieldDragSizeInfluence = StaticProperty<float_t>(1.0);
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ForceField::Type, {
@@ -100,21 +110,11 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ForceField::Type, {
 	{ ForceField::Type::drag_field, "drag_field" }
 })
 
-NLOHMANN_JSON_SERIALIZE_ENUM(ForceField::VectorField::Filter, {
-	{ ForceField::VectorField::Filter::none, "none" },
-	{ ForceField::VectorField::Filter::linear, "linear" }
+NLOHMANN_JSON_SERIALIZE_ENUM(ForceField::Filter, {
+	{ ForceField::Filter::none, "none" },
+	{ ForceField::Filter::linear, "linear" }
 })
 
-void to_json(nlohmann::ordered_json& j, const ForceField::AttractionField& field);
-void to_json(nlohmann::ordered_json& j, const ForceField::AccelerationField& field);
-void to_json(nlohmann::ordered_json& j, const ForceField::VectorField& field);
-void to_json(nlohmann::ordered_json& j, const ForceField::NoiseField& field);
-void to_json(nlohmann::ordered_json& j, const ForceField::DragField& field);
 void to_json(nlohmann::ordered_json& j, const ForceField& forceField);
-void from_json(const nlohmann::ordered_json& j, ForceField::AttractionField& field);
-void from_json(const nlohmann::ordered_json& j, ForceField::AccelerationField& field);
-void from_json(const nlohmann::ordered_json& j, ForceField::VectorField& field);
-void from_json(const nlohmann::ordered_json& j, ForceField::NoiseField& field);
-void from_json(const nlohmann::ordered_json& j, ForceField::DragField& field);
 void from_json(const nlohmann::ordered_json& j, ForceField& forceField);
 }

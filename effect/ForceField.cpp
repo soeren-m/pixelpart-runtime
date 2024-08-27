@@ -1,8 +1,46 @@
 #include "ForceField.h"
-#include "../common/Json.h"
 #include <algorithm>
 
 namespace pixelpart {
+ForceField::ForceField(id_t ownId, id_t parentId) : Node(ownId, parentId) {
+
+}
+
+void ForceField::type(Type type) {
+	fieldType = type;
+}
+ForceField::Type ForceField::type() const {
+	return fieldType;
+}
+
+NodeExclusionSet& ForceField::exclusionSet() {
+	return fieldExclusionSet;
+}
+const NodeExclusionSet& ForceField::exclusionSet() const {
+	return fieldExclusionSet;
+}
+
+AnimatedProperty<vec3_t>& ForceField::size() {
+	return fieldSize;
+}
+const AnimatedProperty<vec3_t>& ForceField::size() const {
+	return fieldSize;
+}
+
+AnimatedProperty<vec3_t>& ForceField::orientation() {
+	return fieldOrientation;
+}
+const AnimatedProperty<vec3_t>& ForceField::orientation() const {
+	return fieldOrientation;
+}
+
+AnimatedProperty<float_t>& ForceField::strength() {
+	return fieldStrength;
+}
+const AnimatedProperty<float_t>& ForceField::strength() const {
+	return fieldStrength;
+}
+
 void to_json(nlohmann::ordered_json& j, const ForceField::AttractionField& field) {
 	j = nlohmann::ordered_json{
 
@@ -51,18 +89,17 @@ void to_json(nlohmann::ordered_json& j, const ForceField& forceField) {
 	j = nlohmann::ordered_json{
 		{ "id", toJson(forceField.id) },
 		{ "parent_id", toJson(forceField.parentId) },
-		{ "name", forceField.name },
-		{ "lifetime_start", forceField.lifetimeStart },
-		{ "lifetime_duration", forceField.lifetimeDuration },
-		{ "repeat", forceField.repeat },
-		{ "position", forceField.position },
+		{ "name", forceField.name() },
+		{ "lifetime_start", forceField.start() },
+		{ "lifetime_duration", forceField.duration() },
+		{ "repeat", forceField.repeat() },
+		{ "position", forceField.position() },
 
-		{ "type", forceField.type },
-		{ "exclusion_list", forceField.exclusionList },
-		{ "size", forceField.size },
-		{ "orientation", forceField.orientation },
-
-		{ "strength", forceField.strength },
+		{ "type", forceField.type() },
+		{ "exclusion_list", forceField.exclusionSet() },
+		{ "size", forceField.size() },
+		{ "orientation", forceField.orientation() },
+		{ "strength", forceField.strength() },
 
 		{ "attraction_field", forceField.attractionField },
 		{ "acceleration_field", forceField.accelerationField },

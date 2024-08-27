@@ -9,6 +9,8 @@ class ParticleEngine {
 public:
 	ParticleEngine(const Effect& fx);
 
+	const Effect& effect() const;
+
 	virtual void step(float_t dt) = 0;
 	virtual void restart(bool reset) = 0;
 
@@ -19,13 +21,12 @@ public:
 
 	virtual void spawnParticles(id_t particleTypeId, uint32_t count) = 0;
 
-	virtual uint32_t getNumParticles() const = 0;
-	virtual uint32_t getNumParticles(uint32_t particleTypeIndex) const = 0;
-	virtual ParticleCollection::ReadPtr getParticles(uint32_t particleTypeIndex) const = 0;
+	virtual uint32_t particleCount() const = 0;
+	virtual uint32_t particleCount(uint32_t particleTypeIndex) const = 0;
 
-	const Effect& getEffect() const;
+	virtual ParticleCollection::ReadPtr particles(uint32_t particleTypeIndex) const = 0;
 
 protected:
-	const Effect& effect;
+	const Effect& particleEffect;
 };
 }

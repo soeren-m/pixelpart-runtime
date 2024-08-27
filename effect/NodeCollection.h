@@ -168,10 +168,10 @@ public:
 		return nodes.at(index);
 	}
 
-	uint32_t getCount() const {
+	uint32_t count() const {
 		return static_cast<uint32_t>(nodes.size());
 	}
-	id_t getMaxId() const {
+	id_t maxId() const {
 		id_t maxId = 0u;
 		for(const T& node : nodes) {
 			maxId = std::max(maxId, node.id);
@@ -181,7 +181,7 @@ public:
 	}
 
 	template <typename TFunc>
-	std::vector<T> getSorted(TFunc compare) const {
+	std::vector<T> sorted(TFunc compare) const {
 		std::vector<T> sortedNodes = nodes;
 		std::sort(sortedNodes.begin(), sortedNodes.end(), [this, &compare](const T& node1, const T& node2) {
 			return compare(node1, node2);
@@ -191,7 +191,7 @@ public:
 	}
 
 	template <typename TFunc>
-	std::vector<uint32_t> getSortedIndices(TFunc compare) const {
+	std::vector<uint32_t> sortedIndices(TFunc compare) const {
 		std::vector<uint32_t> sortedIndices(nodes.size());
 		for(uint32_t i = 0u; i < nodes.size(); i++) {
 			sortedIndices[i] = i;

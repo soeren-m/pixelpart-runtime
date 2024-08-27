@@ -10,6 +10,22 @@ ResourceCollection::ResourceCollection(
 
 }
 
+const std::unordered_map<std::string, ImageResource>& ResourceCollection::images() const {
+	return imageResources;
+}
+
+const std::unordered_map<std::string, MeshResource>& ResourceCollection::meshes() const {
+	return meshResources;
+}
+
+const std::unordered_map<std::string, MaterialResource>& ResourceCollection::materials() const {
+	return materialResources;
+}
+
+const std::unordered_map<std::string, VectorFieldResource>& ResourceCollection::vectorFields() const {
+	return vectorFieldResources;
+}
+
 void to_json(nlohmann::ordered_json& j, const ResourceCollection& resources) {
 	j = nlohmann::ordered_json{
 		{ "images", resources.images() },

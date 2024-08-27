@@ -21,8 +21,8 @@ public:
 	public:
 		BuildException(const std::string& msg, id_t node = nullId, uint32_t slot = nullId);
 
-		id_t getNodeId() const;
-		uint32_t getSlotIndex() const;
+		id_t node() const;
+		uint32_t slot() const;
 
 	private:
 		id_t nodeId = nullId;
@@ -50,40 +50,40 @@ public:
 
 	static uint32_t numCurveInterpolationPoints;
 
-	ShaderGraph();
-	ShaderGraph(const std::unordered_map<id_t, ShaderNode>& initialNodes);
+	ShaderGraph() = default;
+	ShaderGraph(const std::unordered_map<id_t, ShaderNode>& nodes);
 
 	std::string build(BuildResult& result, id_t nodeId = 0u) const;
 
 	id_t addNode(const std::string& typeName);
 	void removeNode(id_t nodeId);
+
 	void linkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t sourceSlot, uint32_t targetSlot);
 	void linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::string& sourceSlotName, const std::string& targetSlotName);
 	void unlinkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t targetSlot);
 	void unlinkNodes(id_t linkId);
-	void setNodeName(id_t nodeId, const std::string& name);
-	void setNodeParameter(id_t nodeId, uint32_t parameterIndex, VariantParameter::Value value);
-	void setNodeParameter(id_t nodeId, const std::string& parameterName, VariantParameter::Value value);
-	void setNodeParameterNode(id_t nodeId, bool enable);
-	void setNodePosition(id_t nodeId, const vec2_t& position);
-	bool hasNode(id_t nodeId) const;
-	const ShaderNode& getNode(id_t nodeId) const;
-	const std::unordered_map<id_t, ShaderNode>& getNodes() const;
-	id_t getNextNodeId() const;
-	id_t getNextLinkId() const;
 
-	std::unordered_map<id_t, VariantParameter> getShaderParameters() const;
+	void nodeName(id_t nodeId, const std::string& name);
+	void nodeParameter(id_t nodeId, uint32_t parameterIndex, VariantParameter::Value value);
+	void nodeParameter(id_t nodeId, const std::string& parameterName, VariantParameter::Value value);
+	void nodeParameterNode(id_t nodeId, bool enable);
+	void nodePosition(id_t nodeId, const vec2_t& position);
 
-	bool hasNodeType(const std::string& typeName) const;
+	bool containsNode(id_t nodeId) const;
+	const ShaderNode& node(id_t nodeId) const;
+	const std::unordered_map<id_t, ShaderNode>& nodes() const;
+
+	std::unordered_map<id_t, VariantParameter> shaderParameters() const;
+
+	bool containsNodeType(const std::string& typeName) const;
 	const ShaderNodeType& nodeType(const std::string& typeName) const;
-	const ShaderNodeType& nodeTypeOfNode(id_t nodeId) const;
+	const ShaderNodeType& nodeType(id_t nodeId) const;
 
 private:
 	uint32_t findNodeType(const std::string& typeName) const;
 	uint32_t findNodeSignature(const BuildResult& result, const ShaderNode& node, std::vector<TypeMatch>& typeMatch) const;
 
-	std::unordered_map<id_t, ShaderNode> nodes;
-
+	std::unordered_map<id_t, ShaderNode> shaderNodes;
 	id_t nextNodeId = 0u;
 	id_t nextLinkId = 0u;
 };

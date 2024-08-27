@@ -1,6 +1,11 @@
 #include "ShaderNode.h"
 
 namespace pixelpart {
+ShaderNode::Link::Link(id_t linkId, id_t linkNodeId, uint32_t slotIndex) :
+	id(linkId), nodeId(linkNodeId), slot(slotIndex) {
+
+}
+
 ShaderNode::ShaderNode(const ShaderNodeType& nodeType) :
 	nodeTypeId(nodeType.name), nodeInputs(nodeType.inputs.size()), nodeParameters(nodeType.parameters.size()) {
 	for(std::size_t p = 0u; p < nodeParameters.size(); p++) {
@@ -19,19 +24,38 @@ ShaderNode::ShaderNode(const std::string& typeId, const std::string& name,
 const std::string& ShaderNode::type() const {
 	return nodeTypeId;
 }
+
+void ShaderNode::name(const std::string& name) {
+	nodeName = name;
+}
 const std::string& ShaderNode::name() const {
 	return nodeName;
+}
+
+std::vector<ShaderNode::Link>& ShaderNode::inputs() {
+	return nodeInputs;
 }
 const std::vector<ShaderNode::Link>& ShaderNode::inputs() const {
 	return nodeInputs;
 }
+
+std::vector<VariantParameter::Value>& ShaderNode::parameters() {
+	return nodeParameters;
+}
 const std::vector<VariantParameter::Value>& ShaderNode::parameters() const {
 	return nodeParameters;
+}
+
+void ShaderNode::parameterNode(bool parameterNode) {
+	nodeIsParameterNode = parameterNode;
 }
 bool ShaderNode::parameterNode() const {
 	return nodeIsParameterNode;
 }
 
+void ShaderNode::position(const vec2_t& position) {
+	nodePosition = position;
+}
 const vec2_t& ShaderNode::position() const {
 	return nodePosition;
 }
@@ -54,10 +78,10 @@ void to_json(nlohmann::ordered_json& j, const ShaderNode& node) {
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ShaderNode::Link& link) {
-	link = ShaderNode::Link();
-	link.id = j.at("id");
-	link.nodeId = j.at("node");
-	link.slot = j.value("slot", 0u);
+	link = ShaderNode::Link(
+		j.at("id"),
+		j.at("node"),
+		j.value("slot", 0u));
 }
 void from_json(const nlohmann::ordered_json& j, ShaderNode& node) {
 	node = ShaderNode(

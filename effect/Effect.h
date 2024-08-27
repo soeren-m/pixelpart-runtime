@@ -14,12 +14,24 @@ namespace pixelpart {
 class Effect {
 public:
 	Effect() = default;
-	Effect(bool effect3d);
+	Effect(bool is3d);
+
+	bool is3d() const;
 
 	NodeCollection<ParticleEmitter>& particleEmitters();
 	const NodeCollection<ParticleEmitter>& particleEmitters() const;
 
-	// TODO
+	NodeCollection<ParticleType>& particleTypes();
+	const NodeCollection<ParticleType>& particleTypes() const;
+
+	NodeCollection<ForceField>& forceFields();
+	const NodeCollection<ForceField>& forceFields() const;
+
+	NodeCollection<Collider>& colliders();
+	const NodeCollection<Collider>& colliders() const;
+
+	NodeCollection<LightSource>& lightSources();
+	const NodeCollection<LightSource>& lightSources() const;
 
 	EffectInputCollection& inputs();
 	const EffectInputCollection& inputs() const;
@@ -30,16 +42,17 @@ public:
 	void refreshProperties();
 
 private:
-	bool is3d = false;
+	bool effect3d = false;
 
-	NodeCollection<ParticleEmitter> particleEmitters;
-	NodeCollection<ParticleType> particleTypes;
-	NodeCollection<ForceField> forceFields;
-	NodeCollection<Collider> colliders;
-	NodeCollection<LightSource> lightSources;
+	NodeCollection<ParticleEmitter> effectParticleEmitters;
+	NodeCollection<ParticleType> effectParticleTypes;
+	NodeCollection<ForceField> effectForceFields;
+	NodeCollection<Collider> effectColliders;
+	NodeCollection<LightSource> effectLightSources;
 
-	EffectInputCollection inputs;
-	ResourceCollection resources;
+	EffectInputCollection effectInputs;
+
+	ResourceCollection effectResources;
 };
 
 void to_json(nlohmann::ordered_json& j, const Effect& effect);

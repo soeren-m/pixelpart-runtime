@@ -18,13 +18,13 @@ public:
 	std::vector<VariantParameter::Value>& parameters();
 	const std::vector<VariantParameter::Value>& parameters() const;
 
-	void visible(bool vis);
+	void visible(bool visible);
 	bool visible() const;
 
 private:
 	std::string effectTypeId;
 	std::vector<VariantParameter::Value> effectParameters;
-	bool effectIsVisible = true;
+	bool effectVisible = true;
 };
 
 void to_json(nlohmann::ordered_json& j, const ImageEffect& effect);

@@ -28,19 +28,20 @@ public:
 	virtual void step(float_t dt) override;
 	virtual void restart(bool reset) override;
 
-	virtual float_t getTime() const override;
+	virtual float_t currentTime() const override;
 
 	virtual void applySeed(uint32_t seed) override;
 	virtual void resetSeed() override;
 
 	virtual void spawnParticles(id_t particleTypeId, uint32_t count) override;
 
-	virtual uint32_t getNumParticles() const override;
-	virtual uint32_t getNumParticles(uint32_t particleTypeIndex) const override;
-	virtual ParticleCollection::ReadPtr getParticles(uint32_t particleTypeIndex) const override;
+	virtual uint32_t particleCount() const override;
+	virtual uint32_t particleCount(uint32_t particleTypeIndex) const override;
 
-	uint32_t getParticleCapacity() const;
-	uint32_t getNumActiveThreads() const;
+	virtual ParticleCollection::ReadPtr particles(uint32_t particleTypeIndex) const override;
+
+	uint32_t particleCapacity() const;
+	uint32_t activeThreadCount() const;
 
 private:
 	void stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,

@@ -1,5 +1,4 @@
 #include "ParticleRendererSettings.h"
-#include "../common/Json.h"
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const ParticleSpriteRendererSettings& rendererSettings) {

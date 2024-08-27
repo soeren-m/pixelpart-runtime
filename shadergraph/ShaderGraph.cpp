@@ -4,14 +4,15 @@
 #include <algorithm>
 
 namespace pixelpart {
-ShaderGraph::BuildException::BuildException(const std::string& msg, id_t node, uint32_t slot) : std::runtime_error(msg), nodeId(node), slotIndex(slot) {
+ShaderGraph::BuildException::BuildException(const std::string& msg, id_t node, uint32_t slot) :
+	std::runtime_error(msg), nodeId(node), slotIndex(slot) {
 
 }
 
-id_t ShaderGraph::BuildException::getNodeId() const {
+id_t ShaderGraph::BuildException::node() const {
 	return nodeId;
 }
-uint32_t ShaderGraph::BuildException::getSlotIndex() const {
+uint32_t ShaderGraph::BuildException::slot() const {
 	return slotIndex;
 }
 
@@ -19,13 +20,10 @@ ShaderGraphLanguage ShaderGraph::graphLanguage = ShaderGraphLanguage();
 
 uint32_t ShaderGraph::numCurveInterpolationPoints = 100u;
 
-ShaderGraph::ShaderGraph() {
-
-}
-ShaderGraph::ShaderGraph(const std::unordered_map<id_t, ShaderNode>& initialNodes) : nodes(initialNodes) {
+ShaderGraph::ShaderGraph(const std::unordered_map<id_t, ShaderNode>& nodes) : shaderNodes(nodes) {
 	id_t maxNodeId = 0u;
 	id_t maxLinkId = 0u;
-	for(const auto& nodeEntry : nodes) {
+	for(const auto& nodeEntry : shaderNodes) {
 		maxNodeId = std::max(maxNodeId, nodeEntry.first);
 
 		for(const auto& link : nodeEntry.second.inputs()) {
@@ -46,8 +44,8 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 		result = BuildResult();
 	}
 
-	auto nodeEntry = nodes.find(nodeId);
-	if(nodeEntry == nodes.end()) {
+	auto nodeEntry = shaderNodes.find(nodeId);
+	if(nodeEntry == shaderNodes.end()) {
 		return std::string();
 	}
 
@@ -58,7 +56,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 		throw BuildException("Unknown node type \"" + node.type() + "\"", nodeId);
 	}
 
-	const ShaderNodeType& nodeType = graphLanguage.nodes.at(nodeTypeIndex);
+	const ShaderNodeType& nodeType = graphLanguage.shaderNodes.at(nodeTypeIndex);
 
 	std::string code = nodeType.code;
 
@@ -199,7 +197,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 			link = node.inputs()[inputSlot];
 		}
 
-		if(nodes.count(link.nodeId) != 0u) {
+		if(shaderNodes.count(link.nodeId) != 0u) {
 			if(result.resolvedNodes.count(link.nodeId) == 0u) {
 				inputCode += build(result, link.nodeId);
 			}
@@ -282,7 +280,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 
 		VariantValue::Type sourceValueType = VariantValue::type_null;
 
-		if(nodes.count(link.nodeId) != 0u) {
+		if(shaderNodes.count(link.nodeId) != 0u) {
 			const ShaderNodeType& sourceNodeType = getNodeTypeOfNode(link.nodeId);
 			const ShaderNodeType::Signature& sourceNodeSignature = sourceNodeType.signatures[result.nodeSignatures[link.nodeId]];
 
@@ -321,12 +319,12 @@ id_t ShaderGraph::addNode(const std::string& typeName) {
 	}
 
 	id_t nodeId = nextNodeId++;
-	nodes[nodeId] = ShaderNode(graphLanguage.nodes[typeIndex]);
+	shaderNodes[nodeId] = ShaderNode(graphLanguage.nodes[typeIndex]);
 
 	return nodeId;
 }
 void ShaderGraph::removeNode(id_t nodeId) {
-	for(auto& nodeEntry : nodes) {
+	for(auto& nodeEntry : shaderNodes) {
 		for(auto& link : nodeEntry.second.inputs()) {
 			if(link.nodeId == nodeId) {
 				link = ShaderNode::Link();
@@ -334,16 +332,17 @@ void ShaderGraph::removeNode(id_t nodeId) {
 		}
 	}
 
-	nodes.erase(nodeId);
+	shaderNodes.erase(nodeId);
 }
+
 void ShaderGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t sourceSlot, uint32_t targetSlot) {
-	if(!hasNode(sourceNodeId) || !hasNode(targetNodeId)) {
+	if(!containsNode(sourceNodeId) || !containsNode(targetNodeId)) {
 		return;
 	}
 
-	ShaderNode& sourceNode = nodes[sourceNodeId];
-	ShaderNode& targetNode = nodes[targetNodeId];
-	if(targetSlot >= targetNode.inputs().size() || sourceSlot >= getNodeType(sourceNode.type()).outputs.size()) {
+	ShaderNode& sourceNode = shaderNodes[sourceNodeId];
+	ShaderNode& targetNode = shaderNodes[targetNodeId];
+	if(targetSlot >= targetNode.inputs().size() || sourceSlot >= nodeType(sourceNode.type()).outputs.size()) {
 		return;
 	}
 
@@ -353,14 +352,14 @@ void ShaderGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t sourc
 		sourceSlot);
 }
 void ShaderGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::string& sourceSlotName, const std::string& targetSlotName) {
-	if(!hasNode(sourceNodeId) || !hasNode(targetNodeId)) {
+	if(!containsNode(sourceNodeId) || !containsNode(targetNodeId)) {
 		return;
 	}
 
-	ShaderNode& sourceNode = nodes[sourceNodeId];
-	ShaderNode& targetNode = nodes[targetNodeId];
-	const ShaderNodeType& sourceNodeType = getNodeType(sourceNode.type);
-	const ShaderNodeType& targetNodeType = getNodeType(targetNode.type);
+	ShaderNode& sourceNode = shaderNodes[sourceNodeId];
+	ShaderNode& targetNode = shaderNodes[targetNodeId];
+	const ShaderNodeType& sourceNodeType = nodeType(sourceNode.type());
+	const ShaderNodeType& targetNodeType = nodeType(targetNode.type());
 
 	uint32_t sourceSlot = nullId;
 	for(std::size_t o = 0u; o < sourceNodeType.outputs.size(); o++) {
@@ -377,27 +376,27 @@ void ShaderGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::str
 	}
 
 	if(sourceSlot != nullId && targetSlot != nullId) {
-		targetNode.inputs[targetSlot] = ShaderNode::Link(
+		targetNode.inputs()[targetSlot] = ShaderNode::Link(
 			nextLinkId++,
 			sourceNodeId,
 			sourceSlot);
 	}
 }
 void ShaderGraph::unlinkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t targetSlot) {
-	if(!hasNode(sourceNodeId) || !hasNode(targetNodeId)) {
+	if(!containsNode(sourceNodeId) || !containsNode(targetNodeId)) {
 		return;
 	}
 
-	ShaderNode& targetNode = nodes[targetNodeId];
-	if(targetSlot >= targetNode.inputs.size()) {
+	ShaderNode& targetNode = shaderNodes[targetNodeId];
+	if(targetSlot >= targetNode.inputs().size()) {
 		return;
 	}
 
-	targetNode.inputs[targetSlot] = ShaderNode::Link();
+	targetNode.inputs()[targetSlot] = ShaderNode::Link();
 }
 void ShaderGraph::unlinkNodes(id_t linkId) {
-	for(auto& nodeEntry : nodes) {
-		for(ShaderNode::Link& link : nodeEntry.second.inputs) {
+	for(auto& nodeEntry : shaderNodes) {
+		for(ShaderNode::Link& link : nodeEntry.second.inputs()) {
 			if(link.id == linkId) {
 				link = ShaderNode::Link();
 				return;
@@ -405,91 +404,87 @@ void ShaderGraph::unlinkNodes(id_t linkId) {
 		}
 	}
 }
-void ShaderGraph::setNodeName(id_t nodeId, const std::string& name) {
-	if(!hasNode(nodeId)) {
+
+void ShaderGraph::nodeName(id_t nodeId, const std::string& name) {
+	if(!containsNode(nodeId)) {
 		return;
 	}
 
-	nodes[nodeId].name = name;
+	shaderNodes[nodeId].name(name);
 }
-void ShaderGraph::setNodeParameter(id_t nodeId, uint32_t parameterIndex, VariantParameter::Value value) {
-	if(!hasNode(nodeId) || parameterIndex >= nodes[nodeId].parameters.size()) {
+void ShaderGraph::nodeParameter(id_t nodeId, uint32_t parameterIndex, VariantParameter::Value value) {
+	if(!containsNode(nodeId) || parameterIndex >= shaderNodes[nodeId].parameters().size()) {
 		return;
 	}
 
-	nodes[nodeId].parameters[parameterIndex] = value;
+	shaderNodes[nodeId].parameters()[parameterIndex] = value;
 }
-void ShaderGraph::setNodeParameter(id_t nodeId, const std::string& parameterName, VariantParameter::Value value) {
-	if(!hasNode(nodeId)) {
+void ShaderGraph::nodeParameter(id_t nodeId, const std::string& parameterName, VariantParameter::Value value) {
+	if(!containsNode(nodeId)) {
 		return;
 	}
 
-	ShaderNode& node = nodes[nodeId];
-	for(std::size_t p = 0u; p < nodes[nodeId].parameters.size(); p++) {
-		if(getNodeType(node.type).parameters[p].name == parameterName) {
-			node.parameters[p] = value;
+	ShaderNode& node = shaderNodes[nodeId];
+	for(std::size_t p = 0u; p < shaderNodes[nodeId].parameters().size(); p++) {
+		if(nodeType(node.type()).parameters[p].name() == parameterName) {
+			node.parameters()[p] = value;
 		}
 	}
 }
-void ShaderGraph::setNodeParameterNode(id_t nodeId, bool enable) {
-	if(!hasNode(nodeId)) {
+void ShaderGraph::nodeParameterNode(id_t nodeId, bool enable) {
+	if(!containsNode(nodeId)) {
 		return;
 	}
 
-	nodes[nodeId].nodeIsParameterNode = enable;
+	shaderNodes[nodeId].parameterNode(enable);
 }
-void ShaderGraph::setNodePosition(id_t nodeId, const vec2_t& position) {
-	if(!hasNode(nodeId)) {
+void ShaderGraph::nodePosition(id_t nodeId, const vec2_t& position) {
+	if(!containsNode(nodeId)) {
 		return;
 	}
 
-	nodes[nodeId].nodePosition = position;
-}
-bool ShaderGraph::hasNode(id_t nodeId) const {
-	return nodes.count(nodeId) != 0u;
-}
-const ShaderNode& ShaderGraph::getNode(id_t nodeId) const {
-	return nodes.at(nodeId);
-}
-const std::unordered_map<id_t, ShaderNode>& ShaderGraph::getNodes() const {
-	return nodes;
-}
-id_t ShaderGraph::getNextNodeId() const {
-	return nextNodeId;
-}
-id_t ShaderGraph::getNextLinkId() const {
-	return nextLinkId;
+	shaderNodes[nodeId].position(position);
 }
 
-std::unordered_map<id_t, VariantParameter> ShaderGraph::getShaderParameters() const {
+bool ShaderGraph::containsNode(id_t nodeId) const {
+	return shaderNodes.count(nodeId) != 0u;
+}
+const ShaderNode& ShaderGraph::node(id_t nodeId) const {
+	return shaderNodes.at(nodeId);
+}
+const std::unordered_map<id_t, ShaderNode>& ShaderGraph::nodes() const {
+	return shaderNodes;
+}
+
+std::unordered_map<id_t, VariantParameter> ShaderGraph::shaderParameters() const {
 	std::unordered_map<id_t, VariantParameter> parameters;
 
-	for(const auto& nodeEntry : nodes) {
+	for(const auto& nodeEntry : shaderNodes) {
 		const ShaderNode& node = nodeEntry.second;
-		const ShaderNodeType& nodeType = getNodeType(node.type());
+		const ShaderNodeType& shaderNodeType = nodeType(node.type());
 
-		if(node.isParameterNode() && !nodeType.parameters.empty()) {
-			parameters[nodeEntry.first] = nodeType.parameters[0];
+		if(node.parameterNode() && !shaderNodeType.parameters.empty()) {
+			parameters[nodeEntry.first] = shaderNodeType.parameters[0];
 		}
 	}
 
 	return parameters;
 }
 
-bool ShaderGraph::hasNodeType(const std::string& typeName) const{
+bool ShaderGraph::containsNodeType(const std::string& typeName) const{
 	return findNodeType(typeName) != nullId;
 }
-const ShaderNodeType& ShaderGraph::getNodeType(const std::string& typeName) const {
+const ShaderNodeType& ShaderGraph::nodeType(const std::string& typeName) const {
 	return graphLanguage.nodes.at(findNodeType(typeName));
 }
-const ShaderNodeType& ShaderGraph::getNodeTypeOfNode(uint32_t nodeId) const {
-	return graphLanguage.nodes.at(findNodeType(nodes.at(nodeId).type()));
+const ShaderNodeType& ShaderGraph::nodeType(uint32_t nodeId) const {
+	return graphLanguage.nodes.at(findNodeType(shaderNodes.at(nodeId).type()));
 }
 
 uint32_t ShaderGraph::findNodeType(const std::string& typeName) const {
-	for(std::size_t i = 0u; i < graphLanguage.nodes.size(); i++) {
-		if(graphLanguage.nodes[i].name == typeName) {
-			return static_cast<uint32_t>(i);
+	for(std::size_t nodeIndex = 0u; nodeIndex < graphLanguage.nodes.size(); nodeIndex++) {
+		if(graphLanguage.nodes[nodeIndex].name == typeName) {
+			return static_cast<uint32_t>(nodeIndex);
 		}
 	}
 
@@ -513,48 +508,48 @@ uint32_t ShaderGraph::findNodeSignature(const BuildResult& result, const ShaderN
 		return ShaderGraph::typematch_none;
 	};
 
-	const ShaderNodeType& nodeType = getNodeType(node.type());
+	const ShaderNodeType& shaderNodeType = nodeType(node.type());
 
 	uint32_t bestSignature = nullId;
-	typeMatch = std::vector<TypeMatch>(nodeType.inputs.size(), typematch_none);
+	typeMatch = std::vector<TypeMatch>(shaderNodeType.inputs.size(), typematch_none);
 
-	for(std::size_t s = 0u; s < nodeType.signatures.size(); s++) {
-		const ShaderNodeType::Signature& signature = nodeType.signatures[s];
+	for(std::size_t signatureIndex = 0u; signatureIndex < shaderNodeType.signatures.size(); signatureIndex++) {
+		const ShaderNodeType::Signature& signature = shaderNodeType.signatures[signatureIndex];
 
 		std::vector<TypeMatch> currentMatch(node.inputs().size(), typematch_none);
-		for(std::size_t i = 0u; i < node.inputs().size(); i++) {
+		for(std::size_t inputIndex = 0u; inputIndex < node.inputs().size(); inputIndex++) {
 			VariantValue::Type inputType = VariantValue::type_null;
-			id_t sourceNodeId = node.inputs()[i].nodeId;
+			id_t sourceNodeId = node.inputs()[inputIndex].nodeId;
 
-			if(nodes.count(sourceNodeId) != 0u) {
-				uint32_t sourceSlot = node.inputs()[i].slot;
+			if(shaderNodes.count(sourceNodeId) != 0u) {
+				uint32_t sourceSlot = node.inputs()[inputIndex].slot;
 				uint32_t sourceSignature = result.nodeSignatures.at(sourceNodeId);
-				const ShaderNodeType& sourceNodeType = getNodeTypeOfNode(sourceNodeId);
+				const ShaderNodeType& sourceNodeType = nodeType(sourceNodeId);
 
 				inputType = sourceNodeType.signatures[sourceSignature].outputTypes[sourceSlot];
 			}
 			else {
-				inputType = nodeType.defaultInputs[i].type();
+				inputType = shaderNodeType.defaultInputs[inputIndex].type();
 			}
 
-			currentMatch[i] = matchTypes(inputType, signature.inputTypes[i]);
+			currentMatch[inputIndex] = matchTypes(inputType, signature.inputTypes[inputIndex]);
 		}
 
 		bool matchNotWorse = true;
 		bool matchBetterForAnyInput = node.inputs().empty();
-		for(std::size_t i = 0u; i < node.inputs().size(); i++) {
-			if(currentMatch[i] == typematch_none || currentMatch[i] > typeMatch[i]) {
+		for(std::size_t inputIndex = 0u; inputIndex < node.inputs().size(); inputIndex++) {
+			if(currentMatch[inputIndex] == typematch_none || currentMatch[inputIndex] > typeMatch[inputIndex]) {
 				matchNotWorse = false;
 				break;
 			}
-			else if(currentMatch[i] < typeMatch[i]) {
+			else if(currentMatch[inputIndex] < typeMatch[inputIndex]) {
 				matchBetterForAnyInput = true;
 			}
 		}
 
 		if(matchNotWorse && matchBetterForAnyInput) {
 			typeMatch = currentMatch;
-			bestSignature = static_cast<uint32_t>(s);
+			bestSignature = static_cast<uint32_t>(signatureIndex);
 		}
 	}
 
@@ -563,12 +558,10 @@ uint32_t ShaderGraph::findNodeSignature(const BuildResult& result, const ShaderN
 
 void to_json(nlohmann::ordered_json& j, const ShaderGraph& shader) {
 	j = nlohmann::ordered_json{
-		{ "nodes", shader.getNodes() }
+		{ "nodes", shader.nodes() }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ShaderGraph& shader) {
-	shader = ShaderGraph(
-		j.at("nodes").get<std::unordered_map<id_t, ShaderNode>>()
-	);
+	shader = ShaderGraph(j.at("nodes"));
 }
 }

@@ -3,13 +3,11 @@
 #include "Node.h"
 #include "../common/Types.h"
 #include "../common/Math.h"
-#include "NodeExclusionList.h"
+#include "NodeExclusionSet.h"
 #include "StaticProperty.h"
 #include "AnimatedProperty.h"
 #include "../json/json.hpp"
 #include <vector>
-
-// TODO
 
 namespace pixelpart {
 class Collider : public Node {
@@ -18,6 +16,9 @@ public:
 
 	Collider() = default;
 	Collider(id_t ownId, id_t parentId = nullId);
+
+	NodeExclusionSet& exclusionSet();
+	const NodeExclusionSet& exclusionSet() const;
 
 	PointList& points();
 	const PointList& points() const;

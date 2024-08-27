@@ -1,12 +1,28 @@
 #include "MeshResource.h"
 #include "../common/Compression.h"
-#include "../common/Json.h"
 #include <cstddef>
 #include <string>
 #include <sstream>
 #include <utility>
 
 namespace pixelpart {
+MeshResource::MeshResource(const std::string& name) : Resource(name) {
+
+}
+
+const std::vector<uint32_t>& MeshResource::faces() const {
+	return meshFaces;
+}
+const std::vector<glm::vec3>& MeshResource::positions() const {
+	return meshPositions;
+}
+const std::vector<glm::vec3>& MeshResource::normals() const {
+	return meshNormals;
+}
+const std::vector<glm::vec2>& MeshResource::textureCoords() const {
+	return meshTextureCoords;
+}
+
 std::pair<std::string, std::size_t> serializeIntegerData(const std::vector<uint32_t>& data) {
 	std::string stringData;
 	for(std::size_t i = 0u; i < data.size(); i++) {
@@ -107,13 +123,13 @@ void deserializeVectorData(std::vector<glm::vec3>& vectorData, const std::string
 }
 
 void to_json(nlohmann::ordered_json& j, const MeshResource& resource) {
-	std::pair<std::string, std::size_t> serializedFaces = serializeIntegerData(resource.faces);
-	std::pair<std::string, std::size_t> serializedPositions = serializeVectorData(resource.positions);
-	std::pair<std::string, std::size_t> serializedNormals = serializeVectorData(resource.normals);
-	std::pair<std::string, std::size_t> serializedTextureCoords = serializeVectorData(resource.textureCoords);
+	std::pair<std::string, std::size_t> serializedFaces = serializeIntegerData(resource.faces());
+	std::pair<std::string, std::size_t> serializedPositions = serializeVectorData(resource.positions());
+	std::pair<std::string, std::size_t> serializedNormals = serializeVectorData(resource.normals());
+	std::pair<std::string, std::size_t> serializedTextureCoords = serializeVectorData(resource.textureCoords());
 
 	j = nlohmann::ordered_json{
-		{ "name", resource.name },
+		{ "name", resource.name() },
 		{ "faces", serializedFaces.first },
 		{ "faces_uncompressed_size", serializedFaces.second },
 		{ "positions", serializedPositions.first },

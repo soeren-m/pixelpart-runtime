@@ -1,5 +1,4 @@
 #include "EffectInput.h"
-#include "../common/Json.h"
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const EffectInput& input) {
@@ -10,8 +9,7 @@ void to_json(nlohmann::ordered_json& j, const EffectInput& input) {
 }
 void from_json(const nlohmann::ordered_json& j, EffectInput& input) {
 	input = EffectInput();
-
-	fromJson(input.name, j, "name");
-	fromJson(input.value, j, "value");
+	input.name = j.value("name", "");
+	input.value = j.value("value", VariantValue());
 }
 }

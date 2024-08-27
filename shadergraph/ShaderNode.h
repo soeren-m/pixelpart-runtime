@@ -10,13 +10,12 @@
 #include <vector>
 
 namespace pixelpart {
-class ShaderGraph;
-
 class ShaderNode {
-	friend class ShaderGraph;
-
 public:
 	struct Link {
+		Link() = default;
+		Link(id_t linkId, id_t linkNodeId, uint32_t slotIndex);
+
 		id_t id = nullId;
 		id_t nodeId = nullId;
 		uint32_t slot = 0u;
@@ -30,12 +29,20 @@ public:
 		bool parameterNode, const vec2_t& position);
 
 	const std::string& type() const;
+
+	void name(const std::string& name);
 	const std::string& name() const;
+
+	std::vector<Link>& inputs();
 	const std::vector<Link>& inputs() const;
+
+	std::vector<VariantParameter::Value>& parameters();
 	const std::vector<VariantParameter::Value>& parameters() const;
 
+	void parameterNode(bool parameterNode);
 	bool parameterNode() const;
 
+	void position(const vec2_t& position);
 	const vec2_t& position() const;
 
 private:

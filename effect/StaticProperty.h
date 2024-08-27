@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../common/Types.h"
-#include "../common/Json.h"
 #include "../common/VariantValue.h"
 #include "../computegraph/ComputeGraph.h"
 #include "../computegraph/OutputComputeNode.h"
 #include "ComputeOutputOperation.h"
+#include "../json/json.hpp"
 #include <unordered_map>
 
 namespace pixelpart {
@@ -28,11 +28,11 @@ public:
 	}
 
 	T operator()() const {
-		return computedValue;
+		return resultValue;
 	}
 
 	T get() const {
-		return computedValue;
+		return resultValue;
 	}
 
 	void refresh(const ComputeGraph::InputSet& inputs) {
@@ -59,10 +59,10 @@ public:
 
 	void refresh() {
 		if(useGraphOutput) {
-			computedValue = applyComputeOutputOperation(value, graphOutputValue, computeOutputOperation);
+			resultValue = applyComputeOutputOperation(value, graphOutputValue, computeOutputOperation);
 		}
 		else {
-			computedValue = value;
+			resultValue = value;
 		}
 	}
 
@@ -95,7 +95,7 @@ private:
 	ComputeGraph computeGraph;
 	ComputeOutputOperation computeOutputOperation = ComputeOutputOperation::set;
 
-	T computedValue = T();
+	T resultValue = T();
 	T graphOutputValue = T();
 	bool useGraphOutput = false;
 };
@@ -111,15 +111,9 @@ void to_json(nlohmann::ordered_json& j, const StaticProperty<T>& property) {
 
 template <typename T>
 void from_json(const nlohmann::ordered_json& j, StaticProperty<T>& property) {
-	T value = T();
-	fromJson(value, j, "value");
-
-	ComputeGraph graph;
-	fromJson(graph, j, "compute_graph");
-
-	ComputeOutputOperation outputOperation = ComputeOutputOperation::set;
-	fromJson(outputOperation, j, "compute_operation");
-
-	property = StaticProperty<T>(value, graph, outputOperation);
+	property = StaticProperty<T>(
+		j.value("value", T()),
+		j.value("compute_graph", ComputeGraph()),
+		j.value("compute_operation", ComputeOutputOperation::set));
 }
 }
