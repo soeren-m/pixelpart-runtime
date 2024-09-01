@@ -10,7 +10,7 @@ ForceSolver::ForceSolver() {
 }
 
 void ForceSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
+	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
 	for(std::size_t f = 0u; f < forceFields.size(); f++) {
 		const ForceField& forceField = forceFields[f];
 		if(forceFieldExclusionSets[f][particleType.id] ||
@@ -19,7 +19,7 @@ void ForceSolver::solve(const ParticleEmitter& particleEmitter, const ParticleTy
 			continue;
 		}
 
-		solve(particleType, particles, numParticles, t, dt, forceField);
+		solve(particleType, particles, particleCount, t, dt, forceField);
 	}
 }
 
@@ -38,7 +38,7 @@ void ForceSolver::prepare(const Effect& effect) {
 	}
 }
 
-void ForceSolver::solve(const ParticleType& particleType, ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt, const ForceField& forceField) const {
+void ForceSolver::solve(const ParticleType& particleType, ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt, const ForceField& forceField) const {
 	float_t life = std::fmod(t - forceField.lifetimeStart, forceField.lifetimeDuration) / forceField.lifetimeDuration;
 	vec3_t forceFieldCenter = forceField.position.get(life);
 	vec3_t forceFieldSize = forceField.size.get(life) * 0.5;
@@ -46,7 +46,7 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleCollection::Wr
 
 	switch(forceField.type) {
 		case ForceField::Type::attraction_field: {
-			for(uint32_t p = 0u; p < numParticles; p++) {
+			for(uint32_t p = 0u; p < particleCount; p++) {
 				vec3_t forceVector = sampleAttractionField(forceField.attractionField,
 					forceFieldCenter, forceFieldSize.x,
 					particles.globalPosition[p]);
@@ -63,7 +63,7 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleCollection::Wr
 			vec3_t forceDirection = glm::radians(forceField.accelerationField.direction.get(life));
 			mat4_t forceDirectionMatrix = glm::yawPitchRoll(forceDirection.y, forceDirection.z, forceDirection.x);
 
-			for(uint32_t p = 0u; p < numParticles; p++) {
+			for(uint32_t p = 0u; p < particleCount; p++) {
 				vec3_t forceVector = sampleAccelerationField(forceField.accelerationField,
 					forceFieldCenter, forceFieldSize,
 					forceFieldOrientationMatrix, forceDirectionMatrix,
@@ -86,7 +86,7 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleCollection::Wr
 			mat4_t forceFieldDirectionMatrix = glm::yawPitchRoll(forceFieldOrientation.y, forceFieldOrientation.z, forceFieldOrientation.x);
 			float_t vectorFieldTightness = glm::clamp(forceField.vectorField.tightness.get(life), 0.0, 1.0);
 
-			for(uint32_t p = 0u; p < numParticles; p++) {
+			for(uint32_t p = 0u; p < particleCount; p++) {
 				bool inside = false;
 				vec3_t forceVector = sampleVectorField(forceField.vectorField, vectorFieldResource,
 					forceFieldCenter, forceFieldSize,
@@ -108,7 +108,7 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleCollection::Wr
 			vec3_t forceFieldOrientation = glm::radians(forceField.orientation.get(life));
 			mat4_t forceFieldOrientationMatrix = glm::yawPitchRoll(-forceFieldOrientation.y, -forceFieldOrientation.z, -forceFieldOrientation.x);
 
-			for(uint32_t p = 0u; p < numParticles; p++) {
+			for(uint32_t p = 0u; p < particleCount; p++) {
 				vec3_t forceVector = sampleNoiseField(forceField.noiseField,
 					forceFieldCenter, forceFieldSize,
 					forceFieldOrientationMatrix,
@@ -125,7 +125,7 @@ void ForceSolver::solve(const ParticleType& particleType, ParticleCollection::Wr
 			vec3_t forceFieldOrientation = glm::radians(forceField.orientation.get(life));
 			mat4_t forceFieldOrientationMatrix = glm::yawPitchRoll(-forceFieldOrientation.y, -forceFieldOrientation.z, -forceFieldOrientation.x);
 
-			for(uint32_t p = 0u; p < numParticles; p++) {
+			for(uint32_t p = 0u; p < particleCount; p++) {
 				vec3_t forceVector = sampleDragField(forceField.dragField,
 					forceFieldCenter, forceFieldSize,
 					forceFieldOrientationMatrix,

@@ -31,6 +31,9 @@ public:
 		std::vector<VariantValue::Type> outputTypes;
 	};
 	struct Link {
+		Link() = default;
+		Link(id_t linkId, id_t linkNodeId, uint32_t linkSlot);
+
 		id_t id = nullId;
 		id_t nodeId = nullId;
 		uint32_t slot = nullId;
@@ -63,12 +66,12 @@ public:
 
 	const std::vector<VariantValue>& defaultInputs() const;
 
-	void inputLinks(const std::vector<Link>& inputLinks);
+	std::vector<Link>& inputLinks();
 	const std::vector<Link>& inputLinks() const;
 
 	const std::vector<VariantParameter>& parameters() const;
 
-	void parameterValues(const std::vector<VariantParameter::Value>& values);
+	std::vector<VariantParameter::Value>& parameterValues();
 	const std::vector<VariantParameter::Value>& parameterValues() const;
 	const VariantParameter::Value& parameterValue(std::size_t index) const;
 

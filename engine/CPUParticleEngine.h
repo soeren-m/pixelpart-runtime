@@ -45,7 +45,7 @@ public:
 
 private:
 	void stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleCollection::WritePtr particles, uint32_t numParticles,
+		ParticleCollection::WritePtr particles, uint32_t particleCount,
 		float_t t, float_t dt) const;
 
 	std::vector<ParticleCollection> particleCollections;
@@ -71,6 +71,6 @@ private:
 	std::shared_ptr<ThreadPool> threadPool;
 #endif
 	uint32_t numTotalActiveThreads = 0u;
-	uint32_t numParticlesPerThread = 128u;
+	uint32_t particleCountPerThread = 128u;
 };
 }

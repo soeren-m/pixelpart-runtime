@@ -39,27 +39,27 @@ const RenderSettings& Project::previewSettings() const {
 }
 
 bool Project::isNameUsed(const std::string& name) const {
-	for(const ParticleEmitter& particleEmitter : projectEffect.particleEmitters) {
+	for(const ParticleEmitter& particleEmitter : projectEffect.particleEmitters()) {
 		if(particleEmitter.name() == name) {
 			return true;
 		}
 	}
-	for(const ParticleType& particleType : projectEffect.particleTypes) {
+	for(const ParticleType& particleType : projectEffect.particleTypes()) {
 		if(particleType.name() == name) {
 			return true;
 		}
 	}
-	for(const ForceField& forceField : projectEffect.forceFields) {
+	for(const ForceField& forceField : projectEffect.forceFields()) {
 		if(forceField.name() == name) {
 			return true;
 		}
 	}
-	for(const Collider& collider : projectEffect.colliders) {
+	for(const Collider& collider : projectEffect.colliders()) {
 		if(collider.name() == name) {
 			return true;
 		}
 	}
-	for(const LightSource& lightSource : projectEffect.lightSources) {
+	for(const LightSource& lightSource : projectEffect.lightSources()) {
 		if(lightSource.name() == name) {
 			return true;
 		}
@@ -68,35 +68,35 @@ bool Project::isNameUsed(const std::string& name) const {
 	return false;
 }
 bool Project::isResourceUsed(const std::string& resourceId) const {
-	for(const ParticleType& particleType : projectEffect.particleTypes) {
-		if(particleType.materialInstance.materialId == resourceId) {
+	for(const ParticleType& particleType : projectEffect.particleTypes()) {
+		if(particleType.materialInstance.materialId() == resourceId) {
 			return true;
 		}
 		if(particleType.meshRendererSettings.meshResourceId == resourceId) {
 			return true;
 		}
 
-		for(const auto& materialParameterEntry : particleType.materialInstance.materialParameters) {
-			if(materialParameterEntry.second.type == pixelpart::VariantParameter::Value::type_resource_image &&
-				resourceId == materialParameterEntry.second.getResourceId()) {
+		for(const auto& materialParameterEntry : particleType.materialInstance.materialParameters()) {
+			if(materialParameterEntry.second.type() == pixelpart::VariantParameter::Value::type_resource_image &&
+				resourceId == materialParameterEntry.second.valueResourceId()) {
 				return true;
 			}
 		}
 	}
 
-	for(const ForceField& forceField : projectEffect.forceFields) {
-		if(resourceId == forceField.vectorField.resourceId) {
+	for(const ForceField& forceField : projectEffect.forceFields()) {
+		if(resourceId == forceField.vectorFieldResourceId()) {
 			return true;
 		}
 	}
 
-	for(const auto& resourceEntry : projectEffect.resources.materials) {
+	for(const auto& resourceEntry : projectEffect.resources().materials()) {
 		const MaterialResource& material = resourceEntry.second;
 
 		for(const auto& nodeEntry : material.shaderGraph().nodes()) {
-			for(const auto& nodeParameter : nodeEntry.second.parameters) {
-				if(nodeParameter.type == pixelpart::VariantParameter::Value::type_resource_image &&
-					resourceId == nodeParameter.getResourceId()) {
+			for(const auto& nodeParameter : nodeEntry.second.parameters()) {
+				if(nodeParameter.type() == pixelpart::VariantParameter::Value::type_resource_image &&
+					resourceId == nodeParameter.valueResourceId()) {
 					return true;
 				}
 			}
@@ -170,7 +170,7 @@ void from_json(const nlohmann::ordered_json& j, Project& project) {
 		}
 	}
 
-	for(ForceField& forceField : project.effect().forceFields) {
+	for(ForceField& forceField : project.effect().forceFields()) {
 		if(forceField.name().empty()) {
 			uint32_t counter = 1u;
 			std::string name = "Force";

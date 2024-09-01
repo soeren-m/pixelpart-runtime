@@ -13,51 +13,51 @@ namespace pixelpart {
 class CollisionSolver : public ParticleSolver {
 public:
 	struct ColliderSegment {
+		ColliderSegment(const Collider& collider);
+
 		std::bitset<256> exclusionSet;
-		float_t lifetimeStart = 0.0;
-		float_t lifetimeDuration = 0.0;
+		float_t start = 0.0;
+		float_t duration = 0.0;
 		bool repeat = false;
 		bool killOnContact = false;
 
 		Curve<float_t> bounce;
 		Curve<float_t> friction;
-
-		ColliderSegment(const Collider& collider);
 	};
 
 	struct LineColliderSegment : ColliderSegment {
+		LineColliderSegment(const Collider& collider, std::size_t segmentIndex);
+
 		vec2_t startPoint = vec2_t(-1.0, 0.0);
 		vec2_t endPoint = vec2_t(+1.0, 0.0);
-
-		LineColliderSegment(const Collider& collider, std::size_t segmentIndex);
 	};
 
 	struct PlaneColliderSegment : ColliderSegment {
+		PlaneColliderSegment(const Collider& collider, std::size_t segmentIndex);
+
 		vec3_t center = vec3_t(0.0, 0.0, 0.0);
 		vec3_t normal = vec3_t(0.0, 1.0, 0.0);
 		vec3_t rightVector = vec3_t(1.0, 0.0, 0.0);
 		vec3_t upVector = vec3_t(0.0, 0.0, 1.0);
-
-		PlaneColliderSegment(const Collider& collider, std::size_t segmentIndex);
 	};
 
 	CollisionSolver();
 
 	virtual void solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt) const override;
+		ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const override;
 
 	virtual void prepare(const Effect& effect) override;
 
-	void setGridCellCountFactor(uint32_t factor);
-	void setGridPadding(float_t padding);
+	void gridCellCountFactor(uint32_t factor);
+	void gridPadding(float_t padding);
 
 private:
 	struct Intersection {
-		bool hit = false;
-		vec3_t point = vec3_t(0.0);
-
 		Intersection();
 		Intersection(const vec3_t& p);
+
+		bool hit = false;
+		vec3_t point = vec3_t(0.0);
 	};
 
 	static bool isPointOnLineSegment(const vec2_t& p, const vec2_t& l1, const vec2_t& l2);
@@ -78,11 +78,11 @@ private:
 	std::vector<LineColliderSegment> lineColliders;
 	std::vector<PlaneColliderSegment> planeColliders;
 
-	Grid<std::vector<uint32_t>> grid;
-	vec2_t gridBottom = vec2_t(0.0);
-	vec2_t gridTop = vec2_t(0.0);
-	vec2_t gridCellDimension = vec2_t(1.0);
-	uint32_t gridCellCountFactor = 3u;
-	float_t gridPadding = 0.25;
+	Grid<std::vector<uint32_t>> solverGrid;
+	vec2_t solverGridBottom = vec2_t(0.0);
+	vec2_t solverGridTop = vec2_t(0.0);
+	vec2_t solverGridCellDimension = vec2_t(1.0);
+	uint32_t solverGridCellCountFactor = 3u;
+	float_t solverGridPadding = 0.25;
 };
 }

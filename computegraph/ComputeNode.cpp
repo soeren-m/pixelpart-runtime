@@ -10,6 +10,11 @@ uint32_t ComputeNode::InputException::index() const {
 	return inputIndex;
 }
 
+ComputeNode::Link::Link(id_t linkId, id_t linkNodeId, uint32_t linkSlot) :
+	id(linkId), nodeId(linkNodeId), slot(linkSlot) {
+
+}
+
 ComputeNode::ComputeNode(
 	const std::string& type,
 	const std::string& category,
@@ -81,8 +86,8 @@ const std::vector<VariantValue>& ComputeNode::defaultInputs() const {
 	return nodeDefaultInputs;
 }
 
-void ComputeNode::inputLinks(const std::vector<Link>& inputLinks) {
-	nodeInputLinks = inputLinks;
+std::vector<ComputeNode::Link>& ComputeNode::inputLinks() {
+	return nodeInputLinks;
 }
 const std::vector<ComputeNode::Link>& ComputeNode::inputLinks() const {
 	return nodeInputLinks;
@@ -92,8 +97,8 @@ const std::vector<VariantParameter>& ComputeNode::parameters() const {
 	return nodeParameters;
 }
 
-void ComputeNode::parameterValues(const std::vector<VariantParameter::Value>& values) {
-	nodeParameterValues = values;
+std::vector<VariantParameter::Value>& ComputeNode::parameterValues() {
+	return nodeParameterValues;
 }
 const std::vector<VariantParameter::Value>& ComputeNode::parameterValues() const {
 	return nodeParameterValues;
@@ -178,8 +183,8 @@ void from_json(const nlohmann::ordered_json& j, ComputeNode::Link& link) {
 }
 void from_json(const nlohmann::ordered_json& j, ComputeNode& node) {
 	node.name(j.value("name", ""));
-	node.inputLinks(j.value("inputs", std::vector<ComputeNode::Link>()));
-	node.parameterValues(j.value("parameter_values", std::vector<VariantParameter::Value>()));
+	node.inputLinks() = j.value("inputs", std::vector<ComputeNode::Link>());
+	node.parameterValues() = j.value("parameter_values", std::vector<VariantParameter::Value>());
 	node.move(j.value("position", vec2_t(0.0)));
 }
 }

@@ -6,6 +6,7 @@
 #include "../effect/ParticleEmitter.h"
 #include "ParticleCollection.h"
 #include "Random.h"
+#include <random>
 #include <vector>
 
 namespace pixelpart {

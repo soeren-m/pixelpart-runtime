@@ -4,8 +4,8 @@
 namespace pixelpart {
 ImageEffect::ImageEffect(const ImageEffectType& type) :
 	effectTypeId(type.name), effectParameters(type.parameters.size()) {
-	for(std::size_t p = 0u; p < effectParameters.size(); p++) {
-		effectParameters[p] = type.parameters[p].def();
+	for(std::size_t parameterIndex = 0u; parameterIndex < effectParameters.size(); parameterIndex++) {
+		effectParameters[parameterIndex] = type.parameters[parameterIndex].def();
 	}
 }
 ImageEffect::ImageEffect(const std::string& typeId, const std::vector<VariantParameter::Value>& parameters, bool visible) :

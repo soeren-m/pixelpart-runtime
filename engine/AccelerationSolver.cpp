@@ -8,11 +8,11 @@ AccelerationSolver::AccelerationSolver() {
 }
 
 void AccelerationSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
-	float_t particleEmitterLife = std::fmod(t - particleEmitter.start(), particleEmitter.duration()) / particleEmitter.durection();
-	vec3_t particleEmitterPosition = particleEmitter.position.get(particleEmitterLife);
+	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
+	float_t particleEmitterLife = std::fmod(t - particleEmitter.start(), particleEmitter.duration()) / particleEmitter.duration();
+	vec3_t particleEmitterPosition = particleEmitter.position().at(particleEmitterLife);
 
-	for(uint32_t p = 0u; p < numParticles; p++) {
+	for(uint32_t p = 0u; p < particleCount; p++) {
 		vec3_t forwardDirection = (particles.velocity[p] != vec3_t(0.0))
 			? glm::normalize(particles.velocity[p])
 			: vec3_t(0.0);
@@ -20,8 +20,8 @@ void AccelerationSolver::solve(const ParticleEmitter& particleEmitter, const Par
 			? glm::normalize(particleEmitterPosition - particles.globalPosition[p])
 			: vec3_t(0.0);
 
-		particles.force[p] = forwardDirection * particleType.acceleration().get(particles.life[p]);
-		particles.force[p] += radialDirection * particleType.radialAcceleration().get(particles.life[p]);
+		particles.force[p] = forwardDirection * particleType.acceleration().at(particles.life[p]);
+		particles.force[p] += radialDirection * particleType.radialAcceleration().at(particles.life[p]);
 	}
 }
 

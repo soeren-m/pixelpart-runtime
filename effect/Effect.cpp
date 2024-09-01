@@ -140,10 +140,10 @@ void Effect::refreshProperties() {
 		forceField.noiseField.frequency().refresh(inputValues);
 		forceField.noiseField.persistence().refresh(inputValues);
 		forceField.noiseField.lacunarity().refresh(inputValues);
-		forceField.noiseField.animationTimeScale().refresh(inputValues);
-		forceField.noiseField.animationTimeBase().refresh(inputValues);
-		forceField.dragField.velocityInfluence().refresh(inputValues);
-		forceField.dragField.sizeInfluence().refresh(inputValues);
+		forceField.noiseAnimationTimeScale().refresh(inputValues);
+		forceField.noiseAnimationTimeBase().refresh(inputValues);
+		forceField.dragVelocityInfluence().refresh(inputValues);
+		forceField.dragSizeInfluence().refresh(inputValues);
 	}
 
 	for(Collider& collider : effectColliders) {

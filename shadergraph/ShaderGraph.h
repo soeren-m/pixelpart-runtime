@@ -30,11 +30,12 @@ public:
 	};
 
 	enum TypeMatch : uint32_t {
-		typematch_exact = 0,
+		typematch_exact,
 		typematch_upcast,
 		typematch_downcast,
 		typematch_none
 	};
+
 	struct BuildResult {
 		std::string mainCode;
 		std::string parameterCode;
@@ -43,7 +44,7 @@ public:
 		std::unordered_set<id_t> resolvedNodes;
 		std::vector<std::string> textureResourceIds;
 		std::unordered_map<id_t, std::string> parameterNames;
-		uint32_t numVariables = 0u;
+		uint32_t variableCount = 0u;
 	};
 
 	static ShaderGraphLanguage graphLanguage;

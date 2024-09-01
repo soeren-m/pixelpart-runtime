@@ -111,7 +111,7 @@ public:
 	bool empty() const {
 		return points.empty();
 	}
-	std::size_t numPoints() const {
+	std::size_t pointCount() const {
 		return points.size();
 	}
 	std::vector<Point>& points() {

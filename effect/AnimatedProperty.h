@@ -11,29 +11,27 @@
 #include <vector>
 #include <unordered_map>
 
-// TODO
-
 namespace pixelpart {
 template <typename T>
 class AnimatedProperty {
 public:
 	AnimatedProperty() {
-		computeGraph.addNode<OutputComputeNode>();
+		propertyComputeGraph.addNode<OutputComputeNode>();
 		refresh();
 	}
 	AnimatedProperty(const T& initialValue) : propertyCurve(initialValue) {
-		computeGraph.addNode<OutputComputeNode>();
+		propertyComputeGraph.addNode<OutputComputeNode>();
 		refresh();
 	}
 	AnimatedProperty(float_t initialPosition, const T& initialValue) : propertyCurve(initialPosition, initialValue) {
-		computeGraph.addNode<OutputComputeNode>();
+		propertyComputeGraph.addNode<OutputComputeNode>();
 		refresh();
 	}
 	AnimatedProperty(const Curve<T>& initialCurve, const ComputeGraph& graph, ComputeOutputOperation outputOperation, ComputeOutputTarget outputTarget) :
 		propertyCurve(initialCurve),
-		computeGraph(graph),
-		computeOutputOperation(outputOperation),
-		computeOutputTarget(outputTarget) {
+		propertyComputeGraph(graph),
+		outputOperation(outputOperation),
+		outputTarget(outputTarget) {
 		refresh();
 	}
 
@@ -46,17 +44,17 @@ public:
 	}
 
 	void refresh(const std::unordered_map<uint32_t, VariantValue>& inputs) {
-		if(computeGraph.isEmpty()) {
+		if(propertyComputeGraph.empty()) {
 			useGraphOutput = false;
 			refresh();
 
 			return;
 		}
 
-		computeGraph.unlinkRemovedInputs(inputs);
+		propertyComputeGraph.unlinkRemovedInputs(inputs);
 
 		try {
-			graphOutputValue = computeGraph.evaluate(inputs).at(0u).template get<T>();
+			graphOutputValue = propertyComputeGraph.evaluate(inputs).at(0u).template get<T>();
 
 			useGraphOutput = true;
 			refresh();
@@ -71,21 +69,21 @@ public:
 		computedCurve = propertyCurve;
 
 		if(useGraphOutput) {
-			if(computeOutputTarget.type == ComputeOutputTarget::keyframe) {
-				switch(computeOutputOperation) {
+			if(outputTarget.type == ComputeOutputTarget::keyframe) {
+				switch(outputOperation) {
 					case ComputeOutputOperation::add:
-						computedCurve.setPoint(computeOutputTarget.index, propertyCurve.getPoint(computeOutputTarget.index).value + graphOutputValue);
+						computedCurve.setPoint(outputTarget.index, propertyCurve.getPoint(outputTarget.index).value + graphOutputValue);
 						break;
 					case ComputeOutputOperation::multiply:
-						computedCurve.setPoint(computeOutputTarget.index, propertyCurve.getPoint(computeOutputTarget.index).value * graphOutputValue);
+						computedCurve.setPoint(outputTarget.index, propertyCurve.getPoint(outputTarget.index).value * graphOutputValue);
 						break;
 					default:
-						computedCurve.setPoint(computeOutputTarget.index, graphOutputValue);
+						computedCurve.setPoint(outputTarget.index, graphOutputValue);
 						break;
 				}
 			}
 			else {
-				switch(computeOutputOperation) {
+				switch(outputOperation) {
 					case ComputeOutputOperation::add:
 						moveCurve(computedCurve, graphOutputValue);
 						break;
@@ -104,10 +102,10 @@ public:
 		propertyCurve = c;
 		refresh();
 	}
-	Curve<T>& getCurve() {
+	Curve<T>& curve() {
 		return propertyCurve;
 	}
-	const Curve<T>& getCurve() const {
+	const Curve<T>& curve() const {
 		return propertyCurve;
 	}
 	const Curve<T>& getComputedCurve() const {
@@ -115,27 +113,27 @@ public:
 	}
 
 	void setComputeGraph(const ComputeGraph& graph) {
-		computeGraph = graph;
+		propertyComputeGraph = graph;
 	}
 	void setComputeOutputOperation(ComputeOutputOperation operation) {
-		computeOutputOperation = operation;
+		outputOperation = operation;
 		refresh();
 	}
 	void setComputeOutputTarget(ComputeOutputTarget target) {
-		computeOutputTarget = target;
+		outputTarget = target;
 		refresh();
 	}
-	ComputeGraph& getComputeGraph() {
-		return computeGraph;
+	ComputeGraph& computeGraph() {
+		return propertyComputeGraph;
 	}
-	const ComputeGraph& getComputeGraph() const {
-		return computeGraph;
+	const ComputeGraph& computeGraph() const {
+		return propertyComputeGraph;
 	}
-	ComputeOutputOperation getComputeOutputOperation() const {
-		return computeOutputOperation;
+	ComputeOutputOperation computeOutputOperation() const {
+		return outputOperation;
 	}
-	ComputeOutputTarget getComputeOutputTarget() const {
-		return computeOutputTarget;
+	ComputeOutputTarget computeOutputTarget() const {
+		return outputTarget;
 	}
 
 	void setPoints(const std::vector<typename Curve<T>::Point>& pointList) {
@@ -176,29 +174,29 @@ public:
 	bool containsPoints() const {
 		return propertyCurve.containsPoints();
 	}
-	std::size_t getNumPoints() const {
-		return propertyCurve.getNumPoints();
+	std::size_t pointCount() const {
+		return propertyCurve.pointCount();
 	}
-	std::vector<typename Curve<T>::Point>& getPoints() {
-		return propertyCurve.getPoints();
+	std::vector<typename Curve<T>::Point>& points() {
+		return propertyCurve.points();
 	}
-	const std::vector<typename Curve<T>::Point>& getPoints() const {
-		return propertyCurve.getPoints();
+	const std::vector<typename Curve<T>::Point>& points() const {
+		return propertyCurve.points();
 	}
-	const typename Curve<T>::Point& getPoint(std::size_t index) const {
-		return propertyCurve.getPoint(index);
-	}
-
-	std::ptrdiff_t getPointIndex(float_t position, float_t epsilon = 0.001) const {
-		return propertyCurve.getPointIndex(position, epsilon);
+	const typename Curve<T>::Point& point(std::size_t index) const {
+		return propertyCurve.point(index);
 	}
 
-	void setInterpolation(CurveInterpolation method) {
-		propertyCurve.setInterpolation(method);
+	std::ptrdiff_t pointIndex(float_t position, float_t epsilon = 0.001) const {
+		return propertyCurve.pointIndex(position, epsilon);
+	}
+
+	void interpolation(CurveInterpolation method) {
+		propertyCurve.interpolation(method);
 		refresh();
 	}
-	CurveInterpolation getInterpolation() const {
-		return propertyCurve.getInterpolation();
+	CurveInterpolation interpolation() const {
+		return propertyCurve.interpolation();
 	}
 
 	void enableAdaptiveCache() {
@@ -209,8 +207,8 @@ public:
 		propertyCurve.enableFixedCache(size);
 		refresh();
 	}
-	const std::vector<T>& getCache() const {
-		return propertyCurve.getCache();
+	const std::vector<T>& cache() const {
+		return propertyCurve.cache();
 	}
 
 	void refreshCache() {
@@ -221,9 +219,9 @@ public:
 private:
 	Curve<T> propertyCurve;
 
-	ComputeGraph computeGraph;
-	ComputeOutputOperation computeOutputOperation = ComputeOutputOperation::set;
-	ComputeOutputTarget computeOutputTarget = ComputeOutputTarget();
+	ComputeGraph propertyComputeGraph;
+	ComputeOutputOperation outputOperation = ComputeOutputOperation::set;
+	ComputeOutputTarget outputTarget = ComputeOutputTarget();
 
 	Curve<T> computedCurve;
 	T graphOutputValue = T();
@@ -233,27 +231,19 @@ private:
 template <typename T>
 void to_json(nlohmann::ordered_json& j, const AnimatedProperty<T>& property) {
 	j = nlohmann::ordered_json{
-		{ "curve", property.getCurve() },
-		{ "compute_graph", property.getComputeGraph() },
-		{ "compute_operation", property.getComputeOutputOperation() },
-		{ "compute_target", property.getComputeOutputTarget() }
+		{ "curve", property.curve() },
+		{ "compute_graph", property.computeGraph() },
+		{ "compute_operation", property.computeOutputOperation() },
+		{ "compute_target", property.computeOutputTarget() }
 	};
 }
 
 template <typename T>
 void from_json(const nlohmann::ordered_json& j, AnimatedProperty<T>& property) {
-	Curve<T> propertyCurve;
-	fromJson(propertyCurve, j, "curve");
-
-	ComputeGraph graph;
-	fromJson(graph, j, "compute_graph");
-
-	ComputeOutputOperation outputOperation = ComputeOutputOperation::set;
-	fromJson(outputOperation, j, "compute_operation");
-
-	ComputeOutputTarget outputTarget;
-	fromJson(outputTarget, j, "compute_target");
-
-	property = AnimatedProperty<T>(propertyCurve, graph, outputOperation, outputTarget);
+	property = AnimatedProperty<T>(
+		j.value("curve", Curve<T>()),
+		j.value("compute_graph", ComputeGraph()),
+		j.value("compute_operation", ComputeOutputOperation::set),
+		j.value("compute_target", ComputeOutputTarget()));
 }
 }
