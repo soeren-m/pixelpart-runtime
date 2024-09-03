@@ -10,6 +10,9 @@ struct ComputeOutputTarget {
 		keyframe = 1
 	};
 
+	ComputeOutputTarget() = default;
+	ComputeOutputTarget(Type targetType, uint32_t targetIndex = 0u);
+
 	Type type = result;
 	uint32_t index = 0u;
 };

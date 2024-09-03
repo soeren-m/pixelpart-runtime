@@ -10,14 +10,29 @@ MeshResource::MeshResource(const std::string& name) : Resource(name) {
 
 }
 
+std::vector<uint32_t>& MeshResource::faces() {
+	return meshFaces;
+}
 const std::vector<uint32_t>& MeshResource::faces() const {
 	return meshFaces;
+}
+
+std::vector<glm::vec3>& MeshResource::positions() {
+	return meshPositions;
 }
 const std::vector<glm::vec3>& MeshResource::positions() const {
 	return meshPositions;
 }
+
+std::vector<glm::vec3>& MeshResource::normals() {
+	return meshNormals;
+}
 const std::vector<glm::vec3>& MeshResource::normals() const {
 	return meshNormals;
+}
+
+std::vector<glm::vec2>& MeshResource::textureCoords() {
+	return meshTextureCoords;
 }
 const std::vector<glm::vec2>& MeshResource::textureCoords() const {
 	return meshTextureCoords;
@@ -142,16 +157,13 @@ void to_json(nlohmann::ordered_json& j, const MeshResource& resource) {
 	};
 }
 void from_json(const nlohmann::ordered_json& j, MeshResource& resource) {
-	resource = MeshResource();
+	resource = MeshResource(j.at("name"));
 
-	fromJson(resource.name, j, "name");
+	CompressionMethod compressionMethod = j.value("compression", CompressionMethod::none);
 
-	CompressionMethod compressionMethod = CompressionMethod::none;
-	fromJson(compressionMethod, j, "compression");
-
-	deserializeIntegerData(resource.faces, j.at("faces"), j.at("faces_uncompressed_size"), compressionMethod);
-	deserializeVectorData(resource.positions, j.at("positions"), j.at("positions_uncompressed_size"), compressionMethod);
-	deserializeVectorData(resource.normals, j.at("normals"), j.at("normals_uncompressed_size"), compressionMethod);
-	deserializeVectorData(resource.textureCoords, j.at("texture_coords"), j.at("texture_coords_uncompressed_size"), compressionMethod);
+	deserializeIntegerData(resource.faces(), j.at("faces"), j.at("faces_uncompressed_size"), compressionMethod);
+	deserializeVectorData(resource.positions(), j.at("positions"), j.at("positions_uncompressed_size"), compressionMethod);
+	deserializeVectorData(resource.normals(), j.at("normals"), j.at("normals_uncompressed_size"), compressionMethod);
+	deserializeVectorData(resource.textureCoords(), j.at("texture_coords"), j.at("texture_coords_uncompressed_size"), compressionMethod);
 }
 }

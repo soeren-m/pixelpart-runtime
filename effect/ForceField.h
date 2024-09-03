@@ -53,7 +53,10 @@ public:
 	AnimatedProperty<float_t>& accelerationStrengthVariance();
 	const AnimatedProperty<float_t>& accelerationStrengthVariance() const;
 
-	void accelerationGridSize(int32_t x, int32_t y, int32_t z);
+	void accelerationGrid(int32_t x, int32_t y, int32_t z,
+		const std::vector<vec3_t>& directionGrid, const std::vector<float_t>& strengthGrid);
+	const std::vector<vec3_t>& accelerationDirectionGrid() const;
+	const std::vector<float_t>& accelerationStrengthGrid() const;
 	int32_t accelerationGridSizeX() const;
 	int32_t accelerationGridSizeY() const;
 	int32_t accelerationGridSizeZ() const;
@@ -85,7 +88,26 @@ public:
 	AnimatedProperty<float_t>& vectorTightness();
 	const AnimatedProperty<float_t>& vectorTightness() const;
 
-	// TODO:
+	StaticProperty<int_t>& noiseOctaves();
+	const StaticProperty<int_t>& noiseOctaves() const;
+
+	AnimatedProperty<float_t>& noiseFrequency();
+	const AnimatedProperty<float_t>& noiseFrequency() const;
+
+	AnimatedProperty<float_t>& noisePersistence();
+	const AnimatedProperty<float_t>& noisePersistence() const;
+
+	AnimatedProperty<float_t>& noiseLacunarity();
+	const AnimatedProperty<float_t>& noiseLacunarity() const;
+
+	void noiseAnimated(bool enable);
+	bool noiseAnimated() const;
+
+	StaticProperty<float_t>& noiseAnimationTimeScale();
+	const StaticProperty<float_t>& noiseAnimationTimeScale() const;
+
+	StaticProperty<float_t>& noiseAnimationTimeBase();
+	const StaticProperty<float_t>& noiseAnimationTimeBase() const;
 
 	StaticProperty<float_t>& dragVelocityInfluence();
 	const StaticProperty<float_t>& dragVelocityInfluence() const;

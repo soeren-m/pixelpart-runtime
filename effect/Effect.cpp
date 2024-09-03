@@ -196,8 +196,8 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 		}
 	}
 	for(ParticleType& particleType : particleTypes) {
-		if(particleType.id == nullId) {
-			particleType.id = findUnusedNodeId(particleTypes);
+		if(particleType.id() == nullId) {
+			particleType.id(findUnusedNodeId(particleTypes));
 		}
 	}
 	for(ForceField& forceField : forceFields) {

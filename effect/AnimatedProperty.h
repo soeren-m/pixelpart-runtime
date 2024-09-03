@@ -72,10 +72,10 @@ public:
 			if(outputTarget.type == ComputeOutputTarget::keyframe) {
 				switch(outputOperation) {
 					case ComputeOutputOperation::add:
-						computedCurve.setPoint(outputTarget.index, propertyCurve.getPoint(outputTarget.index).value + graphOutputValue);
+						computedCurve.setPoint(outputTarget.index, propertyCurve.point(outputTarget.index).value + graphOutputValue);
 						break;
 					case ComputeOutputOperation::multiply:
-						computedCurve.setPoint(outputTarget.index, propertyCurve.getPoint(outputTarget.index).value * graphOutputValue);
+						computedCurve.setPoint(outputTarget.index, propertyCurve.point(outputTarget.index).value * graphOutputValue);
 						break;
 					default:
 						computedCurve.setPoint(outputTarget.index, graphOutputValue);
@@ -98,13 +98,14 @@ public:
 		}
 	}
 
-	void setCurve(const Curve<T>& c) {
-		propertyCurve = c;
+	void curve(const Curve<T>& curve) {
+		propertyCurve = curve;
 		refresh();
 	}
-	Curve<T>& curve() {
+	// TODO
+	/*Curve<T>& curve() {
 		return propertyCurve;
-	}
+	}*/
 	const Curve<T>& curve() const {
 		return propertyCurve;
 	}
@@ -112,25 +113,27 @@ public:
 		return computedCurve;
 	}
 
-	void setComputeGraph(const ComputeGraph& graph) {
+	void computeGraph(const ComputeGraph& graph) {
 		propertyComputeGraph = graph;
 	}
-	void setComputeOutputOperation(ComputeOutputOperation operation) {
-		outputOperation = operation;
-		refresh();
-	}
-	void setComputeOutputTarget(ComputeOutputTarget target) {
-		outputTarget = target;
-		refresh();
-	}
-	ComputeGraph& computeGraph() {
+	/*ComputeGraph& computeGraph() {
 		return propertyComputeGraph;
-	}
+	}*/
 	const ComputeGraph& computeGraph() const {
 		return propertyComputeGraph;
 	}
+
+	void computeOutputOperation(ComputeOutputOperation operation) {
+		outputOperation = operation;
+		refresh();
+	}
 	ComputeOutputOperation computeOutputOperation() const {
 		return outputOperation;
+	}
+
+	void computeOutputTarget(ComputeOutputTarget target) {
+		outputTarget = target;
+		refresh();
 	}
 	ComputeOutputTarget computeOutputTarget() const {
 		return outputTarget;
@@ -177,9 +180,9 @@ public:
 	std::size_t pointCount() const {
 		return propertyCurve.pointCount();
 	}
-	std::vector<typename Curve<T>::Point>& points() {
+	/*std::vector<typename Curve<T>::Point>& points() {
 		return propertyCurve.points();
-	}
+	}*/
 	const std::vector<typename Curve<T>::Point>& points() const {
 		return propertyCurve.points();
 	}

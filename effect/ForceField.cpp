@@ -62,10 +62,23 @@ const AnimatedProperty<float_t>& ForceField::accelerationStrengthVariance() cons
 	return fieldAccelerationStrengthVariance;
 }
 
-void ForceField::accelerationGridSize(int32_t x, int32_t y, int32_t z) {
+void ForceField::accelerationGrid(int32_t x, int32_t y, int32_t z,
+	const std::vector<vec3_t>& directionGrid, const std::vector<float_t>& strengthGrid) {
 	fieldAccelerationGridSize[0] = x;
 	fieldAccelerationGridSize[1] = y;
 	fieldAccelerationGridSize[2] = z;
+	fieldAccelerationDirectionGrid = directionGrid;
+	fieldAccelerationStrengthGrid = strengthGrid;
+
+	std::size_t cellCount = static_cast<std::size_t>(std::max(x * y * z, 0));
+	fieldAccelerationDirectionGrid.resize(cellCount);
+	fieldAccelerationStrengthGrid.resize(cellCount);
+}
+const std::vector<vec3_t>& ForceField::accelerationDirectionGrid() const {
+	return fieldAccelerationDirectionGrid;
+}
+const std::vector<float_t>& ForceField::accelerationStrengthGrid() const {
+	return fieldAccelerationStrengthGrid;
 }
 int32_t ForceField::accelerationGridSizeX() const {
 	return fieldAccelerationGridSize[0];
@@ -98,27 +111,69 @@ const AnimatedProperty<float_t>& ForceField::vectorTightness() const {
 	return fieldVectorTightness;
 }
 
-// TODO
-
-
-void to_json(nlohmann::ordered_json& j, const ForceField::NoiseField& field) {
-	j = nlohmann::ordered_json{
-		{ "octaves", field.octaves },
-		{ "frequency", field.frequency },
-		{ "persistence", field.persistence },
-		{ "lacunarity", field.lacunarity },
-
-		{ "animated", field.animated },
-		{ "animation_time_scale", field.animationTimeScale },
-		{ "animation_time_base", field.animationTimeBase }
-	};
+StaticProperty<int_t>& ForceField::noiseOctaves() {
+	return fieldNoiseOctaves;
 }
-void to_json(nlohmann::ordered_json& j, const ForceField::DragField& field) {
-	j = nlohmann::ordered_json{
-		{ "velocity_influence", field.velocityInfluence },
-		{ "size_influence", field.sizeInfluence }
-	};
+const StaticProperty<int_t>& ForceField::noiseOctaves() const {
+	return fieldNoiseOctaves;
 }
+
+AnimatedProperty<float_t>& ForceField::noiseFrequency() {
+	return fieldNoiseFrequency;
+}
+const AnimatedProperty<float_t>& ForceField::noiseFrequency() const {
+	return fieldNoiseFrequency;
+}
+
+AnimatedProperty<float_t>& ForceField::noisePersistence() {
+	return fieldNoisePersistence;
+}
+const AnimatedProperty<float_t>& ForceField::noisePersistence() const {
+	return fieldNoisePersistence;
+}
+
+AnimatedProperty<float_t>& ForceField::noiseLacunarity() {
+	return fieldNoiseLacunarity;
+}
+const AnimatedProperty<float_t>& ForceField::noiseLacunarity() const {
+	return fieldNoiseLacunarity;
+}
+
+void ForceField::noiseAnimated(bool enable) {
+	fieldNoiseAnimated = enable;
+}
+bool ForceField::noiseAnimated() const {
+	return fieldNoiseAnimated;
+}
+
+StaticProperty<float_t>& ForceField::noiseAnimationTimeScale() {
+	return fieldNoiseAnimationTimeScale;
+}
+const StaticProperty<float_t>& ForceField::noiseAnimationTimeScale() const {
+	return fieldNoiseAnimationTimeScale;
+}
+
+StaticProperty<float_t>& ForceField::noiseAnimationTimeBase() {
+	return fieldNoiseAnimationTimeBase;
+}
+const StaticProperty<float_t>& ForceField::noiseAnimationTimeBase() const {
+	return fieldNoiseAnimationTimeBase;
+}
+
+StaticProperty<float_t>& ForceField::dragVelocityInfluence() {
+	return fieldDragVelocityInfluence;
+}
+const StaticProperty<float_t>& ForceField::dragVelocityInfluence() const {
+	return fieldDragVelocityInfluence;
+}
+
+StaticProperty<float_t>& ForceField::dragSizeInfluence() {
+	return fieldDragSizeInfluence;
+}
+const StaticProperty<float_t>& ForceField::dragSizeInfluence() const {
+	return fieldDragSizeInfluence;
+}
+
 void to_json(nlohmann::ordered_json& j, const ForceField& forceField) {
 	j = nlohmann::ordered_json{
 		{ "id", toJson(forceField.id) },
@@ -136,6 +191,7 @@ void to_json(nlohmann::ordered_json& j, const ForceField& forceField) {
 		{ "strength", forceField.strength() },
 
 		{ "attraction_field", nlohmann::ordered_json{ } },
+
 		{ "acceleration_field", nlohmann::ordered_json{
 			{ "direction", forceField.accelerationDirection() },
 			{ "direction_variance", forceField.accelerationDirectionVariance() },
@@ -143,64 +199,31 @@ void to_json(nlohmann::ordered_json& j, const ForceField& forceField) {
 			{ "grid_size_x", forceField.accelerationGridSizeX() },
 			{ "grid_size_y", forceField.accelerationGridSizeY() },
 			{ "grid_size_z", forceField.accelerationGridSizeZ() },
-			{ "grid_direction", forceField.directionGrid },
-			{ "grid_strength", forceField.strengthGrid }
+			{ "grid_direction", forceField.accelerationDirectionGrid() },
+			{ "grid_strength", forceField.accelerationStrengthGrid() }
 		} },
+
 		{ "vector_field", nlohmann::ordered_json{
 			{ "resource_id", forceField.vectorResourceId() },
 			{ "filter", forceField.vectorFilter() },
 			{ "tightness", forceField.vectorTightness() }
 		} },
-		{ "noise_field", forceField.noiseField },
-		{ "drag_field", forceField.dragField }
+
+		{ "noise_field", nlohmann::ordered_json{
+			{ "octaves", forceField.noiseOctaves() },
+			{ "frequency", forceField.noiseFrequency() },
+			{ "persistence", forceField.noisePersistence() },
+			{ "lacunarity", forceField.noiseLacunarity() },
+			{ "animated", forceField.noiseAnimated() },
+			{ "animation_time_scale", forceField.noiseAnimationTimeScale() },
+			{ "animation_time_base", forceField.noiseAnimationTimeBase() }
+		} },
+
+		{ "drag_field", nlohmann::ordered_json{
+			{ "velocity_influence", forceField.dragVelocityInfluence() },
+			{ "size_influence", forceField.dragSizeInfluence() }
+		} }
 	};
-}
-void from_json(const nlohmann::ordered_json& j, ForceField::AttractionField& field) {
-	field = ForceField::AttractionField();
-}
-void from_json(const nlohmann::ordered_json& j, ForceField::AccelerationField& field) {
-	field = ForceField::AccelerationField();
-
-	field.direction, j, "direction");
-	field.directionVariance, j, "direction_variance");
-	field.strengthVariance, j, "strength_variance");
-
-	field.gridSize[0], j, "grid_size_x");
-	field.gridSize[1], j, "grid_size_y");
-	field.gridSize[2], j, "grid_size_z");
-	field.directionGrid, j, "grid_direction");
-	field.strengthGrid, j, "grid_strength");
-
-	std::size_t numGridCells = static_cast<std::size_t>(
-		std::max(field.gridSize[0] * field.gridSize[1] * field.gridSize[2], 0));
-	field.directionGrid.resize(numGridCells);
-	field.strengthGrid.resize(numGridCells);
-}
-void from_json(const nlohmann::ordered_json& j, ForceField::VectorField& field) {
-	field = ForceField::VectorField();
-
-	field.resourceId, j, "resource_id");
-	field.filter, j, "filter");
-
-	field.tightness, j, "tightness");
-}
-void from_json(const nlohmann::ordered_json& j, ForceField::NoiseField& field) {
-	field = ForceField::NoiseField();
-
-	field.octaves, j, "octaves");
-	field.frequency, j, "frequency");
-	field.persistence, j, "persistence");
-	field.lacunarity, j, "lacunarity");
-
-	field.animated, j, "animated");
-	field.animationTimeScale, j, "animation_time_scale");
-	field.animationTimeBase, j, "animation_time_base");
-}
-void from_json(const nlohmann::ordered_json& j, ForceField::DragField& field) {
-	field = ForceField::DragField();
-
-	field.velocityInfluence, j, "velocity_influence");
-	field.sizeInfluence, j, "size_influence");
 }
 void from_json(const nlohmann::ordered_json& j, ForceField& forceField) {
 	forceField = ForceField(
@@ -214,16 +237,38 @@ void from_json(const nlohmann::ordered_json& j, ForceField& forceField) {
 	forceField.position() = j.value("position", AnimatedProperty<vec3_t>(0.0, vec3_t(0.0)));
 
 	forceField.type(j.value("type", ForceField::Type::attraction_field));
-	forceField.exclusionList, j, "exclusion_list");
-	forceField.size, j, "size");
-	forceField.orientation, j, "orientation");
+	forceField.exclusionSet() = j.value("exclusion_list", NodeExclusionSet());
+	forceField.size() = j.value("size", AnimatedProperty<vec3_t>(vec3_t(1.0)));
+	forceField.orientation() = j.value("orientation", AnimatedProperty<vec3_t>(vec3_t(0.0)));
+	forceField.strength() = j.value("strength", AnimatedProperty<float_t>(1.0));
 
-	forceField.strength, j, "strength");
+	nlohmann::ordered_json jAccelerationField = j.value("acceleration_field", nlohmann::ordered_json());
+	forceField.accelerationDirection() = jAccelerationField.value("direction", AnimatedProperty<vec3_t>(vec3_t(0.0)));
+	forceField.accelerationDirectionVariance() = jAccelerationField.value("direction_variance", AnimatedProperty<float_t>(0.0));
+	forceField.accelerationStrengthVariance() = jAccelerationField.value("strength_variance", AnimatedProperty<float_t>(0.0));
+	forceField.accelerationGrid(
+		jAccelerationField.value("grid_size_x", 1),
+		jAccelerationField.value("grid_size_y", 1),
+		jAccelerationField.value("grid_size_z", 1),
+		jAccelerationField.value("grid_direction", std::vector<vec3_t>{ vec3_t(0.0) }),
+		jAccelerationField.value("grid_strength", std::vector<float_t>{ 0.0 }));
 
-	forceField.attractionField, j, "attraction_field");
-	forceField.accelerationField, j, "acceleration_field");
-	forceField.vectorField, j, "vector_field");
-	forceField.noiseField, j, "noise_field");
-	forceField.dragField, j, "drag_field");
+	nlohmann::ordered_json jVectorField = j.value("vector_field", nlohmann::ordered_json());
+	forceField.vectorResourceId(jVectorField.value("resource_id", ""));
+	forceField.vectorFilter(jVectorField.value("filter", ForceField::Filter::none));
+	forceField.vectorTightness() = jVectorField.value("tightness", AnimatedProperty<float_t>(1.0));
+
+	nlohmann::ordered_json jNoiseField = j.value("noise_field", nlohmann::ordered_json());
+	forceField.noiseOctaves() = jNoiseField.value("octaves", StaticProperty<int64_t>(4));
+	forceField.noiseFrequency() = jNoiseField.value("frequency", AnimatedProperty<float_t>(1.0));
+	forceField.noisePersistence() = jNoiseField.value("persistence", AnimatedProperty<float_t>(0.5));
+	forceField.noiseLacunarity() = jNoiseField.value("lacunarity", AnimatedProperty<float_t>(2.0));
+	forceField.noiseAnimated(jNoiseField.value("animated", false));
+	forceField.noiseAnimationTimeScale() = jNoiseField.value("animation_time_scale", StaticProperty<float_t>(1.0));
+	forceField.noiseAnimationTimeBase() = jNoiseField.value("animation_time_base", StaticProperty<float_t>(0.0));
+
+	nlohmann::ordered_json jDragField = j.value("drag_field", nlohmann::ordered_json());
+	forceField.dragVelocityInfluence() = jDragField.value("velocity_influence", StaticProperty<float_t>(1.0));
+	forceField.dragSizeInfluence() = jDragField.value("size_influence", StaticProperty<float_t>(1.0));
 }
 }
