@@ -11,7 +11,7 @@ public:
 	VectorFieldResource() = default;
 	VectorFieldResource(const std::string& name, const Grid3d<vec3_t>& field);
 
-	//Grid3d<vec3_t>& field();
+	Grid3d<vec3_t>& field();
 	const Grid3d<vec3_t>& field() const;
 
 private:

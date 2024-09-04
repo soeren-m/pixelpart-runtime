@@ -24,14 +24,12 @@ struct ParticleTrailRendererSettings {
 
 	SmoothingMethod smoothingMethod = SmoothingMethod::none;
 	uint32_t numSmoothingSegments = 100u;
-
 	TextureRotation textureRotation = TextureRotation::up;
 	float_t textureUVFactor = 1.0;
 };
 
 struct ParticleMeshRendererSettings {
 	std::string meshResourceId;
-
 	ParticleSortCriterion sortCriterion = ParticleSortCriterion::none;
 };
 

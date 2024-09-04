@@ -11,6 +11,9 @@ VectorFieldResource::VectorFieldResource(const std::string& name, const Grid3d<v
 
 }
 
+Grid3d<vec3_t>& VectorFieldResource::field() {
+	return fieldData;
+}
 const Grid3d<vec3_t>& VectorFieldResource::field() const {
 	return fieldData;
 }
