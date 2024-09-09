@@ -5,6 +5,20 @@ NodeExclusionSet::NodeExclusionSet(const std::unordered_set<id_t>& nodeIds) : ex
 
 }
 
+NodeExclusionSet::iterator NodeExclusionSet::begin() {
+	return excludedNodeIds.begin();
+}
+NodeExclusionSet::iterator NodeExclusionSet::end() {
+	return excludedNodeIds.end();
+}
+
+NodeExclusionSet::const_iterator NodeExclusionSet::begin() const {
+	return excludedNodeIds.begin();
+}
+NodeExclusionSet::const_iterator NodeExclusionSet::end() const {
+	return excludedNodeIds.end();
+}
+
 void NodeExclusionSet::add(id_t nodeId) {
 	excludedNodeIds.insert(nodeId);
 }

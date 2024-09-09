@@ -43,7 +43,7 @@ public:
 		const vec4_t* initialColor = nullptr;
 	};
 
-	//ParticleCollection() = default;
+	//TODO ParticleCollection() = default;
 	ParticleCollection(uint32_t capacity);
 
 	uint32_t add(uint32_t number);

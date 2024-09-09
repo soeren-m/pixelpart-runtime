@@ -8,8 +8,17 @@
 namespace pixelpart {
 class NodeExclusionSet {
 public:
+	using iterator = typename std::unordered_set<id_t>::iterator;
+	using const_iterator = typename std::unordered_set<id_t>::const_iterator;
+
 	NodeExclusionSet() = default;
 	NodeExclusionSet(const std::unordered_set<id_t>& nodeIds);
+
+	iterator begin();
+	iterator end();
+
+	const_iterator begin() const;
+	const_iterator end() const;
 
 	void add(id_t nodeId);
 	void add(const Node& node);

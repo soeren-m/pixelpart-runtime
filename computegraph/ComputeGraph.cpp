@@ -86,7 +86,7 @@ std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, Bu
 		VariantValue::Type sourceValueType = VariantValue::type_null;
 		VariantValue inputValue;
 
-		if(hasNode(link.nodeId)) {
+		if(containsNode(link.nodeId)) {
 			if(result.nodeOutputs.count(link.nodeId) == 0u) {
 				result.nodeOutputs[link.nodeId] = evaluate(graphInputs, result, link.nodeId);
 			}
@@ -153,9 +153,17 @@ void ComputeGraph::removeNode(id_t nodeId) {
 
 	computeNodes.erase(nodeId);
 }
+bool ComputeGraph::containsNode(id_t nodeId) const {
+	const auto& nodeEntry = computeNodes.find(nodeId);
+	if(nodeEntry == computeNodes.end()) {
+		return false;
+	}
+
+	return nodeEntry->second != nullptr;
+}
 
 void ComputeGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t sourceSlot, uint32_t targetSlot) {
-	if(!hasNode(sourceNodeId) || !hasNode(targetNodeId)) {
+	if(!containsNode(sourceNodeId) || !containsNode(targetNodeId)) {
 		return;
 	}
 
@@ -171,7 +179,7 @@ void ComputeGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t sour
 		sourceSlot);
 }
 void ComputeGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::string& sourceSlotName, const std::string& targetSlotName) {
-	if(!hasNode(sourceNodeId) || !hasNode(targetNodeId)) {
+	if(!containsNode(sourceNodeId) || !containsNode(targetNodeId)) {
 		return;
 	}
 
@@ -189,7 +197,7 @@ void ComputeGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::st
 	}
 }
 void ComputeGraph::linkNodeToInput(id_t targetNodeId, uint32_t targetSlot, id_t inputId) {
-	if(!hasNode(targetNodeId)) {
+	if(!containsNode(targetNodeId)) {
 		return;
 	}
 
@@ -204,7 +212,7 @@ void ComputeGraph::linkNodeToInput(id_t targetNodeId, uint32_t targetSlot, id_t 
 		inputId);
 }
 void ComputeGraph::unlinkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t targetSlot) {
-	if(!hasNode(sourceNodeId) || !hasNode(targetNodeId)) {
+	if(!containsNode(sourceNodeId) || !containsNode(targetNodeId)) {
 		return;
 	}
 
@@ -236,7 +244,7 @@ void ComputeGraph::unlinkRemovedInputs(const InputSet& graphInputs) {
 }
 
 void ComputeGraph::nodeName(id_t nodeId, const std::string& name) {
-	if(!hasNode(nodeId)) {
+	if(!containsNode(nodeId)) {
 		return;
 	}
 
@@ -244,7 +252,7 @@ void ComputeGraph::nodeName(id_t nodeId, const std::string& name) {
 	node->name(name);
 }
 void ComputeGraph::nodeParameter(id_t nodeId, uint32_t parameterIndex, VariantParameter::Value value) {
-	if(!hasNode(nodeId)) {
+	if(!containsNode(nodeId)) {
 		return;
 	}
 
@@ -252,7 +260,7 @@ void ComputeGraph::nodeParameter(id_t nodeId, uint32_t parameterIndex, VariantPa
 	node->parameterValues()[parameterIndex] = value;
 }
 void ComputeGraph::nodeParameter(id_t nodeId, const std::string& parameterName, VariantParameter::Value value) {
-	if(!hasNode(nodeId)) {
+	if(!containsNode(nodeId)) {
 		return;
 	}
 
@@ -265,7 +273,7 @@ void ComputeGraph::nodeParameter(id_t nodeId, const std::string& parameterName, 
 	node->parameterValues()[parameterIndex] = value;
 }
 void ComputeGraph::nodePosition(id_t nodeId, const vec2_t& position) {
-	if(!hasNode(nodeId)) {
+	if(!containsNode(nodeId)) {
 		return;
 	}
 
@@ -273,14 +281,6 @@ void ComputeGraph::nodePosition(id_t nodeId, const vec2_t& position) {
 	node->move(position);
 }
 
-bool ComputeGraph::hasNode(id_t nodeId) const {
-	const auto& nodeEntry = computeNodes.find(nodeId);
-	if(nodeEntry == computeNodes.end()) {
-		return false;
-	}
-
-	return nodeEntry->second != nullptr;
-}
 const ComputeNode& ComputeGraph::node(id_t nodeId) const {
 	return *(computeNodes.at(nodeId));
 }
@@ -324,7 +324,7 @@ uint32_t ComputeGraph::findNodeSignature(const InputSet& graphInputs, const Buil
 			VariantValue::Type inputType = VariantValue::type_null;
 			id_t sourceNodeId = activeNode.inputLinks()[i].nodeId;
 
-			if(hasNode(sourceNodeId)) {
+			if(containsNode(sourceNodeId)) {
 				uint32_t sourceSlot = activeNode.inputLinks()[i].slot;
 				uint32_t sourceSignature = result.nodeSignatures.at(sourceNodeId);
 

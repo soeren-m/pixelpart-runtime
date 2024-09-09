@@ -41,6 +41,7 @@ public:
 	virtual ParticleCollection::ReadPtr particles(uint32_t particleTypeIndex) const override;
 
 	uint32_t particleCapacity() const;
+
 	uint32_t activeThreadCount() const;
 
 private:
@@ -51,7 +52,7 @@ private:
 	std::vector<ParticleCollection> particleCollections;
 
 	std::vector<float_t> emissionCount;
-	uint32_t particleCapacity = 0u;
+	uint32_t particleCap = 0u;
 	uint32_t activeSeed = 0u;
 	float_t time = 0.0;
 
@@ -70,7 +71,7 @@ private:
 #ifdef PIXELPART_MULTITHREADING
 	std::shared_ptr<ThreadPool> threadPool;
 #endif
-	uint32_t numTotalActiveThreads = 0u;
+	uint32_t totalActiveThreadCount = 0u;
 	uint32_t particleCountPerThread = 128u;
 };
 }

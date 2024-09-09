@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Node.h"
+#include <cmath>
 
 namespace pixelpart {
 Node::Node(id_t ownId, id_t parentId) : nodeId(ownId), nodeParentId(parentId) {
@@ -47,6 +48,17 @@ void Node::repeat(bool repeat) {
 }
 bool Node::repeat() const {
 	return nodeRepeat;
+}
+
+float_t Node::life(float_t time) const {
+	return nodeRepeat
+		? std::fmod(time - nodeLifetimeStart, nodeLifetimeDuration) / nodeLifetimeDuration
+		: (time - nodeLifetimeStart) / nodeLifetimeDuration;
+}
+bool Node::active(float_t time) const {
+	return
+		(time >= nodeLifetimeStart) &&
+		(time <= nodeLifetimeStart + nodeLifetimeDuration || nodeRepeat);
 }
 
 AnimatedProperty<vec3_t>& Node::position() {

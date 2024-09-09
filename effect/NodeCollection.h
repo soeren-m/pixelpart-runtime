@@ -7,7 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <type_traits>
-
+// TODO
 namespace pixelpart {
 template <typename T>
 class NodeCollection {
@@ -27,10 +27,10 @@ public:
 	iterator end() {
 		return nodes.end();
 	}
-    const_iterator begin() const {
+	const_iterator begin() const {
 		return nodes.begin();
 	}
-    const_iterator end() const {
+	const_iterator end() const {
 		return nodes.end();
 	}
 
@@ -88,7 +88,7 @@ public:
 	}
 
 	void remove(id_t nodeId) {
-		removeAt(findById(nodeId));
+		removeAt(indexOf(nodeId));
 	}
 	void removeAt(uint32_t index) {
 		if(index >= nodes.size()) {
@@ -103,12 +103,12 @@ public:
 		updateIndexMap();
 	}
 
-	uint32_t findById(id_t nodeId) const {
+	uint32_t indexOf(id_t nodeId) const {
 		return (nodeId < indexMap.size())
 			? indexMap[nodeId]
 			: nullId;
 	}
-	uint32_t findByParent(id_t parentId) const {
+	uint32_t indexOfParent(id_t parentId) const {
 		for(uint32_t i = 0u; i < nodes.size(); i++) {
 			if(nodes[i].parentId == parentId) {
 				return i;
@@ -117,7 +117,7 @@ public:
 
 		return nullId;
 	}
-	uint32_t findByName(const std::string& name) const {
+	uint32_t indexOfName(const std::string& name) const {
 		for(uint32_t i = 0u; i < nodes.size(); i++) {
 			if(nodes[i].name == name) {
 				return i;
@@ -128,44 +128,48 @@ public:
 	}
 
 	bool contains(id_t nodeId) const {
-		return findById(nodeId) != nullId;
+		return indexOf(nodeId) != nullId;
 	}
 	bool containsParent(id_t parentId) const {
-		return findByParent(parentId) != nullId;
+		return indexOfParent(parentId) != nullId;
 	}
 	bool containsName(const std::string& name) const {
-		return findByName(name) != nullId;
+		return indexOfName(name) != nullId;
 	}
 	bool containsIndex(uint32_t index) const {
 		return index < nodes.size();
 	}
 
-	T& get(id_t nodeId) {
-		return nodes.at(findById(nodeId));
+	T& at(id_t nodeId) {
+		return nodes.at(indexOf(nodeId));
 	}
-	T& getByParent(id_t parentId) {
-		return nodes.at(findByParent(parentId));
+	const T& at(id_t id) const {
+		return nodes.at(indexOf(id));
 	}
-	T& getByName(const std::string& name) {
-		return nodes.at(findByName(name));
+
+	T& atParent(id_t parentId) {
+		return nodes.at(indexOfParent(parentId));
 	}
-	T& getByIndex(uint32_t index) {
+	const T& atParent(id_t parentId) const {
+		return nodes.at(indexOfParent(parentId));
+	}
+
+	T& atName(const std::string& name) {
+		return nodes.at(indexOfName(name));
+	}
+	const T& atName(const std::string& name) const {
+		return nodes.at(indexOfName(name));
+	}
+
+	T& atIndex(uint32_t index) {
 		return nodes.at(index);
 	}
-	const std::vector<T>& get() const {
+	const T& atIndex(uint32_t index) const {
+		return nodes.at(index);
+	}
+
+	const std::vector<T>& container() const {
 		return nodes;
-	}
-	const T& get(id_t id) const {
-		return nodes.at(findById(id));
-	}
-	const T& getByParent(id_t parentId) const {
-		return nodes.at(findByParent(parentId));
-	}
-	const T& getByName(const std::string& name) const {
-		return nodes.at(findByName(name));
-	}
-	const T& getByIndex(uint32_t index) const {
-		return nodes.at(index);
 	}
 
 	uint32_t count() const {

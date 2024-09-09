@@ -10,7 +10,15 @@ ImageResource::ImageResource(const std::string& name, uint32_t w, uint32_t h, ui
 void ImageResource::resize(uint32_t w, uint32_t h) {
 	width = w;
 	height = h;
-	data.resize(width * height * bitsPerPixel / 8u);
+	data.resize(width * height * bitsPerPixel / 8u, 0u);
+}
+void ImageResource::assign(uint32_t w, uint32_t h, unsigned char value) {
+	width = w;
+	height = h;
+	data.assign(width * height * bitsPerPixel / 8u, value);
+}
+void ImageResource::clear(unsigned char value) {
+	data.assign(width * height * bitsPerPixel / 8u, value);
 }
 
 uint32_t ImageResource::imageWidth() const {

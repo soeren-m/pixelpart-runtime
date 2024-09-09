@@ -13,9 +13,9 @@ public:
 	ImageResource() = default;
 	ImageResource(const std::string& name, uint32_t w, uint32_t h, uint32_t bpp);
 
-	// TODO: operator
-
 	void resize(uint32_t w, uint32_t h);
+	void assign(uint32_t w, uint32_t h, unsigned char value);
+	void clear(unsigned char value);
 
 	uint32_t imageWidth() const;
 	uint32_t imageHeight() const;

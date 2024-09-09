@@ -32,7 +32,7 @@ public:
 	};
 
 	enum TypeMatch : uint32_t {
-		typematch_exact = 0,
+		typematch_exact,
 		typematch_upcast,
 		typematch_downcast,
 		typematch_none
@@ -65,6 +65,7 @@ public:
 
 	id_t addNode(const std::string& typeName);
 	void removeNode(id_t nodeId);
+	bool containsNode(id_t nodeId) const;
 
 	void linkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t sourceSlot, uint32_t targetSlot);
 	void linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::string& sourceSlotName, const std::string& targetSlotName);
@@ -78,7 +79,6 @@ public:
 	void nodeParameter(id_t nodeId, const std::string& parameterName, VariantParameter::Value value);
 	void nodePosition(id_t nodeId, const vec2_t& position);
 
-	bool hasNode(id_t nodeId) const;
 	const ComputeNode& node(id_t nodeId) const;
 	const std::unordered_map<id_t, std::unique_ptr<ComputeNode>>& nodes() const;
 

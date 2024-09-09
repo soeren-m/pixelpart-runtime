@@ -30,16 +30,16 @@ public:
 	Curve() {
 		valueCache.resize(minCacheSize);
 	}
-	Curve(CurveInterpolation interp) : curveInterpolation(interp) {
+	Curve(CurveInterpolation interpolation) : curveInterpolation(interpolation) {
 		valueCache.resize(minCacheSize);
 	}
-	Curve(float_t initialPosition, const T& initialValue, CurveInterpolation interp = CurveInterpolation::linear) : Curve(interp) {
+	Curve(float_t initialPosition, const T& initialValue, CurveInterpolation interpolation = CurveInterpolation::linear) : Curve(interpolation) {
 		addPoint(initialPosition, initialValue);
 	}
-	Curve(const T& initialValue, CurveInterpolation interp = CurveInterpolation::linear) : Curve(interp) {
+	Curve(const T& initialValue, CurveInterpolation interpolation = CurveInterpolation::linear) : Curve(interpolation) {
 		addPoint(0.5, initialValue);
 	}
-	Curve(const std::vector<Point>& pointList, CurveInterpolation interp = CurveInterpolation::linear) : Curve(interp) {
+	Curve(const std::vector<Point>& pointList, CurveInterpolation interpolation = CurveInterpolation::linear) : Curve(interpolation) {
 		points(pointList);
 	}
 

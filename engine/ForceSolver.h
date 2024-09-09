@@ -21,19 +21,19 @@ public:
 private:
 	void solve(const ParticleType& particleType, ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt, const ForceField& forceField) const;
 
-	vec3_t sampleAttractionField(const ForceField::AttractionField& attractionField,
+	vec3_t sampleAttractionField(const ForceField& forceField,
 		const vec3_t& position, float_t size,
 		const vec3_t& particlePosition) const;
-	vec3_t sampleAccelerationField(const ForceField::AccelerationField& accelerationField,
+	vec3_t sampleAccelerationField(const ForceField& forceField,
 		const vec3_t& position, const vec3_t& size, const mat4_t& orientationMatrix, const mat4_t& directionMatrix,
 		const vec3_t& particlePosition) const;
-	vec3_t sampleVectorField(const ForceField::VectorField& vectorField, const VectorFieldResource& resource,
+	vec3_t sampleVectorField(const ForceField& forceField, const VectorFieldResource& resource,
 		const vec3_t& position, const vec3_t& size, const mat4_t& directionMatrix, const mat4_t& orientationMatrix,
 		const vec3_t& particlePosition, bool& inside) const;
-	vec3_t sampleNoiseField(const ForceField::NoiseField& noiseField,
+	vec3_t sampleNoiseField(const ForceField& forceField,
 		const vec3_t& position, const vec3_t& size, const mat4_t& orientationMatrix,
 		const vec3_t& particlePosition, float_t life, float_t t) const;
-	vec3_t sampleDragField(const ForceField::DragField& dragField,
+	vec3_t sampleDragField(const ForceField& forceField,
 		const vec3_t& position, const vec3_t& size, const mat4_t& orientationMatrix,
 		const vec3_t& particlePosition, const vec3_t& particleVelocity, const vec3_t& particleSize) const;
 
