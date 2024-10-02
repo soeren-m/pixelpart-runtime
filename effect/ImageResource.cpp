@@ -1,10 +1,16 @@
 #include "ImageResource.h"
 #include "../common/Compression.h"
+#include <cstring>
+#include <algorithm>
 
 namespace pixelpart {
-ImageResource::ImageResource(const std::string& name, uint32_t w, uint32_t h, uint32_t bpp) : Resource(name),
-	width(w), height(h), bitsPerPixel(bpp) {
+ImageResource::ImageResource(const std::string& name, uint32_t w, uint32_t h, uint32_t bpp) :
+	Resource(name), width(w), height(h), bitsPerPixel(bpp) {
 	data.resize(width * height * bitsPerPixel / 8u);
+}
+ImageResource::ImageResource(const std::string& name, uint32_t w, uint32_t h, uint32_t bpp, const unsigned char* source) :
+	ImageResource(name, w, h, bpp) {
+	copy(source, data.size());
 }
 
 void ImageResource::resize(uint32_t w, uint32_t h) {
@@ -19,6 +25,10 @@ void ImageResource::assign(uint32_t w, uint32_t h, unsigned char value) {
 }
 void ImageResource::clear(unsigned char value) {
 	data.assign(width * height * bitsPerPixel / 8u, value);
+}
+
+void ImageResource::copy(const unsigned char* source, std::size_t size) {
+	std::memcpy(&data.front(), source, std::min(size, data.size()));
 }
 
 uint32_t ImageResource::imageWidth() const {

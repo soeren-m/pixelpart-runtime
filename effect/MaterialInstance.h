@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../common/Id.h"
 #include "../common/VariantParameter.h"
 #include "MaterialResource.h"
 #include "../json/json.hpp"
@@ -10,12 +11,14 @@ namespace pixelpart {
 class MaterialInstance {
 public:
 	MaterialInstance() = default;
+	MaterialInstance(const std::string& materialId, bool builtIn);
 	MaterialInstance(const std::string& materialId, bool builtIn, const std::unordered_map<id_t, VariantParameter::Value>& parameters);
 	MaterialInstance(const MaterialResource& material);
 
 	const std::string& materialId() const;
 	bool builtInMaterial() const;
 
+	std::unordered_map<id_t, VariantParameter::Value>& materialParameters();
 	const std::unordered_map<id_t, VariantParameter::Value>& materialParameters() const;
 
 private:

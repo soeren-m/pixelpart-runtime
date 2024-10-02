@@ -11,9 +11,6 @@ nlohmann::ordered_json toJson(const T& value) {
 	return nlohmann::ordered_json(value);
 }
 
-template <>
-nlohmann::ordered_json toJson<id_t>(const id_t& value);
-
 template <typename T>
 bool fromJson(T& value, const nlohmann::ordered_json& j, const std::string& key) {
 	if(j.contains(key)) {

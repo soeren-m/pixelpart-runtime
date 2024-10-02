@@ -16,6 +16,7 @@ public:
 	Effect() = default;
 	Effect(bool is3d);
 
+	void enable3d(bool mode);
 	bool is3d() const;
 
 	NodeCollection<ParticleEmitter>& particleEmitters();

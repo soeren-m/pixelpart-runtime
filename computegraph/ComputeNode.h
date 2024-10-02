@@ -2,9 +2,9 @@
 
 #include "../common/Types.h"
 #include "../common/Math.h"
+#include "../common/Id.h"
 #include "../common/VariantValue.h"
 #include "../common/VariantParameter.h"
-#include "../common/Constants.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -34,9 +34,9 @@ public:
 		Link() = default;
 		Link(id_t linkId, id_t linkNodeId, uint32_t linkSlot);
 
-		id_t id = nullId;
-		id_t nodeId = nullId;
-		uint32_t slot = nullId;
+		id_t id;
+		id_t nodeId;
+		uint32_t slot;
 	};
 
 	ComputeNode(

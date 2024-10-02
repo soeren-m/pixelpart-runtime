@@ -1,6 +1,10 @@
 #include "Math.h"
 
 namespace pixelpart {
+const vec2_t worldUpVector2 = vec2_t(0.0, 1.0);
+const vec3_t worldUpVector3 = vec3_t(0.0, 1.0, 0.0);
+const vec4_t worldUpVector4 = vec4_t(0.0, 1.0, 0.0, 0.0);
+
 void to_json(nlohmann::ordered_json& j, const vec2_t& v) {
 	j = nlohmann::ordered_json{
 		{ "x", v.x },

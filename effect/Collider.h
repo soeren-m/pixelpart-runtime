@@ -3,6 +3,7 @@
 #include "Node.h"
 #include "../common/Types.h"
 #include "../common/Math.h"
+#include "../common/Id.h"
 #include "NodeExclusionSet.h"
 #include "StaticProperty.h"
 #include "AnimatedProperty.h"

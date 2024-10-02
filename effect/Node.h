@@ -2,19 +2,23 @@
 
 #include "../common/Types.h"
 #include "../common/Math.h"
-#include "../common/Constants.h"
+#include "../common/Id.h"
 #include "AnimatedProperty.h"
 #include <string>
 
 namespace pixelpart {
 class Node {
 public:
+	template <typename T>
+	friend class NodeCollection;
+
 	Node() = default;
 	Node(id_t ownId, id_t parentId = nullId);
 
 	id_t id() const;
 
 	void parent(const Node& parentNode);
+	void parent(id_t parentNodeId);
 	void unparent();
 	id_t parentId() const;
 

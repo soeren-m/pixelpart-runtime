@@ -40,7 +40,7 @@ ComputeGraph::ComputeGraph(const std::unordered_map<id_t, std::unique_ptr<Comput
 		maxNodeId = std::max(maxNodeId, node.first);
 
 		for(const auto& link : node.second->inputLinks()) {
-			if(link.id == nullId) {
+			if(!link.id) {
 				continue;
 			}
 
@@ -48,8 +48,8 @@ ComputeGraph::ComputeGraph(const std::unordered_map<id_t, std::unique_ptr<Comput
 		}
 	}
 
-	nextNodeId = maxNodeId + 1u;
-	nextLinkId = maxLinkId + 1u;
+	nextNodeId = maxNodeId.value() + 1u;
+	nextLinkId = maxLinkId.value() + 1u;
 }
 
 ComputeGraph& ComputeGraph::operator=(const ComputeGraph& other) {

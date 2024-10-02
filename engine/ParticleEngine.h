@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../common/Types.h"
+#include "../common/Id.h"
 #include "../effect/Effect.h"
 #include "ParticleCollection.h"
 

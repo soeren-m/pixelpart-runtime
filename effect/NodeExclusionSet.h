@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../common/Types.h"
+#include "../common/Id.h"
 #include "Node.h"
 #include "../json/json.hpp"
 #include <unordered_set>

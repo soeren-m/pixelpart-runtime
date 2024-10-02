@@ -2,7 +2,7 @@
 
 #include "../common/Types.h"
 #include "../common/VariantValue.h"
-#include "../common/Constants.h"
+#include "../common/Id.h"
 #include "ComputeNode.h"
 #include "ComputeNodeFactory.h"
 #include "../json/json.hpp"
@@ -21,14 +21,14 @@ public:
 
 	class EvaluationException : public std::runtime_error {
 	public:
-		EvaluationException(const std::string& msg, id_t node = nullId, uint32_t slot = nullId);
+		EvaluationException(const std::string& msg, id_t node = id_t(), uint32_t slot = id_t());
 
 		id_t nodeId() const;
 		uint32_t slotIndex() const;
 
 	private:
-		id_t computeNodeId = nullId;
-		uint32_t computeSlotIndex = nullId;
+		id_t computeNodeId;
+		uint32_t computeSlotIndex;
 	};
 
 	enum TypeMatch : uint32_t {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../common/Id.h"
 #include "ParticleEngine.h"
 #include "ParticleGenerator.h"
 #include "SizeSolver.h"

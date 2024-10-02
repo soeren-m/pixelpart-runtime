@@ -3,29 +3,6 @@
 
 namespace pixelpart {
 template <>
-nlohmann::ordered_json toJson<id_t>(const id_t& value) {
-	if(value == nullId) {
-		return nlohmann::ordered_json(nullptr);
-	}
-
-	return nlohmann::ordered_json(value);
-}
-
-template <>
-bool fromJson(id_t& value, const nlohmann::ordered_json& j, const std::string& key) {
-	if(j.contains(key)) {
-		const nlohmann::ordered_json& jValue = j.at(key);
-		value = jValue.is_number_unsigned()
-			? jValue.get<id_t>()
-			: nullId;
-
-		return true;
-	}
-
-	return false;
-}
-
-template <>
 bool fromJson<Curve<float_t>>(Curve<float_t>& value, const nlohmann::ordered_json& j, const std::string& key) {
 	if(j.contains(key)) {
 		const nlohmann::ordered_json& jValue = j.at(key);

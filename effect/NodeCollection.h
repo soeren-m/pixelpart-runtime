@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../common/Types.h"
-#include "../common/Constants.h"
+#include "../common/Id.h"
 #include "Node.h"
 #include <string>
 #include <vector>
@@ -40,31 +40,31 @@ public:
 	}
 
 	id_t set(const T& node, id_t baseId) {
-		id_t nodeId = node.id != nullId
-			? baseId + node.id
+		id_t nodeId = node.nodeId != nullId
+			? baseId + node.nodeId
 			: baseId;
-		id_t parentId = node.parentId != nullId
-			? baseId + node.parentId
+		id_t parentId = node.nodeParentId != nullId
+			? baseId + node.nodeParentId
 			: nullId;
 
 		nodes.push_back(node);
 
 		T& insertedNode = nodes.back();
-		insertedNode.id = nodeId;
-		insertedNode.parentId = parentId;
+		insertedNode.nodeId = nodeId;
+		insertedNode.nodeParentId = parentId;
 		updateIndexMap();
 
 		return nodeId;
 	}
 
 	id_t add(const T& node) {
-		id_t nodeId = node.id != nullId ? node.id : 0u;
+		id_t nodeId = node.nodeId != nullId ? node.nodeId : 0u;
 		while(contains(nodeId)) {
 			nodeId++;
 		}
 
 		nodes.push_back(node);
-		nodes.back().id = nodeId;
+		nodes.back().nodeId = nodeId;
 		updateIndexMap();
 
 		return nodeId;
@@ -75,14 +75,14 @@ public:
 			return nullId;
 		}
 
-		T otherNode = get(nodeId);
-		otherNode.id = nullId;
-		otherNode.parentId = nullId;
+		T otherNode = at(nodeId);
+		otherNode.nodeId = nullId;
+		otherNode.nodeParentId = nullId;
 
 		do {
-			otherNode.name += nameExtension;
+			otherNode.nodeName += nameExtension;
 		}
-		while(containsName(otherNode.name));
+		while(containsName(otherNode.nodeName));
 
 		return add(otherNode);
 	}
@@ -110,7 +110,7 @@ public:
 	}
 	uint32_t indexOfParent(id_t parentId) const {
 		for(uint32_t i = 0u; i < nodes.size(); i++) {
-			if(nodes[i].parentId == parentId) {
+			if(nodes[i].nodeParentId == parentId) {
 				return i;
 			}
 		}
@@ -119,7 +119,7 @@ public:
 	}
 	uint32_t indexOfName(const std::string& name) const {
 		for(uint32_t i = 0u; i < nodes.size(); i++) {
-			if(nodes[i].name == name) {
+			if(nodes[i].nodeName == name) {
 				return i;
 			}
 		}
@@ -178,7 +178,7 @@ public:
 	id_t maxId() const {
 		id_t maxId = 0u;
 		for(const T& node : nodes) {
-			maxId = std::max(maxId, node.id);
+			maxId = std::max(maxId, node.nodeId);
 		}
 
 		return maxId;
@@ -214,7 +214,7 @@ private:
 		indexMap.reserve(nodes.size());
 
 		for(uint32_t i = 0u; i < nodes.size(); i++) {
-			id_t nodeId = nodes[i].id;
+			id_t nodeId = nodes[i].nodeId;
 			if(nodeId >= indexMap.size()) {
 				indexMap.resize(nodeId + 1u, nullId);
 			}

@@ -1,13 +1,28 @@
 #include "MaterialInstance.h"
 
 namespace pixelpart {
+MaterialInstance::MaterialInstance(const std::string& materialId, bool builtIn) :
+	instanceMaterialId(materialId), instanceBuiltInMaterial(builtIn) {
+
+}
 MaterialInstance::MaterialInstance(const std::string& materialId, bool builtIn, const std::unordered_map<id_t, VariantParameter::Value>& parameters) :
 	instanceMaterialId(materialId), instanceBuiltInMaterial(builtIn), instanceMaterialParameters(parameters) {
 
 }
 MaterialInstance::MaterialInstance(const MaterialResource& material) :
 	instanceMaterialId(material.name()), instanceBuiltInMaterial(false) {
+	for(const auto& parameterEntry : material.shaderGraph().shaderParameters()) {
+		const pixelpart::VariantParameter& parameter = parameterEntry.second;
 
+		if(instanceMaterialParameters.count(parameterEntry.first) == 0u) {
+			pixelpart::VariantParameter::Value initialValue = parameter.def();
+			if(material.shaderGraph().containsNode(parameterEntry.first)) {
+				initialValue = material.shaderGraph().node(parameterEntry.first).parameters().at(0u);
+			}
+
+			instanceMaterialParameters[parameterEntry.first] = initialValue;
+		}
+	}
 }
 
 const std::string& MaterialInstance::materialId() const {
@@ -17,6 +32,9 @@ bool MaterialInstance::builtInMaterial() const {
 	return instanceBuiltInMaterial;
 }
 
+std::unordered_map<id_t, VariantParameter::Value>& MaterialInstance::materialParameters() {
+	return instanceMaterialParameters;
+}
 const std::unordered_map<id_t, VariantParameter::Value>& MaterialInstance::materialParameters() const {
 	return instanceMaterialParameters;
 }

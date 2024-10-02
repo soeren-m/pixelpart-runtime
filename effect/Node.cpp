@@ -15,6 +15,9 @@ id_t Node::id() const {
 void Node::parent(const Node& parentNode) {
 	nodeParentId = parentNode.id();
 }
+void Node::parent(id_t parentNodeId) {
+	nodeParentId = parentNodeId;
+}
 void Node::unparent() {
 	nodeParentId = nullId;
 }

@@ -2,6 +2,7 @@
 
 #include "../common/Types.h"
 #include "../common/Math.h"
+#include "../common/Id.h"
 #include <vector>
 
 namespace pixelpart {
@@ -43,8 +44,7 @@ public:
 		const vec4_t* initialColor = nullptr;
 	};
 
-	//TODO ParticleCollection() = default;
-	ParticleCollection(uint32_t capacity);
+	ParticleCollection(uint32_t capacity = 1024);
 
 	uint32_t add(uint32_t number);
 	void remove(uint32_t index);

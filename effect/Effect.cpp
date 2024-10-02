@@ -1,4 +1,5 @@
 #include "Effect.h"
+#include "../common/Id.h"
 #include "../common/Constants.h"
 #include "../common/Json.h"
 #include <vector>
@@ -28,6 +29,10 @@ Effect::Effect(bool is3d) : effect3d(is3d) {
 
 }
 
+void Effect::enable3d(bool mode) {
+	effect3d = mode;
+	// TODO
+}
 bool Effect::is3d() const {
 	return effect3d;
 }

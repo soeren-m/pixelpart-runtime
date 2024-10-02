@@ -13,40 +13,40 @@ template <typename T>
 class StaticProperty {
 public:
 	StaticProperty() {
-		computeGraph.addNode<OutputComputeNode>();
+		propertyComputeGraph.addNode<OutputComputeNode>();
 		refresh();
 	}
-	StaticProperty(const T& initialValue) : value(initialValue) {
-		computeGraph.addNode<OutputComputeNode>();
+	StaticProperty(const T& initialValue) : propertyBaseValue(initialValue) {
+		propertyComputeGraph.addNode<OutputComputeNode>();
 		refresh();
 	}
-	StaticProperty(const T& initialValue, const ComputeGraph& graph, ComputeOutputOperation outputOperation) :
-		value(initialValue),
-		computeGraph(graph),
-		computeOutputOperation(outputOperation) {
+	StaticProperty(const T& initialValue, const ComputeGraph& graph, ComputeOutputOperation outputOp) :
+		propertyBaseValue(initialValue),
+		propertyComputeGraph(graph),
+		outputOperation(outputOp) {
 		refresh();
 	}
 
 	T operator()() const {
-		return resultValue;
+		return computedValue;
 	}
 
-	T get() const {
-		return resultValue;
+	T value() const {
+		return computedValue;
 	}
 
 	void refresh(const ComputeGraph::InputSet& inputs) {
-		if(computeGraph.isEmpty()) {
+		if(propertyComputeGraph.empty()) {
 			useGraphOutput = false;
 			refresh();
 
 			return;
 		}
 
-		computeGraph.unlinkRemovedInputs(inputs);
+		propertyComputeGraph.unlinkRemovedInputs(inputs);
 
 		try {
-			graphOutputValue = computeGraph.evaluate(inputs).at(0u).template get<T>();
+			graphOutputValue = propertyComputeGraph.evaluate(inputs).at(0u).template value<T>();
 
 			useGraphOutput = true;
 			refresh();
@@ -57,45 +57,45 @@ public:
 		}
 	}
 
-	void refresh() {
-		if(useGraphOutput) {
-			resultValue = applyComputeOutputOperation(value, graphOutputValue, computeOutputOperation);
-		}
-		else {
-			resultValue = value;
-		}
-	}
-
 	void baseValue(T v) {
-		value = v;
+		propertyBaseValue = v;
 		refresh();
 	}
 	T baseValue() const {
-		return value;
+		return propertyBaseValue;
 	}
 
 	void computeGraph(const ComputeGraph& graph) {
-		computeGraph = graph;
+		propertyComputeGraph = graph;
 	}
 	const ComputeGraph& computeGraph() const {
-		return computeGraph;
+		return propertyComputeGraph;
 	}
 
 	void computeOutputOperation(ComputeOutputOperation operation) {
-		computeOutputOperation = operation;
+		outputOperation = operation;
 		refresh();
 	}
 	ComputeOutputOperation computeOutputOperation() const {
-		return computeOutputOperation;
+		return outputOperation;
 	}
 
 private:
-	T value = T();
+	void refresh() {
+		if(useGraphOutput) {
+			computedValue = applyComputeOutputOperation(propertyBaseValue, graphOutputValue, outputOperation);
+		}
+		else {
+			computedValue = propertyBaseValue;
+		}
+	}
 
-	ComputeGraph computeGraph;
-	ComputeOutputOperation computeOutputOperation = ComputeOutputOperation::set;
+	T propertyBaseValue = T();
 
-	T resultValue = T();
+	ComputeGraph propertyComputeGraph;
+	ComputeOutputOperation outputOperation = ComputeOutputOperation::set;
+
+	T computedValue = T();
 	T graphOutputValue = T();
 	bool useGraphOutput = false;
 };

@@ -11,7 +11,6 @@ class MeshResource : public Resource {
 public:
 	MeshResource() = default;
 	MeshResource(const std::string& name);
-	// TODO: clear, ...
 
 	std::vector<uint32_t>& faces();
 	const std::vector<uint32_t>& faces() const;

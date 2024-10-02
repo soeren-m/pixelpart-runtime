@@ -56,7 +56,7 @@ const AnimatedProperty<float_t>& Collider::friction() const {
 
 void to_json(nlohmann::ordered_json& j, const Collider& collider) {
 	j = nlohmann::ordered_json{
-		{ "id", toJson(collider.id) },
+		{ "id", collider.id() },
 		{ "parent_id", toJson(collider.parentId) },
 		{ "name", collider.name() },
 		{ "lifetime_start", collider.start() },

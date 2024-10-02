@@ -27,11 +27,11 @@ public:
 		propertyComputeGraph.addNode<OutputComputeNode>();
 		refresh();
 	}
-	AnimatedProperty(const Curve<T>& initialCurve, const ComputeGraph& graph, ComputeOutputOperation outputOperation, ComputeOutputTarget outputTarget) :
+	AnimatedProperty(const Curve<T>& initialCurve, const ComputeGraph& graph, ComputeOutputOperation outputOp, ComputeOutputTarget outputTgt) :
 		propertyCurve(initialCurve),
 		propertyComputeGraph(graph),
-		outputOperation(outputOperation),
-		outputTarget(outputTarget) {
+		outputOperation(outputOp),
+		outputTarget(outputTgt) {
 		refresh();
 	}
 
@@ -43,7 +43,7 @@ public:
 		return computedCurve.at(position);
 	}
 
-	void refresh(const std::unordered_map<uint32_t, VariantValue>& inputs) {
+	void refresh(const ComputeGraph::InputSet& inputs) {
 		if(propertyComputeGraph.empty()) {
 			useGraphOutput = false;
 			refresh();
@@ -54,7 +54,7 @@ public:
 		propertyComputeGraph.unlinkRemovedInputs(inputs);
 
 		try {
-			graphOutputValue = propertyComputeGraph.evaluate(inputs).at(0u).template get<T>();
+			graphOutputValue = propertyComputeGraph.evaluate(inputs).at(0u).template value<T>();
 
 			useGraphOutput = true;
 			refresh();
@@ -65,47 +65,10 @@ public:
 		}
 	}
 
-	void refresh() {
-		computedCurve = propertyCurve;
-
-		if(useGraphOutput) {
-			if(outputTarget.type == ComputeOutputTarget::keyframe) {
-				switch(outputOperation) {
-					case ComputeOutputOperation::add:
-						computedCurve.setPoint(outputTarget.index, propertyCurve.point(outputTarget.index).value + graphOutputValue);
-						break;
-					case ComputeOutputOperation::multiply:
-						computedCurve.setPoint(outputTarget.index, propertyCurve.point(outputTarget.index).value * graphOutputValue);
-						break;
-					default:
-						computedCurve.setPoint(outputTarget.index, graphOutputValue);
-						break;
-				}
-			}
-			else {
-				switch(outputOperation) {
-					case ComputeOutputOperation::add:
-						moveCurve(computedCurve, graphOutputValue);
-						break;
-					case ComputeOutputOperation::multiply:
-						scaleCurve(computedCurve, graphOutputValue);
-						break;
-					default:
-						flattenCurve(computedCurve, graphOutputValue);
-						break;
-				}
-			}
-		}
-	}
-
 	void curve(const Curve<T>& curve) {
 		propertyCurve = curve;
 		refresh();
 	}
-	// TODO
-	/*Curve<T>& curve() {
-		return propertyCurve;
-	}*/
 	const Curve<T>& curve() const {
 		return propertyCurve;
 	}
@@ -116,9 +79,6 @@ public:
 	void computeGraph(const ComputeGraph& graph) {
 		propertyComputeGraph = graph;
 	}
-	/*ComputeGraph& computeGraph() {
-		return propertyComputeGraph;
-	}*/
 	const ComputeGraph& computeGraph() const {
 		return propertyComputeGraph;
 	}
@@ -220,6 +180,39 @@ public:
 	}
 
 private:
+	void refresh() {
+		computedCurve = propertyCurve;
+
+		if(useGraphOutput) {
+			if(outputTarget.type == ComputeOutputTarget::keyframe) {
+				switch(outputOperation) {
+					case ComputeOutputOperation::add:
+						computedCurve.setPoint(outputTarget.index, propertyCurve.point(outputTarget.index).value + graphOutputValue);
+						break;
+					case ComputeOutputOperation::multiply:
+						computedCurve.setPoint(outputTarget.index, propertyCurve.point(outputTarget.index).value * graphOutputValue);
+						break;
+					default:
+						computedCurve.setPoint(outputTarget.index, graphOutputValue);
+						break;
+				}
+			}
+			else {
+				switch(outputOperation) {
+					case ComputeOutputOperation::add:
+						moveCurve(computedCurve, graphOutputValue);
+						break;
+					case ComputeOutputOperation::multiply:
+						scaleCurve(computedCurve, graphOutputValue);
+						break;
+					default:
+						flattenCurve(computedCurve, graphOutputValue);
+						break;
+				}
+			}
+		}
+	}
+
 	Curve<T> propertyCurve;
 
 	ComputeGraph propertyComputeGraph;

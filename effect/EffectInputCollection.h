@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../common/Types.h"
+#include "../common/Id.h"
 #include "EffectInput.h"
 #include "StaticProperty.h"
 #include "AnimatedProperty.h"

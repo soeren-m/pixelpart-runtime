@@ -20,16 +20,23 @@ public:
 
 	ImageResource& image(const std::string& name);
 	const ImageResource& image(const std::string& name) const;
-
+	std::unordered_map<std::string, ImageResource>& images();
 	const std::unordered_map<std::string, ImageResource>& images() const;
 
+	MeshResource& mesh(const std::string& name);
+	const MeshResource& mesh(const std::string& name) const;
+	std::unordered_map<std::string, MeshResource>& meshes();
 	const std::unordered_map<std::string, MeshResource>& meshes() const;
 
+	MaterialResource& material(const std::string& name);
+	const MaterialResource& material(const std::string& name) const;
+	std::unordered_map<std::string, MaterialResource>& materials();
 	const std::unordered_map<std::string, MaterialResource>& materials() const;
 
+	VectorFieldResource& vectorField(const std::string& name);
+	const VectorFieldResource& vectorField(const std::string& name) const;
+	std::unordered_map<std::string, VectorFieldResource>& vectorFields();
 	const std::unordered_map<std::string, VectorFieldResource>& vectorFields() const;
-
-	// TODO
 
 private:
 	std::unordered_map<std::string, ImageResource> imageResources;
