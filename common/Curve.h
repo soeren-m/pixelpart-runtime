@@ -55,19 +55,19 @@ public:
 		curvePoints = pointList;
 		refreshCache();
 	}
-	void points(const Point* pointList, std::size_t numPoints) {
-		curvePoints = pointList != nullptr && numPoints > 0u
-			? std::vector<Point>(pointList, pointList + numPoints)
+	void points(const Point* pointList, std::size_t count) {
+		curvePoints = pointList != nullptr && count > 0u
+			? std::vector<Point>(pointList, pointList + count)
 			: std::vector<Point>();
 		refreshCache();
 	}
 
 	template <typename IntT>
-	void orderedPoints(const float_t* positionList, const T* valueList, const IntT* order, IntT numPoints) {
+	void orderedPoints(const float_t* positionList, const T* valueList, const IntT* order, IntT count) {
 		curvePoints.clear();
-		if(positionList && valueList && order && numPoints > 0) {
-			curvePoints.resize(numPoints);
-			for(IntT i = 0; i < numPoints; i++) {
+		if(positionList && valueList && order && count > 0) {
+			curvePoints.resize(count);
+			for(IntT i = 0; i < count; i++) {
 				curvePoints[i] = Point{ positionList[i], valueList[order[i]] };
 			}
 		}
@@ -114,9 +114,7 @@ public:
 	std::size_t pointCount() const {
 		return curvePoints.size();
 	}
-	std::vector<Point>& points() {
-		return curvePoints;
-	}
+
 	const std::vector<Point>& points() const {
 		return curvePoints;
 	}

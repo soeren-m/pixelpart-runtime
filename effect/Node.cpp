@@ -19,7 +19,7 @@ void Node::parent(id_t parentNodeId) {
 	nodeParentId = parentNodeId;
 }
 void Node::unparent() {
-	nodeParentId = nullId;
+	nodeParentId = id_t();
 }
 id_t Node::parentId() const {
 	return nodeParentId;

@@ -72,9 +72,6 @@ public:
 	const Curve<T>& curve() const {
 		return propertyCurve;
 	}
-	const Curve<T>& getComputedCurve() const {
-		return computedCurve;
-	}
 
 	void computeGraph(const ComputeGraph& graph) {
 		propertyComputeGraph = graph;
@@ -99,66 +96,62 @@ public:
 		return outputTarget;
 	}
 
-	void setPoints(const std::vector<typename Curve<T>::Point>& pointList) {
-		propertyCurve.setPoints(pointList);
+	void keyframes(const std::vector<typename Curve<T>::Point>& pointList) {
+		propertyCurve.points(pointList);
 		refresh();
 	}
-	void setPoints(const typename Curve<T>::Point* pointList, std::size_t numPoints) {
-		propertyCurve.setPoints(pointList, numPoints);
-		refresh();
-	}
-	template <typename IntT>
-	void setPointsOrdered(const float_t* positionList, const T* valueList, const IntT* order, IntT numPoints) {
-		propertyCurve.setPointsOrdered(positionList, valueList, order, numPoints);
+	void keyframes(const typename Curve<T>::Point* pointList, std::size_t count) {
+		propertyCurve.points(pointList, count);
 		refresh();
 	}
 
-	void addPoint(float_t position, const T& value) {
+	template <typename IntT>
+	void orderedKeyframes(const float_t* positionList, const T* valueList, const IntT* order, IntT count) {
+		propertyCurve.orderedPoints(positionList, valueList, order, count);
+		refresh();
+	}
+
+	void addKeyframe(float_t position, const T& value) {
 		propertyCurve.addPoint(position, value);
 		refresh();
 	}
-	void removePoint(std::size_t index) {
+	void removeKeyframe(std::size_t index) {
 		propertyCurve.removePoint(index);
 		refresh();
 	}
-	void setPoint(std::size_t index, const T& value) {
+	void setKeyframe(std::size_t index, const T& value) {
 		propertyCurve.setPoint(index, value);
 		refresh();
 	}
-	void setPointPosition(std::size_t index, float_t position) {
+	void setKeyframePosition(std::size_t index, float_t position) {
 		propertyCurve.setPointPosition(index, position);
 		refresh();
 	}
-	void clear() {
+	void clearKeyframes() {
 		propertyCurve.clear();
 		refresh();
 	}
 
-	bool containsPoints() const {
-		return propertyCurve.containsPoints();
-	}
-	std::size_t pointCount() const {
+	std::size_t keyframeCount() const {
 		return propertyCurve.pointCount();
 	}
-	/*std::vector<typename Curve<T>::Point>& points() {
-		return propertyCurve.points();
-	}*/
-	const std::vector<typename Curve<T>::Point>& points() const {
+
+	const std::vector<typename Curve<T>::Point>& keyframes() const {
 		return propertyCurve.points();
 	}
-	const typename Curve<T>::Point& point(std::size_t index) const {
+	const typename Curve<T>::Point& keyframe(std::size_t index) const {
 		return propertyCurve.point(index);
 	}
 
-	std::ptrdiff_t pointIndex(float_t position, float_t epsilon = 0.001) const {
+	std::ptrdiff_t keyframeIndex(float_t position, float_t epsilon = 0.001) const {
 		return propertyCurve.pointIndex(position, epsilon);
 	}
 
-	void interpolation(CurveInterpolation method) {
+	void keyframeInterpolation(CurveInterpolation method) {
 		propertyCurve.interpolation(method);
 		refresh();
 	}
-	CurveInterpolation interpolation() const {
+	CurveInterpolation keyframeInterpolation() const {
 		return propertyCurve.interpolation();
 	}
 
@@ -170,16 +163,17 @@ public:
 		propertyCurve.enableFixedCache(size);
 		refresh();
 	}
-	const std::vector<T>& cache() const {
+	/*const std::vector<T>& cache() const {
 		return propertyCurve.cache();
-	}
-
-	void refreshCache() {
-		propertyCurve.refreshCache();
-		refresh();
-	}
+	}*/
 
 private:
+	// TODO
+	/*void refreshCache() {
+		propertyCurve.refreshCache();
+		refresh();
+	}*/
+
 	void refresh() {
 		computedCurve = propertyCurve;
 

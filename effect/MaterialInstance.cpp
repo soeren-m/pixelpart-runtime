@@ -9,8 +9,8 @@ MaterialInstance::MaterialInstance(const std::string& materialId, bool builtIn, 
 	instanceMaterialId(materialId), instanceBuiltInMaterial(builtIn), instanceMaterialParameters(parameters) {
 
 }
-MaterialInstance::MaterialInstance(const MaterialResource& material) :
-	instanceMaterialId(material.name()), instanceBuiltInMaterial(false) {
+MaterialInstance::MaterialInstance(const std::string& materialId, const MaterialResource& material) :
+	instanceMaterialId(materialId), instanceBuiltInMaterial(false) {
 	for(const auto& parameterEntry : material.shaderGraph().shaderParameters()) {
 		const pixelpart::VariantParameter& parameter = parameterEntry.second;
 

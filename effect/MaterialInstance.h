@@ -13,7 +13,7 @@ public:
 	MaterialInstance() = default;
 	MaterialInstance(const std::string& materialId, bool builtIn);
 	MaterialInstance(const std::string& materialId, bool builtIn, const std::unordered_map<id_t, VariantParameter::Value>& parameters);
-	MaterialInstance(const MaterialResource& material);
+	MaterialInstance(const std::string& materialId, const MaterialResource& material);
 
 	const std::string& materialId() const;
 	bool builtInMaterial() const;
