@@ -13,7 +13,7 @@ public:
 	friend class NodeCollection;
 
 	Node() = default;
-	Node(id_t ownId, id_t parentId = nullId);
+	Node(id_t ownId, id_t parentId = id_t());
 
 	id_t id() const;
 
@@ -41,8 +41,8 @@ public:
 	const AnimatedProperty<vec3_t>& position() const;
 
 private:
-	id_t nodeId = nullId;
-	id_t nodeParentId = nullId;
+	id_t nodeId = id_t();
+	id_t nodeParentId = id_t();
 	std::string nodeName;
 
 	float_t nodeLifetimeStart = 0.0;

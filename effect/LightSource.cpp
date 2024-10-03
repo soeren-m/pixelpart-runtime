@@ -63,8 +63,8 @@ const AnimatedProperty<float_t>& LightSource::intensity() const {
 
 void to_json(nlohmann::ordered_json& j, const LightSource& lightSource) {
 	j = nlohmann::ordered_json{
-		{ "id", toJson(lightSource.id()) },
-		{ "parent_id", toJson(lightSource.parentId()) },
+		{ "id", lightSource.id() },
+		{ "parent_id", lightSource.parentId() },
 		{ "name", lightSource.name() },
 		{ "lifetime_start", lightSource.start() },
 		{ "lifetime_duration", lightSource.duration() },
@@ -84,7 +84,7 @@ void to_json(nlohmann::ordered_json& j, const LightSource& lightSource) {
 void from_json(const nlohmann::ordered_json& j, LightSource& lightSource) {
 	lightSource = LightSource(
 		j.at("id"),
-		j.value("parent_id", nullId));
+		j.value("parent_id", id_t()));
 
 	lightSource.name(j.value("name", ""));
 	lightSource.start(j.value("lifetime_start", 0.0));

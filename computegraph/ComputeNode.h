@@ -18,12 +18,12 @@ class ComputeNode {
 public:
 	class InputException : public std::runtime_error {
 	public:
-		InputException(const std::string& msg, uint32_t index = nullId);
+		InputException(const std::string& msg, uint32_t index = id_t::nullValue);
 
 		uint32_t index() const;
 
 	private:
-		uint32_t inputIndex = nullId;
+		uint32_t inputIndex = id_t::nullValue;
 	};
 
 	struct Signature {

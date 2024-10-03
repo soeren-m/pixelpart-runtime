@@ -176,8 +176,8 @@ const StaticProperty<float_t>& ForceField::dragSizeInfluence() const {
 
 void to_json(nlohmann::ordered_json& j, const ForceField& forceField) {
 	j = nlohmann::ordered_json{
-		{ "id", toJson(forceField.id) },
-		{ "parent_id", toJson(forceField.parentId) },
+		{ "id", forceField.id() },
+		{ "parent_id", forceField.parentId() },
 		{ "name", forceField.name() },
 		{ "lifetime_start", forceField.start() },
 		{ "lifetime_duration", forceField.duration() },
@@ -228,7 +228,7 @@ void to_json(nlohmann::ordered_json& j, const ForceField& forceField) {
 void from_json(const nlohmann::ordered_json& j, ForceField& forceField) {
 	forceField = ForceField(
 		j.at("id"),
-		j.value("parent_id", nullId));
+		j.value("parent_id", id_t()));
 
 	forceField.name(j.value("name", ""));
 	forceField.start(j.value("lifetime_start", 0.0));

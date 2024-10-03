@@ -17,7 +17,7 @@ namespace pixelpart {
 class ParticleType : public Node {
 public:
 	ParticleType() = default;
-	ParticleType(id_t ownId, id_t parentId = nullId);
+	ParticleType(id_t ownId, id_t parentId = id_t());
 
 	AnimatedProperty<float_t>& count();
 	const AnimatedProperty<float_t>& count() const;

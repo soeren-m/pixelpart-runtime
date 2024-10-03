@@ -378,7 +378,7 @@ void to_json(nlohmann::ordered_json& j, const Curve<T>& curve) {
 	}
 
 	j = nlohmann::ordered_json{
-		{ "curveInterpolation", curve.getInterpolation() },
+		{ "interpolation", curve.getInterpolation() },
 		{ "points", jPointList }
 	};
 }
@@ -395,10 +395,10 @@ void from_json(const nlohmann::ordered_json& j, Curve<T>& curve) {
 	}
 
 	curve = Curve<T>();
-	curve.setPoints(points);
+	curve.points(points);
 
-	if(j.contains("curveInterpolation")) {
-		curve.setInterpolation(j.at("curveInterpolation").get<CurveInterpolation>());
+	if(j.contains("interpolation")) {
+		curve.interpolation(j.at("interpolation").get<CurveInterpolation>());
 	}
 }
 }

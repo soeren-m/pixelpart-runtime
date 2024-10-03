@@ -273,8 +273,8 @@ const ParticleMeshRendererSettings& ParticleType::meshRendererSettings() const {
 
 void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 	j = nlohmann::ordered_json{
-		{ "id", toJson(particleType.id) },
-		{ "parent_id", toJson(particleType.parentId) },
+		{ "id", particleType.id() },
+		{ "parent_id", particleType.parentId() },
 		{ "name", particleType.name() },
 		{ "lifetime_start", particleType.start() },
 		{ "lifetime_duration", particleType.duration() },
@@ -327,7 +327,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	particleType = ParticleType(
 		j.at("id"),
-		j.value("parent_id", nullId));
+		j.value("parent_id", id_t()));
 
 	particleType.name(j.value("name", ""));
 	particleType.start(j.value("lifetime_start", 0.0));

@@ -16,8 +16,8 @@ public:
 		Link() = default;
 		Link(id_t linkId, id_t linkNodeId, uint32_t slotIndex);
 
-		id_t id = nullId;
-		id_t nodeId = nullId;
+		id_t id;
+		id_t nodeId;
 		uint32_t slot = 0u;
 	};
 

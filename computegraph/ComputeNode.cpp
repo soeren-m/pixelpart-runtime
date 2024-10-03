@@ -108,7 +108,7 @@ const VariantParameter::Value& ComputeNode::parameterValue(std::size_t index) co
 }
 
 uint32_t ComputeNode::findInputSlot(const std::string& slotName) const {
-	uint32_t slot = nullId;
+	uint32_t slot = id_t::nullValue;
 	for(uint32_t o = 0u; o < nodeInputSlots.size(); o++) {
 		if(nodeInputSlots[o] == slotName) {
 			slot = o;
@@ -119,7 +119,7 @@ uint32_t ComputeNode::findInputSlot(const std::string& slotName) const {
 	return slot;
 }
 uint32_t ComputeNode::findOutputSlot(const std::string& slotName) const {
-	uint32_t slot = nullId;
+	uint32_t slot = id_t::nullValue;
 	for(uint32_t o = 0u; o < nodeOutputSlots.size(); o++) {
 		if(nodeOutputSlots[o] == slotName) {
 			slot = o;
@@ -130,7 +130,7 @@ uint32_t ComputeNode::findOutputSlot(const std::string& slotName) const {
 	return slot;
 }
 uint32_t ComputeNode::findParameter(const std::string& parameterName) const {
-	uint32_t index = nullId;
+	uint32_t index = id_t::nullValue;
 	for(uint32_t o = 0u; o < nodeParameters.size(); o++) {
 		if(nodeParameters[o].name() == parameterName) {
 			index = o;
@@ -176,10 +176,10 @@ void from_json(const nlohmann::ordered_json& j, ComputeNode::Signature& signatur
 	signature.outputTypes = j.value("output_types", std::vector<VariantValue::Type>());
 }
 void from_json(const nlohmann::ordered_json& j, ComputeNode::Link& link) {
-	link = ComputeNode::Link();
-	link.id = j.value("id", nullId);
-	link.nodeId = j.value("node", nullId);
-	link.slot = j.value("slot", nullId);
+	link = ComputeNode::Link(
+		j.value("id", id_t()),
+		j.value("node", id_t()),
+		j.value("slot", id_t::nullValue));
 }
 void from_json(const nlohmann::ordered_json& j, ComputeNode& node) {
 	node.name(j.value("name", ""));

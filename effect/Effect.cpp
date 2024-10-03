@@ -1,30 +1,8 @@
 #include "Effect.h"
 #include "../common/Id.h"
-#include "../common/Constants.h"
-#include "../common/Json.h"
 #include <vector>
 
 namespace pixelpart {
-template <typename T>
-id_t findUnusedNodeId(const std::vector<T>& nodes) {
-	id_t id = 0u;
-	bool isUsed = true;
-
-	while(isUsed) {
-		id++;
-		isUsed = false;
-
-		for(const T& node : nodes) {
-			if(node.id == id) {
-				isUsed = true;
-				break;
-			}
-		}
-	}
-
-	return id;
-}
-
 Effect::Effect(bool is3d) : effect3d(is3d) {
 
 }
@@ -102,7 +80,7 @@ void Effect::refreshProperties() {
 
 	for(ParticleType& particleType : effectParticleTypes) {
 		particleType.position().refresh(inputValues);
-		particleType.numParticles().refresh(inputValues);
+		particleType.count().refresh(inputValues);
 		particleType.lifespan().refresh(inputValues);
 		particleType.lifespanVariance().refresh(inputValues);
 		particleType.motionPathForce().refresh(inputValues);
@@ -137,14 +115,14 @@ void Effect::refreshProperties() {
 		forceField.size().refresh(inputValues);
 		forceField.orientation().refresh(inputValues);
 		forceField.strength().refresh(inputValues);
-		forceField.accelerationField.direction().refresh(inputValues);
-		forceField.accelerationField.directionVariance().refresh(inputValues);
-		forceField.accelerationField.strengthVariance().refresh(inputValues);
-		forceField.vectorField.tightness().refresh(inputValues);
-		forceField.noiseField.octaves().refresh(inputValues);
-		forceField.noiseField.frequency().refresh(inputValues);
-		forceField.noiseField.persistence().refresh(inputValues);
-		forceField.noiseField.lacunarity().refresh(inputValues);
+		forceField.accelerationDirection().refresh(inputValues);
+		forceField.accelerationDirectionVariance().refresh(inputValues);
+		forceField.accelerationStrengthVariance().refresh(inputValues);
+		forceField.vectorTightness().refresh(inputValues);
+		forceField.noiseOctaves().refresh(inputValues);
+		forceField.noiseFrequency().refresh(inputValues);
+		forceField.noisePersistence().refresh(inputValues);
+		forceField.noiseLacunarity().refresh(inputValues);
 		forceField.noiseAnimationTimeScale().refresh(inputValues);
 		forceField.noiseAnimationTimeBase().refresh(inputValues);
 		forceField.dragVelocityInfluence().refresh(inputValues);
@@ -175,11 +153,11 @@ void Effect::refreshProperties() {
 void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 	j = nlohmann::ordered_json{
 		{ "3d", effect.is3d() },
-		{ "particle_emitters", effect.particleEmitters().get() },
-		{ "particle_types", effect.particleTypes().get() },
-		{ "force_fields", effect.forceFields().get() },
-		{ "colliders", effect.colliders().get() },
-		{ "light_sources", effect.lightSources().get() },
+		{ "particle_emitters", effect.particleEmitters() },
+		{ "particle_types", effect.particleTypes() },
+		{ "force_fields", effect.forceFields() },
+		{ "colliders", effect.colliders() },
+		{ "light_sources", effect.lightSources() },
 		{ "inputs", effect.inputs() },
 		{ "resources", effect.resources() }
 	};
@@ -188,43 +166,10 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 	effect = Effect(j.value("3d", false));
 	effect.inputs() = j.value("inputs", EffectInputCollection());
 	effect.resources() = j.value("resources", ResourceCollection());
-
-	std::vector<ParticleEmitter> particleEmitters = j.value("particle_emitters", std::vector<ParticleEmitter>());
-	std::vector<ParticleType> particleTypes = j.value("particle_types", std::vector<ParticleType>());
-	std::vector<ForceField> forceFields = j.value("force_fields", std::vector<ForceField>());
-	std::vector<Collider> colliders = j.value("colliders", std::vector<Collider>());
-	std::vector<LightSource> lightSources = j.value("light_sources", std::vector<LightSource>());
-
-	for(ParticleEmitter& particleEmitter : particleEmitters) {
-		if(particleEmitter.id() == nullId) {
-			particleEmitter.id(findUnusedNodeId(particleEmitters));
-		}
-	}
-	for(ParticleType& particleType : particleTypes) {
-		if(particleType.id() == nullId) {
-			particleType.id(findUnusedNodeId(particleTypes));
-		}
-	}
-	for(ForceField& forceField : forceFields) {
-		if(forceField.id == nullId) {
-			forceField.id = findUnusedNodeId(forceFields);
-		}
-	}
-	for(Collider& collider : colliders) {
-		if(collider.id == nullId) {
-			collider.id = findUnusedNodeId(colliders);
-		}
-	}
-	for(LightSource& lightSource : lightSources) {
-		if(lightSource.id == nullId) {
-			lightSource.id = findUnusedNodeId(lightSources);
-		}
-	}
-
-	effect.particleEmitters().set(particleEmitters);
-	effect.particleTypes().set(particleTypes);
-	effect.forceFields().set(forceFields);
-	effect.colliders().set(colliders);
-	effect.lightSources().set(lightSources);
+	effect.particleEmitters() = j.value("particle_emitters", NodeCollection<ParticleEmitter>());
+	effect.particleTypes() = j.value("particle_types", NodeCollection<ParticleType>());
+	effect.forceFields() = j.value("force_fields", NodeCollection<ForceField>());
+	effect.colliders() = j.value("colliders", NodeCollection<Collider>());
+	effect.lightSources() = j.value("light_sources", NodeCollection<LightSource>());
 }
 }

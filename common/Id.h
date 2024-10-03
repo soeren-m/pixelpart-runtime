@@ -6,6 +6,8 @@
 namespace pixelpart {
 class id_t {
 public:
+	static const uint32_t nullValue;
+
 	id_t() = default;
 	id_t(uint32_t id);
 

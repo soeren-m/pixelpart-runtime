@@ -18,6 +18,7 @@ public:
 	void lightingMode(LightingMode mode);
 	LightingMode lightingMode() const;
 
+	ShaderGraph& shaderGraph();
 	const ShaderGraph& shaderGraph() const;
 
 private:

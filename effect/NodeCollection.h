@@ -40,12 +40,12 @@ public:
 	}
 
 	id_t set(const T& node, id_t baseId) {
-		id_t nodeId = node.nodeId != nullId
-			? baseId + node.nodeId
+		id_t nodeId = node.nodeId
+			? id_t(baseId.value() + node.nodeId.value())
 			: baseId;
-		id_t parentId = node.nodeParentId != nullId
-			? baseId + node.nodeParentId
-			: nullId;
+		id_t parentId = node.nodeParentId
+			? id_t(baseId.value() + node.nodeParentId.value())
+			: id_t();
 
 		nodes.push_back(node);
 
@@ -58,7 +58,7 @@ public:
 	}
 
 	id_t add(const T& node) {
-		id_t nodeId = node.nodeId != nullId ? node.nodeId : 0u;
+		id_t nodeId = node.nodeId ? node.nodeId : id_t(0u);
 		while(contains(nodeId)) {
 			nodeId++;
 		}
@@ -72,12 +72,12 @@ public:
 
 	id_t duplicate(id_t nodeId, const std::string& nameExtension = " (copy)") {
 		if(!contains(nodeId)) {
-			return nullId;
+			return id_t();
 		}
 
 		T otherNode = at(nodeId);
-		otherNode.nodeId = nullId;
-		otherNode.nodeParentId = nullId;
+		otherNode.nodeId = id_t();
+		otherNode.nodeParentId = id_t();
 
 		do {
 			otherNode.nodeName += nameExtension;
@@ -104,9 +104,9 @@ public:
 	}
 
 	uint32_t indexOf(id_t nodeId) const {
-		return (nodeId < indexMap.size())
-			? indexMap[nodeId]
-			: nullId;
+		return nodeId.value() < indexMap.size()
+			? indexMap[nodeId.value()]
+			: id_t::nullValue;
 	}
 	uint32_t indexOfParent(id_t parentId) const {
 		for(uint32_t i = 0u; i < nodes.size(); i++) {
@@ -115,7 +115,7 @@ public:
 			}
 		}
 
-		return nullId;
+		return id_t::nullValue;
 	}
 	uint32_t indexOfName(const std::string& name) const {
 		for(uint32_t i = 0u; i < nodes.size(); i++) {
@@ -124,17 +124,17 @@ public:
 			}
 		}
 
-		return nullId;
+		return id_t::nullValue;
 	}
 
 	bool contains(id_t nodeId) const {
-		return indexOf(nodeId) != nullId;
+		return indexOf(nodeId) != id_t::nullValue;
 	}
 	bool containsParent(id_t parentId) const {
-		return indexOfParent(parentId) != nullId;
+		return indexOfParent(parentId) != id_t::nullValue;
 	}
 	bool containsName(const std::string& name) const {
-		return indexOfName(name) != nullId;
+		return indexOfName(name) != id_t::nullValue;
 	}
 	bool containsIndex(uint32_t index) const {
 		return index < nodes.size();
@@ -215,15 +215,49 @@ private:
 
 		for(uint32_t i = 0u; i < nodes.size(); i++) {
 			id_t nodeId = nodes[i].nodeId;
-			if(nodeId >= indexMap.size()) {
-				indexMap.resize(nodeId + 1u, nullId);
+			if(nodeId.value() >= indexMap.size()) {
+				indexMap.resize(nodeId.value() + 1u, id_t::nullValue);
 			}
 
-			indexMap[nodeId] = i;
+			indexMap[nodeId.value()] = i;
 		}
 	}
 
 	std::vector<T> nodes;
 	std::vector<uint32_t> indexMap;
 };
+
+template <typename T>
+void to_json(nlohmann::ordered_json& j, const NodeCollection<T>& collection) {
+	j = collection.container();
+}
+
+template <typename T>
+void from_json(const nlohmann::ordered_json& j, NodeCollection<T>& collection) {
+	std::vector<T> nodes = j;
+	for(T& node : nodes) {
+		if(node.id()) {
+			continue;
+		}
+
+		id_t newId = 0u;
+		bool used = true;
+
+		while(used) {
+			newId++;
+			used = false;
+
+			for(const T& node : nodes) {
+				if(node.id() == newId) {
+					used = true;
+					break;
+				}
+			}
+		}
+
+		node.id(newId);
+	}
+
+	collection.set(nodes);
+}
 }

@@ -92,8 +92,8 @@ const AnimatedProperty<float_t>& ParticleEmitter::spread() const {
 
 void to_json(nlohmann::ordered_json& j, const ParticleEmitter& particleEmitter) {
 	j = nlohmann::ordered_json{
-		{ "id", toJson(particleEmitter.id) },
-		{ "parent_id", toJson(particleEmitter.parentId) },
+		{ "id", particleEmitter.id() },
+		{ "parent_id", particleEmitter.parentId() },
 		{ "name", particleEmitter.name() },
 		{ "lifetime_start", particleEmitter.start() },
 		{ "lifetime_duration", particleEmitter.duration() },
@@ -118,7 +118,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleEmitter& particleEmitter) 
 void from_json(const nlohmann::ordered_json& j, ParticleEmitter& particleEmitter) {
 	particleEmitter = ParticleEmitter(
 		j.at("id"),
-		j.value("parent_id", nullId));
+		j.value("parent_id", id_t()));
 
 	particleEmitter.name(j.value("name", ""));
 	particleEmitter.start(j.value("lifetime_start", 0.0));

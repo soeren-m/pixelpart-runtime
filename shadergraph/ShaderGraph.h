@@ -19,14 +19,14 @@ class ShaderGraph {
 public:
 	class BuildException : public std::runtime_error {
 	public:
-		BuildException(const std::string& msg, id_t node = nullId, uint32_t slot = nullId);
+		BuildException(const std::string& msg, id_t node = id_t(), uint32_t slot = id_t::nullValue);
 
 		id_t node() const;
 		uint32_t slot() const;
 
 	private:
-		id_t nodeId = nullId;
-		uint32_t slotIndex = nullId;
+		id_t nodeId;
+		uint32_t slotIndex = id_t::nullValue;
 	};
 
 	enum TypeMatch : uint32_t {

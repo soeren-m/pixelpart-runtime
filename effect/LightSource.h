@@ -17,7 +17,7 @@ public:
 	};
 
 	LightSource() = default;
-	LightSource(id_t ownId, id_t parentId = nullId);
+	LightSource(id_t ownId, id_t parentId = id_t());
 
 	void type(Type type);
 	Type type() const;

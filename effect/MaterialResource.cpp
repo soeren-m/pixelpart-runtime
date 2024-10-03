@@ -20,6 +20,9 @@ LightingMode MaterialResource::lightingMode() const {
 	return materialLightingMode;
 }
 
+ShaderGraph& MaterialResource::shaderGraph() {
+	return materialShaderGraph;
+}
 const ShaderGraph& MaterialResource::shaderGraph() const {
 	return materialShaderGraph;
 }

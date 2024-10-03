@@ -28,7 +28,7 @@ public:
 	};
 
 	ForceField() = default;
-	ForceField(id_t ownId, id_t parentId = nullId);
+	ForceField(id_t ownId, id_t parentId = id_t());
 
 	void type(Type type);
 	Type type() const;

@@ -51,7 +51,7 @@ public:
 	};
 
 	ParticleEmitter() = default;
-	ParticleEmitter(id_t ownId, id_t parentId = nullId);
+	ParticleEmitter(id_t ownId, id_t parentId = id_t());
 
 	void shape(Shape shape);
 	Shape shape() const;

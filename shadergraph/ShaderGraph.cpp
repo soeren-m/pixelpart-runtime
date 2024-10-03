@@ -27,20 +27,20 @@ ShaderGraph::ShaderGraph(const std::unordered_map<id_t, ShaderNode>& nodes) : sh
 		maxNodeId = std::max(maxNodeId, nodeEntry.first);
 
 		for(const auto& link : nodeEntry.second.inputs()) {
-			if(link.id == pixelpart::nullId) {
+			if(!link.id) {
 				continue;
 			}
 
-			maxLinkId = std::max(maxLinkId, link.id);
+			maxLinkId = std::max(maxLinkId.value(), link.id.value());
 		}
 	}
 
-	nextNodeId = maxNodeId + 1u;
-	nextLinkId = maxLinkId + 1u;
+	nextNodeId = maxNodeId.value() + 1u;
+	nextLinkId = maxLinkId.value() + 1u;
 }
 
 std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
-	if(nodeId == 0u) {
+	if(nodeId.value() == 0u) {
 		result = BuildResult();
 	}
 
@@ -52,7 +52,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 	const ShaderNode& node = nodeEntry->second;
 
 	uint32_t nodeTypeIndex = findNodeType(node.type());
-	if(nodeTypeIndex == nullId) {
+	if(nodeTypeIndex == id_t::nullValue) {
 		throw BuildException("Unknown node type \"" + node.type() + "\"", nodeId);
 	}
 
@@ -81,7 +81,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 				std::string nodeIdentifier = replaceString(shaderNodeType.name, "_", " ");
 				std::string parameterVariableName = graphLanguage.parameterPrefix
 					+ nodeIdentifier
-					+ "_" + std::to_string(nodeId)
+					+ "_" + std::to_string(nodeId.value())
 					+ "_" + std::to_string(parameterIndex);
 
 				result.parameterNames[nodeId] = parameterVariableName;
@@ -255,7 +255,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 
 	std::vector<TypeMatch> typeMatch;
 	result.nodeSignatures[nodeId] = findNodeSignature(result, node, typeMatch);
-	if(result.nodeSignatures[nodeId] == nullId) {
+	if(result.nodeSignatures[nodeId] == id_t::nullValue) {
 		throw BuildException("No matching node signature found", nodeId);
 	}
 
@@ -303,7 +303,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 
 	result.resolvedNodes.insert(nodeId);
 
-	if(nodeId == 0u) {
+	if(nodeId.value() == 0u) {
 		result.mainCode = inputCode + "\n" + code;
 
 		return result.mainCode;
@@ -314,8 +314,8 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 
 id_t ShaderGraph::addNode(const std::string& typeName) {
 	uint32_t typeIndex = findNodeType(typeName);
-	if(typeIndex == nullId) {
-		return nullId;
+	if(typeIndex == id_t::nullValue) {
+		return id_t();
 	}
 
 	id_t nodeId = nextNodeId++;
@@ -361,21 +361,21 @@ void ShaderGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::str
 	const ShaderNodeType& sourceNodeType = nodeType(sourceNode.type());
 	const ShaderNodeType& targetNodeType = nodeType(targetNode.type());
 
-	uint32_t sourceSlot = nullId;
+	uint32_t sourceSlot = id_t::nullValue;
 	for(std::size_t o = 0u; o < sourceNodeType.outputs.size(); o++) {
 		if(sourceNodeType.outputs[o] == sourceSlotName) {
 			sourceSlot = static_cast<uint32_t>(o);
 		}
 	}
 
-	uint32_t targetSlot = nullId;
+	uint32_t targetSlot = id_t::nullValue;
 	for(std::size_t i = 0u; i < targetNodeType.inputs.size(); i++) {
 		if(targetNodeType.inputs[i] == targetSlotName) {
 			targetSlot = static_cast<uint32_t>(i);
 		}
 	}
 
-	if(sourceSlot != nullId && targetSlot != nullId) {
+	if(sourceSlot != id_t::nullValue && targetSlot != id_t::nullValue) {
 		targetNode.inputs()[targetSlot] = ShaderNode::Link(
 			nextLinkId++,
 			sourceNodeId,
@@ -472,12 +472,12 @@ std::unordered_map<id_t, VariantParameter> ShaderGraph::shaderParameters() const
 }
 
 bool ShaderGraph::containsNodeType(const std::string& typeName) const{
-	return findNodeType(typeName) != nullId;
+	return findNodeType(typeName) != id_t::nullValue;
 }
 const ShaderNodeType& ShaderGraph::nodeType(const std::string& typeName) const {
 	return graphLanguage.nodes.at(findNodeType(typeName));
 }
-const ShaderNodeType& ShaderGraph::nodeType(uint32_t nodeId) const {
+const ShaderNodeType& ShaderGraph::nodeType(id_t nodeId) const {
 	return graphLanguage.nodes.at(findNodeType(shaderNodes.at(nodeId).type()));
 }
 
@@ -488,7 +488,7 @@ uint32_t ShaderGraph::findNodeType(const std::string& typeName) const {
 		}
 	}
 
-	return nullId;
+	return id_t::nullValue;
 }
 uint32_t ShaderGraph::findNodeSignature(const BuildResult& result, const ShaderNode& node, std::vector<TypeMatch>& typeMatch) const {
 	const auto matchTypes = [](VariantValue::Type type1, VariantValue::Type type2) {
@@ -510,7 +510,7 @@ uint32_t ShaderGraph::findNodeSignature(const BuildResult& result, const ShaderN
 
 	const ShaderNodeType& shaderNodeType = nodeType(node.type());
 
-	uint32_t bestSignature = nullId;
+	uint32_t bestSignature = id_t::nullValue;
 	typeMatch = std::vector<TypeMatch>(shaderNodeType.inputs.size(), typematch_none);
 
 	for(std::size_t signatureIndex = 0u; signatureIndex < shaderNodeType.signatures.size(); signatureIndex++) {

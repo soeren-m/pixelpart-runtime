@@ -16,7 +16,7 @@ public:
 	using PointList = std::vector<vec3_t>;
 
 	Collider() = default;
-	Collider(id_t ownId, id_t parentId = nullId);
+	Collider(id_t ownId, id_t parentId = id_t());
 
 	NodeExclusionSet& exclusionSet();
 	const NodeExclusionSet& exclusionSet() const;
