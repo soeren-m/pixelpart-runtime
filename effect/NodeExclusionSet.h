@@ -4,16 +4,16 @@
 #include "../common/Id.h"
 #include "Node.h"
 #include "../json/json.hpp"
-#include <unordered_set>
+#include <set>
 
 namespace pixelpart {
 class NodeExclusionSet {
 public:
-	using iterator = typename std::unordered_set<id_t>::iterator;
-	using const_iterator = typename std::unordered_set<id_t>::const_iterator;
+	using iterator = typename std::set<id_t>::iterator;
+	using const_iterator = typename std::set<id_t>::const_iterator;
 
 	NodeExclusionSet() = default;
-	NodeExclusionSet(const std::unordered_set<id_t>& nodeIds);
+	NodeExclusionSet(const std::set<id_t>& nodeIds);
 
 	iterator begin();
 	iterator end();
@@ -30,10 +30,12 @@ public:
 	bool excluded(id_t nodeId) const;
 	bool excluded(const Node& node) const;
 
-	const std::unordered_set<id_t>& nodeIds() const;
+	std::size_t count() const;
+
+	const std::set<id_t>& nodeIds() const;
 
 private:
-	std::unordered_set<id_t> excludedNodeIds;
+	std::set<id_t> excludedNodeIds;
 };
 
 void to_json(nlohmann::ordered_json& j, const NodeExclusionSet& set);

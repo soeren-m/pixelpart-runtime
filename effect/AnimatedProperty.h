@@ -163,17 +163,8 @@ public:
 		propertyCurve.enableFixedCache(size);
 		refresh();
 	}
-	/*const std::vector<T>& cache() const {
-		return propertyCurve.cache();
-	}*/
 
 private:
-	// TODO
-	/*void refreshCache() {
-		propertyCurve.refreshCache();
-		refresh();
-	}*/
-
 	void refresh() {
 		computedCurve = propertyCurve;
 

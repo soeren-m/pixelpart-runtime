@@ -1,7 +1,7 @@
 #include "NodeExclusionSet.h"
 
 namespace pixelpart {
-NodeExclusionSet::NodeExclusionSet(const std::unordered_set<id_t>& nodeIds) : excludedNodeIds(nodeIds) {
+NodeExclusionSet::NodeExclusionSet(const std::set<id_t>& nodeIds) : excludedNodeIds(nodeIds) {
 
 }
 
@@ -40,7 +40,11 @@ bool NodeExclusionSet::excluded(const Node& node) const {
 	return excluded(node.id());
 }
 
-const std::unordered_set<id_t>& NodeExclusionSet::nodeIds() const {
+std::size_t NodeExclusionSet::count() const {
+	return excludedNodeIds.size();
+}
+
+const std::set<id_t>& NodeExclusionSet::nodeIds() const {
 	return excludedNodeIds;
 }
 
@@ -48,6 +52,6 @@ void to_json(nlohmann::ordered_json& j, const NodeExclusionSet& set) {
 	j = set.nodeIds();
 }
 void from_json(const nlohmann::ordered_json& j, NodeExclusionSet& set) {
-	set = NodeExclusionSet(j.get<std::unordered_set<id_t>>());
+	set = NodeExclusionSet(j.get<std::set<id_t>>());
 }
 }

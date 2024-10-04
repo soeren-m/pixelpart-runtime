@@ -21,7 +21,7 @@ public:
 
 	class EvaluationException : public std::runtime_error {
 	public:
-		EvaluationException(const std::string& msg, id_t node = id_t(), uint32_t slot = id_t());
+		EvaluationException(const std::string& msg, id_t node = id_t(), uint32_t slot = id_t::nullValue);
 
 		id_t nodeId() const;
 		uint32_t slotIndex() const;
