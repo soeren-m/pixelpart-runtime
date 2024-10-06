@@ -11,7 +11,7 @@
 namespace pixelpart {
 template <typename T>
 class NodeCollection {
-static_assert(std::is_base_of<Node, T>::value, "T must have base class Node");
+//static_assert(std::is_base_of<Node, T>::value, "T must have base class Node");
 
 public:
 	using iterator = typename std::vector<T>::iterator;
@@ -36,6 +36,30 @@ public:
 
 	void set(const std::vector<T>& nodeList) {
 		nodes = nodeList;
+
+		for(T& node : nodes) {
+			if(node.id()) {
+				continue;
+			}
+
+			id_t newId = 0u;
+			bool used = true;
+
+			while(used) {
+				newId++;
+				used = false;
+
+				for(const T& node : nodes) {
+					if(node.id() == newId) {
+						used = true;
+						break;
+					}
+				}
+			}
+
+			node.nodeId = newId;
+		}
+
 		updateIndexMap();
 	}
 
@@ -235,29 +259,6 @@ void to_json(nlohmann::ordered_json& j, const NodeCollection<T>& collection) {
 template <typename T>
 void from_json(const nlohmann::ordered_json& j, NodeCollection<T>& collection) {
 	std::vector<T> nodes = j;
-	for(T& node : nodes) {
-		if(node.id()) {
-			continue;
-		}
-
-		id_t newId = 0u;
-		bool used = true;
-
-		while(used) {
-			newId++;
-			used = false;
-
-			for(const T& node : nodes) {
-				if(node.id() == newId) {
-					used = true;
-					break;
-				}
-			}
-		}
-
-		node.id(newId);
-	}
-
 	collection.set(nodes);
 }
 }

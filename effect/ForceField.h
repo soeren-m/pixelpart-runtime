@@ -54,6 +54,7 @@ public:
 	AnimatedProperty<float_t>& accelerationStrengthVariance();
 	const AnimatedProperty<float_t>& accelerationStrengthVariance() const;
 
+	void accelerationGrid(int32_t x, int32_t y, int32_t z);
 	void accelerationGrid(int32_t x, int32_t y, int32_t z,
 		const std::vector<vec3_t>& directionGrid, const std::vector<float_t>& strengthGrid);
 	const std::vector<vec3_t>& accelerationDirectionGrid() const;

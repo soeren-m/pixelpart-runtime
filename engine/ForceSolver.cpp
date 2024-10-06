@@ -13,7 +13,7 @@ void ForceSolver::solve(const ParticleEmitter& particleEmitter, const ParticleTy
 	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
 	for(std::size_t f = 0u; f < forceFields.size(); f++) {
 		const ForceField& forceField = forceFields[f];
-		if(forceFieldExclusionSets[f][particleType.id()] || !forceField.active(t)) {
+		if(forceFieldExclusionSets[f][particleType.id().value()] || !forceField.active(t)) {
 			continue;
 		}
 
@@ -177,8 +177,8 @@ vec3_t ForceSolver::sampleAccelerationField(const ForceField& forceField,
 		gridCellY * forceField.accelerationGridSizeX() +
 		gridCellX);
 
-	vec3_t gridDirectionOffset = glm::radians(forceField.accelerationDirectionVariance().get() * forceField.accelerationDirectionGrid()[gridCellIndex]);
-	float_t gridStrengthOffset = forceField.accelerationStrengthVariance().get() * forceField.accelerationStrengthGrid()[gridCellIndex] + 1.0;
+	vec3_t gridDirectionOffset = glm::radians(forceField.accelerationDirectionVariance().at() * forceField.accelerationDirectionGrid()[gridCellIndex]);
+	float_t gridStrengthOffset = forceField.accelerationStrengthVariance().at() * forceField.accelerationStrengthGrid()[gridCellIndex] + 1.0;
 
 	vec3_t result = vec3_t(glm::yawPitchRoll(gridDirectionOffset.y, gridDirectionOffset.z, gridDirectionOffset.x) *
 		vec4_t(vec3_t(directionMatrix * worldUpVector4), 0.0));
@@ -201,25 +201,25 @@ vec3_t ForceSolver::sampleVectorField(const ForceField& forceField, const Vector
 	vec3_t samplePosition = (rotatedParticlePosition - position + size) / (size * 2.0);
 
 	if(is3d) {
-		switch(vectorField.filter) {
-			case ForceField::VectorField::Filter::none: {
+		switch(forceField.vectorFilter()) {
+			case ForceField::Filter::none: {
 				vec3_t normalizedSamplePosition = vec3_t(
-					samplePosition.x * static_cast<float_t>(resource.field.getWidth()),
-					samplePosition.y * static_cast<float_t>(resource.field.getHeight()),
-					samplePosition.z * static_cast<float_t>(resource.field.getDepth()));
+					samplePosition.x * static_cast<float_t>(resource.field().width()),
+					samplePosition.y * static_cast<float_t>(resource.field().height()),
+					samplePosition.z * static_cast<float_t>(resource.field().depth()));
 
-				result = resource.field.getOrDefault(
+				result = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z),
 					vec3_t(0.0));
 			}
 
-			case ForceField::VectorField::Filter::linear: {
+			case ForceField::Filter::linear: {
 				vec3_t normalizedSamplePosition = vec3_t(
-					samplePosition.x * static_cast<float_t>(resource.field.getWidth()),
-					samplePosition.y * static_cast<float_t>(resource.field.getHeight()),
-					samplePosition.z * static_cast<float_t>(resource.field.getDepth()));
+					samplePosition.x * static_cast<float_t>(resource.field().width()),
+					samplePosition.y * static_cast<float_t>(resource.field().height()),
+					samplePosition.z * static_cast<float_t>(resource.field().depth()));
 
 				float_t fractX = glm::fract(normalizedSamplePosition.x);
 				float_t fractY = glm::fract(normalizedSamplePosition.y);
@@ -228,42 +228,42 @@ vec3_t ForceSolver::sampleVectorField(const ForceField& forceField, const Vector
 				int32_t nextOffsetY = fractY > 0.5 ? +1 : -1;
 				int32_t nextOffsetZ = fractZ > 0.5 ? +1 : -1;
 
-				vec3_t sample0 = resource.field.getOrDefault(
+				vec3_t sample0 = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z),
 					vec3_t(0.0));
-				vec3_t sample1 = resource.field.getOrDefault(
+				vec3_t sample1 = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x) + nextOffsetX,
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z),
 					vec3_t(0.0));
-				vec3_t sample2 = resource.field.getOrDefault(
+				vec3_t sample2 = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y) + nextOffsetY,
 					static_cast<int32_t>(normalizedSamplePosition.z),
 					vec3_t(0.0));
-				vec3_t sample3 = resource.field.getOrDefault(
+				vec3_t sample3 = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x) + nextOffsetX,
 					static_cast<int32_t>(normalizedSamplePosition.y) + nextOffsetY,
 					static_cast<int32_t>(normalizedSamplePosition.z),
 					vec3_t(0.0));
-				vec3_t sample4 = resource.field.getOrDefault(
+				vec3_t sample4 = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
 					vec3_t(0.0));
-				vec3_t sample5 = resource.field.getOrDefault(
+				vec3_t sample5 = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x) + nextOffsetX,
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
 					vec3_t(0.0));
-				vec3_t sample6 = resource.field.getOrDefault(
+				vec3_t sample6 = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y) + nextOffsetY,
 					static_cast<int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
 					vec3_t(0.0));
-				vec3_t sample7 = resource.field.getOrDefault(
+				vec3_t sample7 = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x) + nextOffsetX,
 					static_cast<int32_t>(normalizedSamplePosition.y) + nextOffsetY,
 					static_cast<int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
@@ -287,24 +287,24 @@ vec3_t ForceSolver::sampleVectorField(const ForceField& forceField, const Vector
 		}
 	}
 	else {
-		switch(vectorField.filter) {
-			case ForceField::VectorField::Filter::none: {
+		switch(forceField.vectorFilter()) {
+			case ForceField::Filter::none: {
 				vec3_t normalizedSamplePosition = vec3_t(
-					samplePosition.x * static_cast<float_t>(resource.field.getWidth()),
-					samplePosition.y * static_cast<float_t>(resource.field.getHeight()),
+					samplePosition.x * static_cast<float_t>(resource.field().width()),
+					samplePosition.y * static_cast<float_t>(resource.field().height()),
 					0.0);
 
-				result = resource.field.getOrDefault(
+				result = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z),
 					vec3_t(0.0));
 			}
 
-			case ForceField::VectorField::Filter::linear: {
+			case ForceField::Filter::linear: {
 				vec3_t normalizedSamplePosition = vec3_t(
-					samplePosition.x * static_cast<float_t>(resource.field.getWidth()),
-					samplePosition.y * static_cast<float_t>(resource.field.getHeight()),
+					samplePosition.x * static_cast<float_t>(resource.field().width()),
+					samplePosition.y * static_cast<float_t>(resource.field().height()),
 					0.0);
 
 				float_t fractX = glm::fract(normalizedSamplePosition.x);
@@ -312,22 +312,22 @@ vec3_t ForceSolver::sampleVectorField(const ForceField& forceField, const Vector
 				int32_t nextOffsetX = fractX > 0.5 ? +1 : -1;
 				int32_t nextOffsetY = fractY > 0.5 ? +1 : -1;
 
-				vec3_t sample0 = resource.field.getOrDefault(
+				vec3_t sample0 = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z),
 					vec3_t(0.0));
-				vec3_t sample1 = resource.field.getOrDefault(
+				vec3_t sample1 = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x) + nextOffsetX,
 					static_cast<int32_t>(normalizedSamplePosition.y),
 					static_cast<int32_t>(normalizedSamplePosition.z),
 					vec3_t(0.0));
-				vec3_t sample2 = resource.field.getOrDefault(
+				vec3_t sample2 = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x),
 					static_cast<int32_t>(normalizedSamplePosition.y) + nextOffsetY,
 					static_cast<int32_t>(normalizedSamplePosition.z),
 					vec3_t(0.0));
-				vec3_t sample3 = resource.field.getOrDefault(
+				vec3_t sample3 = resource.field().value(
 					static_cast<int32_t>(normalizedSamplePosition.x) + nextOffsetX,
 					static_cast<int32_t>(normalizedSamplePosition.y) + nextOffsetY,
 					static_cast<int32_t>(normalizedSamplePosition.z),
@@ -360,13 +360,13 @@ vec3_t ForceSolver::sampleNoiseField(const ForceField& forceField,
 	}
 
 	vec3_t samplePosition = rotatedParticlePosition - position;
-	uint32_t octaves = static_cast<uint32_t>(std::max(forceField.octaves().get(), static_cast<int64_t>(0)));
+	uint32_t octaves = static_cast<uint32_t>(std::max(forceField.noiseOctaves().value(), static_cast<int64_t>(0)));
 	float_t frequency = forceField.noiseFrequency().at(life);
 	float_t persistence = forceField.noisePersistence().at(life);
 	float_t lacunarity = forceField.noiseLacunarity().at(life);
 
 	if(forceField.noiseAnimated()) {
-		float_t animationTime = forceField.noiseAnimationTimeBase().get() + forceField.noiseAnimationTimeScale().get() * t;
+		float_t animationTime = forceField.noiseAnimationTimeBase().value() + forceField.noiseAnimationTimeScale().value() * t;
 
 		return is3d
 			? computeAnimatedCurlNoise3d(samplePosition, animationTime, octaves, frequency, persistence, lacunarity)
@@ -392,8 +392,8 @@ vec3_t ForceSolver::sampleDragField(const ForceField& forceField,
 	float_t particleArea = std::max(particleSize.x, std::max(particleSize.y, particleSize.z));
 
 	return -particleVelocity / particleSpeed *
-		(1.0 + (particleSpeed * particleSpeed - 1.0) * forceField.dragVelocityInfluence().get()) *
-		(1.0 + (particleArea - 1.0) * forceField.dragSizeInfluence().get());
+		(1.0 + (particleSpeed * particleSpeed - 1.0) * forceField.dragVelocityInfluence().value()) *
+		(1.0 + (particleArea - 1.0) * forceField.dragSizeInfluence().value());
 }
 
 vec3_t ForceSolver::computeStaticCurlNoise2d(const vec2_t& samplePosition, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const {

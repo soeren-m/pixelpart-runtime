@@ -8,28 +8,28 @@
 namespace pixelpart {
 CollisionSolver::ColliderSegment::ColliderSegment(const Collider& collider) :
 	start(collider.start()), duration(collider.duration()), repeat(collider.repeat()),
-	killOnContact(collider.killOnContact().get()),
-	bounce(collider.bounce().getComputedCurve()),
-	friction(collider.friction().getComputedCurve()) {
+	killOnContact(collider.killOnContact().value()),
+	bounce(collider.bounce().resultCurve()),
+	friction(collider.friction().resultCurve()) {
 
 }
 
 CollisionSolver::LineColliderSegment::LineColliderSegment(const Collider& collider, std::size_t segmentIndex) : ColliderSegment(collider) {
-	for(id_t particleTypeId : collider.exclusionList) {
-		exclusionSet.set(particleTypeId);
+	for(id_t particleTypeId : collider.exclusionSet()) {
+		exclusionSet.set(particleTypeId.value());
 	}
 
-	startPoint = vec2_t(collider.points.at(segmentIndex));
-	endPoint = vec2_t(collider.points.at(segmentIndex + 1u));
+	startPoint = vec2_t(collider.points().at(segmentIndex));
+	endPoint = vec2_t(collider.points().at(segmentIndex + 1u));
 }
 
 CollisionSolver::PlaneColliderSegment::PlaneColliderSegment(const Collider& collider, std::size_t segmentIndex) : ColliderSegment(collider) {
-	for(id_t particleTypeId : collider.exclusionList) {
-		exclusionSet.set(particleTypeId);
+	for(id_t particleTypeId : collider.exclusionSet()) {
+		exclusionSet.set(particleTypeId.value());
 	}
 
-	center = (collider.points[segmentIndex + 1u] + collider.points[segmentIndex]) * 0.5;
-	rightVector = collider.points[segmentIndex + 1u] - center;
+	center = (collider.point(segmentIndex + 1u) + collider.point(segmentIndex)) * 0.5;
+	rightVector = collider.point(segmentIndex + 1u) - center;
 
 	normal = vec3_t(1.0, 0.0, 0.0);
 	if(std::abs(rightVector.x) > 0.001) {
@@ -39,10 +39,10 @@ CollisionSolver::PlaneColliderSegment::PlaneColliderSegment(const Collider& coll
 		normal = glm::normalize(vec3_t(0.0, 1.0, -rightVector.y / rightVector.z));
 	}
 
-	upVector = glm::cross(glm::normalize(rightVector), normal) * collider.width.get() * 0.5;
+	upVector = glm::cross(glm::normalize(rightVector), normal) * collider.width().value() * 0.5;
 
-	normal = glm::rotate(normal, glm::radians(collider.orientation.get()), rightVector);
-	upVector = glm::rotate(upVector, glm::radians(collider.orientation.get()), rightVector);
+	normal = glm::rotate(normal, glm::radians(collider.orientation().value()), rightVector);
+	upVector = glm::rotate(upVector, glm::radians(collider.orientation().value()), rightVector);
 }
 
 CollisionSolver::CollisionSolver() : solverGrid(1u, 1u) {
@@ -54,7 +54,7 @@ void CollisionSolver::solve(const ParticleEmitter& particleEmitter, const Partic
 	if(!planeColliders.empty()) {
 		for(uint32_t p = 0u; p < particleCount; p++) {
 			for(const PlaneColliderSegment& collider : planeColliders) {
-				if(collider.exclusionSet[particleType.id] ||
+				if(collider.exclusionSet[particleType.id().value()] ||
 					(t < collider.start) ||
 					(t > collider.start + collider.duration && !collider.repeat)) {
 					continue;
@@ -79,13 +79,13 @@ void CollisionSolver::solve(const ParticleEmitter& particleEmitter, const Partic
 			std::unordered_set<uint32_t> potentialColliders;
 			for(int32_t cy = startIndex.y; cy <= endIndex.y; cy++) {
 				for(int32_t cx = startIndex.x; cx <= endIndex.x; cx++) {
-					findPotentialColliders(potentialColliders, cx, cy, particles.size[p] * particleType.physicalSize.get(particles.life[p]));
+					findPotentialColliders(potentialColliders, cx, cy, particles.size[p] * particleType.physicalSize().at(particles.life[p]));
 				}
 			}
 
 			for(uint32_t i : potentialColliders) {
 				const LineColliderSegment& collider = lineColliders[i];
-				if(collider.exclusionSet[particleType.id] ||
+				if(collider.exclusionSet[particleType.id().value()] ||
 					t < collider.start ||
 					t > collider.start + collider.duration && !collider.repeat) {
 					continue;
@@ -102,18 +102,18 @@ void CollisionSolver::prepare(const Effect& effect) {
 	planeColliders.clear();
 	solverGrid.clear();
 
-	if(effect.is3d) {
-		planeColliders.reserve(effect.colliders.getCount());
-		for(const Collider& collider : effect.colliders) {
-			for(std::size_t i = 0u; i + 1u < collider.points.size(); i++) {
+	if(effect.is3d()) {
+		planeColliders.reserve(effect.colliders().count());
+		for(const Collider& collider : effect.colliders()) {
+			for(std::size_t i = 0u; i + 1u < collider.points().size(); i++) {
 				planeColliders.emplace_back(collider, i);
 			}
 		}
 	}
-	else if(effect.colliders.getCount() > 0) {
-		lineColliders.reserve(effect.colliders.getCount());
-		for(const Collider& collider : effect.colliders) {
-			for(std::size_t i = 0u; i + 1u < collider.points.size(); i++) {
+	else if(effect.colliders().count() > 0u) {
+		lineColliders.reserve(effect.colliders().count());
+		for(const Collider& collider : effect.colliders()) {
+			for(std::size_t i = 0u; i + 1u < collider.points().size(); i++) {
 				lineColliders.emplace_back(collider, i);
 			}
 		}
@@ -311,7 +311,7 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleCollection
 	vec2_t colliderToParticle = globalParticlePosition - closestPoint;
 	float_t distanceSqr = glm::length2(colliderToParticle);
 	float_t particleRadius = std::min(particles.size[p].x, particles.size[p].y) * 0.5;
-	particleRadius = std::max(particleRadius * particleType.physicalSize.get(particles.life[p]), 0.01);
+	particleRadius = std::max(particleRadius * particleType.physicalSize().at(particles.life[p]), 0.01);
 
 	if(distanceSqr <= particleRadius * particleRadius) {
 		if(collider.killOnContact) {
@@ -323,8 +323,8 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleCollection
 			vec2_t reflectedVelocity = glm::reflect(globalParticleVelocity, normal);
 			vec2_t segmentVector = glm::normalize(collider.endPoint - collider.startPoint);
 			float_t slideFactor = glm::dot((globalParticleForce != vec2_t(0.0)) ? glm::normalize(globalParticleForce) : vec2_t(0.0, 1.0), segmentVector) * glm::length(globalParticleForce) * distance / particleRadius;
-			float_t bounce = collider.bounce.get(colliderLife) * particleType.bounce.get(particles.life[p]);
-			float_t friction = std::min(collider.friction.get(colliderLife) * particleType.friction.get(particles.life[p]), 1.0);
+			float_t bounce = collider.bounce.at(colliderLife) * particleType.bounce().at(particles.life[p]);
+			float_t friction = std::min(collider.friction.at(colliderLife) * particleType.friction().at(particles.life[p]), 1.0);
 
 			particles.velocity[p] = vec3_t(reflectedVelocity * bounce, particles.velocity[p].z);
 			particles.velocity[p] += vec3_t(segmentVector * slideFactor * (1.0 - friction), 0.0);
@@ -341,7 +341,7 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleCollection
 			else {
 				vec2_t normal = glm::normalize(colliderToParticle);
 				vec2_t reflectedVelocity = glm::reflect(globalParticleVelocity, normal);
-				float_t bounce = collider.bounce.get(colliderLife) * particleType.bounce.get(particles.life[p]);
+				float_t bounce = collider.bounce.at(colliderLife) * particleType.bounce().at(particles.life[p]);
 
 				particles.velocity[p] = vec3_t(reflectedVelocity * bounce, particles.velocity[p].z);
 			}
@@ -365,7 +365,7 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleCollection
 	vec3_t colliderNormal = glm::normalize(colliderToParticle);
 	float_t distanceSqr = glm::length2(colliderToParticle);
 	float_t particleRadius = std::min(particles.size[p].x, std::min(particles.size[p].y, particles.size[p].z)) * 0.5;
-	particleRadius = std::max(particleRadius * particleType.physicalSize.get(particles.life[p]), 0.01);
+	particleRadius = std::max(particleRadius * particleType.physicalSize().at(particles.life[p]), 0.01);
 
 	if(distanceSqr <= particleRadius * particleRadius) {
 		if(collider.killOnContact) {
@@ -381,8 +381,8 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleCollection
 			}
 
 			float_t slideFactor = glm::dot(normalizedParticleForce, slideVector) * glm::length(globalParticleForce) * distance / particleRadius;
-			float_t bounce = collider.bounce.get(colliderLife) * particleType.bounce.get(particles.life[p]);
-			float_t friction = std::min(collider.friction.get(colliderLife) * particleType.friction.get(particles.life[p]), 1.0);
+			float_t bounce = collider.bounce.at(colliderLife) * particleType.bounce().at(particles.life[p]);
+			float_t friction = std::min(collider.friction.at(colliderLife) * particleType.friction().at(particles.life[p]), 1.0);
 
 			particles.velocity[p] = reflectedVelocity * bounce;
 			particles.velocity[p] += slideVector * slideFactor * (1.0 - friction);
@@ -398,7 +398,7 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleCollection
 			}
 			else {
 				vec3_t reflectedVelocity = glm::reflect(globalParticleVelocity, colliderNormal);
-				float_t bounce = collider.bounce.get(colliderLife) * particleType.bounce.get(particles.life[p]);
+				float_t bounce = collider.bounce.at(colliderLife) * particleType.bounce().at(particles.life[p]);
 
 				particles.velocity[p] = reflectedVelocity * bounce;
 			}
@@ -407,8 +407,8 @@ void CollisionSolver::solve(const ParticleType& particleType, ParticleCollection
 }
 
 GridIndex<int32_t> CollisionSolver::toGridIndex(const vec3_t& position) const {
-	int32_t x = std::min(std::max(static_cast<int32_t>(std::floor((position.x - solverGridBottom.x) / solverGridCellDimension.x)), 0), static_cast<int32_t>(solverGrid.getWidth()) - 1);
-	int32_t y = std::min(std::max(static_cast<int32_t>(std::floor((position.y - solverGridBottom.y) / solverGridCellDimension.y)), 0), static_cast<int32_t>(solverGrid.getHeight()) - 1);
+	int32_t x = std::min(std::max(static_cast<int32_t>(std::floor((position.x - solverGridBottom.x) / solverGridCellDimension.x)), 0), static_cast<int32_t>(solverGrid.width()) - 1);
+	int32_t y = std::min(std::max(static_cast<int32_t>(std::floor((position.y - solverGridBottom.y) / solverGridCellDimension.y)), 0), static_cast<int32_t>(solverGrid.height()) - 1);
 
 	return GridIndex<int32_t>{ x, y };
 }
@@ -417,8 +417,8 @@ void CollisionSolver::findPotentialColliders(std::unordered_set<uint32_t>& poten
 	int32_t radiusX = 1 + static_cast<int32_t>(size.x / solverGridCellDimension.x);
 	int32_t radiusY = 1 + static_cast<int32_t>(size.y / solverGridCellDimension.y);
 
-	for(int32_t y = cy - radiusY; y <= cy + radiusY && y < static_cast<int32_t>(solverGrid.getHeight()); y++) {
-		for(int32_t x = cx - radiusX; x <= cx + radiusX && x < static_cast<int32_t>(solverGrid.getWidth()); x++) {
+	for(int32_t y = cy - radiusY; y <= cy + radiusY && y < static_cast<int32_t>(solverGrid.height()); y++) {
+		for(int32_t x = cx - radiusX; x <= cx + radiusX && x < static_cast<int32_t>(solverGrid.width()); x++) {
 			if(x < 0 || y < 0) {
 				continue;
 			}

@@ -26,7 +26,7 @@ ComputeGraph::ComputeGraph(const ComputeGraph& other) {
 	nextNodeId = other.nextNodeId;
 	nextLinkId = other.nextLinkId;
 }
-ComputeGraph::ComputeGraph(const std::unordered_map<id_t, std::unique_ptr<ComputeNode>>& initialNodes) {
+ComputeGraph::ComputeGraph(const ComputeNodeCollection& initialNodes) {
 	for(const auto& node : initialNodes) {
 		if(node.second) {
 			computeNodes[node.first] = std::move(node.second->clone());
@@ -101,7 +101,7 @@ std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, Bu
 			sourceValueType = sourceNodeSignature.outputTypes[link.slot];
 			inputValue = result.nodeOutputs[link.nodeId][link.slot];
 		}
-		else if(link.nodeId == nullId && graphInputs.count(link.slot) != 0u) {
+		else if(!link.nodeId && graphInputs.count(link.slot) != 0u) {
 			sourceValueType = graphInputs.at(link.slot).type();
 			inputValue = graphInputs.at(link.slot);
 		}
@@ -118,7 +118,7 @@ std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, Bu
 
 	std::vector<TypeMatch> typeMatch;
 	result.nodeSignatures[nodeId] = findNodeSignature(graphInputs, result, *activeNode, typeMatch);
-	if(result.nodeSignatures[nodeId] == nullId) {
+	if(result.nodeSignatures[nodeId] == id_t::nullValue) {
 		throw EvaluationException("No matching node signature found", nodeId);
 	}
 
@@ -189,7 +189,7 @@ void ComputeGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::st
 	uint32_t sourceSlot = sourceNode.findOutputSlot(sourceSlotName);
 	uint32_t targetSlot = targetNode.findInputSlot(targetSlotName);
 
-	if(sourceSlot != nullId && targetSlot != nullId) {
+	if(sourceSlot != id_t::nullValue && targetSlot != id_t::nullValue) {
 		targetNode.inputLinks()[targetSlot] = ComputeNode::Link(
 			nextLinkId++,
 			sourceNodeId,
@@ -208,7 +208,7 @@ void ComputeGraph::linkNodeToInput(id_t targetNodeId, uint32_t targetSlot, id_t 
 
 	targetNode.inputLinks()[targetSlot] = ComputeNode::Link(
 		nextLinkId++,
-		nullId,
+		id_t(),
 		inputId);
 }
 void ComputeGraph::unlinkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t targetSlot) {
@@ -236,7 +236,7 @@ void ComputeGraph::unlinkNodes(id_t linkId) {
 void ComputeGraph::unlinkRemovedInputs(const InputSet& graphInputs) {
 	for(auto& nodeEntry : computeNodes) {
 		for(ComputeNode::Link& link : nodeEntry.second->inputLinks()) {
-			if(link.nodeId == nullId && link.slot != nullId && graphInputs.count(link.slot) == 0u) {
+			if(!link.nodeId && link.slot != id_t::nullValue && graphInputs.count(link.slot) == 0u) {
 				link = ComputeNode::Link();
 			}
 		}
@@ -266,7 +266,7 @@ void ComputeGraph::nodeParameter(id_t nodeId, const std::string& parameterName, 
 
 	auto& node = computeNodes.at(nodeId);
 	uint32_t parameterIndex = node->findParameter(parameterName);
-	if(parameterIndex == nullId) {
+	if(parameterIndex == id_t::nullValue) {
 		return;
 	}
 
@@ -284,14 +284,14 @@ void ComputeGraph::nodePosition(id_t nodeId, const vec2_t& position) {
 const ComputeNode& ComputeGraph::node(id_t nodeId) const {
 	return *(computeNodes.at(nodeId));
 }
-const std::unordered_map<id_t, std::unique_ptr<ComputeNode>>& ComputeGraph::nodes() const {
+const ComputeGraph::ComputeNodeCollection& ComputeGraph::nodes() const {
 	return computeNodes;
 }
 
 bool ComputeGraph::empty() const {
 	return computeNodes.size() == 0u || (computeNodes.size() == 1u &&
 		std::all_of(computeNodes.begin()->second->inputLinks().begin(), computeNodes.begin()->second->inputLinks().end(), [](const ComputeNode::Link& l) {
-			return l.id == nullId;
+			return !l.id;
 		}));
 }
 
@@ -313,7 +313,7 @@ uint32_t ComputeGraph::findNodeSignature(const InputSet& graphInputs, const Buil
 		return ComputeGraph::typematch_none;
 	};
 
-	uint32_t bestSignature = nullId;
+	uint32_t bestSignature = id_t::nullValue;
 	typeMatch = std::vector<TypeMatch>(activeNode.inputLinks().size(), typematch_none);
 
 	for(uint32_t s = 0u; s < static_cast<uint32_t>(activeNode.signatures().size()); s++) {
@@ -330,7 +330,7 @@ uint32_t ComputeGraph::findNodeSignature(const InputSet& graphInputs, const Buil
 
 				inputType = node(sourceNodeId).signatures()[sourceSignature].outputTypes[sourceSlot];
 			}
-			else if(activeNode.inputLinks()[i].nodeId == nullId && graphInputs.count(activeNode.inputLinks()[i].slot) != 0u) {
+			else if(!activeNode.inputLinks()[i].nodeId && graphInputs.count(activeNode.inputLinks()[i].slot) != 0u) {
 				inputType = graphInputs.at(activeNode.inputLinks()[i].slot).type();
 			}
 			else {
@@ -373,7 +373,7 @@ void to_json(nlohmann::ordered_json& j, const ComputeGraph& computeGraph) {
 	}
 }
 void from_json(const nlohmann::ordered_json& j, ComputeGraph& computeGraph) {
-	std::unordered_map<id_t, std::unique_ptr<ComputeNode>> nodes;
+	ComputeGraph::ComputeNodeCollection nodes;
 
 	const nlohmann::ordered_json& jNodes = j.at("nodes");
 	for(const nlohmann::ordered_json& jNodeEntry : jNodes) {

@@ -73,7 +73,7 @@ VariantParameter::Value VariantParameter::Value::CurveValue(const Curve<float_t>
 	value.data.integer = static_cast<int_t>(v.interpolation());
 
 	for(std::size_t i = 0u; i < 64u; i++) {
-		if(i < v.numPoints()) {
+		if(i < v.pointCount()) {
 			const Curve<float_t>::Point& point = v.point(i);
 
 			value.data.numbers[i * 2u + 0u] = point.position;
@@ -93,7 +93,7 @@ VariantParameter::Value VariantParameter::Value::GradientValue(const Curve<vec3_
 	value.data.integer = static_cast<int_t>(v.interpolation());
 
 	for(std::size_t i = 0u; i < 64u; i++) {
-		if(i < v.numPoints()) {
+		if(i < v.pointCount()) {
 			const Curve<vec3_t>::Point& point = v.point(i);
 
 			value.data.numbers[i * 4u + 0u] = point.position;
@@ -117,7 +117,7 @@ VariantParameter::Value VariantParameter::Value::GradientValue(const Curve<vec4_
 	value.data.integer = static_cast<int_t>(v.interpolation());
 
 	for(std::size_t i = 0u; i < 64u; i++) {
-		if(i < v.numPoints()) {
+		if(i < v.pointCount()) {
 			const Curve<vec4_t>::Point& point = v.point(i);
 
 			value.data.numbers[i * 4u + 0u] = point.position;
@@ -343,17 +343,36 @@ VariantParameter::VariantParameter(const std::string& paramName,
 
 }
 
+void VariantParameter::name(const std::string& name) {
+	parameterName = name;
+}
 const std::string& VariantParameter::name() const {
 	return parameterName;
+}
+
+void VariantParameter::def(const Value& value) {
+	defaultValue = value;
 }
 const VariantParameter::Value& VariantParameter::def() const {
 	return defaultValue;
 }
+
+void VariantParameter::min(const Value& value) {
+	minValue = value;
+}
 const VariantParameter::Value& VariantParameter::min() const {
 	return minValue;
 }
+
+void VariantParameter::max(const Value& value) {
+	maxValue = value;
+}
 const VariantParameter::Value& VariantParameter::max() const {
 	return maxValue;
+}
+
+std::vector<std::string>& VariantParameter::options() {
+	return valueNames;
 }
 const std::vector<std::string>& VariantParameter::options() const {
 	return valueNames;

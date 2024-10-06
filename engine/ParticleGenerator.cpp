@@ -1,5 +1,4 @@
 #include "ParticleGenerator.h"
-#include "../common/Constants.h"
 #include "../glm/gtx/euler_angles.hpp"
 #include "../glm/gtx/rotate_vector.hpp"
 #include <cmath>
@@ -16,20 +15,20 @@ uint32_t ParticleGenerator::generate(uint32_t count, uint32_t parentParticle, ui
 	ParticleCollection& particleCollection = particleCollections[particleTypeIndex];
 	count = particleCollection.add(count);
 
-	const ParticleType& particleType = effect.particleTypes().getByIndex(particleTypeIndex);
-	const ParticleEmitter& particleEmitter = effect.particleEmitters().getByIndex(particleEmitterIndex);
+	const ParticleType& particleType = effect.particleTypes().atIndex(particleTypeIndex);
+	const ParticleEmitter& particleEmitter = effect.particleEmitters().atIndex(particleEmitterIndex);
 	ParticleCollection::WritePtr particles = particleCollections[particleTypeIndex].writePtr();
-	ParticleCollection::ReadPtr parentParticles = parentParticleTypeIndex != nullId ? particleCollections[parentParticleTypeIndex].readPtr() : ParticleCollection::ReadPtr();
+	ParticleCollection::ReadPtr parentParticles = parentParticleTypeIndex != id_t::nullValue ? particleCollections[parentParticleTypeIndex].readPtr() : ParticleCollection::ReadPtr();
 	float_t alpha = t / particleEmitter.duration();
 
 	for(uint32_t i = 0u; i < count; i++) {
 		uint32_t p = particleCollection.count() - count + i;
 
 		particles.id[p] = nextParticleId++;
-		particles.parentId[p] = parentParticle != nullId ? parentParticles.id[parentParticle] : nullId;
+		particles.parentId[p] = parentParticle != id_t::nullValue ? parentParticles.id[parentParticle] : id_t();
 
 		particles.life[p] = 0.0;
-		particles.lifespan[p] = std::max(particleType.lifespan().at(alpha) + random::uniform(rng, -particleType.lifespanVariance().get(), +particleType.lifespanVariance().get()), 0.000001);
+		particles.lifespan[p] = std::max(particleType.lifespan().at(alpha) + random::uniform(rng, -particleType.lifespanVariance().value(), +particleType.lifespanVariance().value()), 0.000001);
 
 		vec3_t particleEmitterPosition = particleEmitter.position().at(alpha);
 		vec3_t particleEmitterVelocity = (particleEmitterPosition - particleEmitter.position().at(alpha - dt / particleEmitter.duration())) / dt;
@@ -100,7 +99,7 @@ uint32_t ParticleGenerator::generate(uint32_t count, uint32_t parentParticle, ui
 			? rotate3d(particleSpawnPosition, particleEmitter.orientation().at(alpha))
 			: rotate2d(particleSpawnPosition, particleEmitter.orientation().at(alpha).x);
 
-		vec3_t particleSpawnCenter = parentParticle != nullId
+		vec3_t particleSpawnCenter = parentParticle != id_t::nullValue
 			? (parentParticles.globalPosition[parentParticle] + particleEmitterPosition)
 			: (particleType.positionRelative() ? vec3_t(0.0) : particleEmitterPosition);
 
@@ -109,7 +108,7 @@ uint32_t ParticleGenerator::generate(uint32_t count, uint32_t parentParticle, ui
 			? particles.position[p] + particleEmitterPosition
 			: particles.position[p];
 
-		vec3_t particleParentVelocity = parentParticle != nullId
+		vec3_t particleParentVelocity = parentParticle != id_t::nullValue
 			? parentParticles.velocity[parentParticle]
 			: particleEmitterVelocity;
 
@@ -168,27 +167,27 @@ uint32_t ParticleGenerator::generate(uint32_t count, uint32_t parentParticle, ui
 		particles.velocity[p] *= glm::mix(
 			particleType.initialVelocity().at(alpha),
 			glm::length(particleParentVelocity),
-			particleType.inheritedVelocity().at(alpha)) + random::uniform(rng, -particleType.velocityVariance().get(), +particleType.velocityVariance().get());
+			particleType.inheritedVelocity().at(alpha)) + random::uniform(rng, -particleType.velocityVariance().value(), +particleType.velocityVariance().value());
 		particles.force[p] = vec3_t(0.0);
 
 		particles.initialRotation[p] = particleType.initialRotation().at(alpha) + vec3_t(
-			random::uniform(rng, -particleType.rotationVariance().get().x, +particleType.rotationVariance().get().x),
-			random::uniform(rng, -particleType.rotationVariance().get().y, +particleType.rotationVariance().get().y),
-			random::uniform(rng, -particleType.rotationVariance().get().z, +particleType.rotationVariance().get().z));
+			random::uniform(rng, -particleType.rotationVariance().value().x, +particleType.rotationVariance().value().x),
+			random::uniform(rng, -particleType.rotationVariance().value().y, +particleType.rotationVariance().value().y),
+			random::uniform(rng, -particleType.rotationVariance().value().z, +particleType.rotationVariance().value().z));
 		particles.initialAngularVelocity[p] = vec3_t(
-			random::uniform(rng, -particleType.angularVelocityVariance().get().x, +particleType.angularVelocityVariance().get().x),
-			random::uniform(rng, -particleType.angularVelocityVariance().get().y, +particleType.angularVelocityVariance().get().y),
-			random::uniform(rng, -particleType.angularVelocityVariance().get().z, +particleType.angularVelocityVariance().get().z));
+			random::uniform(rng, -particleType.angularVelocityVariance().value().x, +particleType.angularVelocityVariance().value().x),
+			random::uniform(rng, -particleType.angularVelocityVariance().value().y, +particleType.angularVelocityVariance().value().y),
+			random::uniform(rng, -particleType.angularVelocityVariance().value().z, +particleType.angularVelocityVariance().value().z));
 		particles.rotation[p] = particles.initialRotation[p];
 
-		particles.initialSize[p] = particleType.initialSize().at(alpha) + random::uniform(rng, -particleType.sizeVariance().get(), +particleType.sizeVariance().get());
+		particles.initialSize[p] = particleType.initialSize().at(alpha) + random::uniform(rng, -particleType.sizeVariance().value(), +particleType.sizeVariance().value());
 		particles.size[p] = particleType.size().at() * particles.initialSize[p];
 
 		particles.initialColor[p] = vec4_t(
-			random::uniform(rng, -particleType.colorVariance().get().x, +particleType.colorVariance().get().x),
-			random::uniform(rng, -particleType.colorVariance().get().y, +particleType.colorVariance().get().y),
-			random::uniform(rng, -particleType.colorVariance().get().z, +particleType.colorVariance().get().z),
-			particleType.initialOpacity().at(alpha) + random::uniform(rng, -particleType.opacityVariance().get(), +particleType.opacityVariance().get()));
+			random::uniform(rng, -particleType.colorVariance().value().x, +particleType.colorVariance().value().x),
+			random::uniform(rng, -particleType.colorVariance().value().y, +particleType.colorVariance().value().y),
+			random::uniform(rng, -particleType.colorVariance().value().z, +particleType.colorVariance().value().z),
+			particleType.initialOpacity().at(alpha) + random::uniform(rng, -particleType.opacityVariance().value(), +particleType.opacityVariance().value()));
 		particles.color[p] = vec4_t(vec3_t(particleType.color().at()), particleType.opacity().at());
 	}
 

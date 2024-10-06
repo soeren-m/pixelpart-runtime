@@ -34,7 +34,7 @@ public:
 	void repeat(bool repeat);
 	bool repeat() const;
 
-	float_t life(float_t time) const;
+	float_t life(float_t time, bool forceRepeat = false) const;
 	bool active(float_t time) const;
 
 	AnimatedProperty<vec3_t>& position();

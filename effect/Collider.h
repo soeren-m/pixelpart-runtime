@@ -21,6 +21,9 @@ public:
 	NodeExclusionSet& exclusionSet();
 	const NodeExclusionSet& exclusionSet() const;
 
+	vec3_t& point(std::size_t index);
+	const vec3_t& point(std::size_t index) const;
+
 	PointList& points();
 	const PointList& points() const;
 

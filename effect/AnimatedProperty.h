@@ -72,28 +72,8 @@ public:
 	const Curve<T>& curve() const {
 		return propertyCurve;
 	}
-
-	void computeGraph(const ComputeGraph& graph) {
-		propertyComputeGraph = graph;
-	}
-	const ComputeGraph& computeGraph() const {
-		return propertyComputeGraph;
-	}
-
-	void computeOutputOperation(ComputeOutputOperation operation) {
-		outputOperation = operation;
-		refresh();
-	}
-	ComputeOutputOperation computeOutputOperation() const {
-		return outputOperation;
-	}
-
-	void computeOutputTarget(ComputeOutputTarget target) {
-		outputTarget = target;
-		refresh();
-	}
-	ComputeOutputTarget computeOutputTarget() const {
-		return outputTarget;
+	const Curve<T>& resultCurve() const {
+		return computedCurve;
 	}
 
 	void keyframes(const std::vector<typename Curve<T>::Point>& pointList) {
@@ -147,6 +127,12 @@ public:
 		return propertyCurve.pointIndex(position, epsilon);
 	}
 
+	template <typename UnaryFunc>
+	void forEachKeyframe(UnaryFunc func) {
+		propertyCurve.forEachPoint(func);
+		refresh();
+	}
+
 	void keyframeInterpolation(CurveInterpolation method) {
 		propertyCurve.interpolation(method);
 		refresh();
@@ -162,6 +148,29 @@ public:
 	void enableFixedCache(std::size_t size) {
 		propertyCurve.enableFixedCache(size);
 		refresh();
+	}
+
+	void computeGraph(const ComputeGraph& graph) {
+		propertyComputeGraph = graph;
+	}
+	const ComputeGraph& computeGraph() const {
+		return propertyComputeGraph;
+	}
+
+	void computeOutputOperation(ComputeOutputOperation operation) {
+		outputOperation = operation;
+		refresh();
+	}
+	ComputeOutputOperation computeOutputOperation() const {
+		return outputOperation;
+	}
+
+	void computeOutputTarget(ComputeOutputTarget target) {
+		outputTarget = target;
+		refresh();
+	}
+	ComputeOutputTarget computeOutputTarget() const {
+		return outputTarget;
 	}
 
 private:

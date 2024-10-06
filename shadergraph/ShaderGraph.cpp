@@ -20,7 +20,7 @@ ShaderGraphLanguage ShaderGraph::graphLanguage = ShaderGraphLanguage();
 
 uint32_t ShaderGraph::numCurveInterpolationPoints = 100u;
 
-ShaderGraph::ShaderGraph(const std::unordered_map<id_t, ShaderNode>& nodes) : shaderNodes(nodes) {
+ShaderGraph::ShaderGraph(const ShaderNodeCollection& nodes) : shaderNodes(nodes) {
 	id_t maxNodeId = 0u;
 	id_t maxLinkId = 0u;
 	for(const auto& nodeEntry : shaderNodes) {
@@ -452,7 +452,7 @@ bool ShaderGraph::containsNode(id_t nodeId) const {
 const ShaderNode& ShaderGraph::node(id_t nodeId) const {
 	return shaderNodes.at(nodeId);
 }
-const std::unordered_map<id_t, ShaderNode>& ShaderGraph::nodes() const {
+const ShaderGraph::ShaderNodeCollection& ShaderGraph::nodes() const {
 	return shaderNodes;
 }
 
@@ -562,6 +562,6 @@ void to_json(nlohmann::ordered_json& j, const ShaderGraph& shader) {
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ShaderGraph& shader) {
-	shader = ShaderGraph(j.at("nodes"));
+	shader = ShaderGraph(j.at("nodes").get<ShaderGraph::ShaderNodeCollection>());
 }
 }

@@ -62,6 +62,17 @@ const AnimatedProperty<float_t>& ForceField::accelerationStrengthVariance() cons
 	return fieldAccelerationStrengthVariance;
 }
 
+void ForceField::accelerationGrid(int32_t x, int32_t y, int32_t z) {
+	fieldAccelerationGridSize[0] = x;
+	fieldAccelerationGridSize[1] = y;
+	fieldAccelerationGridSize[2] = z;
+	fieldAccelerationDirectionGrid.clear();
+	fieldAccelerationStrengthGrid.clear();
+
+	std::size_t cellCount = static_cast<std::size_t>(std::max(x * y * z, 0));
+	fieldAccelerationDirectionGrid.resize(cellCount, vec3_t(0.0));
+	fieldAccelerationStrengthGrid.resize(cellCount, 0.0);
+}
 void ForceField::accelerationGrid(int32_t x, int32_t y, int32_t z,
 	const std::vector<vec3_t>& directionGrid, const std::vector<float_t>& strengthGrid) {
 	fieldAccelerationGridSize[0] = x;
@@ -71,8 +82,8 @@ void ForceField::accelerationGrid(int32_t x, int32_t y, int32_t z,
 	fieldAccelerationStrengthGrid = strengthGrid;
 
 	std::size_t cellCount = static_cast<std::size_t>(std::max(x * y * z, 0));
-	fieldAccelerationDirectionGrid.resize(cellCount);
-	fieldAccelerationStrengthGrid.resize(cellCount);
+	fieldAccelerationDirectionGrid.resize(cellCount, vec3_t(0.0));
+	fieldAccelerationStrengthGrid.resize(cellCount, 0.0);
 }
 const std::vector<vec3_t>& ForceField::accelerationDirectionGrid() const {
 	return fieldAccelerationDirectionGrid;

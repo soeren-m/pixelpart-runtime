@@ -138,6 +138,15 @@ public:
 		return it - curvePoints.begin();
 	}
 
+	template <typename UnaryFunc>
+	void forEachPoint(UnaryFunc func) {
+		for(auto it = curvePoints.begin(); it != curvePoints.end(); it++) {
+			func(*it);
+		}
+
+		refreshCache();
+	}
+
 	void interpolation(CurveInterpolation method) {
 		if(method == curveInterpolation) {
 			return;
@@ -368,7 +377,7 @@ void from_json(const nlohmann::ordered_json& j, typename Curve<T>::Point& point)
 template <typename T>
 void to_json(nlohmann::ordered_json& j, const Curve<T>& curve) {
 	nlohmann::ordered_json jPointList = nlohmann::ordered_json::array();
-	for(const typename Curve<T>::Point& point : curve.getPoints()) {
+	for(const typename Curve<T>::Point& point : curve.points()) {
 		nlohmann::ordered_json jPoint;
 		to_json<T>(jPoint, point);
 
@@ -376,7 +385,7 @@ void to_json(nlohmann::ordered_json& j, const Curve<T>& curve) {
 	}
 
 	j = nlohmann::ordered_json{
-		{ "interpolation", curve.getInterpolation() },
+		{ "interpolation", curve.interpolation() },
 		{ "points", jPointList }
 	};
 }
@@ -392,11 +401,6 @@ void from_json(const nlohmann::ordered_json& j, Curve<T>& curve) {
 		points.push_back(point);
 	}
 
-	curve = Curve<T>();
-	curve.points(points);
-
-	if(j.contains("interpolation")) {
-		curve.interpolation(j.at("interpolation").get<CurveInterpolation>());
-	}
+	curve = Curve<T>(points, j.value("interpolation", CurveInterpolation::linear));
 }
 }

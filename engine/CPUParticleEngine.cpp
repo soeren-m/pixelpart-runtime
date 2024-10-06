@@ -1,5 +1,4 @@
 #include "CPUParticleEngine.h"
-#include "../common/Constants.h"
 #include <cmath>
 #include <algorithm>
 
@@ -31,7 +30,7 @@ void CPUParticleEngine::step(float_t dt) {
 			const ParticleEmitter& parentParticleEmitter = particleEffect.particleEmitters().at(parentParticleEmitterId);
 
 			uint32_t parentParticleTypeIndex = particleEffect.particleTypes().indexOf(parentParticleEmitter.parentId());
-			if(parentParticleTypeIndex != nullId) {
+			if(parentParticleTypeIndex != id_t::nullValue) {
 				particleSubTypes[parentParticleTypeIndex].push_back(particleTypeIndex);
 			}
 		}
@@ -41,12 +40,12 @@ void CPUParticleEngine::step(float_t dt) {
 		const ParticleType& particleType = particleEffect.particleTypes().atIndex(particleTypeIndex);
 
 		uint32_t particleEmitterIndex = particleEffect.particleEmitters().indexOf(particleType.parentId());
-		if(particleEmitterIndex == nullId) {
+		if(particleEmitterIndex == id_t::nullValue) {
 			continue;
 		}
 
 		const ParticleEmitter& particleEmitter = particleEffect.particleEmitters().atIndex(particleEmitterIndex);
-		if(particleEmitter.parentId() != nullId) {
+		if(particleEmitter.parentId()) {
 			continue;
 		}
 
@@ -88,7 +87,7 @@ void CPUParticleEngine::step(float_t dt) {
 		int32_t particlesEmitted = static_cast<int32_t>(emissionCount[particleTypeIndex]);
 		if(particlesEmitted > 0) {
 			particlesEmitted = particleGenerator.generate(particlesEmitted,
-				nullId, particleTypeIndex, nullId, particleEmitterIndex, dt, repeatedTime);
+				id_t::nullValue, particleTypeIndex, id_t::nullValue, particleEmitterIndex, dt, repeatedTime);
 
 			emissionCount[particleTypeIndex] -= static_cast<float_t>(particlesEmitted);
 		}
@@ -173,15 +172,15 @@ void CPUParticleEngine::step(float_t dt) {
 
 	totalActiveThreadCount = 1u;
 
-	sizeSolver.prepare(effect);
-	colorSolver.prepare(effect);
-	accelerationSolver.prepare(effect);
-	forceSolver.prepare(effect);
-	collisionSolver.prepare(effect);
-	motionPathSolver.prepare(effect);
-	rotationSolver.prepare(effect);
-	integrationSolver.prepare(effect);
-	lifeSolver.prepare(effect);
+	sizeSolver.prepare(particleEffect);
+	colorSolver.prepare(particleEffect);
+	accelerationSolver.prepare(particleEffect);
+	forceSolver.prepare(particleEffect);
+	collisionSolver.prepare(particleEffect);
+	motionPathSolver.prepare(particleEffect);
+	rotationSolver.prepare(particleEffect);
+	integrationSolver.prepare(particleEffect);
+	lifeSolver.prepare(particleEffect);
 
 	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < particleEffect.particleTypes().count(); particleTypeIndex++) {
 		const ParticleType& particleType = particleEffect.particleTypes().atIndex(particleTypeIndex);
@@ -192,7 +191,7 @@ void CPUParticleEngine::step(float_t dt) {
 		uint32_t activeThreadCount = 1u;
 
 #ifdef PIXELPART_MULTITHREADING
-		uint32_t availableThreadCount = threadPool != nullptr ? static_cast<uint32_t>(threadPool->getNumThreads()) : 1u;
+		uint32_t availableThreadCount = threadPool != nullptr ? static_cast<uint32_t>(threadPool->threadCount()) : 1u;
 		activeThreadCount = std::min(std::max(particleCount / particleCountPerThread, 1u), availableThreadCount);
 
 		if(activeThreadCount > 1u) {
@@ -269,13 +268,13 @@ void CPUParticleEngine::resetSeed() {
 
 void CPUParticleEngine::spawnParticles(id_t particleTypeId, uint32_t count) {
 	uint32_t particleTypeIndex = particleEffect.particleTypes().indexOf(particleTypeId);
-	if(particleTypeIndex == nullId) {
+	if(particleTypeIndex == id_t::nullValue) {
 		return;
 	}
 
 	const ParticleType& particleType = particleEffect.particleTypes().atIndex(particleTypeIndex);
 	uint32_t particleEmitterIndex = particleEffect.particleEmitters().indexOf(particleType.parentId());
-	if(particleEmitterIndex == nullId) {
+	if(particleEmitterIndex == id_t::nullValue) {
 		return;
 	}
 
@@ -283,8 +282,8 @@ void CPUParticleEngine::spawnParticles(id_t particleTypeId, uint32_t count) {
 	float_t objectTime = std::fmod(time - particleEmitter.start(), particleEmitter.duration());
 
 	particleGenerator.generate(count,
-		nullId,
-		particleTypeIndex, nullId,
+		id_t::nullValue,
+		particleTypeIndex, id_t::nullValue,
 		particleEmitterIndex,
 		0.0, objectTime);
 }

@@ -12,6 +12,13 @@ const NodeExclusionSet& Collider::exclusionSet() const {
 	return colliderExclusionSet;
 }
 
+vec3_t& Collider::point(std::size_t index) {
+	return colliderPoints.at(index);
+}
+const vec3_t& Collider::point(std::size_t index) const {
+	return colliderPoints.at(index);
+}
+
 Collider::PointList& Collider::points() {
 	return colliderPoints;
 }

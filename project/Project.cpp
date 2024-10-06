@@ -69,14 +69,14 @@ bool Project::isNameUsed(const std::string& name) const {
 }
 bool Project::isResourceUsed(const std::string& resourceId) const {
 	for(const ParticleType& particleType : projectEffect.particleTypes()) {
-		if(particleType.materialInstance.materialId() == resourceId) {
+		if(particleType.materialInstance().materialId() == resourceId) {
 			return true;
 		}
-		if(particleType.meshRendererSettings.meshResourceId == resourceId) {
+		if(particleType.meshRendererSettings().meshResourceId == resourceId) {
 			return true;
 		}
 
-		for(const auto& materialParameterEntry : particleType.materialInstance.materialParameters()) {
+		for(const auto& materialParameterEntry : particleType.materialInstance().materialParameters()) {
 			if(materialParameterEntry.second.type() == pixelpart::VariantParameter::Value::type_resource_image &&
 				resourceId == materialParameterEntry.second.valueResourceId()) {
 				return true;
@@ -85,7 +85,7 @@ bool Project::isResourceUsed(const std::string& resourceId) const {
 	}
 
 	for(const ForceField& forceField : projectEffect.forceFields()) {
-		if(resourceId == forceField.vectorFieldResourceId()) {
+		if(resourceId == forceField.vectorResourceId()) {
 			return true;
 		}
 	}

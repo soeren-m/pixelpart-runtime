@@ -12,11 +12,10 @@
 #include <unordered_map>
 #include <stdexcept>
 
-// TODO
-
 namespace pixelpart {
 class ComputeGraph {
 public:
+	using ComputeNodeCollection = std::unordered_map<id_t, std::unique_ptr<ComputeNode>>;
 	using InputSet = std::unordered_map<uint32_t, VariantValue>;
 
 	class EvaluationException : public std::runtime_error {
@@ -47,7 +46,7 @@ public:
 
 	ComputeGraph() = default;
 	ComputeGraph(const ComputeGraph& other);
-	ComputeGraph(const std::unordered_map<id_t, std::unique_ptr<ComputeNode>>& initialNodes);
+	ComputeGraph(const ComputeNodeCollection& initialNodes);
 
 	ComputeGraph& operator=(const ComputeGraph& other);
 
@@ -80,7 +79,7 @@ public:
 	void nodePosition(id_t nodeId, const vec2_t& position);
 
 	const ComputeNode& node(id_t nodeId) const;
-	const std::unordered_map<id_t, std::unique_ptr<ComputeNode>>& nodes() const;
+	const ComputeNodeCollection& nodes() const;
 
 	bool empty() const;
 
@@ -88,7 +87,7 @@ private:
 	uint32_t findNodeType(const std::string& typeName) const;
 	uint32_t findNodeSignature(const InputSet& graphInputs, const BuildResult& result, const ComputeNode& activeNode, std::vector<TypeMatch>& typeMatch) const;
 
-	std::unordered_map<id_t, std::unique_ptr<ComputeNode>> computeNodes;
+	ComputeNodeCollection computeNodes;
 	id_t nextNodeId = 0u;
 	id_t nextLinkId = 0u;
 };

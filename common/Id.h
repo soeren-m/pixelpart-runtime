@@ -37,5 +37,7 @@ void from_json(const nlohmann::ordered_json& j, id_t& id);
 
 template <>
 struct std::hash<pixelpart::id_t> {
-	std::size_t operator()(const pixelpart::id_t& id) const;
+	std::size_t operator()(const pixelpart::id_t& id) const {
+		return std::hash<uint32_t>()(id.value());
+	}
 };

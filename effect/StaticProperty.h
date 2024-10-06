@@ -103,7 +103,7 @@ private:
 template <typename T>
 void to_json(nlohmann::ordered_json& j, const StaticProperty<T>& property) {
 	j = nlohmann::ordered_json{
-		{ "value", property.getValue() },
+		{ "value", property.baseValue() },
 		{ "compute_graph", property.computeGraph() },
 		{ "compute_operation", property.computeOutputOperation() },
 	};

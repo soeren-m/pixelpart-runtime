@@ -157,7 +157,8 @@ void to_json(nlohmann::ordered_json& j, const MeshResource& resource) {
 	};
 }
 void from_json(const nlohmann::ordered_json& j, MeshResource& resource) {
-	resource = MeshResource(j.at("name"));
+	resource = MeshResource(
+		j.at("name").get<std::string>());
 
 	CompressionMethod compressionMethod = j.value("compression", CompressionMethod::none);
 

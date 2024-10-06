@@ -83,10 +83,19 @@ public:
 		const Value& paramDefault, const Value& paramMin, const Value& paramMax,
 		const std::vector<std::string>& paramValueNames);
 
+	void name(const std::string& name);
 	const std::string& name() const;
+
+	void def(const Value& value);
 	const Value& def() const;
+
+	void min(const Value& value);
 	const Value& min() const;
+
+	void max(const Value& value);
 	const Value& max() const;
+
+	std::vector<std::string>& options();
 	const std::vector<std::string>& options() const;
 
 private:

@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Node.h"
 #include <cmath>
 
@@ -53,8 +51,8 @@ bool Node::repeat() const {
 	return nodeRepeat;
 }
 
-float_t Node::life(float_t time) const {
-	return nodeRepeat
+float_t Node::life(float_t time, bool forceRepeat) const {
+	return nodeRepeat || forceRepeat
 		? std::fmod(time - nodeLifetimeStart, nodeLifetimeDuration) / nodeLifetimeDuration
 		: (time - nodeLifetimeStart) / nodeLifetimeDuration;
 }

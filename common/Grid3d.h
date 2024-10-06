@@ -69,7 +69,7 @@ public:
 	}
 
 	template <typename IntT>
-	T& valueOrDefault(IntT x, IntT y, IntT z, const T& defaultValue) {
+	T& value(IntT x, IntT y, IntT z, const T& defaultValue) {
 		if(contains(x, y, z)) {
 			return operator()<IntT>(x, y, z);
 		}
@@ -77,7 +77,7 @@ public:
 		return defaultValue;
 	}
 	template <typename IntT>
-	T& valueOrDefault(const GridIndex3d<IntT>& index, const T& defaultValue) {
+	T& value(const GridIndex3d<IntT>& index, const T& defaultValue) {
 		if(contains(index.x, index.y, index.z)) {
 			return operator()<IntT>(index);
 		}
@@ -85,7 +85,7 @@ public:
 		return defaultValue;
 	}
 	template <typename IntT>
-	const T& valueOrDefault(IntT x, IntT y, IntT z, const T& defaultValue) const {
+	const T& value(IntT x, IntT y, IntT z, const T& defaultValue) const {
 		if(contains(x, y, z)) {
 			return operator()<IntT>(x, y, z);
 		}
@@ -93,7 +93,7 @@ public:
 		return defaultValue;
 	}
 	template <typename IntT>
-	const T& valueOrDefault(const GridIndex3d<IntT>& index, const T& defaultValue) const {
+	const T& value(const GridIndex3d<IntT>& index, const T& defaultValue) const {
 		if(contains(index.x, index.y, index.z)) {
 			return operator()<IntT>(index);
 		}

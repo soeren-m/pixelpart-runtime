@@ -17,6 +17,8 @@
 namespace pixelpart {
 class ShaderGraph {
 public:
+	using ShaderNodeCollection = std::unordered_map<id_t, ShaderNode>;
+
 	class BuildException : public std::runtime_error {
 	public:
 		BuildException(const std::string& msg, id_t node = id_t(), uint32_t slot = id_t::nullValue);
@@ -52,7 +54,7 @@ public:
 	static uint32_t numCurveInterpolationPoints;
 
 	ShaderGraph() = default;
-	ShaderGraph(const std::unordered_map<id_t, ShaderNode>& nodes);
+	ShaderGraph(const ShaderNodeCollection& nodes);
 
 	std::string build(BuildResult& result, id_t nodeId = 0u) const;
 
@@ -72,7 +74,7 @@ public:
 
 	bool containsNode(id_t nodeId) const;
 	const ShaderNode& node(id_t nodeId) const;
-	const std::unordered_map<id_t, ShaderNode>& nodes() const;
+	const ShaderNodeCollection& nodes() const;
 
 	std::unordered_map<id_t, VariantParameter> shaderParameters() const;
 
@@ -84,7 +86,7 @@ private:
 	uint32_t findNodeType(const std::string& typeName) const;
 	uint32_t findNodeSignature(const BuildResult& result, const ShaderNode& node, std::vector<TypeMatch>& typeMatch) const;
 
-	std::unordered_map<id_t, ShaderNode> shaderNodes;
+	ShaderNodeCollection shaderNodes;
 	id_t nextNodeId = 0u;
 	id_t nextLinkId = 0u;
 };
