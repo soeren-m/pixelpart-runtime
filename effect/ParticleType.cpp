@@ -89,45 +89,45 @@ AlignmentMode ParticleType::alignmentMode() const {
 	return particleAlignmentMode;
 }
 
-AnimatedProperty<vec3_t>& ParticleType::initialRotation() {
+AnimatedProperty<float3_t>& ParticleType::initialRotation() {
 	return particleInitialRotation;
 }
-const AnimatedProperty<vec3_t>& ParticleType::initialRotation() const {
+const AnimatedProperty<float3_t>& ParticleType::initialRotation() const {
 	return particleInitialRotation;
 }
 
-AnimatedProperty<vec3_t>& ParticleType::rotation() {
+AnimatedProperty<float3_t>& ParticleType::rotation() {
 	return particleRotation;
 }
-const AnimatedProperty<vec3_t>& ParticleType::rotation() const {
+const AnimatedProperty<float3_t>& ParticleType::rotation() const {
 	return particleRotation;
 }
 
-AnimatedProperty<vec3_t>& ParticleType::rotationBySpeed() {
+AnimatedProperty<float3_t>& ParticleType::rotationBySpeed() {
 	return particleRotationBySpeed;
 }
-const AnimatedProperty<vec3_t>& ParticleType::rotationBySpeed() const {
+const AnimatedProperty<float3_t>& ParticleType::rotationBySpeed() const {
 	return particleRotationBySpeed;
 }
 
-StaticProperty<vec3_t>& ParticleType::rotationVariance() {
+StaticProperty<float3_t>& ParticleType::rotationVariance() {
 	return particleRotationVariance;
 }
-const StaticProperty<vec3_t>& ParticleType::rotationVariance() const {
+const StaticProperty<float3_t>& ParticleType::rotationVariance() const {
 	return particleRotationVariance;
 }
 
-StaticProperty<vec3_t>& ParticleType::angularVelocityVariance() {
+StaticProperty<float3_t>& ParticleType::angularVelocityVariance() {
 	return particleAngularVelocityVariance;
 }
-const StaticProperty<vec3_t>& ParticleType::angularVelocityVariance() const {
+const StaticProperty<float3_t>& ParticleType::angularVelocityVariance() const {
 	return particleAngularVelocityVariance;
 }
 
-StaticProperty<vec3_t>& ParticleType::pivot() {
+StaticProperty<float3_t>& ParticleType::pivot() {
 	return particlePivot;
 }
-const StaticProperty<vec3_t>& ParticleType::pivot() const {
+const StaticProperty<float3_t>& ParticleType::pivot() const {
 	return particlePivot;
 }
 
@@ -180,10 +180,10 @@ const AnimatedProperty<float_t>& ParticleType::initialSize() const {
 	return particleInitialSize;
 }
 
-AnimatedProperty<vec3_t>& ParticleType::size() {
+AnimatedProperty<float3_t>& ParticleType::size() {
 	return particleSize;
 }
-const AnimatedProperty<vec3_t>& ParticleType::size() const {
+const AnimatedProperty<float3_t>& ParticleType::size() const {
 	return particleSize;
 }
 
@@ -194,24 +194,24 @@ const StaticProperty<float_t>& ParticleType::sizeVariance() const {
 	return particleSizeVariance;
 }
 
-AnimatedProperty<vec3_t>& ParticleType::stretch() {
+AnimatedProperty<float3_t>& ParticleType::stretch() {
 	return particleStretch;
 }
-const AnimatedProperty<vec3_t>& ParticleType::stretch() const {
+const AnimatedProperty<float3_t>& ParticleType::stretch() const {
 	return particleStretch;
 }
 
-AnimatedProperty<vec4_t>& ParticleType::color() {
+AnimatedProperty<float4_t>& ParticleType::color() {
 	return particleColor;
 }
-const AnimatedProperty<vec4_t>& ParticleType::color() const {
+const AnimatedProperty<float4_t>& ParticleType::color() const {
 	return particleColor;
 }
 
-StaticProperty<vec4_t>& ParticleType::colorVariance() {
+StaticProperty<float4_t>& ParticleType::colorVariance() {
 	return particleColorVariance;
 }
-const StaticProperty<vec4_t>& ParticleType::colorVariance() const {
+const StaticProperty<float4_t>& ParticleType::colorVariance() const {
 	return particleColorVariance;
 }
 
@@ -333,7 +333,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	particleType.start(j.value("lifetime_start", 0.0));
 	particleType.duration(j.value("lifetime_duration", 1.0));
 	particleType.repeat(j.value("repeat", true));
-	particleType.position() = j.value("position", AnimatedProperty<vec3_t>(0.0, vec3_t(0.0)));
+	particleType.position() = j.value("position", AnimatedProperty<float3_t>(0.0, float3_t(0.0)));
 
 	particleType.count() = j.value("num_particles", AnimatedProperty<float_t>(0.0));
 	particleType.lifespan() = j.value("lifespan", AnimatedProperty<float_t>(1.0));
@@ -348,12 +348,12 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	particleType.radialAcceleration() = j.value("radial_acceleration", AnimatedProperty<float_t>(0.0));
 	particleType.rotationMode(j.value("rotation_mode", RotationMode::angle));
 	particleType.alignmentMode(j.value("alignment_mode", AlignmentMode::camera));
-	particleType.initialRotation() = j.value("initial_rotation", AnimatedProperty<vec3_t>(vec3_t(0.0)));
-	particleType.rotation() = j.value("rotation", AnimatedProperty<vec3_t>(vec3_t(0.0)));
-	particleType.rotationBySpeed() = j.value("rotation_by_speed", AnimatedProperty<vec3_t>(vec3_t(0.0)));
-	particleType.rotationVariance() = j.value("rotation_variance", StaticProperty<vec3_t>(vec3_t(0.0)));
-	particleType.angularVelocityVariance() = j.value("angular_velocity_variance", StaticProperty<vec3_t>(vec3_t(0.0)));
-	particleType.pivot() = j.value("pivot", StaticProperty<vec3_t>(vec3_t(0.0)));
+	particleType.initialRotation() = j.value("initial_rotation", AnimatedProperty<float3_t>(float3_t(0.0)));
+	particleType.rotation() = j.value("rotation", AnimatedProperty<float3_t>(float3_t(0.0)));
+	particleType.rotationBySpeed() = j.value("rotation_by_speed", AnimatedProperty<float3_t>(float3_t(0.0)));
+	particleType.rotationVariance() = j.value("rotation_variance", StaticProperty<float3_t>(float3_t(0.0)));
+	particleType.angularVelocityVariance() = j.value("angular_velocity_variance", StaticProperty<float3_t>(float3_t(0.0)));
+	particleType.pivot() = j.value("pivot", StaticProperty<float3_t>(float3_t(0.0)));
 
 	particleType.physicalSize() = j.value("physical_size", AnimatedProperty<float_t>(1.0));
 	particleType.weight() = j.value("weight", AnimatedProperty<float_t>(1.0));
@@ -363,11 +363,11 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	particleType.visible(j.value("visible", true));
 	particleType.layer(j.value("layer", 0u));
 	particleType.initialSize() = j.value("initial_size", AnimatedProperty<float_t>(0.1));
-	particleType.size() = j.value("size", AnimatedProperty<vec3_t>(vec3_t(1.0)));
+	particleType.size() = j.value("size", AnimatedProperty<float3_t>(float3_t(1.0)));
 	particleType.sizeVariance() = j.value("size_variance", StaticProperty<float_t>(0.0));
-	particleType.stretch() = j.value("stretch", AnimatedProperty<vec3_t>(vec3_t(0.0)));
-	particleType.color() = j.value("color", AnimatedProperty<vec4_t>(vec4_t(1.0)));
-	particleType.colorVariance() = j.value("color_variance", StaticProperty<vec4_t>(vec4_t(0.0)));
+	particleType.stretch() = j.value("stretch", AnimatedProperty<float3_t>(float3_t(0.0)));
+	particleType.color() = j.value("color", AnimatedProperty<float4_t>(float4_t(1.0)));
+	particleType.colorVariance() = j.value("color_variance", StaticProperty<float4_t>(float4_t(0.0)));
 	particleType.initialOpacity() = j.value("initial_opacity", AnimatedProperty<float_t>(1.0));
 	particleType.opacity() = j.value("opacity", AnimatedProperty<float_t>(1.0));
 	particleType.opacityVariance() = j.value("opacity_variance", StaticProperty<float_t>(0.0));

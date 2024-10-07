@@ -20,17 +20,17 @@ const NodeExclusionSet& ForceField::exclusionSet() const {
 	return fieldExclusionSet;
 }
 
-AnimatedProperty<vec3_t>& ForceField::size() {
+AnimatedProperty<float3_t>& ForceField::size() {
 	return fieldSize;
 }
-const AnimatedProperty<vec3_t>& ForceField::size() const {
+const AnimatedProperty<float3_t>& ForceField::size() const {
 	return fieldSize;
 }
 
-AnimatedProperty<vec3_t>& ForceField::orientation() {
+AnimatedProperty<float3_t>& ForceField::orientation() {
 	return fieldOrientation;
 }
-const AnimatedProperty<vec3_t>& ForceField::orientation() const {
+const AnimatedProperty<float3_t>& ForceField::orientation() const {
 	return fieldOrientation;
 }
 
@@ -41,10 +41,10 @@ const AnimatedProperty<float_t>& ForceField::strength() const {
 	return fieldStrength;
 }
 
-AnimatedProperty<vec3_t>& ForceField::accelerationDirection() {
+AnimatedProperty<float3_t>& ForceField::accelerationDirection() {
 	return fieldAccelerationDirection;
 }
-const AnimatedProperty<vec3_t>& ForceField::accelerationDirection() const {
+const AnimatedProperty<float3_t>& ForceField::accelerationDirection() const {
 	return fieldAccelerationDirection;
 }
 
@@ -70,11 +70,11 @@ void ForceField::accelerationGrid(int32_t x, int32_t y, int32_t z) {
 	fieldAccelerationStrengthGrid.clear();
 
 	std::size_t cellCount = static_cast<std::size_t>(std::max(x * y * z, 0));
-	fieldAccelerationDirectionGrid.resize(cellCount, vec3_t(0.0));
+	fieldAccelerationDirectionGrid.resize(cellCount, float3_t(0.0));
 	fieldAccelerationStrengthGrid.resize(cellCount, 0.0);
 }
 void ForceField::accelerationGrid(int32_t x, int32_t y, int32_t z,
-	const std::vector<vec3_t>& directionGrid, const std::vector<float_t>& strengthGrid) {
+	const std::vector<float3_t>& directionGrid, const std::vector<float_t>& strengthGrid) {
 	fieldAccelerationGridSize[0] = x;
 	fieldAccelerationGridSize[1] = y;
 	fieldAccelerationGridSize[2] = z;
@@ -82,10 +82,10 @@ void ForceField::accelerationGrid(int32_t x, int32_t y, int32_t z,
 	fieldAccelerationStrengthGrid = strengthGrid;
 
 	std::size_t cellCount = static_cast<std::size_t>(std::max(x * y * z, 0));
-	fieldAccelerationDirectionGrid.resize(cellCount, vec3_t(0.0));
+	fieldAccelerationDirectionGrid.resize(cellCount, float3_t(0.0));
 	fieldAccelerationStrengthGrid.resize(cellCount, 0.0);
 }
-const std::vector<vec3_t>& ForceField::accelerationDirectionGrid() const {
+const std::vector<float3_t>& ForceField::accelerationDirectionGrid() const {
 	return fieldAccelerationDirectionGrid;
 }
 const std::vector<float_t>& ForceField::accelerationStrengthGrid() const {
@@ -245,23 +245,23 @@ void from_json(const nlohmann::ordered_json& j, ForceField& forceField) {
 	forceField.start(j.value("lifetime_start", 0.0));
 	forceField.duration(j.value("lifetime_duration", 1.0));
 	forceField.repeat(j.value("repeat", true));
-	forceField.position() = j.value("position", AnimatedProperty<vec3_t>(0.0, vec3_t(0.0)));
+	forceField.position() = j.value("position", AnimatedProperty<float3_t>(0.0, float3_t(0.0)));
 
 	forceField.type(j.value("type", ForceField::Type::attraction_field));
 	forceField.exclusionSet() = j.value("exclusion_list", NodeExclusionSet());
-	forceField.size() = j.value("size", AnimatedProperty<vec3_t>(vec3_t(1.0)));
-	forceField.orientation() = j.value("orientation", AnimatedProperty<vec3_t>(vec3_t(0.0)));
+	forceField.size() = j.value("size", AnimatedProperty<float3_t>(float3_t(1.0)));
+	forceField.orientation() = j.value("orientation", AnimatedProperty<float3_t>(float3_t(0.0)));
 	forceField.strength() = j.value("strength", AnimatedProperty<float_t>(1.0));
 
 	nlohmann::ordered_json jAccelerationField = j.value("acceleration_field", nlohmann::ordered_json());
-	forceField.accelerationDirection() = jAccelerationField.value("direction", AnimatedProperty<vec3_t>(vec3_t(0.0)));
+	forceField.accelerationDirection() = jAccelerationField.value("direction", AnimatedProperty<float3_t>(float3_t(0.0)));
 	forceField.accelerationDirectionVariance() = jAccelerationField.value("direction_variance", AnimatedProperty<float_t>(0.0));
 	forceField.accelerationStrengthVariance() = jAccelerationField.value("strength_variance", AnimatedProperty<float_t>(0.0));
 	forceField.accelerationGrid(
 		jAccelerationField.value("grid_size_x", 1),
 		jAccelerationField.value("grid_size_y", 1),
 		jAccelerationField.value("grid_size_z", 1),
-		jAccelerationField.value("grid_direction", std::vector<vec3_t>{ vec3_t(0.0) }),
+		jAccelerationField.value("grid_direction", std::vector<float3_t>{ float3_t(0.0) }),
 		jAccelerationField.value("grid_strength", std::vector<float_t>{ 0.0 }));
 
 	nlohmann::ordered_json jVectorField = j.value("vector_field", nlohmann::ordered_json());

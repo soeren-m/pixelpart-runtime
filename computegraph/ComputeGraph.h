@@ -76,7 +76,7 @@ public:
 	void nodeName(id_t nodeId, const std::string& name);
 	void nodeParameter(id_t nodeId, uint32_t parameterIndex, VariantParameter::Value value);
 	void nodeParameter(id_t nodeId, const std::string& parameterName, VariantParameter::Value value);
-	void nodePosition(id_t nodeId, const vec2_t& position);
+	void nodePosition(id_t nodeId, const float2_t& position);
 
 	const ComputeNode& node(id_t nodeId) const;
 	const ComputeNodeCollection& nodes() const;

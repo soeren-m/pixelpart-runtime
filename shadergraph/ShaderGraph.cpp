@@ -152,10 +152,10 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 					break;
 				}
 				case VariantParameter::Value::type_gradient: {
-					Curve<vec3_t> gradient = parameterValue.valueGradient();
+					Curve<float3_t> gradient = parameterValue.valueGradient();
 
 					for(uint32_t i = 0u; i < numCurveInterpolationPoints; i++) {
-						vec3_t pointValue = gradient.at(static_cast<float_t>(i) / static_cast<float_t>(numCurveInterpolationPoints - 1u));
+						float3_t pointValue = gradient.at(static_cast<float_t>(i) / static_cast<float_t>(numCurveInterpolationPoints - 1u));
 						std::string pointValueString = graphLanguage.typeConstructors[VariantValue::type_float3];
 						pointValueString = replaceString(pointValueString, std::to_string(pointValue.x), "{0}");
 						pointValueString = replaceString(pointValueString, std::to_string(pointValue.y), "{1}");
@@ -438,7 +438,7 @@ void ShaderGraph::nodeParameterNode(id_t nodeId, bool enable) {
 
 	shaderNodes[nodeId].parameterNode(enable);
 }
-void ShaderGraph::nodePosition(id_t nodeId, const vec2_t& position) {
+void ShaderGraph::nodePosition(id_t nodeId, const float2_t& position) {
 	if(!containsNode(nodeId)) {
 		return;
 	}

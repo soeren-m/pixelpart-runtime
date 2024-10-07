@@ -54,7 +54,7 @@ Vector2ConstantComputeNode::Vector2ConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float2 } } },
 	{ },
-	{ VariantParameter::Float2Parameter("compute_param_value", vec2_t(0.0), vec2_t(-FLT_MAX), vec2_t(+FLT_MAX)) }) {
+	{ VariantParameter::Float2Parameter("compute_param_value", float2_t(0.0), float2_t(-FLT_MAX), float2_t(+FLT_MAX)) }) {
 
 }
 std::vector<VariantValue> Vector2ConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
@@ -67,7 +67,7 @@ Vector3ConstantComputeNode::Vector3ConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float3 } } },
 	{ },
-	{ VariantParameter::Float3Parameter("compute_param_value", vec3_t(0.0), vec3_t(-FLT_MAX), vec3_t(+FLT_MAX)) }) {
+	{ VariantParameter::Float3Parameter("compute_param_value", float3_t(0.0), float3_t(-FLT_MAX), float3_t(+FLT_MAX)) }) {
 
 }
 std::vector<VariantValue> Vector3ConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
@@ -80,7 +80,7 @@ Vector4ConstantComputeNode::Vector4ConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float4 } } },
 	{ },
-	{ VariantParameter::Float4Parameter("compute_param_value", vec4_t(0.0), vec4_t(-FLT_MAX), vec4_t(+FLT_MAX)) }) {
+	{ VariantParameter::Float4Parameter("compute_param_value", float4_t(0.0), float4_t(-FLT_MAX), float4_t(+FLT_MAX)) }) {
 
 }
 std::vector<VariantValue> Vector4ConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
@@ -93,7 +93,7 @@ ColorConstantComputeNode::ColorConstantComputeNode() : ComputeNodeBase(typeName,
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float4 } } },
 	{ },
-	{ VariantParameter::ColorParameter("compute_param_value", vec4_t(1.0)) }) {
+	{ VariantParameter::ColorParameter("compute_param_value", float4_t(1.0)) }) {
 
 }
 std::vector<VariantValue> ColorConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {

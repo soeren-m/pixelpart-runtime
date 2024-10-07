@@ -6,15 +6,15 @@
 #include <vector>
 
 namespace pixelpart {
-VectorFieldResource::VectorFieldResource(const std::string& name, const Grid3d<vec3_t>& field) : Resource(name),
+VectorFieldResource::VectorFieldResource(const std::string& name, const Grid3d<float3_t>& field) : Resource(name),
 	fieldData(field) {
 
 }
 
-Grid3d<vec3_t>& VectorFieldResource::field() {
+Grid3d<float3_t>& VectorFieldResource::field() {
 	return fieldData;
 }
-const Grid3d<vec3_t>& VectorFieldResource::field() const {
+const Grid3d<float3_t>& VectorFieldResource::field() const {
 	return fieldData;
 }
 
@@ -23,7 +23,7 @@ void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
 	for(std::size_t z = 0u; z < resource.field().depth(); z++) {
 		for(std::size_t y = 0u; y < resource.field().height(); y++) {
 			for(std::size_t x = 0u; x < resource.field().width(); x++) {
-				const vec3_t& vector = resource.field()(x, y, z);
+				const float3_t& vector = resource.field()(x, y, z);
 
 				dataString += std::to_string(vector.x);
 				dataString += ' ';
@@ -60,7 +60,7 @@ void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
 	std::istringstream dataStream(
 		std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
-	Grid3d<vec3_t> field = Grid3d<vec3_t>(width, height, depth, vec3_t(0.0));
+	Grid3d<float3_t> field = Grid3d<float3_t>(width, height, depth, float3_t(0.0));
 
 	bool finished = false;
 	for(std::size_t z = 0u; z < field.depth() && !finished; z++) {
@@ -71,7 +71,7 @@ void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
 					break;
 				}
 
-				vec3_t vector = vec3_t(0.0);
+				float3_t vector = float3_t(0.0);
 				std::string token;
 
 				std::getline(dataStream, token, ' ');

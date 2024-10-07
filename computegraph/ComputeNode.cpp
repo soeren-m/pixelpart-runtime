@@ -141,10 +141,10 @@ uint32_t ComputeNode::findParameter(const std::string& parameterName) const {
 	return index;
 }
 
-void ComputeNode::move(const vec2_t& pos) {
+void ComputeNode::move(const float2_t& pos) {
 	nodePosition = pos;
 }
-vec2_t ComputeNode::position() const {
+float2_t ComputeNode::position() const {
 	return nodePosition;
 }
 
@@ -185,6 +185,6 @@ void from_json(const nlohmann::ordered_json& j, ComputeNode& node) {
 	node.name(j.value("name", ""));
 	node.inputLinks() = j.value("inputs", std::vector<ComputeNode::Link>());
 	node.parameterValues() = j.value("parameter_values", std::vector<VariantParameter::Value>());
-	node.move(j.value("position", vec2_t(0.0)));
+	node.move(j.value("position", float2_t(0.0)));
 }
 }

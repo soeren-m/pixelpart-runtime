@@ -272,7 +272,7 @@ void ComputeGraph::nodeParameter(id_t nodeId, const std::string& parameterName, 
 
 	node->parameterValues()[parameterIndex] = value;
 }
-void ComputeGraph::nodePosition(id_t nodeId, const vec2_t& position) {
+void ComputeGraph::nodePosition(id_t nodeId, const float2_t& position) {
 	if(!containsNode(nodeId)) {
 		return;
 	}

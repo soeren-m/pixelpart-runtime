@@ -79,8 +79,8 @@ public:
 	uint32_t findOutputSlot(const std::string& slotName) const;
 	uint32_t findParameter(const std::string& parameterName) const;
 
-	void move(const vec2_t& pos);
-	vec2_t position() const;
+	void move(const float2_t& pos);
+	float2_t position() const;
 
 protected:
 	virtual ComputeNode* cloneImpl() const = 0;
@@ -98,7 +98,7 @@ protected:
 	std::vector<VariantParameter> nodeParameters;
 	std::vector<VariantParameter::Value> nodeParameterValues;
 
-	vec2_t nodePosition = vec2_t(0.0);
+	float2_t nodePosition = float2_t(0.0);
 };
 
 void to_json(nlohmann::ordered_json& j, const ComputeNode::Signature& signature);

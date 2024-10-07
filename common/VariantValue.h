@@ -21,11 +21,11 @@ struct VariantTag<int_t> { typedef IntTag Type; };
 template <>
 struct VariantTag<float_t> { typedef FloatTag Type; };
 template <>
-struct VariantTag<vec2_t> { typedef Float2Tag Type; };
+struct VariantTag<float2_t> { typedef Float2Tag Type; };
 template <>
-struct VariantTag<vec3_t> { typedef Float3Tag Type; };
+struct VariantTag<float3_t> { typedef Float3Tag Type; };
 template <>
-struct VariantTag<vec4_t> { typedef Float4Tag Type; };
+struct VariantTag<float4_t> { typedef Float4Tag Type; };
 
 class VariantValue {
 public:
@@ -42,9 +42,9 @@ public:
 	static VariantValue Bool(bool v);
 	static VariantValue Int(int_t v);
 	static VariantValue Float(float_t v);
-	static VariantValue Float2(const vec2_t& v);
-	static VariantValue Float3(const vec3_t& v);
-	static VariantValue Float4(const vec4_t& v);
+	static VariantValue Float2(const float2_t& v);
+	static VariantValue Float3(const float3_t& v);
+	static VariantValue Float4(const float4_t& v);
 
 	VariantValue() = default;
 	VariantValue(Type varType);
@@ -61,16 +61,16 @@ public:
 	bool valueBool() const;
 	int_t valueInt() const;
 	float_t valueFloat() const;
-	vec2_t valueFloat2() const;
-	vec3_t valueFloat3() const;
-	vec4_t valueFloat4() const;
+	float2_t valueFloat2() const;
+	float3_t valueFloat3() const;
+	float4_t valueFloat4() const;
 
 	bool toBool() const;
 	int_t toInt() const;
 	float_t toFloat() const;
-	vec2_t toFloat2() const;
-	vec3_t toFloat3() const;
-	vec4_t toFloat4() const;
+	float2_t toFloat2() const;
+	float3_t toFloat3() const;
+	float4_t toFloat4() const;
 
 	VariantValue cast(Type targetType) const;
 
@@ -78,9 +78,9 @@ private:
 	bool value(BoolTag t) const;
 	int_t value(IntTag t) const;
 	float_t value(FloatTag t) const;
-	vec2_t value(Float2Tag t) const;
-	vec3_t value(Float3Tag t) const;
-	vec4_t value(Float4Tag t) const;
+	float2_t value(Float2Tag t) const;
+	float3_t value(Float3Tag t) const;
+	float4_t value(Float4Tag t) const;
 
 	Type dataType = type_null;
 

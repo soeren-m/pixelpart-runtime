@@ -6,13 +6,10 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <type_traits>
-// TODO
+
 namespace pixelpart {
 template <typename T>
 class NodeCollection {
-//static_assert(std::is_base_of<Node, T>::value, "T must have base class Node");
-
 public:
 	using iterator = typename std::vector<T>::iterator;
 	using const_iterator = typename std::vector<T>::const_iterator;

@@ -11,7 +11,7 @@ ColorSolver::ColorSolver() {
 void ColorSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
 	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
 	for(uint32_t p = 0u; p < particleCount; p++) {
-		vec4_t hsv = rgb2hsv(particleType.color().at(particles.life[p]));
+		float4_t hsv = rgb2hsv(particleType.color().at(particles.life[p]));
 
 		float_t hue = std::fmod(hsv.x + particles.initialColor[p].x, 360.0);
 		hsv.x = (hue < 0.0) ? hue + 360.0 : hue;

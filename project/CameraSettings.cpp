@@ -13,7 +13,7 @@ void to_json(nlohmann::ordered_json& j, const CameraSettings& settings) {
 }
 void from_json(const nlohmann::ordered_json& j, CameraSettings& settings) {
 	settings = CameraSettings();
-	settings.position = j.value("position", vec3_t(0.0, 0.0, 1.0));
+	settings.position = j.value("position", float3_t(0.0, 0.0, 1.0));
 	settings.zoom = j.value("zoom", 1.0);
 	settings.fieldOfView = j.value("fov", 60.0);
 	settings.pitch = j.value("pitch", 0.0);

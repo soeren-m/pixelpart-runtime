@@ -13,7 +13,7 @@
 namespace pixelpart {
 class Collider : public Node {
 public:
-	using PointList = std::vector<vec3_t>;
+	using PointList = std::vector<float3_t>;
 
 	Collider() = default;
 	Collider(id_t ownId, id_t parentId = id_t());
@@ -21,8 +21,8 @@ public:
 	NodeExclusionSet& exclusionSet();
 	const NodeExclusionSet& exclusionSet() const;
 
-	vec3_t& point(std::size_t index);
-	const vec3_t& point(std::size_t index) const;
+	float3_t& point(std::size_t index);
+	const float3_t& point(std::size_t index) const;
 
 	PointList& points();
 	const PointList& points() const;
@@ -45,8 +45,8 @@ public:
 private:
 	NodeExclusionSet colliderExclusionSet;
 	PointList colliderPoints = PointList{
-		vec3_t(-0.5, 0.0, 0.0),
-		vec3_t(+0.5, 0.0, 0.0)
+		float3_t(-0.5, 0.0, 0.0),
+		float3_t(+0.5, 0.0, 0.0)
 	};
 	StaticProperty<float_t> colliderWidth = StaticProperty<float_t>(1.0);
 	StaticProperty<float_t> colliderOrientation = StaticProperty<float_t>(0.0);

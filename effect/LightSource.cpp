@@ -12,10 +12,10 @@ LightSource::Type LightSource::type() const {
 	return lightType;
 }
 
-AnimatedProperty<vec3_t>& LightSource::direction() {
+AnimatedProperty<float3_t>& LightSource::direction() {
 	return lightDirection;
 }
-const AnimatedProperty<vec3_t>& LightSource::direction() const {
+const AnimatedProperty<float3_t>& LightSource::direction() const {
 	return lightDirection;
 }
 
@@ -47,10 +47,10 @@ const AnimatedProperty<float_t>& LightSource::spotAngleAttenuation() const {
 	return lightSpotAngleAttenuation;
 }
 
-AnimatedProperty<vec4_t>& LightSource::color() {
+AnimatedProperty<float4_t>& LightSource::color() {
 	return lightColor;
 }
-const AnimatedProperty<vec4_t>& LightSource::color() const {
+const AnimatedProperty<float4_t>& LightSource::color() const {
 	return lightColor;
 }
 
@@ -90,15 +90,15 @@ void from_json(const nlohmann::ordered_json& j, LightSource& lightSource) {
 	lightSource.start(j.value("lifetime_start", 0.0));
 	lightSource.duration(j.value("lifetime_duration", 1.0));
 	lightSource.repeat(j.value("repeat", true));
-	lightSource.position() = j.value("position", AnimatedProperty<vec3_t>(0.0, vec3_t(0.0)));
+	lightSource.position() = j.value("position", AnimatedProperty<float3_t>(0.0, float3_t(0.0)));
 
 	lightSource.type(j.value("type", LightSource::Type::directional));
-	lightSource.direction() = j.value("direction", AnimatedProperty<vec3_t>(vec3_t(0.0)));
+	lightSource.direction() = j.value("direction", AnimatedProperty<float3_t>(float3_t(0.0)));
 	lightSource.range() = j.value("range", AnimatedProperty<float_t>(1.0));
 	lightSource.attenuation() = j.value("attenuation", AnimatedProperty<float_t>(1.0));
 	lightSource.spotAngle() = j.value("spot_angle", AnimatedProperty<float_t>(45.0));
 	lightSource.spotAngleAttenuation() = j.value("spot_angle_attenuation", AnimatedProperty<float_t>(1.0));
-	lightSource.color() = j.value("color", AnimatedProperty<vec4_t>(vec4_t(1.0)));
+	lightSource.color() = j.value("color", AnimatedProperty<float4_t>(float4_t(1.0)));
 	lightSource.intensity() = j.value("intensity", AnimatedProperty<float_t>(1.0));
 }
 }

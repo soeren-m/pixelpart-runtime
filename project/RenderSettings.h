@@ -20,9 +20,9 @@ struct RenderSettings {
 	bool backgroundEnabled = false;
 	bool postProcessingEnabled = true;
 	bool seamlessRenderingEnabled = false;
-	vec4_t backgroundColor = vec4_t(0.0, 0.0, 0.0, 1.0);
+	float4_t backgroundColor = float4_t(0.0, 0.0, 0.0, 1.0);
 
-	vec3_t ambientLighting = vec3_t(0.1);
+	float3_t ambientLighting = float3_t(0.1);
 	bool hdrEnabled = true;
 	float_t hdrBloomIntensity = 0.1;
 	float_t hdrExposure = 1.0;

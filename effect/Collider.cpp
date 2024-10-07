@@ -12,10 +12,10 @@ const NodeExclusionSet& Collider::exclusionSet() const {
 	return colliderExclusionSet;
 }
 
-vec3_t& Collider::point(std::size_t index) {
+float3_t& Collider::point(std::size_t index) {
 	return colliderPoints.at(index);
 }
-const vec3_t& Collider::point(std::size_t index) const {
+const float3_t& Collider::point(std::size_t index) const {
 	return colliderPoints.at(index);
 }
 
@@ -89,10 +89,10 @@ void from_json(const nlohmann::ordered_json& j, Collider& collider) {
 	collider.start(j.value("lifetime_start", 0.0));
 	collider.duration(j.value("lifetime_duration", 1.0));
 	collider.repeat(j.value("repeat", true));
-	collider.position() = j.value("position", AnimatedProperty<vec3_t>(0.0, vec3_t(0.0)));
+	collider.position() = j.value("position", AnimatedProperty<float3_t>(0.0, float3_t(0.0)));
 
 	collider.exclusionSet() = j.value("exclusion_list", NodeExclusionSet());
-	collider.points() = j.value("points", Collider::PointList{ vec3_t(-0.5, 0.0, 0.0), vec3_t(+0.5, 0.0, 0.0) });
+	collider.points() = j.value("points", Collider::PointList{ float3_t(-0.5, 0.0, 0.0), float3_t(+0.5, 0.0, 0.0) });
 	collider.width() = j.value("width", StaticProperty<float_t>(1.0));
 	collider.orientation() = j.value("orientation", StaticProperty<float_t>(0.0));
 	collider.killOnContact() = j.value("kill_on_contact", StaticProperty<bool>(false));

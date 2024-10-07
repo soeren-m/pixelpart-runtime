@@ -26,7 +26,7 @@ public:
 	ShaderNode(const std::string& typeId, const std::string& name,
 		const std::vector<Link>& inputs,
 		const std::vector<VariantParameter::Value>& parameters,
-		bool parameterNode, const vec2_t& position);
+		bool parameterNode, const float2_t& position);
 
 	const std::string& type() const;
 
@@ -42,8 +42,8 @@ public:
 	void parameterNode(bool parameterNode);
 	bool parameterNode() const;
 
-	void position(const vec2_t& position);
-	const vec2_t& position() const;
+	void position(const float2_t& position);
+	const float2_t& position() const;
 
 private:
 	std::string nodeTypeId;
@@ -53,7 +53,7 @@ private:
 
 	bool nodeIsParameterNode = false;
 
-	vec2_t nodePosition = vec2_t(0.0);
+	float2_t nodePosition = float2_t(0.0);
 };
 
 void to_json(nlohmann::ordered_json& j, const ShaderNode::Link& link);

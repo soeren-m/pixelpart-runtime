@@ -36,17 +36,17 @@ public:
 	NodeExclusionSet& exclusionSet();
 	const NodeExclusionSet& exclusionSet() const;
 
-	AnimatedProperty<vec3_t>& size();
-	const AnimatedProperty<vec3_t>& size() const;
+	AnimatedProperty<float3_t>& size();
+	const AnimatedProperty<float3_t>& size() const;
 
-	AnimatedProperty<vec3_t>& orientation();
-	const AnimatedProperty<vec3_t>& orientation() const;
+	AnimatedProperty<float3_t>& orientation();
+	const AnimatedProperty<float3_t>& orientation() const;
 
 	AnimatedProperty<float_t>& strength();
 	const AnimatedProperty<float_t>& strength() const;
 
-	AnimatedProperty<vec3_t>& accelerationDirection();
-	const AnimatedProperty<vec3_t>& accelerationDirection() const;
+	AnimatedProperty<float3_t>& accelerationDirection();
+	const AnimatedProperty<float3_t>& accelerationDirection() const;
 
 	AnimatedProperty<float_t>& accelerationDirectionVariance();
 	const AnimatedProperty<float_t>& accelerationDirectionVariance() const;
@@ -56,8 +56,8 @@ public:
 
 	void accelerationGrid(int32_t x, int32_t y, int32_t z);
 	void accelerationGrid(int32_t x, int32_t y, int32_t z,
-		const std::vector<vec3_t>& directionGrid, const std::vector<float_t>& strengthGrid);
-	const std::vector<vec3_t>& accelerationDirectionGrid() const;
+		const std::vector<float3_t>& directionGrid, const std::vector<float_t>& strengthGrid);
+	const std::vector<float3_t>& accelerationDirectionGrid() const;
 	const std::vector<float_t>& accelerationStrengthGrid() const;
 	int32_t accelerationGridSizeX() const;
 	int32_t accelerationGridSizeY() const;
@@ -71,7 +71,7 @@ public:
 		fieldAccelerationStrengthGrid.resize(
 			fieldAccelerationGridSize[0] * fieldAccelerationGridSize[1] * fieldAccelerationGridSize[2]);
 
-		for(vec3_t& value : fieldAccelerationDirectionGrid) {
+		for(float3_t& value : fieldAccelerationDirectionGrid) {
 			value.x = uniformDistrib(rng);
 			value.y = uniformDistrib(rng);
 			value.z = uniformDistrib(rng);
@@ -120,15 +120,15 @@ public:
 private:
 	Type fieldType = Type::attraction_field;
 	NodeExclusionSet fieldExclusionSet;
-	AnimatedProperty<vec3_t> fieldSize = AnimatedProperty<vec3_t>(vec3_t(1.0));
-	AnimatedProperty<vec3_t> fieldOrientation = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	AnimatedProperty<float3_t> fieldSize = AnimatedProperty<float3_t>(float3_t(1.0));
+	AnimatedProperty<float3_t> fieldOrientation = AnimatedProperty<float3_t>(float3_t(0.0));
 	AnimatedProperty<float_t> fieldStrength = AnimatedProperty<float_t>(1.0);
 
-	AnimatedProperty<vec3_t> fieldAccelerationDirection = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	AnimatedProperty<float3_t> fieldAccelerationDirection = AnimatedProperty<float3_t>(float3_t(0.0));
 	AnimatedProperty<float_t> fieldAccelerationDirectionVariance = AnimatedProperty<float_t>(0.0);
 	AnimatedProperty<float_t> fieldAccelerationStrengthVariance = AnimatedProperty<float_t>(0.0);
 	int32_t fieldAccelerationGridSize[3] = { 1, 1, 1 };
-	std::vector<vec3_t> fieldAccelerationDirectionGrid = std::vector<vec3_t>{ vec3_t(0.0) };
+	std::vector<float3_t> fieldAccelerationDirectionGrid = std::vector<float3_t>{ float3_t(0.0) };
 	std::vector<float_t> fieldAccelerationStrengthGrid = std::vector<float_t>{ 0.0 };
 
 	std::string fieldVectorResourceId;

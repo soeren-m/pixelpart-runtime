@@ -9,13 +9,13 @@ namespace pixelpart {
 class VectorFieldResource : public Resource {
 public:
 	VectorFieldResource() = default;
-	VectorFieldResource(const std::string& name, const Grid3d<vec3_t>& field);
+	VectorFieldResource(const std::string& name, const Grid3d<float3_t>& field);
 
-	Grid3d<vec3_t>& field();
-	const Grid3d<vec3_t>& field() const;
+	Grid3d<float3_t>& field();
+	const Grid3d<float3_t>& field() const;
 
 private:
-	Grid3d<vec3_t> fieldData;
+	Grid3d<float3_t> fieldData;
 };
 
 void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource);

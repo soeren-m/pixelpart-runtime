@@ -22,8 +22,8 @@ public:
 	void type(Type type);
 	Type type() const;
 
-	AnimatedProperty<vec3_t>& direction();
-	const AnimatedProperty<vec3_t>& direction() const;
+	AnimatedProperty<float3_t>& direction();
+	const AnimatedProperty<float3_t>& direction() const;
 
 	AnimatedProperty<float_t>& range();
 	const AnimatedProperty<float_t>& range() const;
@@ -37,8 +37,8 @@ public:
 	AnimatedProperty<float_t>& spotAngleAttenuation();
 	const AnimatedProperty<float_t>& spotAngleAttenuation() const;
 
-	AnimatedProperty<vec4_t>& color();
-	const AnimatedProperty<vec4_t>& color() const;
+	AnimatedProperty<float4_t>& color();
+	const AnimatedProperty<float4_t>& color() const;
 
 	AnimatedProperty<float_t>& intensity();
 	const AnimatedProperty<float_t>& intensity() const;
@@ -46,13 +46,13 @@ public:
 private:
 	Type lightType = Type::directional;
 
-	AnimatedProperty<vec3_t> lightDirection = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	AnimatedProperty<float3_t> lightDirection = AnimatedProperty<float3_t>(float3_t(0.0));
 	AnimatedProperty<float_t> lightRange = AnimatedProperty<float_t>(1.0);
 	AnimatedProperty<float_t> lightAttenuation = AnimatedProperty<float_t>(1.0);
 	AnimatedProperty<float_t> lightSpotAngle = AnimatedProperty<float_t>(45.0);
 	AnimatedProperty<float_t> lightSpotAngleAttenuation = AnimatedProperty<float_t>(1.0);
 
-	AnimatedProperty<vec4_t> lightColor = AnimatedProperty<vec4_t>(vec4_t(1.0));
+	AnimatedProperty<float4_t> lightColor = AnimatedProperty<float4_t>(float4_t(1.0));
 	AnimatedProperty<float_t> lightIntensity = AnimatedProperty<float_t>(1.0);
 };
 

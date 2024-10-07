@@ -56,14 +56,14 @@ public:
 	void shape(Shape shape);
 	Shape shape() const;
 
-	Curve<vec3_t>& path();
-	const Curve<vec3_t>& path() const;
+	Curve<float3_t>& path();
+	const Curve<float3_t>& path() const;
 
-	AnimatedProperty<vec3_t>& size();
-	const AnimatedProperty<vec3_t>& size() const;
+	AnimatedProperty<float3_t>& size();
+	const AnimatedProperty<float3_t>& size() const;
 
-	AnimatedProperty<vec3_t>& orientation();
-	const AnimatedProperty<vec3_t>& orientation() const;
+	AnimatedProperty<float3_t>& orientation();
+	const AnimatedProperty<float3_t>& orientation() const;
 
 	void distribution(Distribution distribution);
 	Distribution distribution() const;
@@ -82,24 +82,24 @@ public:
 	void directionMode(DirectionMode directionMode);
 	DirectionMode directionMode() const;
 
-	AnimatedProperty<vec3_t>& direction();
-	const AnimatedProperty<vec3_t>& direction() const;
+	AnimatedProperty<float3_t>& direction();
+	const AnimatedProperty<float3_t>& direction() const;
 
 	AnimatedProperty<float_t>& spread();
 	const AnimatedProperty<float_t>& spread() const;
 
 private:
 	Shape emitterShape = Shape::point;
-	Curve<vec3_t> emitterPath = Curve<vec3_t>();
-	AnimatedProperty<vec3_t> emitterSize = AnimatedProperty<vec3_t>(vec3_t(1.0));
-	AnimatedProperty<vec3_t> emitterOrientation = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	Curve<float3_t> emitterPath = Curve<float3_t>();
+	AnimatedProperty<float3_t> emitterSize = AnimatedProperty<float3_t>(float3_t(1.0));
+	AnimatedProperty<float3_t> emitterOrientation = AnimatedProperty<float3_t>(float3_t(0.0));
 
 	Distribution emitterDistribution = Distribution::uniform;
 	GridOrder emitterGridOrder = GridOrder::x_y_z;
 	uint32_t emitterGridSize[3] = { 5u, 5u, 5u };
 	EmissionMode emitterEmissionMode = EmissionMode::continuous;
 	DirectionMode emitterDirectionMode = DirectionMode::fixed;
-	AnimatedProperty<vec3_t> emitterDirection = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	AnimatedProperty<float3_t> emitterDirection = AnimatedProperty<float3_t>(float3_t(0.0));
 	AnimatedProperty<float_t> emitterSpread = AnimatedProperty<float_t>(0.0);
 };
 

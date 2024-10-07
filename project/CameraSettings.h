@@ -6,7 +6,7 @@
 
 namespace pixelpart {
 struct CameraSettings {
-	vec3_t position = vec3_t(0.0, 0.0, 1.0);
+	float3_t position = float3_t(0.0, 0.0, 1.0);
 	float_t zoom = 1.0;
 	float_t fieldOfView = 60.0;
 	float_t pitch = 0.0;

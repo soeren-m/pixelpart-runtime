@@ -70,7 +70,7 @@ public:
 	void nodeParameter(id_t nodeId, uint32_t parameterIndex, VariantParameter::Value value);
 	void nodeParameter(id_t nodeId, const std::string& parameterName, VariantParameter::Value value);
 	void nodeParameterNode(id_t nodeId, bool enable);
-	void nodePosition(id_t nodeId, const vec2_t& position);
+	void nodePosition(id_t nodeId, const float2_t& position);
 
 	bool containsNode(id_t nodeId) const;
 	const ShaderNode& node(id_t nodeId) const;

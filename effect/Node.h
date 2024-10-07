@@ -37,8 +37,8 @@ public:
 	float_t life(float_t time, bool forceRepeat = false) const;
 	bool active(float_t time) const;
 
-	AnimatedProperty<vec3_t>& position();
-	const AnimatedProperty<vec3_t>& position() const;
+	AnimatedProperty<float3_t>& position();
+	const AnimatedProperty<float3_t>& position() const;
 
 private:
 	id_t nodeId = id_t();
@@ -49,6 +49,6 @@ private:
 	float_t nodeLifetimeDuration = 1.0;
 	bool nodeRepeat = true;
 
-	AnimatedProperty<vec3_t> nodePosition = AnimatedProperty<vec3_t>(0.0, vec3_t(0.0));
+	AnimatedProperty<float3_t> nodePosition = AnimatedProperty<float3_t>(0.0, float3_t(0.0));
 };
 }

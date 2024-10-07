@@ -55,23 +55,23 @@ public:
 	void alignmentMode(AlignmentMode mode);
 	AlignmentMode alignmentMode() const;
 
-	AnimatedProperty<vec3_t>& initialRotation();
-	const AnimatedProperty<vec3_t>& initialRotation() const;
+	AnimatedProperty<float3_t>& initialRotation();
+	const AnimatedProperty<float3_t>& initialRotation() const;
 
-	AnimatedProperty<vec3_t>& rotation();
-	const AnimatedProperty<vec3_t>& rotation() const;
+	AnimatedProperty<float3_t>& rotation();
+	const AnimatedProperty<float3_t>& rotation() const;
 
-	AnimatedProperty<vec3_t>& rotationBySpeed();
-	const AnimatedProperty<vec3_t>& rotationBySpeed() const;
+	AnimatedProperty<float3_t>& rotationBySpeed();
+	const AnimatedProperty<float3_t>& rotationBySpeed() const;
 
-	StaticProperty<vec3_t>& rotationVariance();
-	const StaticProperty<vec3_t>& rotationVariance() const;
+	StaticProperty<float3_t>& rotationVariance();
+	const StaticProperty<float3_t>& rotationVariance() const;
 
-	StaticProperty<vec3_t>& angularVelocityVariance();
-	const StaticProperty<vec3_t>& angularVelocityVariance() const;
+	StaticProperty<float3_t>& angularVelocityVariance();
+	const StaticProperty<float3_t>& angularVelocityVariance() const;
 
-	StaticProperty<vec3_t>& pivot();
-	const StaticProperty<vec3_t>& pivot() const;
+	StaticProperty<float3_t>& pivot();
+	const StaticProperty<float3_t>& pivot() const;
 
 	AnimatedProperty<float_t>& physicalSize();
 	const AnimatedProperty<float_t>& physicalSize() const;
@@ -94,20 +94,20 @@ public:
 	AnimatedProperty<float_t>& initialSize();
 	const AnimatedProperty<float_t>& initialSize() const;
 
-	AnimatedProperty<vec3_t>& size();
-	const AnimatedProperty<vec3_t>& size() const;
+	AnimatedProperty<float3_t>& size();
+	const AnimatedProperty<float3_t>& size() const;
 
 	StaticProperty<float_t>& sizeVariance();
 	const StaticProperty<float_t>& sizeVariance() const;
 
-	AnimatedProperty<vec3_t>& stretch();
-	const AnimatedProperty<vec3_t>& stretch() const;
+	AnimatedProperty<float3_t>& stretch();
+	const AnimatedProperty<float3_t>& stretch() const;
 
-	AnimatedProperty<vec4_t>& color();
-	const AnimatedProperty<vec4_t>& color() const;
+	AnimatedProperty<float4_t>& color();
+	const AnimatedProperty<float4_t>& color() const;
 
-	StaticProperty<vec4_t>& colorVariance();
-	const StaticProperty<vec4_t>& colorVariance() const;
+	StaticProperty<float4_t>& colorVariance();
+	const StaticProperty<float4_t>& colorVariance() const;
 
 	AnimatedProperty<float_t>& initialOpacity();
 	const AnimatedProperty<float_t>& initialOpacity() const;
@@ -147,12 +147,12 @@ private:
 	AnimatedProperty<float_t> particleRadialAcceleration = AnimatedProperty<float_t>(0.0);
 	RotationMode particleRotationMode = RotationMode::angle;
 	AlignmentMode particleAlignmentMode = AlignmentMode::camera;
-	AnimatedProperty<vec3_t> particleInitialRotation = AnimatedProperty<vec3_t>(vec3_t(0.0));
-	AnimatedProperty<vec3_t> particleRotation = AnimatedProperty<vec3_t>(vec3_t(0.0));
-	AnimatedProperty<vec3_t> particleRotationBySpeed = AnimatedProperty<vec3_t>(vec3_t(0.0));
-	StaticProperty<vec3_t> particleRotationVariance = StaticProperty<vec3_t>(vec3_t(0.0));
-	StaticProperty<vec3_t> particleAngularVelocityVariance = StaticProperty<vec3_t>(vec3_t(0.0));
-	StaticProperty<vec3_t> particlePivot = StaticProperty<vec3_t>(vec3_t(0.0));
+	AnimatedProperty<float3_t> particleInitialRotation = AnimatedProperty<float3_t>(float3_t(0.0));
+	AnimatedProperty<float3_t> particleRotation = AnimatedProperty<float3_t>(float3_t(0.0));
+	AnimatedProperty<float3_t> particleRotationBySpeed = AnimatedProperty<float3_t>(float3_t(0.0));
+	StaticProperty<float3_t> particleRotationVariance = StaticProperty<float3_t>(float3_t(0.0));
+	StaticProperty<float3_t> particleAngularVelocityVariance = StaticProperty<float3_t>(float3_t(0.0));
+	StaticProperty<float3_t> particlePivot = StaticProperty<float3_t>(float3_t(0.0));
 
 	AnimatedProperty<float_t> particlePhysicalSize = AnimatedProperty<float_t>(1.0);
 	AnimatedProperty<float_t> particleWeight = AnimatedProperty<float_t>(1.0);
@@ -162,11 +162,11 @@ private:
 	bool particleVisible = true;
 	uint32_t particleLayer = 0u;
 	AnimatedProperty<float_t> particleInitialSize = AnimatedProperty<float_t>(0.1);
-	AnimatedProperty<vec3_t> particleSize = AnimatedProperty<vec3_t>(vec3_t(1.0));
+	AnimatedProperty<float3_t> particleSize = AnimatedProperty<float3_t>(float3_t(1.0));
 	StaticProperty<float_t> particleSizeVariance = StaticProperty<float_t>(0.0);
-	AnimatedProperty<vec3_t> particleStretch = AnimatedProperty<vec3_t>(vec3_t(0.0));
-	AnimatedProperty<vec4_t> particleColor = AnimatedProperty<vec4_t>(vec4_t(1.0));
-	StaticProperty<vec4_t> particleColorVariance = StaticProperty<vec4_t>(vec4_t(0.0));
+	AnimatedProperty<float3_t> particleStretch = AnimatedProperty<float3_t>(float3_t(0.0));
+	AnimatedProperty<float4_t> particleColor = AnimatedProperty<float4_t>(float4_t(1.0));
+	StaticProperty<float4_t> particleColorVariance = StaticProperty<float4_t>(float4_t(0.0));
 	AnimatedProperty<float_t> particleInitialOpacity = AnimatedProperty<float_t>(1.0);
 	AnimatedProperty<float_t> particleOpacity = AnimatedProperty<float_t>(1.0);
 	StaticProperty<float_t> particleOpacityVariance = StaticProperty<float_t>(0.0);

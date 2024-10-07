@@ -15,7 +15,7 @@ ShaderNode::ShaderNode(const ShaderNodeType& nodeType) :
 ShaderNode::ShaderNode(const std::string& typeId, const std::string& name,
 	const std::vector<Link>& inputs,
 	const std::vector<VariantParameter::Value>& parameters,
-	bool parameterNode, const vec2_t& position) :
+	bool parameterNode, const float2_t& position) :
 	nodeTypeId(typeId), nodeName(name), nodeInputs(inputs), nodeParameters(parameters),
 	nodeIsParameterNode(parameterNode), nodePosition(position) {
 
@@ -53,10 +53,10 @@ bool ShaderNode::parameterNode() const {
 	return nodeIsParameterNode;
 }
 
-void ShaderNode::position(const vec2_t& position) {
+void ShaderNode::position(const float2_t& position) {
 	nodePosition = position;
 }
-const vec2_t& ShaderNode::position() const {
+const float2_t& ShaderNode::position() const {
 	return nodePosition;
 }
 
@@ -90,6 +90,6 @@ void from_json(const nlohmann::ordered_json& j, ShaderNode& node) {
 		j.value("inputs", std::vector<ShaderNode::Link>()),
 		j.value("parameters", std::vector<VariantParameter::Value>()),
 		j.value("parameter_node", false),
-		j.value("position", vec2_t(0.0)));
+		j.value("position", float2_t(0.0)));
 }
 }

@@ -43,9 +43,9 @@ void from_json(const nlohmann::ordered_json& j, RenderSettings& settings) {
 	settings.backgroundEnabled = j.value("background_enabled", false);
 	settings.postProcessingEnabled = j.value("postprocessing_enabled", true);
 	settings.seamlessRenderingEnabled = j.value("seamlessrendering_enabled", false);
-	settings.backgroundColor = j.value("background_color", vec4_t(0.0, 0.0, 0.0, 1.0));
+	settings.backgroundColor = j.value("background_color", float4_t(0.0, 0.0, 0.0, 1.0));
 
-	settings.ambientLighting = j.value("ambient_lighting", vec3_t(0.1));
+	settings.ambientLighting = j.value("ambient_lighting", float3_t(0.1));
 	settings.hdrEnabled = j.value("hdr_enabled", true);
 	settings.hdrBloomIntensity = j.value("hdr_bloom_intensity", 0.1);
 	settings.hdrExposure = j.value("hdr_exposure", 1.0);

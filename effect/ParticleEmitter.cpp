@@ -12,24 +12,24 @@ ParticleEmitter::Shape ParticleEmitter::shape() const {
 	return emitterShape;
 }
 
-Curve<vec3_t>& ParticleEmitter::path() {
+Curve<float3_t>& ParticleEmitter::path() {
 	return emitterPath;
 }
-const Curve<vec3_t>& ParticleEmitter::path() const {
+const Curve<float3_t>& ParticleEmitter::path() const {
 	return emitterPath;
 }
 
-AnimatedProperty<vec3_t>& ParticleEmitter::size() {
+AnimatedProperty<float3_t>& ParticleEmitter::size() {
 	return emitterSize;
 }
-const AnimatedProperty<vec3_t>& ParticleEmitter::size() const {
+const AnimatedProperty<float3_t>& ParticleEmitter::size() const {
 	return emitterSize;
 }
 
-AnimatedProperty<vec3_t>& ParticleEmitter::orientation() {
+AnimatedProperty<float3_t>& ParticleEmitter::orientation() {
 	return emitterOrientation;
 }
-const AnimatedProperty<vec3_t>& ParticleEmitter::orientation() const {
+const AnimatedProperty<float3_t>& ParticleEmitter::orientation() const {
 	return emitterOrientation;
 }
 
@@ -76,10 +76,10 @@ ParticleEmitter::DirectionMode ParticleEmitter::directionMode() const {
 	return emitterDirectionMode;
 }
 
-AnimatedProperty<vec3_t>& ParticleEmitter::direction() {
+AnimatedProperty<float3_t>& ParticleEmitter::direction() {
 	return emitterDirection;
 }
-const AnimatedProperty<vec3_t>& ParticleEmitter::direction() const {
+const AnimatedProperty<float3_t>& ParticleEmitter::direction() const {
 	return emitterDirection;
 }
 
@@ -124,12 +124,12 @@ void from_json(const nlohmann::ordered_json& j, ParticleEmitter& particleEmitter
 	particleEmitter.start(j.value("lifetime_start", 0.0));
 	particleEmitter.duration(j.value("lifetime_duration", 1.0));
 	particleEmitter.repeat(j.value("repeat", true));
-	particleEmitter.position() = j.value("position", AnimatedProperty<vec3_t>(0.0, vec3_t(0.0)));
+	particleEmitter.position() = j.value("position", AnimatedProperty<float3_t>(0.0, float3_t(0.0)));
 
 	particleEmitter.shape(j.value("shape", ParticleEmitter::Shape::point));
-	particleEmitter.path() = j.value("path", Curve<vec3_t>());
-	particleEmitter.size() = j.value("size", AnimatedProperty<vec3_t>(vec3_t(1.0)));
-	particleEmitter.orientation() = j.value("orientation", AnimatedProperty<vec3_t>(vec3_t(0.0)));
+	particleEmitter.path() = j.value("path", Curve<float3_t>());
+	particleEmitter.size() = j.value("size", AnimatedProperty<float3_t>(float3_t(1.0)));
+	particleEmitter.orientation() = j.value("orientation", AnimatedProperty<float3_t>(float3_t(0.0)));
 	particleEmitter.distribution(j.value("distribution", ParticleEmitter::Distribution::uniform));
 	particleEmitter.gridOrder(j.value("grid_order", ParticleEmitter::GridOrder::x_y_z));
 	particleEmitter.gridSize(
@@ -138,7 +138,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleEmitter& particleEmitter
 		j.value("grid_size_z", 5u));
 	particleEmitter.emissionMode(j.value("emission_mode", ParticleEmitter::EmissionMode::continuous));
 	particleEmitter.directionMode(j.value("direction_mode", ParticleEmitter::DirectionMode::fixed));
-	particleEmitter.direction() = j.value("direction", AnimatedProperty<vec3_t>(vec3_t(0.0)));
+	particleEmitter.direction() = j.value("direction", AnimatedProperty<float3_t>(float3_t(0.0)));
 	particleEmitter.spread() = j.value("spread", AnimatedProperty<float_t>(0.0));
 }
 }

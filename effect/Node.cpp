@@ -62,10 +62,10 @@ bool Node::active(float_t time) const {
 		(time <= nodeLifetimeStart + nodeLifetimeDuration || nodeRepeat);
 }
 
-AnimatedProperty<vec3_t>& Node::position() {
+AnimatedProperty<float3_t>& Node::position() {
 	return nodePosition;
 }
-const AnimatedProperty<vec3_t>& Node::position() const {
+const AnimatedProperty<float3_t>& Node::position() const {
 	return nodePosition;
 }
 }

@@ -6,8 +6,6 @@
 #include <vector>
 #include <algorithm>
 
-// TODO
-
 namespace pixelpart {
 enum class CurveInterpolation : uint32_t {
 	none = 0,

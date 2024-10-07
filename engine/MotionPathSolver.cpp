@@ -16,12 +16,12 @@ void MotionPathSolver::solve(const ParticleEmitter& particleEmitter, const Parti
 	}
 
 	for(uint32_t p = 0u; p < particleCount; p++) {
-		vec3_t predictedPosition = particles.position[p] +
+		float3_t predictedPosition = particles.position[p] +
 			particles.velocity[p] * positionLookahead +
 			particles.force[p] * positionLookahead * positionLookahead;
 
-		vec3_t targetPosition = particleType.position().at(particles.life[p] + targetLookahead);
-		vec3_t targetVelocity = targetPosition - predictedPosition;
+		float3_t targetPosition = particleType.position().at(particles.life[p] + targetLookahead);
+		float3_t targetVelocity = targetPosition - predictedPosition;
 		targetVelocity *= particleType.motionPathForce().value();
 
 		particles.force[p] += targetVelocity - particles.velocity[p];
