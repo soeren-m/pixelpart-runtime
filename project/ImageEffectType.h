@@ -1,6 +1,9 @@
 #pragma once
 
 #include "../common/VariantParameter.h"
+#include "../json/json.hpp"
+#include <string>
+#include <vector>
 
 namespace pixelpart {
 struct ImageEffectType {

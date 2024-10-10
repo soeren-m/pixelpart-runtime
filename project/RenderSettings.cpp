@@ -1,5 +1,4 @@
 #include "RenderSettings.h"
-#include "../common/Json.h"
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const RenderSettings& settings) {
@@ -30,25 +29,25 @@ void to_json(nlohmann::ordered_json& j, const RenderSettings& settings) {
 void from_json(const nlohmann::ordered_json& j, RenderSettings& settings) {
 	settings = RenderSettings();
 
-	fromJson(settings.simulationSeed, j, "simulation_seed");
+	settings.simulationSeed = j.value("simulation_seed", 0u);
 
-	fromJson(settings.frameWidth, j, "frame_width");
-	fromJson(settings.frameHeight, j, "frame_height");
+	settings.frameWidth = j.value("frame_width", 1u);
+	settings.frameHeight = j.value("frame_height", 1u);
 
-	fromJson(settings.captureRate, j, "capture_rate");
-	fromJson(settings.duration, j, "duration");
-	fromJson(settings.delay, j, "delay");
-	fromJson(settings.playbackSpeed, j, "playback_speed");
+	settings.captureRate = j.value("capture_rate", 30.0);
+	settings.duration = j.value("duration", 1.0);
+	settings.delay = j.value("delay", 0.0);
+	settings.playbackSpeed = j.value("playback_speed", 1.0);
 
-	fromJson(settings.loop, j, "loop");
-	fromJson(settings.backgroundEnabled, j, "background_enabled");
-	fromJson(settings.postProcessingEnabled, j, "postprocessing_enabled");
-	fromJson(settings.seamlessRenderingEnabled, j, "seamlessrendering_enabled");
-	fromJson(settings.backgroundColor, j, "background_color");
+	settings.loop = j.value("loop", false);
+	settings.backgroundEnabled = j.value("background_enabled", false);
+	settings.postProcessingEnabled = j.value("postprocessing_enabled", true);
+	settings.seamlessRenderingEnabled = j.value("seamlessrendering_enabled", false);
+	settings.backgroundColor = j.value("background_color", float4_t(0.0, 0.0, 0.0, 1.0));
 
-	fromJson(settings.ambientLighting, j, "ambient_lighting");
-	fromJson(settings.hdrEnabled, j, "hdr_enabled");
-	fromJson(settings.hdrBloomIntensity, j, "hdr_bloom_intensity");
-	fromJson(settings.hdrExposure, j, "hdr_exposure");
+	settings.ambientLighting = j.value("ambient_lighting", float3_t(0.1));
+	settings.hdrEnabled = j.value("hdr_enabled", true);
+	settings.hdrBloomIntensity = j.value("hdr_bloom_intensity", 0.1);
+	settings.hdrExposure = j.value("hdr_exposure", 1.0);
 }
 }

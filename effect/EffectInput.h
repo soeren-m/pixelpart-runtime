@@ -1,9 +1,14 @@
 #pragma once
 
 #include "../common/VariantValue.h"
+#include "../json/json.hpp"
+#include <string>
 
 namespace pixelpart {
 struct EffectInput {
+	EffectInput() = default;
+	EffectInput(const std::string& inputName, const VariantValue& inputValue);
+
 	std::string name;
 	VariantValue value;
 };

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Types.h"
+#include "Math.h"
 
 namespace pixelpart {
-vec4_t rgb2hsv(const vec4_t& colorRGB);
-vec4_t hsv2rgb(const vec4_t& colorHSV);
+float4_t rgb2hsv(const float4_t& colorRGB);
+float4_t hsv2rgb(const float4_t& colorHSV);
 }

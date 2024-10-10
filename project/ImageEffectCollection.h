@@ -1,15 +1,19 @@
 #pragma once
 
 #include "ImageEffectType.h"
+#include "../json/json.hpp"
+#include <string>
+#include <vector>
 
 namespace pixelpart {
 class ImageEffectCollection {
 public:
-	ImageEffectCollection();
+	ImageEffectCollection() = default;
 	ImageEffectCollection(const std::vector<ImageEffectType>& effectTypes);
 
-	const ImageEffectType* getEffectType(const std::string& typeName) const;
-	const std::vector<ImageEffectType>& getEffectTypes() const;
+	const ImageEffectType* effectType(const std::string& typeName) const;
+
+	const std::vector<ImageEffectType>& effectTypes() const;
 
 private:
 	std::vector<ImageEffectType> effects;

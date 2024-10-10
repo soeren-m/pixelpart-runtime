@@ -1,26 +1,26 @@
 #pragma once
 
-#ifndef __EMSCRIPTEN__
+#ifdef PIXELPART_MULTITHREADING
 
-#include "Types.h"
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <utility>
 #include <vector>
 #include <queue>
 #include <unordered_set>
-#include <utility>
-#include <memory>
 #include <thread>
+#include <future>
 #include <mutex>
 #include <condition_variable>
-#include <functional>
-#include <future>
 
 namespace pixelpart {
 class ThreadPool {
 public:
 	using Task = std::function<void()>;
 
-	ThreadPool(std::size_t numThreads) {
-		for(std::size_t i = 0u; i < numThreads; i++) {
+	ThreadPool(std::size_t threads) {
+		for(std::size_t i = 0u; i < threads; i++) {
 			workers.emplace_back([this]() {
 				while(true) {
 					uint32_t taskId = 0u;
@@ -98,7 +98,7 @@ public:
 		});
 	}
 
-	std::size_t getNumThreads() const {
+	std::size_t threadCount() const {
 		return workers.size();
 	}
 

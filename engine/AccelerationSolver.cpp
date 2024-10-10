@@ -1,4 +1,5 @@
 #include "AccelerationSolver.h"
+#include "../common/Math.h"
 
 namespace pixelpart {
 AccelerationSolver::AccelerationSolver() {
@@ -6,24 +7,23 @@ AccelerationSolver::AccelerationSolver() {
 }
 
 void AccelerationSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
-	float_t particleEmitterLife = std::fmod(t - particleEmitter.lifetimeStart, particleEmitter.lifetimeDuration) / particleEmitter.lifetimeDuration;
-	vec3_t particleEmitterPosition = particleEmitter.position.get(particleEmitterLife);
+	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
+	float3_t particleEmitterPosition = particleEmitter.position().at(particleEmitter.life(t));
 
-	for(uint32_t p = 0u; p < numParticles; p++) {
-		vec3_t forwardDirection = (particles.velocity[p] != vec3_t(0.0))
+	for(uint32_t p = 0u; p < particleCount; p++) {
+		float3_t forwardDirection = (particles.velocity[p] != float3_t(0.0))
 			? glm::normalize(particles.velocity[p])
-			: vec3_t(0.0);
-		vec3_t radialDirection = (particleEmitterPosition != particles.globalPosition[p])
+			: float3_t(0.0);
+		float3_t radialDirection = (particleEmitterPosition != particles.globalPosition[p])
 			? glm::normalize(particleEmitterPosition - particles.globalPosition[p])
-			: vec3_t(0.0);
+			: float3_t(0.0);
 
-		particles.force[p] = forwardDirection * particleType.acceleration.get(particles.life[p]);
-		particles.force[p] += radialDirection * particleType.radialAcceleration.get(particles.life[p]);
+		particles.force[p] = forwardDirection * particleType.acceleration().at(particles.life[p]);
+		particles.force[p] += radialDirection * particleType.radialAcceleration().at(particles.life[p]);
 	}
 }
 
-void AccelerationSolver::refresh(const Effect& effect) {
+void AccelerationSolver::prepare(const Effect& effect) {
 
 }
 }

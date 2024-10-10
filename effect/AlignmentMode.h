@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../common/Types.h"
+#include "../json/json.hpp"
+#include <cstdint>
 
 namespace pixelpart {
 enum class AlignmentMode : uint32_t {

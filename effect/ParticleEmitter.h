@@ -1,9 +1,16 @@
 #pragma once
 
 #include "Node.h"
+#include "../common/Types.h"
+#include "../common/Math.h"
+#include "../common/Id.h"
+#include "../common/Curve.h"
+#include "AnimatedProperty.h"
+#include "../json/json.hpp"
 
 namespace pixelpart {
-struct ParticleEmitter : public Node {
+class ParticleEmitter : public Node {
+public:
 	enum class Shape : uint32_t {
 		point = 0,
 		line = 1,
@@ -43,18 +50,57 @@ struct ParticleEmitter : public Node {
 		inherit_inverse = 4
 	};
 
-	Shape shape = Shape::point;
-	Curve<vec3_t> path = Curve<vec3_t>();
-	AnimatedProperty<vec3_t> size = AnimatedProperty<vec3_t>(vec3_t(1.0));
-	AnimatedProperty<vec3_t> orientation = AnimatedProperty<vec3_t>(vec3_t(0.0));
+	ParticleEmitter() = default;
+	ParticleEmitter(id_t ownId, id_t parentId = id_t());
 
-	Distribution distribution = Distribution::uniform;
-	GridOrder gridOrder = GridOrder::x_y_z;
-	uint32_t gridSize[3] = { 5u, 5u, 5u };
-	EmissionMode emissionMode = EmissionMode::continuous;
-	DirectionMode directionMode = DirectionMode::fixed;
-	AnimatedProperty<vec3_t> direction = AnimatedProperty<vec3_t>(vec3_t(0.0));
-	AnimatedProperty<float_t> spread = AnimatedProperty<float_t>(0.0);
+	void shape(Shape shape);
+	Shape shape() const;
+
+	Curve<float3_t>& path();
+	const Curve<float3_t>& path() const;
+
+	AnimatedProperty<float3_t>& size();
+	const AnimatedProperty<float3_t>& size() const;
+
+	AnimatedProperty<float3_t>& orientation();
+	const AnimatedProperty<float3_t>& orientation() const;
+
+	void distribution(Distribution distribution);
+	Distribution distribution() const;
+
+	void gridOrder(GridOrder gridOrder);
+	GridOrder gridOrder() const;
+
+	void gridSize(uint32_t x, uint32_t y, uint32_t z);
+	uint32_t gridSizeX() const;
+	uint32_t gridSizeY() const;
+	uint32_t gridSizeZ() const;
+
+	void emissionMode(EmissionMode emissionMode);
+	EmissionMode emissionMode() const;
+
+	void directionMode(DirectionMode directionMode);
+	DirectionMode directionMode() const;
+
+	AnimatedProperty<float3_t>& direction();
+	const AnimatedProperty<float3_t>& direction() const;
+
+	AnimatedProperty<float_t>& spread();
+	const AnimatedProperty<float_t>& spread() const;
+
+private:
+	Shape emitterShape = Shape::point;
+	Curve<float3_t> emitterPath = Curve<float3_t>();
+	AnimatedProperty<float3_t> emitterSize = AnimatedProperty<float3_t>(float3_t(1.0));
+	AnimatedProperty<float3_t> emitterOrientation = AnimatedProperty<float3_t>(float3_t(0.0));
+
+	Distribution emitterDistribution = Distribution::uniform;
+	GridOrder emitterGridOrder = GridOrder::x_y_z;
+	uint32_t emitterGridSize[3] = { 5u, 5u, 5u };
+	EmissionMode emitterEmissionMode = EmissionMode::continuous;
+	DirectionMode emitterDirectionMode = DirectionMode::fixed;
+	AnimatedProperty<float3_t> emitterDirection = AnimatedProperty<float3_t>(float3_t(0.0));
+	AnimatedProperty<float_t> emitterSpread = AnimatedProperty<float_t>(0.0);
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ParticleEmitter::Shape, {

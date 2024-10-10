@@ -1,15 +1,30 @@
 #pragma once
 
+#include "../common/VariantParameter.h"
 #include "ImageEffectType.h"
+#include "../json/json.hpp"
+#include <string>
+#include <vector>
 
 namespace pixelpart {
-struct ImageEffect {
-	std::string type;
-	std::vector<VariantParameter::Value> parameters;
-	bool visible = true;
+class ImageEffect {
+public:
+	ImageEffect() = default;
+	ImageEffect(const ImageEffectType& type);
+	ImageEffect(const std::string& typeId, const std::vector<VariantParameter::Value>& parameters, bool visible = true);
 
-	ImageEffect();
-	ImageEffect(const ImageEffectType& effectType);
+	const std::string& type() const;
+
+	std::vector<VariantParameter::Value>& parameters();
+	const std::vector<VariantParameter::Value>& parameters() const;
+
+	void visible(bool visible);
+	bool visible() const;
+
+private:
+	std::string effectTypeId;
+	std::vector<VariantParameter::Value> effectParameters;
+	bool effectVisible = true;
 };
 
 void to_json(nlohmann::ordered_json& j, const ImageEffect& effect);

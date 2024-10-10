@@ -1,5 +1,4 @@
 #include "ImageEffectSettings.h"
-#include "../common/Json.h"
 
 namespace pixelpart {
 ImageEffectCollection ImageEffectSettings::effectCollection = ImageEffectCollection();
@@ -11,7 +10,6 @@ void to_json(nlohmann::ordered_json& j, const ImageEffectSettings& settings) {
 }
 void from_json(const nlohmann::ordered_json& j, ImageEffectSettings& settings) {
 	settings = ImageEffectSettings();
-
-	fromJson(settings.effects, j, "effects");
+	settings.effects = j.value("effects", std::vector<ImageEffect>());
 }
 }

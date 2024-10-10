@@ -1,20 +1,24 @@
-#include "Types.h"
+#include "Math.h"
 
 namespace pixelpart {
-void to_json(nlohmann::ordered_json& j, const vec2_t& v) {
+const float2_t worldUpVector2 = float2_t(0.0, 1.0);
+const float3_t worldUpVector3 = float3_t(0.0, 1.0, 0.0);
+const float4_t worldUpVector4 = float4_t(0.0, 1.0, 0.0, 0.0);
+
+void to_json(nlohmann::ordered_json& j, const float2_t& v) {
 	j = nlohmann::ordered_json{
 		{ "x", v.x },
 		{ "y", v.y },
 	};
 }
-void to_json(nlohmann::ordered_json& j, const vec3_t& v) {
+void to_json(nlohmann::ordered_json& j, const float3_t& v) {
 	j = nlohmann::ordered_json{
 		{ "x", v.x },
 		{ "y", v.y },
 		{ "z", v.z },
 	};
 }
-void to_json(nlohmann::ordered_json& j, const vec4_t& v) {
+void to_json(nlohmann::ordered_json& j, const float4_t& v) {
 	j = nlohmann::ordered_json{
 		{ "x", v.x },
 		{ "y", v.y },
@@ -22,7 +26,7 @@ void to_json(nlohmann::ordered_json& j, const vec4_t& v) {
 		{ "w", v.w },
 	};
 }
-void from_json(const nlohmann::ordered_json& j, vec2_t& v) {
+void from_json(const nlohmann::ordered_json& j, float2_t& v) {
 	if(j.is_number()) {
 		v.x = j.get<float_t>();
 		v.y = 0.0;
@@ -32,7 +36,7 @@ void from_json(const nlohmann::ordered_json& j, vec2_t& v) {
 		v.y = j.contains("y") ? j.at("y").get<float_t>() : 0.0;
 	}
 }
-void from_json(const nlohmann::ordered_json& j, vec3_t& v) {
+void from_json(const nlohmann::ordered_json& j, float3_t& v) {
 	if(j.is_number()) {
 		v.x = j.get<float_t>();
 		v.y = 0.0;
@@ -44,7 +48,7 @@ void from_json(const nlohmann::ordered_json& j, vec3_t& v) {
 		v.z = j.contains("z") ? j.at("z").get<float_t>() : 0.0;
 	}
 }
-void from_json(const nlohmann::ordered_json& j, vec4_t& v) {
+void from_json(const nlohmann::ordered_json& j, float4_t& v) {
 	if(j.is_number()) {
 		v.x = j.get<float_t>();
 		v.y = 0.0;

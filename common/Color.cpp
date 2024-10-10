@@ -1,8 +1,9 @@
 #include "Color.h"
+#include <cstdint>
 
 namespace pixelpart {
-vec4_t rgb2hsv(const vec4_t& colorRGB) {
-	vec4_t result(0.0, 0.0, 0.0, colorRGB.a);
+float4_t rgb2hsv(const float4_t& colorRGB) {
+	float4_t result(0.0, 0.0, 0.0, colorRGB.a);
 
 	float_t min = colorRGB.r < colorRGB.g ? colorRGB.r : colorRGB.g;
 	min = min < colorRGB.b ? min : colorRGB.b;
@@ -50,9 +51,9 @@ vec4_t rgb2hsv(const vec4_t& colorRGB) {
 	return result;
 }
 
-vec4_t hsv2rgb(const vec4_t& colorHSV) {
+float4_t hsv2rgb(const float4_t& colorHSV) {
 	if(colorHSV.y <= 0.0) {
-		return vec4_t(colorHSV.z, colorHSV.z, colorHSV.z, colorHSV.a);
+		return float4_t(colorHSV.z, colorHSV.z, colorHSV.z, colorHSV.a);
 	}
 
 	float_t hh = colorHSV.x;
@@ -70,19 +71,19 @@ vec4_t hsv2rgb(const vec4_t& colorHSV) {
 
 	switch(i) {
 		case 0:
-			return vec4_t(colorHSV.z, t, p, colorHSV.a);
+			return float4_t(colorHSV.z, t, p, colorHSV.a);
 		case 1:
-			return vec4_t(q, colorHSV.z, p, colorHSV.a);
+			return float4_t(q, colorHSV.z, p, colorHSV.a);
 		case 2:
-			return vec4_t(p, colorHSV.z, t, colorHSV.a);
+			return float4_t(p, colorHSV.z, t, colorHSV.a);
 		case 3:
-			return vec4_t(p, q, colorHSV.z, colorHSV.a);
+			return float4_t(p, q, colorHSV.z, colorHSV.a);
 		case 4:
-			return vec4_t(t, p, colorHSV.z, colorHSV.a);
+			return float4_t(t, p, colorHSV.z, colorHSV.a);
 		default:
-			return vec4_t(colorHSV.z, p, q, colorHSV.a);
+			return float4_t(colorHSV.z, p, q, colorHSV.a);
 	}
 
-	return vec4_t(colorHSV.z, p, q, colorHSV.a);
+	return float4_t(colorHSV.z, p, q, colorHSV.a);
 }
 }

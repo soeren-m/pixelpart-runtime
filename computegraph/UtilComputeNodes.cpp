@@ -15,11 +15,11 @@ CurveComputeNode::CurveComputeNode() : ComputeNodeBase(typeName,
 	{ "compute_slot_result" },
 	{ Signature{ { VariantValue::type_float }, { VariantValue::type_float } } },
 	{ VariantValue::Float(0.0) },
-	{ VariantParameter::createCurveParameter("compute_param_curve", Curve<float_t>(0.5, CurveInterpolation::linear)) }) {
+	{ VariantParameter::CurveParameter("compute_param_curve", Curve<float_t>(0.5, CurveInterpolation::linear)) }) {
 
 }
 std::vector<VariantValue> CurveComputeNode::evaluate(const std::vector<VariantValue>& in) const {
-	return std::vector<VariantValue>{ VariantValue::Float(parameterValues[0].getCurve().get(in[0].toFloat())) };
+	return std::vector<VariantValue>{ VariantValue::Float(parameterValue(0).valueCurve().at(in[0].toFloat())) };
 }
 
 Split2ComputeNode::Split2ComputeNode() : ComputeNodeBase(typeName,
@@ -84,7 +84,7 @@ Merge2ComputeNode::Merge2ComputeNode() : ComputeNodeBase(typeName,
 }
 std::vector<VariantValue> Merge2ComputeNode::evaluate(const std::vector<VariantValue>& in) const {
 	return std::vector<VariantValue>{
-		VariantValue::Float2(vec2_t(in[0].toFloat(), in[1].toFloat()))
+		VariantValue::Float2(float2_t(in[0].toFloat(), in[1].toFloat()))
 	};
 }
 
@@ -99,7 +99,7 @@ Merge3ComputeNode::Merge3ComputeNode() : ComputeNodeBase(typeName,
 }
 std::vector<VariantValue> Merge3ComputeNode::evaluate(const std::vector<VariantValue>& in) const {
 	return std::vector<VariantValue>{
-		VariantValue::Float3(vec3_t(in[0].toFloat(), in[1].toFloat(), in[2].toFloat()))
+		VariantValue::Float3(float3_t(in[0].toFloat(), in[1].toFloat(), in[2].toFloat()))
 	};
 }
 
@@ -114,7 +114,7 @@ Merge4ComputeNode::Merge4ComputeNode() : ComputeNodeBase(typeName,
 }
 std::vector<VariantValue> Merge4ComputeNode::evaluate(const std::vector<VariantValue>& in) const {
 	return std::vector<VariantValue>{
-		VariantValue::Float4(vec4_t(in[0].toFloat(), in[1].toFloat(), in[2].toFloat(), in[3].toFloat()))
+		VariantValue::Float4(float4_t(in[0].toFloat(), in[1].toFloat(), in[2].toFloat(), in[3].toFloat()))
 	};
 }
 }

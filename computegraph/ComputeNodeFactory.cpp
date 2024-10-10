@@ -8,10 +8,6 @@
 #include "UtilComputeNodes.h"
 
 namespace pixelpart {
-ComputeNodeFactory::ComputeNodeFactory() {
-
-}
-
 void ComputeNodeFactory::registerBuiltInNodes() {
 	registerNode<pixelpart::OutputComputeNode>();
 	registerNode<pixelpart::BooleanConstantComputeNode>();
@@ -77,15 +73,15 @@ void ComputeNodeFactory::registerBuiltInNodes() {
 	registerNode<pixelpart::Merge4ComputeNode>();
 }
 
-std::vector<std::string> ComputeNodeFactory::getRegisteredTypes() const {
-	return insertionOrder;
-}
-
 std::unique_ptr<ComputeNode> ComputeNodeFactory::create(const std::string& name) const {
-	if(nodeTypes.count(name) == 0u) {
+	if(nodeTypeFunctions.count(name) == 0u) {
 		return nullptr;
 	}
 
-	return std::unique_ptr<ComputeNode>(nodeTypes.at(name)());
+	return std::unique_ptr<ComputeNode>(nodeTypeFunctions.at(name)());
+}
+
+std::vector<std::string> ComputeNodeFactory::registeredTypes() const {
+	return insertionOrder;
 }
 }

@@ -15,11 +15,11 @@ BooleanConstantComputeNode::BooleanConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_bool } } },
 	{ },
-	{ VariantParameter::createBoolParameter("compute_param_value", false) }) {
+	{ VariantParameter::BoolParameter("compute_param_value", false) }) {
 
 }
 std::vector<VariantValue> BooleanConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
-	return std::vector<VariantValue>{ VariantValue::Bool(parameterValues[0].getBool()) };
+	return std::vector<VariantValue>{ VariantValue::Bool(parameterValue(0).valueBool()) };
 }
 
 IntegerConstantComputeNode::IntegerConstantComputeNode() : ComputeNodeBase(typeName,
@@ -28,11 +28,11 @@ IntegerConstantComputeNode::IntegerConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_int } } },
 	{ },
-	{ VariantParameter::createIntParameter("compute_param_value", 0, INT_MIN, INT_MAX) }) {
+	{ VariantParameter::IntParameter("compute_param_value", 0, INT_MIN, INT_MAX) }) {
 
 }
 std::vector<VariantValue> IntegerConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
-	return std::vector<VariantValue>{ VariantValue::Int(parameterValues[0].getInt()) };
+	return std::vector<VariantValue>{ VariantValue::Int(parameterValue(0).valueInt()) };
 }
 
 NumberConstantComputeNode::NumberConstantComputeNode() : ComputeNodeBase(typeName,
@@ -41,11 +41,11 @@ NumberConstantComputeNode::NumberConstantComputeNode() : ComputeNodeBase(typeNam
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float } } },
 	{ },
-	{ VariantParameter::createFloatParameter("compute_param_value", 0.0, -FLT_MAX, +FLT_MAX) }) {
+	{ VariantParameter::FloatParameter("compute_param_value", 0.0, -FLT_MAX, +FLT_MAX) }) {
 
 }
 std::vector<VariantValue> NumberConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
-	return std::vector<VariantValue>{ VariantValue::Float(parameterValues[0].getFloat()) };
+	return std::vector<VariantValue>{ VariantValue::Float(parameterValue(0).valueFloat()) };
 }
 
 Vector2ConstantComputeNode::Vector2ConstantComputeNode() : ComputeNodeBase(typeName,
@@ -54,11 +54,11 @@ Vector2ConstantComputeNode::Vector2ConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float2 } } },
 	{ },
-	{ VariantParameter::createFloat2Parameter("compute_param_value", vec2_t(0.0), vec2_t(-FLT_MAX), vec2_t(+FLT_MAX)) }) {
+	{ VariantParameter::Float2Parameter("compute_param_value", float2_t(0.0), float2_t(-FLT_MAX), float2_t(+FLT_MAX)) }) {
 
 }
 std::vector<VariantValue> Vector2ConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
-	return std::vector<VariantValue>{ VariantValue::Float2(parameterValues[0].getFloat2()) };
+	return std::vector<VariantValue>{ VariantValue::Float2(parameterValue(0).valueFloat2()) };
 }
 
 Vector3ConstantComputeNode::Vector3ConstantComputeNode() : ComputeNodeBase(typeName,
@@ -67,11 +67,11 @@ Vector3ConstantComputeNode::Vector3ConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float3 } } },
 	{ },
-	{ VariantParameter::createFloat3Parameter("compute_param_value", vec3_t(0.0), vec3_t(-FLT_MAX), vec3_t(+FLT_MAX)) }) {
+	{ VariantParameter::Float3Parameter("compute_param_value", float3_t(0.0), float3_t(-FLT_MAX), float3_t(+FLT_MAX)) }) {
 
 }
 std::vector<VariantValue> Vector3ConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
-	return std::vector<VariantValue>{ VariantValue::Float3(parameterValues[0].getFloat3()) };
+	return std::vector<VariantValue>{ VariantValue::Float3(parameterValue(0).valueFloat3()) };
 }
 
 Vector4ConstantComputeNode::Vector4ConstantComputeNode() : ComputeNodeBase(typeName,
@@ -80,11 +80,11 @@ Vector4ConstantComputeNode::Vector4ConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float4 } } },
 	{ },
-	{ VariantParameter::createFloat4Parameter("compute_param_value", vec4_t(0.0), vec4_t(-FLT_MAX), vec4_t(+FLT_MAX)) }) {
+	{ VariantParameter::Float4Parameter("compute_param_value", float4_t(0.0), float4_t(-FLT_MAX), float4_t(+FLT_MAX)) }) {
 
 }
 std::vector<VariantValue> Vector4ConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
-	return std::vector<VariantValue>{ VariantValue::Float4(parameterValues[0].getFloat4()) };
+	return std::vector<VariantValue>{ VariantValue::Float4(parameterValue(0).valueFloat4()) };
 }
 
 ColorConstantComputeNode::ColorConstantComputeNode() : ComputeNodeBase(typeName,
@@ -93,10 +93,10 @@ ColorConstantComputeNode::ColorConstantComputeNode() : ComputeNodeBase(typeName,
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float4 } } },
 	{ },
-	{ VariantParameter::createColorParameter("compute_param_value", vec4_t(1.0)) }) {
+	{ VariantParameter::ColorParameter("compute_param_value", float4_t(1.0)) }) {
 
 }
 std::vector<VariantValue> ColorConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
-	return std::vector<VariantValue>{ VariantValue::Float4(parameterValues[0].getFloat4()) };
+	return std::vector<VariantValue>{ VariantValue::Float4(parameterValue(0).valueFloat4()) };
 }
 }

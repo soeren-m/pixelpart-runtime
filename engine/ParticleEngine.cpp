@@ -1,11 +1,11 @@
 #include "ParticleEngine.h"
 
 namespace pixelpart {
-ParticleEngine::ParticleEngine(const Effect& fx) : effect(fx) {
+ParticleEngine::ParticleEngine(const Effect& fx) : particleEffect(fx) {
 
 }
 
-const Effect& ParticleEngine::getEffect() const {
-	return effect;
+const Effect& ParticleEngine::effect() const {
+	return particleEffect;
 }
 }

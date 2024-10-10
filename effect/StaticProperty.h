@@ -1,98 +1,99 @@
 #pragma once
 
-#include "ComputeOutputOperation.h"
+#include "../common/Types.h"
+#include "../common/VariantValue.h"
 #include "../computegraph/ComputeGraph.h"
 #include "../computegraph/OutputComputeNode.h"
-#include "../common/Json.h"
+#include "ComputeOutputOperation.h"
+#include "../json/json.hpp"
+#include <unordered_map>
 
 namespace pixelpart {
 template <typename T>
 class StaticProperty {
 public:
 	StaticProperty() {
-		computeGraph.addNode<OutputComputeNode>();
-		refresh();
+		propertyComputeGraph.addNode<OutputComputeNode>();
+		recalculateResult();
 	}
-	StaticProperty(const T& initialValue) : value(initialValue) {
-		computeGraph.addNode<OutputComputeNode>();
-		refresh();
+	StaticProperty(const T& initialValue) : propertyBaseValue(initialValue) {
+		propertyComputeGraph.addNode<OutputComputeNode>();
+		recalculateResult();
 	}
-	StaticProperty(const T& initialValue, const ComputeGraph& graph, ComputeOutputOperation outputOperation) :
-		value(initialValue),
-		computeGraph(graph),
-		computeOutputOperation(outputOperation) {
-		refresh();
+	StaticProperty(const T& initialValue, const ComputeGraph& graph, ComputeOutputOperation outputOp) :
+		propertyBaseValue(initialValue),
+		propertyComputeGraph(graph),
+		outputOperation(outputOp) {
+		recalculateResult();
 	}
 
 	T operator()() const {
 		return computedValue;
 	}
 
-	T get() const {
+	T value() const {
 		return computedValue;
 	}
 
-	void refresh(const std::unordered_map<uint32_t, VariantValue>& inputs) {
-		if(computeGraph.isEmpty()) {
+	void input(const ComputeGraph::InputSet& inputs) {
+		if(propertyComputeGraph.empty()) {
 			useGraphOutput = false;
-			refresh();
+			recalculateResult();
 
 			return;
 		}
 
-		computeGraph.unlinkRemovedInputs(inputs);
+		propertyComputeGraph.unlinkRemovedInputs(inputs);
 
 		try {
-			graphOutputValue = computeGraph.evaluate(inputs).at(0u).template get<T>();
+			graphOutputValue = propertyComputeGraph.evaluate(inputs).at(0u).template value<T>();
 
 			useGraphOutput = true;
-			refresh();
+			recalculateResult();
 		}
 		catch(const ComputeGraph::EvaluationException&) {
 			useGraphOutput = false;
-			refresh();
+			recalculateResult();
 		}
 	}
 
-	void refresh() {
-		if(useGraphOutput) {
-			computedValue = applyComputeOutputOperation(value, graphOutputValue, computeOutputOperation);
-		}
-		else {
-			computedValue = value;
-		}
+	void baseValue(T v) {
+		propertyBaseValue = v;
+		recalculateResult();
+	}
+	T baseValue() const {
+		return propertyBaseValue;
 	}
 
-	void setValue(T v) {
-		value = v;
-		refresh();
+	void computeGraph(const ComputeGraph& graph) {
+		propertyComputeGraph = graph;
 	}
-	T getValue() const {
-		return value;
+	const ComputeGraph& computeGraph() const {
+		return propertyComputeGraph;
 	}
 
-	void setComputeGraph(const ComputeGraph& graph) {
-		computeGraph = graph;
+	void computeOutputOperation(ComputeOutputOperation operation) {
+		outputOperation = operation;
+		recalculateResult();
 	}
-	void setComputeOutputOperation(ComputeOutputOperation operation) {
-		computeOutputOperation = operation;
-		refresh();
-	}
-	ComputeGraph& getComputeGraph() {
-		return computeGraph;
-	}
-	const ComputeGraph& getComputeGraph() const {
-		return computeGraph;
-	}
-	ComputeOutputOperation getComputeOutputOperation() const {
-		return computeOutputOperation;
+	ComputeOutputOperation computeOutputOperation() const {
+		return outputOperation;
 	}
 
 private:
-	T value = T();
+	void recalculateResult() {
+		if(useGraphOutput) {
+			computedValue = applyComputeOutputOperation(propertyBaseValue, graphOutputValue, outputOperation);
+		}
+		else {
+			computedValue = propertyBaseValue;
+		}
+	}
 
-	ComputeGraph computeGraph;
-	ComputeOutputOperation computeOutputOperation = ComputeOutputOperation::set;
+	T propertyBaseValue = T();
+
+	ComputeGraph propertyComputeGraph;
+	ComputeOutputOperation outputOperation = ComputeOutputOperation::set;
 
 	T computedValue = T();
 	T graphOutputValue = T();
@@ -102,23 +103,17 @@ private:
 template <typename T>
 void to_json(nlohmann::ordered_json& j, const StaticProperty<T>& property) {
 	j = nlohmann::ordered_json{
-		{ "value", property.getValue() },
-		{ "compute_graph", property.getComputeGraph() },
-		{ "compute_operation", property.getComputeOutputOperation() },
+		{ "value", property.baseValue() },
+		{ "compute_graph", property.computeGraph() },
+		{ "compute_operation", property.computeOutputOperation() },
 	};
 }
 
 template <typename T>
 void from_json(const nlohmann::ordered_json& j, StaticProperty<T>& property) {
-	T value = T();
-	fromJson(value, j, "value");
-
-	ComputeGraph graph;
-	fromJson(graph, j, "compute_graph");
-
-	ComputeOutputOperation outputOperation = ComputeOutputOperation::set;
-	fromJson(outputOperation, j, "compute_operation");
-
-	property = StaticProperty<T>(value, graph, outputOperation);
+	property = StaticProperty<T>(
+		j.value("value", T()),
+		j.value("compute_graph", ComputeGraph()),
+		j.value("compute_operation", ComputeOutputOperation::set));
 }
 }

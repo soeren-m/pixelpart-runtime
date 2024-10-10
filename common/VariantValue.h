@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Types.h"
+#include "Math.h"
+#include "../json/json.hpp"
 
 namespace pixelpart {
 struct BoolTag { };
@@ -19,13 +21,14 @@ struct VariantTag<int_t> { typedef IntTag Type; };
 template <>
 struct VariantTag<float_t> { typedef FloatTag Type; };
 template <>
-struct VariantTag<vec2_t> { typedef Float2Tag Type; };
+struct VariantTag<float2_t> { typedef Float2Tag Type; };
 template <>
-struct VariantTag<vec3_t> { typedef Float3Tag Type; };
+struct VariantTag<float3_t> { typedef Float3Tag Type; };
 template <>
-struct VariantTag<vec4_t> { typedef Float4Tag Type; };
+struct VariantTag<float4_t> { typedef Float4Tag Type; };
 
-struct VariantValue {
+class VariantValue {
+public:
 	enum Type : int32_t {
 		type_null = -1,
 		type_bool,
@@ -34,53 +37,58 @@ struct VariantValue {
 		type_float2,
 		type_float3,
 		type_float4
-	} type = type_null;
+	};
+
+	static VariantValue Bool(bool v);
+	static VariantValue Int(int_t v);
+	static VariantValue Float(float_t v);
+	static VariantValue Float2(const float2_t& v);
+	static VariantValue Float3(const float3_t& v);
+	static VariantValue Float4(const float4_t& v);
+
+	VariantValue() = default;
+	VariantValue(Type varType);
+
+	Type type() const;
+
+	template <typename T>
+	T value() const {
+		typedef typename VariantTag<T>::Type TagType;
+
+		return value(TagType());
+	}
+
+	bool valueBool() const;
+	int_t valueInt() const;
+	float_t valueFloat() const;
+	float2_t valueFloat2() const;
+	float3_t valueFloat3() const;
+	float4_t valueFloat4() const;
+
+	bool toBool() const;
+	int_t toInt() const;
+	float_t toFloat() const;
+	float2_t toFloat2() const;
+	float3_t toFloat3() const;
+	float4_t toFloat4() const;
+
+	VariantValue cast(Type targetType) const;
+
+private:
+	bool value(BoolTag t) const;
+	int_t value(IntTag t) const;
+	float_t value(FloatTag t) const;
+	float2_t value(Float2Tag t) const;
+	float3_t value(Float3Tag t) const;
+	float4_t value(Float4Tag t) const;
+
+	Type dataType = type_null;
 
 	union {
 		bool boolean;
 		int_t integer;
 		float_t number[4];
 	} data;
-
-	static VariantValue Bool(bool v);
-	static VariantValue Int(int_t v);
-	static VariantValue Float(float_t v);
-	static VariantValue Float2(const vec2_t& v);
-	static VariantValue Float3(const vec3_t& v);
-	static VariantValue Float4(const vec4_t& v);
-
-	VariantValue();
-	VariantValue(Type t);
-
-	template <typename T>
-	T get() const {
-		typedef typename VariantTag<T>::Type TagType;
-
-		return get(TagType());
-	}
-
-	bool get(BoolTag t) const;
-	int_t get(IntTag t) const;
-	float_t get(FloatTag t) const;
-	vec2_t get(Float2Tag t) const;
-	vec3_t get(Float3Tag t) const;
-	vec4_t get(Float4Tag t) const;
-
-	bool getBool() const;
-	int_t getInt() const;
-	float_t getFloat() const;
-	vec2_t getFloat2() const;
-	vec3_t getFloat3() const;
-	vec4_t getFloat4() const;
-
-	bool toBool() const;
-	int_t toInt() const;
-	float_t toFloat() const;
-	vec2_t toFloat2() const;
-	vec3_t toFloat3() const;
-	vec4_t toFloat4() const;
-
-	VariantValue cast(Type targetType) const;
 };
 
 VariantValue operator+(const VariantValue& v1, const VariantValue& v2);

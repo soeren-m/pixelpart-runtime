@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../common/Types.h"
-#include <type_traits>
+#include "../json/json.hpp"
+#include <cstdint>
 
 namespace pixelpart {
 enum class ComputeOutputOperation : uint32_t {

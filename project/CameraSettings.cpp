@@ -1,5 +1,4 @@
 #include "CameraSettings.h"
-#include "../common/Json.h"
 
 namespace pixelpart {
 void to_json(nlohmann::ordered_json& j, const CameraSettings& settings) {
@@ -14,12 +13,11 @@ void to_json(nlohmann::ordered_json& j, const CameraSettings& settings) {
 }
 void from_json(const nlohmann::ordered_json& j, CameraSettings& settings) {
 	settings = CameraSettings();
-
-	fromJson(settings.position, j, "position");
-	fromJson(settings.zoom, j, "zoom");
-	fromJson(settings.fieldOfView, j, "fov");
-	fromJson(settings.pitch, j, "pitch");
-	fromJson(settings.yaw, j, "yaw");
-	fromJson(settings.roll, j, "roll");
+	settings.position = j.value("position", float3_t(0.0, 0.0, 1.0));
+	settings.zoom = j.value("zoom", 1.0);
+	settings.fieldOfView = j.value("fov", 60.0);
+	settings.pitch = j.value("pitch", 0.0);
+	settings.yaw = j.value("yaw", 0.0);
+	settings.roll = j.value("roll", 0.0);
 }
 }

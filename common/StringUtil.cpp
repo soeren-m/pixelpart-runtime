@@ -1,4 +1,5 @@
 #include "StringUtil.h"
+#include <cstddef>
 
 namespace pixelpart {
 std::string replaceString(std::string str, const std::string& to, const std::string& from) {

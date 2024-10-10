@@ -1,10 +1,12 @@
 #include "CPUParticleEngine.h"
+#include <cmath>
+#include <algorithm>
 
 namespace pixelpart {
-CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity) : ParticleEngine(fx), particleCapacity(capacity), particleGenerator(fx, particleContainers) {
+CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity) : ParticleEngine(fx), particleCap(capacity), particleGenerator(fx, particleCollections) {
 
 }
-#ifndef __EMSCRIPTEN__
+#ifdef PIXELPART_MULTITHREADING
 CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity, std::shared_ptr<ThreadPool> thPool) : CPUParticleEngine(fx, capacity) {
 	threadPool = thPool;
 }
@@ -13,66 +15,66 @@ CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity, std::s
 void CPUParticleEngine::step(float_t dt) {
 	time += dt;
 
-	if(effect.particleTypes.getCount() != particleContainers.size()) {
-		particleContainers.assign(effect.particleTypes.getCount(), ParticleContainer(particleCapacity));
-		emissionCount.assign(effect.particleTypes.getCount(), 0.0);
+	if(particleEffect.particleTypes().count() != particleCollections.size()) {
+		particleCollections.assign(particleEffect.particleTypes().count(), ParticleCollection(particleCap));
+		emissionCount.assign(particleEffect.particleTypes().count(), 0.0);
 	}
 
 	particleGenerator.prepare();
 
-	std::vector<std::vector<uint32_t>> particleSubTypes(effect.particleTypes.getCount(), std::vector<uint32_t>());
-	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
-		id_t parentParticleEmitterId = effect.particleTypes.getByIndex(particleTypeIndex).parentId;
+	std::vector<std::vector<uint32_t>> particleSubTypes(particleEffect.particleTypes().count(), std::vector<uint32_t>());
+	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < particleEffect.particleTypes().count(); particleTypeIndex++) {
+		id_t parentParticleEmitterId = particleEffect.particleTypes().atIndex(particleTypeIndex).parentId();
 
-		if(effect.particleEmitters.contains(parentParticleEmitterId)) {
-			const ParticleEmitter& parentParticleEmitter = effect.particleEmitters.get(parentParticleEmitterId);
+		if(particleEffect.particleEmitters().contains(parentParticleEmitterId)) {
+			const ParticleEmitter& parentParticleEmitter = particleEffect.particleEmitters().at(parentParticleEmitterId);
 
-			uint32_t parentParticleTypeIndex = effect.particleTypes.findById(parentParticleEmitter.parentId);
-			if(parentParticleTypeIndex != nullId) {
+			uint32_t parentParticleTypeIndex = particleEffect.particleTypes().indexOf(parentParticleEmitter.parentId());
+			if(parentParticleTypeIndex != id_t::nullValue) {
 				particleSubTypes[parentParticleTypeIndex].push_back(particleTypeIndex);
 			}
 		}
 	}
 
-	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
-		const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
+	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < particleEffect.particleTypes().count(); particleTypeIndex++) {
+		const ParticleType& particleType = particleEffect.particleTypes().atIndex(particleTypeIndex);
 
-		uint32_t particleEmitterIndex = effect.particleEmitters.findById(particleType.parentId);
-		if(particleEmitterIndex == nullId) {
+		uint32_t particleEmitterIndex = particleEffect.particleEmitters().indexOf(particleType.parentId());
+		if(particleEmitterIndex == id_t::nullValue) {
 			continue;
 		}
 
-		const ParticleEmitter& particleEmitter = effect.particleEmitters.getByIndex(particleEmitterIndex);
-		if(particleEmitter.parentId != nullId) {
+		const ParticleEmitter& particleEmitter = particleEffect.particleEmitters().atIndex(particleEmitterIndex);
+		if(particleEmitter.parentId()) {
 			continue;
 		}
 
-		float_t timeSinceStart = time - particleEmitter.lifetimeStart;
+		float_t timeSinceStart = time - particleEmitter.start();
 		if(timeSinceStart <= 0.0) {
 			continue;
 		}
 
-		float_t repeatedTime = std::fmod(timeSinceStart, particleEmitter.lifetimeDuration);
-		float_t emissionTime = particleEmitter.repeat ? repeatedTime : timeSinceStart;
+		float_t repeatedTime = std::fmod(timeSinceStart, particleEmitter.duration());
+		float_t emissionTime = particleEmitter.repeat() ? repeatedTime : timeSinceStart;
 
-		switch(particleEmitter.emissionMode) {
+		switch(particleEmitter.emissionMode()) {
 			case ParticleEmitter::EmissionMode::continuous: {
-				if(emissionTime <= particleEmitter.lifetimeDuration) {
-					emissionCount[particleTypeIndex] += particleType.numParticles.get(repeatedTime / particleEmitter.lifetimeDuration) * dt;
+				if(emissionTime <= particleEmitter.duration()) {
+					emissionCount[particleTypeIndex] += particleType.count().at(repeatedTime / particleEmitter.duration()) * dt;
 				}
 
 				break;
 			}
 			case ParticleEmitter::EmissionMode::burst_start: {
 				if(emissionTime <= dt) {
-					emissionCount[particleTypeIndex] += particleType.numParticles.get();
+					emissionCount[particleTypeIndex] += particleType.count().at();
 				}
 
 				break;
 			}
 			case ParticleEmitter::EmissionMode::burst_end: {
-				if(emissionTime >= particleEmitter.lifetimeDuration - dt && emissionTime < particleEmitter.lifetimeDuration) {
-					emissionCount[particleTypeIndex] += particleType.numParticles.get();
+				if(emissionTime >= particleEmitter.duration() - dt && emissionTime < particleEmitter.duration()) {
+					emissionCount[particleTypeIndex] += particleType.count().at();
 				}
 
 				break;
@@ -85,56 +87,56 @@ void CPUParticleEngine::step(float_t dt) {
 		int32_t particlesEmitted = static_cast<int32_t>(emissionCount[particleTypeIndex]);
 		if(particlesEmitted > 0) {
 			particlesEmitted = particleGenerator.generate(particlesEmitted,
-				nullId, particleTypeIndex, nullId, particleEmitterIndex, dt, repeatedTime);
+				id_t::nullValue, particleTypeIndex, id_t::nullValue, particleEmitterIndex, dt, repeatedTime);
 
 			emissionCount[particleTypeIndex] -= static_cast<float_t>(particlesEmitted);
 		}
 	}
 
-	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
-		const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
-		const ParticleEmitter& particleEmitter = effect.particleEmitters.get(particleType.parentId);
-		ParticleContainer& particleContainer = particleContainers[particleTypeIndex];
-		ParticleWritePtr particles = particleContainer.getParticleWritePtr();
+	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < particleEffect.particleTypes().count(); particleTypeIndex++) {
+		const ParticleType& particleType = particleEffect.particleTypes().atIndex(particleTypeIndex);
+		const ParticleEmitter& particleEmitter = particleEffect.particleEmitters().at(particleType.parentId());
+		ParticleCollection& particleCollection = particleCollections[particleTypeIndex];
+		ParticleCollection::WritePtr particles = particleCollection.writePtr();
 
 		const std::vector<uint32_t>& subTypes = particleSubTypes[particleTypeIndex];
 		if(subTypes.empty()) {
 			continue;
 		}
 
-		for(uint32_t p = 0u; p < particleContainer.getNumParticles(); p++) {
+		for(uint32_t p = 0u; p < particleCollection.count(); p++) {
 			for(uint32_t subParticleTypeIndex : subTypes) {
-				const ParticleType& subParticleType = effect.particleTypes.getByIndex(subParticleTypeIndex);
+				const ParticleType& subParticleType = particleEffect.particleTypes().atIndex(subParticleTypeIndex);
 
-				uint32_t subParticleEmitterIndex = effect.particleEmitters.findById(subParticleType.parentId);
-				const ParticleEmitter& subParticleEmitter = effect.particleEmitters.getByIndex(subParticleEmitterIndex);
+				uint32_t subParticleEmitterIndex = particleEffect.particleEmitters().indexOf(subParticleType.parentId());
+				const ParticleEmitter& subParticleEmitter = particleEffect.particleEmitters().atIndex(subParticleEmitterIndex);
 
-				float_t subTimeSinceStart = particles.life[p] * particles.lifespan[p] - subParticleEmitter.lifetimeStart;
+				float_t subTimeSinceStart = particles.life[p] * particles.lifespan[p] - subParticleEmitter.start();
 				if(subTimeSinceStart <= 0.0) {
 					continue;
 				}
 
-				float_t subRepeatedTime = std::fmod(subTimeSinceStart, subParticleEmitter.lifetimeDuration);
-				float_t subEmissionTime = subParticleEmitter.repeat ? subRepeatedTime : subTimeSinceStart;
+				float_t subRepeatedTime = std::fmod(subTimeSinceStart, subParticleEmitter.duration());
+				float_t subEmissionTime = subParticleEmitter.repeat() ? subRepeatedTime : subTimeSinceStart;
 
-				switch(subParticleEmitter.emissionMode) {
+				switch(subParticleEmitter.emissionMode()) {
 					case ParticleEmitter::EmissionMode::continuous: {
-						if(subEmissionTime <= subParticleEmitter.lifetimeDuration) {
-							emissionCount[subParticleTypeIndex] += subParticleType.numParticles.get(subRepeatedTime / particleEmitter.lifetimeDuration) * dt;
+						if(subEmissionTime <= subParticleEmitter.duration()) {
+							emissionCount[subParticleTypeIndex] += subParticleType.count().at(subRepeatedTime / particleEmitter.duration()) * dt;
 						}
 
 						break;
 					}
 					case ParticleEmitter::EmissionMode::burst_start: {
 						if(subEmissionTime <= dt) {
-							emissionCount[subParticleTypeIndex] += subParticleType.numParticles.get();
+							emissionCount[subParticleTypeIndex] += subParticleType.count().at();
 						}
 
 						break;
 					}
 					case ParticleEmitter::EmissionMode::burst_end: {
 						if(particles.life[p] > 1.0) {
-							emissionCount[subParticleTypeIndex] += subParticleType.numParticles.get();
+							emissionCount[subParticleTypeIndex] += subParticleType.count().at();
 						}
 
 						break;
@@ -155,12 +157,12 @@ void CPUParticleEngine::step(float_t dt) {
 		}
 	}
 
-	for(ParticleContainer& particleContainer : particleContainers) {
-		ParticleReadPtr particles = particleContainer.getParticleReadPtr();
+	for(ParticleCollection& particleCollection : particleCollections) {
+		ParticleCollection::ReadPtr particles = particleCollection.readPtr();
 
-		for(uint32_t p = 0u; p < particleContainer.getNumParticles(); ) {
+		for(uint32_t p = 0u; p < particleCollection.count(); ) {
 			if(particles.life[p] > 1.0) {
-				particleContainer.kill(p);
+				particleCollection.remove(p);
 			}
 			else {
 				p++;
@@ -168,63 +170,63 @@ void CPUParticleEngine::step(float_t dt) {
 		}
 	}
 
-	numTotalActiveThreads = 1u;
+	totalActiveThreadCount = 1u;
 
-	sizeSolver.refresh(effect);
-	colorSolver.refresh(effect);
-	accelerationSolver.refresh(effect);
-	forceSolver.refresh(effect);
-	collisionSolver.refresh(effect);
-	motionPathSolver.refresh(effect);
-	rotationSolver.refresh(effect);
-	integrationSolver.refresh(effect);
-	lifeSolver.refresh(effect);
+	sizeSolver.prepare(particleEffect);
+	colorSolver.prepare(particleEffect);
+	accelerationSolver.prepare(particleEffect);
+	forceSolver.prepare(particleEffect);
+	collisionSolver.prepare(particleEffect);
+	motionPathSolver.prepare(particleEffect);
+	rotationSolver.prepare(particleEffect);
+	integrationSolver.prepare(particleEffect);
+	lifeSolver.prepare(particleEffect);
 
-	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes.getCount(); particleTypeIndex++) {
-		const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
-		const ParticleEmitter& particleEmitter = effect.particleEmitters.get(particleType.parentId);
-		ParticleContainer& particleContainer = particleContainers[particleTypeIndex];
+	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < particleEffect.particleTypes().count(); particleTypeIndex++) {
+		const ParticleType& particleType = particleEffect.particleTypes().atIndex(particleTypeIndex);
+		const ParticleEmitter& particleEmitter = particleEffect.particleEmitters().at(particleType.parentId());
+		ParticleCollection& particleCollection = particleCollections[particleTypeIndex];
 
-		uint32_t numParticles = particleContainer.getNumParticles();
-		uint32_t numActiveThreads = 1u;
+		uint32_t particleCount = particleCollection.count();
+		uint32_t activeThreadCount = 1u;
 
-#ifndef __EMSCRIPTEN__
-		uint32_t numAvailableThreads = threadPool != nullptr ? static_cast<uint32_t>(threadPool->getNumThreads()) : 1u;
-		numActiveThreads = std::min(std::max(numParticles / numParticlesPerThread, 1u), numAvailableThreads);
+#ifdef PIXELPART_MULTITHREADING
+		uint32_t availableThreadCount = threadPool != nullptr ? static_cast<uint32_t>(threadPool->threadCount()) : 1u;
+		activeThreadCount = std::min(std::max(particleCount / particleCountPerThread, 1u), availableThreadCount);
 
-		if(numActiveThreads > 1u) {
-			uint32_t numParticlesInThisThread = numParticles / numActiveThreads;
-			uint32_t numThreadsWithLargerLoad = numParticles % numActiveThreads;
+		if(activeThreadCount > 1u) {
+			uint32_t particleCountInThisThread = particleCount / activeThreadCount;
+			uint32_t threadsWithLargerLoadCount = particleCount % activeThreadCount;
 			uint32_t workgroupIndex = 0u;
 
-			for(uint32_t threadIndex = 0u; threadIndex < numActiveThreads; threadIndex++) {
-				uint32_t workgroupSize = (threadIndex < numActiveThreads - numThreadsWithLargerLoad)
-					? numParticlesInThisThread
-					: numParticlesInThisThread + 1u;
+			for(uint32_t threadIndex = 0u; threadIndex < activeThreadCount; threadIndex++) {
+				uint32_t workgroupSize = (threadIndex < activeThreadCount - threadsWithLargerLoadCount)
+					? particleCountInThisThread
+					: particleCountInThisThread + 1u;
 
 				threadPool->enqueue(threadIndex, &CPUParticleEngine::stepParticles, this,
 					particleEmitter, particleType,
-					particleContainer.getParticleWritePtr(workgroupIndex), workgroupSize,
+					particleCollection.writePtr(workgroupIndex), workgroupSize,
 					time, dt);
 
 				workgroupIndex += workgroupSize;
 			}
 
-			for(uint32_t threadIndex = 0u; threadIndex < numActiveThreads; threadIndex++) {
+			for(uint32_t threadIndex = 0u; threadIndex < activeThreadCount; threadIndex++) {
 				threadPool->wait(threadIndex);
 			}
 		}
 #endif
 
-		if(numActiveThreads <= 1u) {
+		if(activeThreadCount <= 1u) {
 			stepParticles(particleEmitter, particleType,
-				particleContainer.getParticleWritePtr(), numParticles,
+				particleCollection.writePtr(), particleCount,
 				time, dt);
 		}
 
-		if(!effect.is3d) {
-			ParticleWritePtr particles = particleContainer.getParticleWritePtr();
-			for(uint32_t p = 0u; p < particleContainer.getNumParticles(); p++) {
+		if(!particleEffect.is3d()) {
+			ParticleCollection::WritePtr particles = particleCollection.writePtr();
+			for(uint32_t p = 0u; p < particleCollection.count(); p++) {
 				particles.rotation[p].y = 0.0;
 				particles.rotation[p].z = 0.0;
 				particles.force[p].z = 0.0;
@@ -234,15 +236,15 @@ void CPUParticleEngine::step(float_t dt) {
 			}
 		}
 
-		numTotalActiveThreads = std::max(numTotalActiveThreads, numActiveThreads);
+		totalActiveThreadCount = std::max(totalActiveThreadCount, activeThreadCount);
 	}
 }
 void CPUParticleEngine::restart(bool reset) {
 	time = 0.0;
 
 	if(reset) {
-		for(ParticleContainer& particleContainer : particleContainers) {
-			particleContainer.killAll();
+		for(ParticleCollection& particleCollection : particleCollections) {
+			particleCollection.removeAll();
 		}
 		for(float_t& count : emissionCount) {
 			count = 0.0;
@@ -252,7 +254,7 @@ void CPUParticleEngine::restart(bool reset) {
 	}
 }
 
-float_t CPUParticleEngine::getTime() const {
+float_t CPUParticleEngine::currentTime() const {
 	return time;
 }
 
@@ -265,70 +267,70 @@ void CPUParticleEngine::resetSeed() {
 }
 
 void CPUParticleEngine::spawnParticles(id_t particleTypeId, uint32_t count) {
-	uint32_t particleTypeIndex = effect.particleTypes.findById(particleTypeId);
-	if(particleTypeIndex == nullId) {
+	uint32_t particleTypeIndex = particleEffect.particleTypes().indexOf(particleTypeId);
+	if(particleTypeIndex == id_t::nullValue) {
 		return;
 	}
 
-	const ParticleType& particleType = effect.particleTypes.getByIndex(particleTypeIndex);
-	uint32_t particleEmitterIndex = effect.particleEmitters.findById(particleType.parentId);
-	if(particleEmitterIndex == nullId) {
+	const ParticleType& particleType = particleEffect.particleTypes().atIndex(particleTypeIndex);
+	uint32_t particleEmitterIndex = particleEffect.particleEmitters().indexOf(particleType.parentId());
+	if(particleEmitterIndex == id_t::nullValue) {
 		return;
 	}
 
-	const ParticleEmitter& particleEmitter = effect.particleEmitters.getByIndex(particleEmitterIndex);
-	float_t objectTime = std::fmod(time - particleEmitter.lifetimeStart, particleEmitter.lifetimeDuration);
+	const ParticleEmitter& particleEmitter = particleEffect.particleEmitters().atIndex(particleEmitterIndex);
+	float_t objectTime = std::fmod(time - particleEmitter.start(), particleEmitter.duration());
 
 	particleGenerator.generate(count,
-		nullId,
-		particleTypeIndex, nullId,
+		id_t::nullValue,
+		particleTypeIndex, id_t::nullValue,
 		particleEmitterIndex,
 		0.0, objectTime);
 }
 
-
-uint32_t CPUParticleEngine::getNumParticles() const {
+uint32_t CPUParticleEngine::particleCount() const {
 	uint32_t count = 0u;
-	for(const ParticleContainer& particleContainer : particleContainers) {
-		count += particleContainer.getNumParticles();
+	for(const ParticleCollection& particleCollection : particleCollections) {
+		count += particleCollection.count();
 	}
 
 	return count;
 }
-uint32_t CPUParticleEngine::getNumParticles(uint32_t particleTypeIndex) const {
-	if(particleTypeIndex >= particleContainers.size()) {
+uint32_t CPUParticleEngine::particleCount(uint32_t particleTypeIndex) const {
+	if(particleTypeIndex >= particleCollections.size()) {
 		return 0u;
 	}
 
-	return particleContainers[particleTypeIndex].getNumParticles();
+	return particleCollections[particleTypeIndex].count();
 }
-ParticleReadPtr CPUParticleEngine::getParticles(uint32_t particleTypeIndex) const {
-	if(particleTypeIndex >= particleContainers.size()) {
-		return ParticleReadPtr();
+
+ParticleCollection::ReadPtr CPUParticleEngine::particles(uint32_t particleTypeIndex) const {
+	if(particleTypeIndex >= particleCollections.size()) {
+		return ParticleCollection::ReadPtr();
 	}
 
-	return particleContainers[particleTypeIndex].getParticleReadPtr();
+	return particleCollections[particleTypeIndex].readPtr();
 }
 
-uint32_t CPUParticleEngine::getParticleCapacity() const {
-	return particleCapacity;
+uint32_t CPUParticleEngine::particleCapacity() const {
+	return particleCap;
 }
 
-uint32_t CPUParticleEngine::getNumActiveThreads() const {
-	return numTotalActiveThreads;
+uint32_t CPUParticleEngine::activeThreadCount() const {
+	return totalActiveThreadCount;
 }
 
 void CPUParticleEngine::stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleWritePtr particles, uint32_t numParticles,
+	ParticleCollection::WritePtr particles, uint32_t particleCount,
 	float_t t, float_t dt) const {
-	sizeSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
-	colorSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
-	accelerationSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
-	forceSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
-	collisionSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
-	motionPathSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
-	rotationSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
-	integrationSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
-	lifeSolver.solve(particleEmitter, particleType, particles, numParticles, t, dt);
+	sizeSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
+	colorSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
+	accelerationSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
+	forceSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
+	collisionSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
+	motionPathSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
+	rotationSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
+	integrationSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
+	lifeSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
 }
 }

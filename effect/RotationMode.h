@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../common/Types.h"
+#include <cstdint>
+#include "../json/json.hpp"
 
 namespace pixelpart {
 enum class RotationMode : uint32_t {

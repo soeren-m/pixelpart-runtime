@@ -1,4 +1,5 @@
 #include "RotationSolver.h"
+#include "../common/Math.h"
 
 namespace pixelpart {
 RotationSolver::RotationSolver() {
@@ -6,21 +7,21 @@ RotationSolver::RotationSolver() {
 }
 
 void RotationSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
-	switch(particleType.rotationMode) {
+	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
+	switch(particleType.rotationMode()) {
 		case RotationMode::angle: {
-			for(uint32_t p = 0u; p < numParticles; p++) {
-				particles.rotation[p] = particles.initialRotation[p] + particleType.rotation.get(particles.life[p]);
-				particles.rotation[p] += particleType.rotationBySpeed.get(particles.life[p]) * glm::length(particles.velocity[p]);
+			for(uint32_t p = 0u; p < particleCount; p++) {
+				particles.rotation[p] = particles.initialRotation[p] + particleType.rotation().at(particles.life[p]);
+				particles.rotation[p] += particleType.rotationBySpeed().at(particles.life[p]) * glm::length(particles.velocity[p]);
 			}
 
 			break;
 		}
 
 		case RotationMode::velocity: {
-			for(uint32_t p = 0u; p < numParticles; p++) {
-				particles.rotation[p] += (particles.initialAngularVelocity[p] + particleType.rotation.get(particles.life[p])) * dt;
-				particles.rotation[p] += particleType.rotationBySpeed.get(particles.life[p]) * glm::length(particles.velocity[p]) * dt;
+			for(uint32_t p = 0u; p < particleCount; p++) {
+				particles.rotation[p] += (particles.initialAngularVelocity[p] + particleType.rotation().at(particles.life[p])) * dt;
+				particles.rotation[p] += particleType.rotationBySpeed().at(particles.life[p]) * glm::length(particles.velocity[p]) * dt;
 			}
 
 			break;
@@ -32,7 +33,7 @@ void RotationSolver::solve(const ParticleEmitter& particleEmitter, const Particl
 	}
 }
 
-void RotationSolver::refresh(const Effect& effect) {
+void RotationSolver::prepare(const Effect& effect) {
 
 }
 }

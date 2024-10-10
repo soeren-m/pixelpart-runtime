@@ -1,6 +1,9 @@
 #pragma once
 
+#include "../common/Types.h"
 #include "ParticleSortCriterion.h"
+#include "../json/json.hpp"
+#include <string>
 
 namespace pixelpart {
 struct ParticleSpriteRendererSettings {
@@ -20,15 +23,13 @@ struct ParticleTrailRendererSettings {
 	};
 
 	SmoothingMethod smoothingMethod = SmoothingMethod::none;
-	uint32_t numSmoothingSegments = 100u;
-
+	uint32_t smoothingSegmentCount = 100u;
 	TextureRotation textureRotation = TextureRotation::up;
 	float_t textureUVFactor = 1.0;
 };
 
 struct ParticleMeshRendererSettings {
 	std::string meshResourceId;
-
 	ParticleSortCriterion sortCriterion = ParticleSortCriterion::none;
 };
 

@@ -1,4 +1,5 @@
 #include "MotionPathSolver.h"
+#include "../common/Math.h"
 
 namespace pixelpart {
 MotionPathSolver::MotionPathSolver() {
@@ -6,28 +7,28 @@ MotionPathSolver::MotionPathSolver() {
 }
 
 void MotionPathSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleWritePtr particles, uint32_t numParticles, float_t t, float_t dt) const {
+	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
 	const float_t positionLookahead = 0.1;
 	const float_t targetLookahead = 0.01;
 
-	if(particleType.motionPathForce.get() < 0.1) {
+	if(particleType.motionPathForce().value() < 0.1) {
 		return;
 	}
 
-	for(uint32_t p = 0u; p < numParticles; p++) {
-		vec3_t predictedPosition = particles.position[p] +
+	for(uint32_t p = 0u; p < particleCount; p++) {
+		float3_t predictedPosition = particles.position[p] +
 			particles.velocity[p] * positionLookahead +
 			particles.force[p] * positionLookahead * positionLookahead;
 
-		vec3_t targetPosition = particleType.position.get(particles.life[p] + targetLookahead);
-		vec3_t targetVelocity = targetPosition - predictedPosition;
-		targetVelocity *= particleType.motionPathForce.get();
+		float3_t targetPosition = particleType.position().at(particles.life[p] + targetLookahead);
+		float3_t targetVelocity = targetPosition - predictedPosition;
+		targetVelocity *= particleType.motionPathForce().value();
 
 		particles.force[p] += targetVelocity - particles.velocity[p];
 	}
 }
 
-void MotionPathSolver::refresh(const Effect& effect) {
+void MotionPathSolver::prepare(const Effect& effect) {
 
 }
 }

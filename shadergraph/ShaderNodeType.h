@@ -2,6 +2,9 @@
 
 #include "../common/VariantValue.h"
 #include "../common/VariantParameter.h"
+#include "../json/json.hpp"
+#include <string>
+#include <vector>
 
 namespace pixelpart {
 struct ShaderNodeType {

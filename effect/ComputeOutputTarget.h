@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../common/Types.h"
+#include "../json/json.hpp"
+#include <cstdint>
 
 namespace pixelpart {
 struct ComputeOutputTarget {
@@ -8,6 +9,9 @@ struct ComputeOutputTarget {
 		result = 0,
 		keyframe = 1
 	};
+
+	ComputeOutputTarget() = default;
+	ComputeOutputTarget(Type targetType, uint32_t targetIndex = 0u);
 
 	Type type = result;
 	uint32_t index = 0u;

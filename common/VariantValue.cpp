@@ -3,45 +3,45 @@
 namespace pixelpart {
 VariantValue VariantValue::Bool(bool v) {
 	VariantValue value;
-	value.type = type_bool;
+	value.dataType = type_bool;
 	value.data.boolean = v;
 
 	return value;
 }
 VariantValue VariantValue::Int(int_t v) {
 	VariantValue value;
-	value.type = type_int;
+	value.dataType = type_int;
 	value.data.integer = v;
 
 	return value;
 }
 VariantValue VariantValue::Float(float_t v) {
 	VariantValue value;
-	value.type = type_float;
+	value.dataType = type_float;
 	value.data.number[0] = v;
 
 	return value;
 }
-VariantValue VariantValue::Float2(const vec2_t& v) {
+VariantValue VariantValue::Float2(const float2_t& v) {
 	VariantValue value;
-	value.type = type_float2;
+	value.dataType = type_float2;
 	value.data.number[0] = v.x;
 	value.data.number[1] = v.y;
 
 	return value;
 }
-VariantValue VariantValue::Float3(const vec3_t& v) {
+VariantValue VariantValue::Float3(const float3_t& v) {
 	VariantValue value;
-	value.type = type_float3;
+	value.dataType = type_float3;
 	value.data.number[0] = v.x;
 	value.data.number[1] = v.y;
 	value.data.number[2] = v.z;
 
 	return value;
 }
-VariantValue VariantValue::Float4(const vec4_t& v) {
+VariantValue VariantValue::Float4(const float4_t& v) {
 	VariantValue value;
-	value.type = type_float4;
+	value.dataType = type_float4;
 	value.data.number[0] = v.x;
 	value.data.number[1] = v.y;
 	value.data.number[2] = v.z;
@@ -50,11 +50,8 @@ VariantValue VariantValue::Float4(const vec4_t& v) {
 	return value;
 }
 
-VariantValue::VariantValue() {
-
-}
-VariantValue::VariantValue(Type t) : type(t) {
-	switch(type) {
+VariantValue::VariantValue(Type varType) : dataType(varType) {
+	switch(varType) {
 		case type_bool:
 			data.boolean = false;
 			break;
@@ -75,46 +72,31 @@ VariantValue::VariantValue(Type t) : type(t) {
 	}
 }
 
-bool VariantValue::get(BoolTag t) const {
-	return toBool();
-}
-int_t VariantValue::get(IntTag t) const {
-	return toInt();
-}
-float_t VariantValue::get(FloatTag t) const {
-	return toFloat();
-}
-vec2_t VariantValue::get(Float2Tag t) const {
-	return toFloat2();
-}
-vec3_t VariantValue::get(Float3Tag t) const {
-	return toFloat3();
-}
-vec4_t VariantValue::get(Float4Tag t) const {
-	return toFloat4();
+VariantValue::Type VariantValue::type() const {
+	return dataType;
 }
 
-bool VariantValue::getBool() const {
+bool VariantValue::valueBool() const {
 	return data.boolean;
 }
-int_t VariantValue::getInt() const {
+int_t VariantValue::valueInt() const {
 	return data.integer;
 }
-float_t VariantValue::getFloat() const {
+float_t VariantValue::valueFloat() const {
 	return data.number[0];
 }
-vec2_t VariantValue::getFloat2() const {
-	return vec2_t(data.number[0], data.number[1]);
+float2_t VariantValue::valueFloat2() const {
+	return float2_t(data.number[0], data.number[1]);
 }
-vec3_t VariantValue::getFloat3() const {
-	return vec3_t(data.number[0], data.number[1], data.number[2]);
+float3_t VariantValue::valueFloat3() const {
+	return float3_t(data.number[0], data.number[1], data.number[2]);
 }
-vec4_t VariantValue::getFloat4() const {
-	return vec4_t(data.number[0], data.number[1], data.number[2], data.number[3]);
+float4_t VariantValue::valueFloat4() const {
+	return float4_t(data.number[0], data.number[1], data.number[2], data.number[3]);
 }
 
 bool VariantValue::toBool() const {
-	switch(type) {
+	switch(dataType) {
 		case type_bool:
 			return data.boolean;
 		case type_int:
@@ -129,7 +111,7 @@ bool VariantValue::toBool() const {
 	}
 }
 int_t VariantValue::toInt() const {
-	switch(type) {
+	switch(dataType) {
 		case type_bool:
 			return data.boolean ? 1 : 0;
 		case type_int:
@@ -144,7 +126,7 @@ int_t VariantValue::toInt() const {
 	}
 }
 float_t VariantValue::toFloat() const {
-	switch(type) {
+	switch(dataType) {
 		case type_bool:
 			return data.boolean ? 1.0 : 0.0;
 		case type_int:
@@ -158,52 +140,52 @@ float_t VariantValue::toFloat() const {
 			return 0.0;
 	}
 }
-vec2_t VariantValue::toFloat2() const {
-	switch(type) {
+float2_t VariantValue::toFloat2() const {
+	switch(dataType) {
 		case type_bool:
-			return vec2_t(data.boolean ? 1.0 : 0.0);
+			return float2_t(data.boolean ? 1.0 : 0.0);
 		case type_int:
-			return vec2_t(static_cast<float_t>(data.integer));
+			return float2_t(static_cast<float_t>(data.integer));
 		case type_float:
-			return vec2_t(data.number[0]);
+			return float2_t(data.number[0]);
 		case type_float2:
 		case type_float3:
 		case type_float4:
-			return vec2_t(data.number[0], data.number[1]);
+			return float2_t(data.number[0], data.number[1]);
 		default:
-			return vec2_t(0.0);
+			return float2_t(0.0);
 	}
 }
-vec3_t VariantValue::toFloat3() const {
-	switch(type) {
+float3_t VariantValue::toFloat3() const {
+	switch(dataType) {
 		case type_bool:
-			return vec3_t(data.boolean ? 1.0 : 0.0);
+			return float3_t(data.boolean ? 1.0 : 0.0);
 		case type_int:
-			return vec3_t(static_cast<float_t>(data.integer));
+			return float3_t(static_cast<float_t>(data.integer));
 		case type_float:
 		case type_float2:
-			return vec3_t(data.number[0]);
+			return float3_t(data.number[0]);
 		case type_float3:
 		case type_float4:
-			return vec3_t(data.number[0], data.number[1], data.number[2]);
+			return float3_t(data.number[0], data.number[1], data.number[2]);
 		default:
-			return vec3_t(0.0);
+			return float3_t(0.0);
 	}
 }
-vec4_t VariantValue::toFloat4() const {
-	switch(type) {
+float4_t VariantValue::toFloat4() const {
+	switch(dataType) {
 		case type_bool:
-			return vec4_t(data.boolean ? 1.0 : 0.0);
+			return float4_t(data.boolean ? 1.0 : 0.0);
 		case type_int:
-			return vec4_t(static_cast<float_t>(data.integer));
+			return float4_t(static_cast<float_t>(data.integer));
 		case type_float:
 		case type_float2:
 		case type_float3:
-			return vec4_t(data.number[0]);
+			return float4_t(data.number[0]);
 		case type_float4:
-			return vec4_t(data.number[0], data.number[1], data.number[2], data.number[3]);
+			return float4_t(data.number[0], data.number[1], data.number[2], data.number[3]);
 		default:
-			return vec4_t(0.0);
+			return float4_t(0.0);
 	}
 }
 
@@ -226,12 +208,31 @@ VariantValue VariantValue::cast(Type targetType) const {
 	}
 }
 
+bool VariantValue::value(BoolTag t) const {
+	return toBool();
+}
+int_t VariantValue::value(IntTag t) const {
+	return toInt();
+}
+float_t VariantValue::value(FloatTag t) const {
+	return toFloat();
+}
+float2_t VariantValue::value(Float2Tag t) const {
+	return toFloat2();
+}
+float3_t VariantValue::value(Float3Tag t) const {
+	return toFloat3();
+}
+float4_t VariantValue::value(Float4Tag t) const {
+	return toFloat4();
+}
+
 VariantValue operator+(const VariantValue& v1, const VariantValue& v2) {
-	if(v1.type == VariantValue::type_null || v2.type == VariantValue::type_null) {
+	if(v1.type() == VariantValue::type_null || v2.type() == VariantValue::type_null) {
 		return VariantValue();
 	}
 
-	switch(v1.type) {
+	switch(v1.type()) {
 		case VariantValue::type_int:
 			return VariantValue::Int(v1.toInt() + v2.toInt());
 		case VariantValue::type_float:
@@ -247,11 +248,11 @@ VariantValue operator+(const VariantValue& v1, const VariantValue& v2) {
 	}
 }
 VariantValue operator-(const VariantValue& v1, const VariantValue& v2) {
-	if(v1.type == VariantValue::type_null || v2.type == VariantValue::type_null) {
+	if(v1.type() == VariantValue::type_null || v2.type() == VariantValue::type_null) {
 		return VariantValue();
 	}
 
-	switch(v1.type) {
+	switch(v1.type()) {
 		case VariantValue::type_int:
 			return VariantValue::Int(v1.toInt() - v2.toInt());
 		case VariantValue::type_float:
@@ -267,11 +268,11 @@ VariantValue operator-(const VariantValue& v1, const VariantValue& v2) {
 	}
 }
 VariantValue operator*(const VariantValue& v1, const VariantValue& v2) {
-	if(v1.type == VariantValue::type_null || v2.type == VariantValue::type_null) {
+	if(v1.type() == VariantValue::type_null || v2.type() == VariantValue::type_null) {
 		return VariantValue();
 	}
 
-	switch(v1.type) {
+	switch(v1.type()) {
 		case VariantValue::type_int:
 			return VariantValue::Int(v1.toInt() * v2.toInt());
 		case VariantValue::type_float:
@@ -287,11 +288,11 @@ VariantValue operator*(const VariantValue& v1, const VariantValue& v2) {
 	}
 }
 VariantValue operator/(const VariantValue& v1, const VariantValue& v2) {
-	if(v1.type == VariantValue::type_null || v2.type == VariantValue::type_null) {
+	if(v1.type() == VariantValue::type_null || v2.type() == VariantValue::type_null) {
 		return VariantValue();
 	}
 
-	switch(v1.type) {
+	switch(v1.type()) {
 		case VariantValue::type_int:
 			return VariantValue::Int(v1.toInt() / v2.toInt());
 		case VariantValue::type_float:
@@ -308,23 +309,23 @@ VariantValue operator/(const VariantValue& v1, const VariantValue& v2) {
 }
 
 bool operator==(const VariantValue& v1, const VariantValue& v2) {
-	if(v1.type != v2.type) {
+	if(v1.type() != v2.type()) {
 		return false;
 	}
 
-	switch(v1.type) {
+	switch(v1.type()) {
 		case VariantValue::type_bool:
-			return v1.getBool() == v2.getBool();
+			return v1.valueBool() == v2.valueBool();
 		case VariantValue::type_int:
-			return v1.getInt() == v2.getInt();
+			return v1.valueInt() == v2.valueInt();
 		case VariantValue::type_float:
-			return v1.getFloat() == v2.getFloat();
+			return v1.valueFloat() == v2.valueFloat();
 		case VariantValue::type_float2:
-			return v1.getFloat2() == v2.getFloat2();
+			return v1.valueFloat2() == v2.valueFloat2();
 		case VariantValue::type_float3:
-			return v1.getFloat3() == v2.getFloat3();
+			return v1.valueFloat3() == v2.valueFloat3();
 		case VariantValue::type_float4:
-			return v1.getFloat4() == v2.getFloat4();
+			return v1.valueFloat4() == v2.valueFloat4();
 		default:
 			return true;
 	}
@@ -333,11 +334,11 @@ bool operator!=(const VariantValue& v1, const VariantValue& v2) {
 	return !operator==(v1, v2);
 }
 bool operator<(const VariantValue& v1, const VariantValue& v2) {
-	if(v1.type != v2.type) {
-		return v1.type < v2.type;
+	if(v1.type() != v2.type()) {
+		return v1.type() < v2.type();
 	}
 
-	switch(v1.type) {
+	switch(v1.type()) {
 		case VariantValue::type_bool:
 		case VariantValue::type_int:
 			return v1.toInt() < v2.toInt();
@@ -362,28 +363,28 @@ bool operator>=(const VariantValue& v1, const VariantValue& v2) {
 
 void to_json(nlohmann::ordered_json& j, const VariantValue& value) {
 	j = nlohmann::ordered_json{
-		{ "type", value.type },
+		{ "type", value.type() },
 		{ "value", nullptr }
 	};
 
-	switch(value.type) {
+	switch(value.type()) {
 		case VariantValue::type_bool:
-			j["value"] = value.getBool();
+			j["value"] = value.valueBool();
 			break;
 		case VariantValue::type_int:
-			j["value"] = value.getInt();
+			j["value"] = value.valueInt();
 			break;
 		case VariantValue::type_float:
-			j["value"] = value.getFloat();
+			j["value"] = value.valueFloat();
 			break;
 		case VariantValue::type_float2:
-			j["value"] = value.getFloat2();
+			j["value"] = value.valueFloat2();
 			break;
 		case VariantValue::type_float3:
-			j["value"] = value.getFloat3();
+			j["value"] = value.valueFloat3();
 			break;
 		case VariantValue::type_float4:
-			j["value"] = value.getFloat4();
+			j["value"] = value.valueFloat4();
 			break;
 		default:
 			break;
@@ -403,13 +404,13 @@ void from_json(const nlohmann::ordered_json& j, VariantValue& value) {
 			value = VariantValue::Float(j.at("value").get<float_t>());
 			break;
 		case VariantValue::type_float2:
-			value = VariantValue::Float2(j.at("value").get<vec2_t>());
+			value = VariantValue::Float2(j.at("value").get<float2_t>());
 			break;
 		case VariantValue::type_float3:
-			value = VariantValue::Float3(j.at("value").get<vec3_t>());
+			value = VariantValue::Float3(j.at("value").get<float3_t>());
 			break;
 		case VariantValue::type_float4:
-			value = VariantValue::Float4(j.at("value").get<vec4_t>());
+			value = VariantValue::Float4(j.at("value").get<float4_t>());
 			break;
 		default:
 			value = VariantValue();
