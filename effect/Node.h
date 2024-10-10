@@ -9,8 +9,7 @@
 namespace pixelpart {
 class Node {
 public:
-	template <typename T>
-	friend class NodeCollection;
+	friend class SceneGraph;
 
 	Node() = default;
 	Node(id_t ownId, id_t parentId = id_t());
@@ -40,6 +39,12 @@ public:
 	AnimatedProperty<float3_t>& position();
 	const AnimatedProperty<float3_t>& position() const;
 
+	AnimatedProperty<float3_t>& rotation();
+	const AnimatedProperty<float3_t>& rotation() const;
+
+	AnimatedProperty<float3_t>& size();
+	const AnimatedProperty<float3_t>& size() const;
+
 private:
 	id_t nodeId = id_t();
 	id_t nodeParentId = id_t();
@@ -50,5 +55,11 @@ private:
 	bool nodeRepeat = true;
 
 	AnimatedProperty<float3_t> nodePosition = AnimatedProperty<float3_t>(0.0, float3_t(0.0));
+	AnimatedProperty<float3_t> nodeRotation = AnimatedProperty<float3_t>(float3_t(0.0));
+	AnimatedProperty<float3_t> nodeSize = AnimatedProperty<float3_t>(float3_t(1.0));
+
+	bool nodeInheritPosition = true;
+	bool nodeInheritRotation = true;
+	bool nodeInheritSize = true;
 };
 }

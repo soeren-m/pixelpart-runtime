@@ -22,12 +22,6 @@ public:
 	void type(Type type);
 	Type type() const;
 
-	AnimatedProperty<float3_t>& direction();
-	const AnimatedProperty<float3_t>& direction() const;
-
-	AnimatedProperty<float_t>& range();
-	const AnimatedProperty<float_t>& range() const;
-
 	AnimatedProperty<float_t>& attenuation();
 	const AnimatedProperty<float_t>& attenuation() const;
 
@@ -46,8 +40,6 @@ public:
 private:
 	Type lightType = Type::directional;
 
-	AnimatedProperty<float3_t> lightDirection = AnimatedProperty<float3_t>(float3_t(0.0));
-	AnimatedProperty<float_t> lightRange = AnimatedProperty<float_t>(1.0);
 	AnimatedProperty<float_t> lightAttenuation = AnimatedProperty<float_t>(1.0);
 	AnimatedProperty<float_t> lightSpotAngle = AnimatedProperty<float_t>(45.0);
 	AnimatedProperty<float_t> lightSpotAngleAttenuation = AnimatedProperty<float_t>(1.0);

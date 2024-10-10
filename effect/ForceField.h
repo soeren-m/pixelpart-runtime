@@ -36,12 +36,6 @@ public:
 	NodeExclusionSet& exclusionSet();
 	const NodeExclusionSet& exclusionSet() const;
 
-	AnimatedProperty<float3_t>& size();
-	const AnimatedProperty<float3_t>& size() const;
-
-	AnimatedProperty<float3_t>& orientation();
-	const AnimatedProperty<float3_t>& orientation() const;
-
 	AnimatedProperty<float_t>& strength();
 	const AnimatedProperty<float_t>& strength() const;
 
@@ -120,8 +114,6 @@ public:
 private:
 	Type fieldType = Type::attraction_field;
 	NodeExclusionSet fieldExclusionSet;
-	AnimatedProperty<float3_t> fieldSize = AnimatedProperty<float3_t>(float3_t(1.0));
-	AnimatedProperty<float3_t> fieldOrientation = AnimatedProperty<float3_t>(float3_t(0.0));
 	AnimatedProperty<float_t> fieldStrength = AnimatedProperty<float_t>(1.0);
 
 	AnimatedProperty<float3_t> fieldAccelerationDirection = AnimatedProperty<float3_t>(float3_t(0.0));

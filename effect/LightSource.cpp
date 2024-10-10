@@ -91,10 +91,10 @@ void from_json(const nlohmann::ordered_json& j, LightSource& lightSource) {
 	lightSource.duration(j.value("lifetime_duration", 1.0));
 	lightSource.repeat(j.value("repeat", true));
 	lightSource.position() = j.value("position", AnimatedProperty<float3_t>(0.0, float3_t(0.0)));
+	lightSource.rotation() = j.value("rotation", AnimatedProperty<float3_t>(float3_t(0.0)));
+	lightSource.size() = j.value("size", AnimatedProperty<float3_t>(float3_t(1.0)));
 
 	lightSource.type(j.value("type", LightSource::Type::directional));
-	lightSource.direction() = j.value("direction", AnimatedProperty<float3_t>(float3_t(0.0)));
-	lightSource.range() = j.value("range", AnimatedProperty<float_t>(1.0));
 	lightSource.attenuation() = j.value("attenuation", AnimatedProperty<float_t>(1.0));
 	lightSource.spotAngle() = j.value("spot_angle", AnimatedProperty<float_t>(45.0));
 	lightSource.spotAngleAttenuation() = j.value("spot_angle_attenuation", AnimatedProperty<float_t>(1.0));

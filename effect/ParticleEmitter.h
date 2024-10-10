@@ -59,12 +59,6 @@ public:
 	Curve<float3_t>& path();
 	const Curve<float3_t>& path() const;
 
-	AnimatedProperty<float3_t>& size();
-	const AnimatedProperty<float3_t>& size() const;
-
-	AnimatedProperty<float3_t>& orientation();
-	const AnimatedProperty<float3_t>& orientation() const;
-
 	void distribution(Distribution distribution);
 	Distribution distribution() const;
 
@@ -91,8 +85,6 @@ public:
 private:
 	Shape emitterShape = Shape::point;
 	Curve<float3_t> emitterPath = Curve<float3_t>();
-	AnimatedProperty<float3_t> emitterSize = AnimatedProperty<float3_t>(float3_t(1.0));
-	AnimatedProperty<float3_t> emitterOrientation = AnimatedProperty<float3_t>(float3_t(0.0));
 
 	Distribution emitterDistribution = Distribution::uniform;
 	GridOrder emitterGridOrder = GridOrder::x_y_z;

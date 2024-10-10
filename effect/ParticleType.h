@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Node.h"
 #include "../common/Types.h"
 #include "../common/Math.h"
 #include "../common/Id.h"
@@ -14,10 +13,10 @@
 #include "../json/json.hpp"
 
 namespace pixelpart {
-class ParticleType : public Node {
+class ParticleType {
 public:
 	ParticleType() = default;
-	ParticleType(id_t ownId, id_t parentId = id_t());
+	ParticleType(id_t ownId);
 
 	AnimatedProperty<float_t>& count();
 	const AnimatedProperty<float_t>& count() const;
@@ -134,6 +133,20 @@ public:
 	const ParticleMeshRendererSettings& meshRendererSettings() const;
 
 private:
+	// TODO: base properties
+	AnimatedProperty<float_t> particleInitialSize = AnimatedProperty<float_t>(0.1);
+	AnimatedProperty<float3_t> particleInitialRotation = AnimatedProperty<float3_t>(float3_t(0.0));
+
+	// TODO: lifetime properties
+	AnimatedProperty<float3_t> particleLifetimeSize = AnimatedProperty<float3_t>(float3_t(1.0));
+	AnimatedProperty<float3_t> particleLifetimeRotation = AnimatedProperty<float3_t>(float3_t(0.0));
+	AnimatedProperty<float_t> particleLifetimePhysicalSize = AnimatedProperty<float_t>(1.0);
+	AnimatedProperty<float_t> particleLifetimeWeight = AnimatedProperty<float_t>(1.0);
+	AnimatedProperty<float_t> particleLifetimeBounce = AnimatedProperty<float_t>(1.0);
+	AnimatedProperty<float_t> particleLifetimeFriction = AnimatedProperty<float_t>(1.0);
+
+
+
 	AnimatedProperty<float_t> particleCount = AnimatedProperty<float_t>(0.0);
 	AnimatedProperty<float_t> particleLifespan = AnimatedProperty<float_t>(1.0);
 	StaticProperty<float_t> particleLifespanVariance = StaticProperty<float_t>(0.0);
@@ -147,22 +160,19 @@ private:
 	AnimatedProperty<float_t> particleRadialAcceleration = AnimatedProperty<float_t>(0.0);
 	RotationMode particleRotationMode = RotationMode::angle;
 	AlignmentMode particleAlignmentMode = AlignmentMode::camera;
-	AnimatedProperty<float3_t> particleInitialRotation = AnimatedProperty<float3_t>(float3_t(0.0));
-	AnimatedProperty<float3_t> particleRotation = AnimatedProperty<float3_t>(float3_t(0.0));
+	
+	
 	AnimatedProperty<float3_t> particleRotationBySpeed = AnimatedProperty<float3_t>(float3_t(0.0));
 	StaticProperty<float3_t> particleRotationVariance = StaticProperty<float3_t>(float3_t(0.0));
 	StaticProperty<float3_t> particleAngularVelocityVariance = StaticProperty<float3_t>(float3_t(0.0));
 	StaticProperty<float3_t> particlePivot = StaticProperty<float3_t>(float3_t(0.0));
 
-	AnimatedProperty<float_t> particlePhysicalSize = AnimatedProperty<float_t>(1.0);
-	AnimatedProperty<float_t> particleWeight = AnimatedProperty<float_t>(1.0);
-	AnimatedProperty<float_t> particleBounce = AnimatedProperty<float_t>(1.0);
-	AnimatedProperty<float_t> particleFriction = AnimatedProperty<float_t>(1.0);
+	
 
 	bool particleVisible = true;
 	uint32_t particleLayer = 0u;
-	AnimatedProperty<float_t> particleInitialSize = AnimatedProperty<float_t>(0.1);
-	AnimatedProperty<float3_t> particleSize = AnimatedProperty<float3_t>(float3_t(1.0));
+	
+	
 	StaticProperty<float_t> particleSizeVariance = StaticProperty<float_t>(0.0);
 	AnimatedProperty<float3_t> particleStretch = AnimatedProperty<float3_t>(float3_t(0.0));
 	AnimatedProperty<float4_t> particleColor = AnimatedProperty<float4_t>(float4_t(1.0));
