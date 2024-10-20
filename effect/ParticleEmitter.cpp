@@ -5,6 +5,10 @@ ParticleEmitter::ParticleEmitter(id_t ownId, id_t parentId) : Node(ownId, parent
 
 }
 
+const std::vector<id_t>& ParticleEmitter::particleTypes() const {
+	return emitterParticleTypes;
+}
+
 void ParticleEmitter::shape(Shape shape) {
 	emitterShape = shape;
 }

@@ -7,6 +7,7 @@
 #include "../common/Curve.h"
 #include "AnimatedProperty.h"
 #include "../json/json.hpp"
+#include <vector>
 
 namespace pixelpart {
 class ParticleEmitter : public Node {
@@ -53,6 +54,8 @@ public:
 	ParticleEmitter() = default;
 	ParticleEmitter(id_t ownId, id_t parentId = id_t());
 
+	const std::vector<id_t>& particleTypes() const;
+
 	void shape(Shape shape);
 	Shape shape() const;
 
@@ -83,6 +86,8 @@ public:
 	const AnimatedProperty<float_t>& spread() const;
 
 private:
+	std::vector<id_t> emitterParticleTypes;
+
 	Shape emitterShape = Shape::point;
 	Curve<float3_t> emitterPath = Curve<float3_t>();
 

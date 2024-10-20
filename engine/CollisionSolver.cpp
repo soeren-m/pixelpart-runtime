@@ -49,7 +49,7 @@ CollisionSolver::CollisionSolver() : solverGrid(1u, 1u) {
 
 }
 
-void CollisionSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+void CollisionSolver::solve(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
 	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
 	if(!planeColliders.empty()) {
 		for(uint32_t p = 0u; p < particleCount; p++) {

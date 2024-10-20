@@ -6,7 +6,7 @@ RotationSolver::RotationSolver() {
 
 }
 
-void RotationSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+void RotationSolver::solve(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
 	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
 	switch(particleType.rotationMode()) {
 		case RotationMode::angle: {

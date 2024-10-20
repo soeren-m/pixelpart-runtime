@@ -6,7 +6,7 @@ MotionPathSolver::MotionPathSolver() {
 
 }
 
-void MotionPathSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+void MotionPathSolver::solve(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
 	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
 	const float_t positionLookahead = 0.1;
 	const float_t targetLookahead = 0.01;

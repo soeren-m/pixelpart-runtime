@@ -11,14 +11,11 @@ class Node {
 public:
 	friend class SceneGraph;
 
-	Node() = default;
-	Node(id_t ownId, id_t parentId = id_t());
-
 	id_t id() const;
 
-	void parent(const Node& parentNode);
+	/*void parent(const Node& parentNode);
 	void parent(id_t parentNodeId);
-	void unparent();
+	void unparent();*/
 	id_t parentId() const;
 
 	void name(const std::string& name);
@@ -39,11 +36,14 @@ public:
 	AnimatedProperty<float3_t>& position();
 	const AnimatedProperty<float3_t>& position() const;
 
-	AnimatedProperty<float3_t>& rotation();
-	const AnimatedProperty<float3_t>& rotation() const;
+	AnimatedProperty<float3_t>& orientation();
+	const AnimatedProperty<float3_t>& orientation() const;
 
 	AnimatedProperty<float3_t>& size();
 	const AnimatedProperty<float3_t>& size() const;
+
+protected:
+	Node(id_t ownId, id_t parentId = id_t());
 
 private:
 	id_t nodeId = id_t();
@@ -55,11 +55,11 @@ private:
 	bool nodeRepeat = true;
 
 	AnimatedProperty<float3_t> nodePosition = AnimatedProperty<float3_t>(0.0, float3_t(0.0));
-	AnimatedProperty<float3_t> nodeRotation = AnimatedProperty<float3_t>(float3_t(0.0));
+	AnimatedProperty<float3_t> nodeOrientation = AnimatedProperty<float3_t>(float3_t(0.0));
 	AnimatedProperty<float3_t> nodeSize = AnimatedProperty<float3_t>(float3_t(1.0));
 
 	bool nodeInheritPosition = true;
-	bool nodeInheritRotation = true;
+	bool nodeInheritOrientation = true;
 	bool nodeInheritSize = true;
 };
 }

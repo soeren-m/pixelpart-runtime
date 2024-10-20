@@ -7,22 +7,161 @@
 namespace pixelpart {
 const float_t pi = 3.14159265358979323846;
 
-ParticleGenerator::ParticleGenerator(const Effect& fx, std::vector<ParticleCollection>& particleColl) : effect(fx), particleCollections(particleColl) {
+ParticleGenerator::ParticleGenerator(const Effect& fx, std::vector<ParticleRuntimeInstance>& particleRuntimeInsts) : effect(fx), particleRuntimeInstances(particleRuntimeInsts) {
 
 }
 
-uint32_t ParticleGenerator::generate(uint32_t count, uint32_t parentParticle, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, float_t dt, float_t t) {
-	ParticleCollection& particleCollection = particleCollections[particleTypeIndex];
+void ParticleGenerator::generate(float_t dt, float_t t) {
+	if(particleEmitterGridIndices.size() != effect.particleEmitters().count()) {
+		particleEmitterGridIndices.assign(effect.particleEmitters().count(), 0u);
+	}
+
+	for(ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
+		const ParticleType& particleType = effect.particleTypes().at(runtimeInstance.typeId());
+
+		uint32_t particleEmitterIndex = effect.sceneGraph().indexOf(runtimeInstance.emitterId());
+		if(particleEmitterIndex == id_t::nullValue) {
+			continue;
+		}
+
+		const ParticleEmitter& particleEmitter = effect.sceneGraph().atIndex<ParticleEmitter>(particleEmitterIndex);
+		if(particleEmitter.parentId()) { // TODO
+			continue;
+		}
+
+		float_t timeSinceStart = t - particleEmitter.start();
+		if(timeSinceStart <= 0.0) {
+			continue;
+		}
+
+		float_t repeatedTime = std::fmod(timeSinceStart, particleEmitter.duration());
+		float_t emissionTime = particleEmitter.repeat() ? repeatedTime : timeSinceStart;
+
+		switch(particleEmitter.emissionMode()) {
+			case ParticleEmitter::EmissionMode::continuous: {
+				if(emissionTime <= particleEmitter.duration()) {
+					runtimeInstance.emissionCount() += particleType.count().at(repeatedTime / particleEmitter.duration()) * dt;
+				}
+
+				break;
+			}
+			case ParticleEmitter::EmissionMode::burst_start: {
+				if(emissionTime <= dt) {
+					runtimeInstance.emissionCount() += particleType.count().at();
+				}
+
+				break;
+			}
+			case ParticleEmitter::EmissionMode::burst_end: {
+				if(emissionTime >= particleEmitter.duration() - dt && emissionTime < particleEmitter.duration()) {
+					runtimeInstance.emissionCount() += particleType.count().at();
+				}
+
+				break;
+			}
+			default: {
+				break;
+			}
+		}
+
+		int32_t particlesEmitted = static_cast<int32_t>(runtimeInstance.emissionCount());
+		if(particlesEmitted > 0) {
+			particlesEmitted = generate(particlesEmitted, id_t::nullValue, runtimeInstance, dt, repeatedTime);
+			runtimeInstance.emissionCount() -= static_cast<float_t>(particlesEmitted);
+		}
+	}
+
+	std::vector<std::vector<id_t>> particleRuntimeSubTypes(particleRuntimeInstances.size(), std::vector<uint32_t>());
+	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < effect.particleTypes().count(); particleTypeIndex++) {
+		id_t parentParticleEmitterId = effect.particleTypes().atIndex(particleTypeIndex).parentId();
+
+		if(effect.particleEmitters().contains(parentParticleEmitterId)) {
+			const ParticleEmitter& parentParticleEmitter = effect.particleEmitters().at(parentParticleEmitterId);
+
+			uint32_t parentParticleTypeIndex = effect.particleTypes().indexOf(parentParticleEmitter.parentId());
+			if(parentParticleTypeIndex != id_t::nullValue) {
+				particleSubTypes[parentParticleTypeIndex].push_back(particleTypeIndex);
+			}
+		}
+	}
+
+	for(ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
+		const ParticleType& particleType = effect.particleTypes().at(runtimeInstance.typeId());
+		const ParticleEmitter& particleEmitter = effect.particleEmitters().at(particleType.parentId());
+		ParticleCollection& particleCollection = particleCollections[particleTypeIndex];
+		ParticleCollection::WritePtr particles = particleCollection.writePtr();
+
+		const std::vector<id_t>& subTypes = particleSubTypes[particleTypeIndex];
+		if(subTypes.empty()) {
+			continue;
+		}
+
+		for(uint32_t p = 0u; p < particleCollection.count(); p++) {
+			for(id_t subParticleTypeId : subTypes) {
+				const ParticleType& subParticleType = effect.particleTypes().at(subParticleTypeId);
+
+				uint32_t subParticleEmitterIndex = effect.particleEmitters().indexOf(subParticleType.parentId());
+				const ParticleEmitter& subParticleEmitter = effect.sceneGraph().at<ParticleEmitter>(subParticleEmitterIndex);
+
+				float_t subTimeSinceStart = particles.life[p] * particles.lifespan[p] - subParticleEmitter.start();
+				if(subTimeSinceStart <= 0.0) {
+					continue;
+				}
+
+				float_t subRepeatedTime = std::fmod(subTimeSinceStart, subParticleEmitter.duration());
+				float_t subEmissionTime = subParticleEmitter.repeat() ? subRepeatedTime : subTimeSinceStart;
+
+				switch(subParticleEmitter.emissionMode()) {
+					case ParticleEmitter::EmissionMode::continuous: {
+						if(subEmissionTime <= subParticleEmitter.duration()) {
+							emissionCount[subParticleTypeIndex] += subParticleType.count().at(subRepeatedTime / particleEmitter.duration()) * dt;
+						}
+
+						break;
+					}
+					case ParticleEmitter::EmissionMode::burst_start: {
+						if(subEmissionTime <= dt) {
+							emissionCount[subParticleTypeIndex] += subParticleType.count().at();
+						}
+
+						break;
+					}
+					case ParticleEmitter::EmissionMode::burst_end: {
+						if(particles.life[p] > 1.0) {
+							emissionCount[subParticleTypeIndex] += subParticleType.count().at();
+						}
+
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+
+				int32_t particlesEmitted = static_cast<int32_t>(emissionCount[subParticleTypeIndex]);
+				if(particlesEmitted > 0) {
+					particlesEmitted = particleGenerator.generate(particlesEmitted,
+						p, subParticleTypeIndex, particleTypeIndex, subParticleEmitterIndex, dt, subRepeatedTime);
+
+					emissionCount[subParticleTypeIndex] -= static_cast<float_t>(particlesEmitted);
+				}
+			}
+		}
+	}
+}
+
+uint32_t ParticleGenerator::generate(uint32_t count, uint32_t parentParticle, ParticleRuntimeInstance& runtimeInstance, float_t dt, float_t t) {
+	ParticleCollection& particleCollection = runtimeInstance.particles();
 	count = particleCollection.add(count);
 
-	const ParticleType& particleType = effect.particleTypes().atIndex(particleTypeIndex);
-	const ParticleEmitter& particleEmitter = effect.particleEmitters().atIndex(particleEmitterIndex);
-	ParticleCollection::WritePtr particles = particleCollections[particleTypeIndex].writePtr();
+	const ParticleType& particleType = effect.particleTypes().at(runtimeInstance.typeId());
+	const ParticleEmitter& particleEmitter = effect.sceneGraph().at<ParticleEmitter>(runtimeInstance.emitterId());
+	ParticleCollection::WritePtr particles = particleCollection.writePtr();
 	ParticleCollection::ReadPtr parentParticles = parentParticleTypeIndex != id_t::nullValue ? particleCollections[parentParticleTypeIndex].readPtr() : ParticleCollection::ReadPtr();
 	float_t alpha = t / particleEmitter.duration();
 
-	for(uint32_t i = 0u; i < count; i++) {
-		uint32_t p = particleCollection.count() - count + i;
+	for(uint32_t addIndex = 0u; addIndex < count; addIndex++) {
+		uint32_t p = particleCollection.count() - count + addIndex;
 
 		particles.id[p] = nextParticleId++;
 		particles.parentId[p] = parentParticle != id_t::nullValue ? parentParticles.id[parentParticle] : id_t::nullValue;
@@ -194,11 +333,7 @@ uint32_t ParticleGenerator::generate(uint32_t count, uint32_t parentParticle, ui
 	return count;
 }
 
-void ParticleGenerator::prepare() {
-	if(particleEmitterGridIndices.size() != effect.particleEmitters().count()) {
-		particleEmitterGridIndices.assign(effect.particleEmitters().count(), 0u);
-	}
-}
+
 void ParticleGenerator::reset() {
 	nextParticleId = 0u;
 	particleEmitterGridIndices.assign(effect.particleEmitters().count(), 0u);

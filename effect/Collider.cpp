@@ -5,10 +5,10 @@ Collider::Collider(id_t ownId, id_t parentId) : Node(ownId, parentId) {
 
 }
 
-NodeExclusionSet& Collider::exclusionSet() {
+NodeSet& Collider::exclusionSet() {
 	return colliderExclusionSet;
 }
-const NodeExclusionSet& Collider::exclusionSet() const {
+const NodeSet& Collider::exclusionSet() const {
 	return colliderExclusionSet;
 }
 
@@ -90,7 +90,7 @@ void from_json(const nlohmann::ordered_json& j, Collider& collider) {
 	collider.repeat(j.value("repeat", true));
 	collider.position() = j.value("position", AnimatedProperty<float3_t>(0.0, float3_t(0.0)));
 
-	collider.exclusionSet() = j.value("exclusion_list", NodeExclusionSet());
+	collider.exclusionSet() = j.value("exclusion_list", NodeSet());
 	collider.points() = j.value("points", Collider::PointList{ float3_t(-0.5, 0.0, 0.0), float3_t(+0.5, 0.0, 0.0) });
 	collider.width() = j.value("width", StaticProperty<float_t>(1.0));
 	collider.orientation() = j.value("orientation", StaticProperty<float_t>(0.0));

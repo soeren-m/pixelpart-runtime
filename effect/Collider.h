@@ -4,7 +4,7 @@
 #include "../common/Types.h"
 #include "../common/Math.h"
 #include "../common/Id.h"
-#include "NodeExclusionSet.h"
+#include "NodeSet.h"
 #include "StaticProperty.h"
 #include "AnimatedProperty.h"
 #include "../json/json.hpp"
@@ -18,8 +18,8 @@ public:
 	Collider() = default;
 	Collider(id_t ownId, id_t parentId = id_t());
 
-	NodeExclusionSet& exclusionSet();
-	const NodeExclusionSet& exclusionSet() const;
+	NodeSet& exclusionSet();
+	const NodeSet& exclusionSet() const;
 
 	float3_t& point(std::size_t index);
 	const float3_t& point(std::size_t index) const;
@@ -42,7 +42,7 @@ public:
 	const AnimatedProperty<float_t>& friction() const;
 
 private:
-	NodeExclusionSet colliderExclusionSet;
+	NodeSet colliderExclusionSet;
 	PointList colliderPoints = PointList{
 		float3_t(-0.5, 0.0, 0.0),
 		float3_t(+0.5, 0.0, 0.0)

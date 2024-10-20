@@ -7,13 +7,13 @@
 #include <set>
 
 namespace pixelpart {
-class NodeExclusionSet {
+class NodeSet {
 public:
 	using iterator = typename std::set<id_t>::iterator;
 	using const_iterator = typename std::set<id_t>::const_iterator;
 
-	NodeExclusionSet() = default;
-	NodeExclusionSet(const std::set<id_t>& nodeIds);
+	NodeSet() = default;
+	NodeSet(const std::set<id_t>& nodeIds);
 
 	iterator begin();
 	iterator end();
@@ -35,9 +35,9 @@ public:
 	const std::set<id_t>& nodeIds() const;
 
 private:
-	std::set<id_t> excludedNodeIds;
+	std::set<id_t> ids;
 };
 
-void to_json(nlohmann::ordered_json& j, const NodeExclusionSet& set);
-void from_json(const nlohmann::ordered_json& j, NodeExclusionSet& set);
+void to_json(nlohmann::ordered_json& j, const NodeSet& set);
+void from_json(const nlohmann::ordered_json& j, NodeSet& set);
 }

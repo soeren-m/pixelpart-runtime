@@ -18,6 +18,13 @@ public:
 	ParticleType() = default;
 	ParticleType(id_t ownId);
 
+	id_t id() const;
+
+	id_t parentId() const;
+
+	void name(const std::string& name);
+	const std::string& name() const;
+
 	AnimatedProperty<float_t>& count();
 	const AnimatedProperty<float_t>& count() const;
 
@@ -133,6 +140,10 @@ public:
 	const ParticleMeshRendererSettings& meshRendererSettings() const;
 
 private:
+	id_t particleTypeId = id_t();
+	id_t parentParticleTypeId = id_t(); // TODO
+	std::string particleTypeName;
+
 	// TODO: base properties
 	AnimatedProperty<float_t> particleInitialSize = AnimatedProperty<float_t>(0.1);
 	AnimatedProperty<float3_t> particleInitialRotation = AnimatedProperty<float3_t>(float3_t(0.0));

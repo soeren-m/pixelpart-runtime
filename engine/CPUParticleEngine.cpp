@@ -15,147 +15,19 @@ CPUParticleEngine::CPUParticleEngine(const Effect& fx, uint32_t capacity, std::s
 void CPUParticleEngine::step(float_t dt) {
 	time += dt;
 
+	// TODO
 	if(particleEffect.particleTypes().count() != particleCollections.size()) {
 		particleCollections.assign(particleEffect.particleTypes().count(), ParticleCollection(particleCap));
 		emissionCount.assign(particleEffect.particleTypes().count(), 0.0);
 	}
 
-	particleGenerator.prepare();
+	particleGenerator.generate(dt, time);
 
-	std::vector<std::vector<uint32_t>> particleSubTypes(particleEffect.particleTypes().count(), std::vector<uint32_t>());
-	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < particleEffect.particleTypes().count(); particleTypeIndex++) {
-		id_t parentParticleEmitterId = particleEffect.particleTypes().atIndex(particleTypeIndex).parentId();
+	
 
-		if(particleEffect.particleEmitters().contains(parentParticleEmitterId)) {
-			const ParticleEmitter& parentParticleEmitter = particleEffect.particleEmitters().at(parentParticleEmitterId);
+	
 
-			uint32_t parentParticleTypeIndex = particleEffect.particleTypes().indexOf(parentParticleEmitter.parentId());
-			if(parentParticleTypeIndex != id_t::nullValue) {
-				particleSubTypes[parentParticleTypeIndex].push_back(particleTypeIndex);
-			}
-		}
-	}
 
-	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < particleEffect.particleTypes().count(); particleTypeIndex++) {
-		const ParticleType& particleType = particleEffect.particleTypes().atIndex(particleTypeIndex);
-
-		uint32_t particleEmitterIndex = particleEffect.particleEmitters().indexOf(particleType.parentId());
-		if(particleEmitterIndex == id_t::nullValue) {
-			continue;
-		}
-
-		const ParticleEmitter& particleEmitter = particleEffect.particleEmitters().atIndex(particleEmitterIndex);
-		if(particleEmitter.parentId()) {
-			continue;
-		}
-
-		float_t timeSinceStart = time - particleEmitter.start();
-		if(timeSinceStart <= 0.0) {
-			continue;
-		}
-
-		float_t repeatedTime = std::fmod(timeSinceStart, particleEmitter.duration());
-		float_t emissionTime = particleEmitter.repeat() ? repeatedTime : timeSinceStart;
-
-		switch(particleEmitter.emissionMode()) {
-			case ParticleEmitter::EmissionMode::continuous: {
-				if(emissionTime <= particleEmitter.duration()) {
-					emissionCount[particleTypeIndex] += particleType.count().at(repeatedTime / particleEmitter.duration()) * dt;
-				}
-
-				break;
-			}
-			case ParticleEmitter::EmissionMode::burst_start: {
-				if(emissionTime <= dt) {
-					emissionCount[particleTypeIndex] += particleType.count().at();
-				}
-
-				break;
-			}
-			case ParticleEmitter::EmissionMode::burst_end: {
-				if(emissionTime >= particleEmitter.duration() - dt && emissionTime < particleEmitter.duration()) {
-					emissionCount[particleTypeIndex] += particleType.count().at();
-				}
-
-				break;
-			}
-			default: {
-				break;
-			}
-		}
-
-		int32_t particlesEmitted = static_cast<int32_t>(emissionCount[particleTypeIndex]);
-		if(particlesEmitted > 0) {
-			particlesEmitted = particleGenerator.generate(particlesEmitted,
-				id_t::nullValue, particleTypeIndex, id_t::nullValue, particleEmitterIndex, dt, repeatedTime);
-
-			emissionCount[particleTypeIndex] -= static_cast<float_t>(particlesEmitted);
-		}
-	}
-
-	for(uint32_t particleTypeIndex = 0u; particleTypeIndex < particleEffect.particleTypes().count(); particleTypeIndex++) {
-		const ParticleType& particleType = particleEffect.particleTypes().atIndex(particleTypeIndex);
-		const ParticleEmitter& particleEmitter = particleEffect.particleEmitters().at(particleType.parentId());
-		ParticleCollection& particleCollection = particleCollections[particleTypeIndex];
-		ParticleCollection::WritePtr particles = particleCollection.writePtr();
-
-		const std::vector<uint32_t>& subTypes = particleSubTypes[particleTypeIndex];
-		if(subTypes.empty()) {
-			continue;
-		}
-
-		for(uint32_t p = 0u; p < particleCollection.count(); p++) {
-			for(uint32_t subParticleTypeIndex : subTypes) {
-				const ParticleType& subParticleType = particleEffect.particleTypes().atIndex(subParticleTypeIndex);
-
-				uint32_t subParticleEmitterIndex = particleEffect.particleEmitters().indexOf(subParticleType.parentId());
-				const ParticleEmitter& subParticleEmitter = particleEffect.particleEmitters().atIndex(subParticleEmitterIndex);
-
-				float_t subTimeSinceStart = particles.life[p] * particles.lifespan[p] - subParticleEmitter.start();
-				if(subTimeSinceStart <= 0.0) {
-					continue;
-				}
-
-				float_t subRepeatedTime = std::fmod(subTimeSinceStart, subParticleEmitter.duration());
-				float_t subEmissionTime = subParticleEmitter.repeat() ? subRepeatedTime : subTimeSinceStart;
-
-				switch(subParticleEmitter.emissionMode()) {
-					case ParticleEmitter::EmissionMode::continuous: {
-						if(subEmissionTime <= subParticleEmitter.duration()) {
-							emissionCount[subParticleTypeIndex] += subParticleType.count().at(subRepeatedTime / particleEmitter.duration()) * dt;
-						}
-
-						break;
-					}
-					case ParticleEmitter::EmissionMode::burst_start: {
-						if(subEmissionTime <= dt) {
-							emissionCount[subParticleTypeIndex] += subParticleType.count().at();
-						}
-
-						break;
-					}
-					case ParticleEmitter::EmissionMode::burst_end: {
-						if(particles.life[p] > 1.0) {
-							emissionCount[subParticleTypeIndex] += subParticleType.count().at();
-						}
-
-						break;
-					}
-					default: {
-						break;
-					}
-				}
-
-				int32_t particlesEmitted = static_cast<int32_t>(emissionCount[subParticleTypeIndex]);
-				if(particlesEmitted > 0) {
-					particlesEmitted = particleGenerator.generate(particlesEmitted,
-						p, subParticleTypeIndex, particleTypeIndex, subParticleEmitterIndex, dt, subRepeatedTime);
-
-					emissionCount[subParticleTypeIndex] -= static_cast<float_t>(particlesEmitted);
-				}
-			}
-		}
-	}
 
 	for(ParticleCollection& particleCollection : particleCollections) {
 		ParticleCollection::ReadPtr particles = particleCollection.readPtr();
@@ -320,17 +192,17 @@ uint32_t CPUParticleEngine::activeThreadCount() const {
 	return totalActiveThreadCount;
 }
 
-void CPUParticleEngine::stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+void CPUParticleEngine::stepParticles(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
 	ParticleCollection::WritePtr particles, uint32_t particleCount,
 	float_t t, float_t dt) const {
-	sizeSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
-	colorSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
-	accelerationSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
-	forceSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
-	collisionSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
-	motionPathSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
-	rotationSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
-	integrationSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
-	lifeSolver.solve(particleEmitter, particleType, particles, particleCount, t, dt);
+	sizeSolver.solve(sceneGraph, particleEmitter, particleType, particles, particleCount, t, dt);
+	colorSolver.solve(sceneGraph, particleEmitter, particleType, particles, particleCount, t, dt);
+	accelerationSolver.solve(sceneGraph, particleEmitter, particleType, particles, particleCount, t, dt);
+	forceSolver.solve(sceneGraph, particleEmitter, particleType, particles, particleCount, t, dt);
+	collisionSolver.solve(sceneGraph, particleEmitter, particleType, particles, particleCount, t, dt);
+	motionPathSolver.solve(sceneGraph, particleEmitter, particleType, particles, particleCount, t, dt);
+	rotationSolver.solve(sceneGraph, particleEmitter, particleType, particles, particleCount, t, dt);
+	integrationSolver.solve(sceneGraph, particleEmitter, particleType, particles, particleCount, t, dt);
+	lifeSolver.solve(sceneGraph, particleEmitter, particleType, particles, particleCount, t, dt);
 }
 }

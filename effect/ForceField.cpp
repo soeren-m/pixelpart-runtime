@@ -13,10 +13,10 @@ ForceField::Type ForceField::type() const {
 	return fieldType;
 }
 
-NodeExclusionSet& ForceField::exclusionSet() {
+NodeSet& ForceField::exclusionSet() {
 	return fieldExclusionSet;
 }
-const NodeExclusionSet& ForceField::exclusionSet() const {
+const NodeSet& ForceField::exclusionSet() const {
 	return fieldExclusionSet;
 }
 
@@ -248,7 +248,7 @@ void from_json(const nlohmann::ordered_json& j, ForceField& forceField) {
 	forceField.position() = j.value("position", AnimatedProperty<float3_t>(0.0, float3_t(0.0)));
 
 	forceField.type(j.value("type", ForceField::Type::attraction_field));
-	forceField.exclusionSet() = j.value("exclusion_list", NodeExclusionSet());
+	forceField.exclusionSet() = j.value("exclusion_list", NodeSet());
 	forceField.size() = j.value("size", AnimatedProperty<float3_t>(float3_t(1.0)));
 	forceField.orientation() = j.value("orientation", AnimatedProperty<float3_t>(float3_t(0.0)));
 	forceField.strength() = j.value("strength", AnimatedProperty<float_t>(1.0));

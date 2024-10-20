@@ -5,6 +5,7 @@
 #include "../effect/Effect.h"
 #include "../effect/ParticleEmitter.h"
 #include "ParticleCollection.h"
+#include "ParticleRuntimeInstance.h"
 #include "Random.h"
 #include <random>
 #include <vector>
@@ -12,11 +13,12 @@
 namespace pixelpart {
 class ParticleGenerator {
 public:
-	ParticleGenerator(const Effect& fx, std::vector<ParticleCollection>& particleColl);
+	ParticleGenerator(const Effect& fx, std::vector<ParticleRuntimeInstance>& particleRuntimeInsts);
 
-	uint32_t generate(uint32_t count, uint32_t parentParticle, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, float_t dt, float_t t);
+	void generate(float_t dt, float_t t);
 
-	void prepare();
+	uint32_t generate(uint32_t count, uint32_t parentParticle, ParticleRuntimeInstance& runtimeInstance, float_t dt, float_t t);
+
 	void reset();
 
 	void applySeed(uint32_t seed);
@@ -65,7 +67,7 @@ private:
 		uint32_t gridSizeX, uint32_t gridSizeY, uint32_t gridSizeZ, uint32_t& gridIndex);
 
 	const Effect& effect;
-	std::vector<ParticleCollection>& particleCollections;
+	std::vector<ParticleRuntimeInstance>& particleRuntimeInstances;
 
 	uint32_t nextParticleId = 0u;
 	std::vector<uint32_t> particleEmitterGridIndices;

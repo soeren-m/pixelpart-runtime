@@ -4,7 +4,7 @@
 #include "../common/Types.h"
 #include "../common/Math.h"
 #include "../common/Id.h"
-#include "NodeExclusionSet.h"
+#include "NodeSet.h"
 #include "StaticProperty.h"
 #include "AnimatedProperty.h"
 #include "../json/json.hpp"
@@ -33,8 +33,8 @@ public:
 	void type(Type type);
 	Type type() const;
 
-	NodeExclusionSet& exclusionSet();
-	const NodeExclusionSet& exclusionSet() const;
+	NodeSet& exclusionSet();
+	const NodeSet& exclusionSet() const;
 
 	AnimatedProperty<float_t>& strength();
 	const AnimatedProperty<float_t>& strength() const;
@@ -113,7 +113,7 @@ public:
 
 private:
 	Type fieldType = Type::attraction_field;
-	NodeExclusionSet fieldExclusionSet;
+	NodeSet fieldExclusionSet;
 	AnimatedProperty<float_t> fieldStrength = AnimatedProperty<float_t>(1.0);
 
 	AnimatedProperty<float3_t> fieldAccelerationDirection = AnimatedProperty<float3_t>(float3_t(0.0));

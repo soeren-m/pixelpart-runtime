@@ -1,8 +1,19 @@
 #include "ParticleType.h"
 
 namespace pixelpart {
-ParticleType::ParticleType(id_t ownId, id_t parentId) : Node(ownId, parentId) {
+ParticleType::ParticleType(id_t ownId) : particleTypeId(ownId) {
 
+}
+
+id_t ParticleType::id() const {
+	return particleTypeId;
+}
+
+void ParticleType::name(const std::string& name) {
+	particleTypeName = name;
+}
+const std::string& ParticleType::name() const {
+	return particleTypeName;
 }
 
 AnimatedProperty<float_t>& ParticleType::count() {
@@ -274,7 +285,6 @@ const ParticleMeshRendererSettings& ParticleType::meshRendererSettings() const {
 void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 	j = nlohmann::ordered_json{
 		{ "id", particleType.id() },
-		{ "parent_id", particleType.parentId() },
 		{ "name", particleType.name() },
 		{ "lifetime_start", particleType.start() },
 		{ "lifetime_duration", particleType.duration() },
@@ -326,8 +336,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 }
 void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	particleType = ParticleType(
-		j.at("id"),
-		j.value("parent_id", id_t()));
+		j.at("id"));
 
 	particleType.name(j.value("name", ""));
 	particleType.start(j.value("lifetime_start", 0.0));

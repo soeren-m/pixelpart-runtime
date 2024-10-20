@@ -8,7 +8,7 @@ ColorSolver::ColorSolver() {
 
 }
 
-void ColorSolver::solve(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+void ColorSolver::solve(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
 	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
 	for(uint32_t p = 0u; p < particleCount; p++) {
 		float4_t hsv = rgb2hsv(particleType.color().at(particles.life[p]));
