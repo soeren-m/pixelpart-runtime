@@ -1,0 +1,71 @@
+#include "ParticleRuntimeInstanceCollection.h"
+#include <algorithm>
+#include <stdexcept>
+
+namespace pixelpart {
+ParticleRuntimeInstanceCollection::iterator ParticleRuntimeInstanceCollection::begin() {
+	return instances.begin();
+}
+ParticleRuntimeInstanceCollection::iterator ParticleRuntimeInstanceCollection::end() {
+	return instances.end();
+}
+ParticleRuntimeInstanceCollection::const_iterator ParticleRuntimeInstanceCollection::begin() const {
+	return instances.begin();
+}
+ParticleRuntimeInstanceCollection::const_iterator ParticleRuntimeInstanceCollection::end() const {
+	return instances.end();
+}
+
+ParticleRuntimeInstance& ParticleRuntimeInstanceCollection::add(id_t particleEmitterId, id_t particleTypeId, uint32_t particleCapacity) {
+	return instances.emplace_back(particleEmitterId, particleTypeId, particleCapacity);
+}
+void ParticleRuntimeInstanceCollection::remove(id_t particleEmitterId, id_t particleTypeId) {
+	instances.erase(std::remove_if(instances.begin(), instances.end(),
+		[particleEmitterId, particleTypeId](const ParticleRuntimeInstance& instance) {
+			return instance.emitterId() == particleEmitterId && instance.typeId() == particleTypeId;
+		}),
+		instances.end());
+}
+ParticleRuntimeInstanceCollection::iterator ParticleRuntimeInstanceCollection::remove(const_iterator position) {
+	return instances.erase(position);
+}
+ParticleRuntimeInstanceCollection::iterator ParticleRuntimeInstanceCollection::remove(const_iterator first, const_iterator last) {
+	return instances.erase(first, last);
+}
+
+ParticleRuntimeInstance* ParticleRuntimeInstanceCollection::find(id_t particleEmitterId, id_t particleTypeId) {
+	for(ParticleRuntimeInstance& instance : instances) {
+		if(instance.emitterId() == particleEmitterId && instance.typeId() == particleTypeId) {
+			return &instance;
+		}
+	}
+
+	return nullptr;
+}
+const ParticleRuntimeInstance* ParticleRuntimeInstanceCollection::find(id_t particleEmitterId, id_t particleTypeId) const {
+	for(const ParticleRuntimeInstance& instance : instances) {
+		if(instance.emitterId() == particleEmitterId && instance.typeId() == particleTypeId) {
+			return &instance;
+		}
+	}
+
+	return nullptr;
+}
+
+bool ParticleRuntimeInstanceCollection::contains(id_t particleEmitterId, id_t particleTypeId) const {
+	for(const ParticleRuntimeInstance& instance : instances) {
+		if(instance.emitterId() == particleEmitterId && instance.typeId() == particleTypeId) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+std::size_t ParticleRuntimeInstanceCollection::count() const {
+	return instances.size();
+}
+bool ParticleRuntimeInstanceCollection::empty() const {
+	return instances.empty();
+}
+}

@@ -1,25 +1,31 @@
 #pragma once
 
+#include "AnimatedProperty.h"
+#include "NodeTransform.h"
+#include "../computegraph/ComputeGraph.h"
 #include "../common/Types.h"
 #include "../common/Math.h"
 #include "../common/Id.h"
-#include "AnimatedProperty.h"
+#include <memory>
 #include <string>
 
 namespace pixelpart {
 class Node {
 public:
-	template <typename T>
-	friend class NodeCollection;
+	friend class SceneGraph;
 
 	Node() = default;
 	Node(id_t ownId, id_t parentId = id_t());
+
+	std::unique_ptr<Node> clone() const;
+
+	virtual void applyInputs(const ComputeGraph::InputSet& inputs);
+	virtual bool usesResource(const std::string& resourceId) const;
 
 	id_t id() const;
 
 	void parent(const Node& parentNode);
 	void parent(id_t parentNodeId);
-	void unparent();
 	id_t parentId() const;
 
 	void name(const std::string& name);
@@ -40,6 +46,18 @@ public:
 	AnimatedProperty<float3_t>& position();
 	const AnimatedProperty<float3_t>& position() const;
 
+	AnimatedProperty<float3_t>& orientation();
+	const AnimatedProperty<float3_t>& orientation() const;
+
+	AnimatedProperty<float3_t>& size();
+	const AnimatedProperty<float3_t>& size() const;
+
+	NodeTransform transform(float_t time) const;
+	NodeTransform baseTransform(float_t time) const;
+
+protected:
+	virtual Node* cloneImpl() const;
+
 private:
 	id_t nodeId = id_t();
 	id_t nodeParentId = id_t();
@@ -50,5 +68,10 @@ private:
 	bool nodeRepeat = true;
 
 	AnimatedProperty<float3_t> nodePosition = AnimatedProperty<float3_t>(0.0, float3_t(0.0));
+	AnimatedProperty<float3_t> nodeOrientation = AnimatedProperty<float3_t>(float3_t(0.0));
+	AnimatedProperty<float3_t> nodeSize = AnimatedProperty<float3_t>(float3_t(1.0));
 };
+
+void to_json(nlohmann::ordered_json& j, const Node& node);
+void from_json(const nlohmann::ordered_json& j, Node& node);
 }

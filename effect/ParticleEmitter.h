@@ -1,12 +1,13 @@
 #pragma once
 
 #include "Node.h"
+#include "AnimatedProperty.h"
 #include "../common/Types.h"
 #include "../common/Math.h"
 #include "../common/Id.h"
 #include "../common/Curve.h"
-#include "AnimatedProperty.h"
 #include "../json/json.hpp"
+#include <vector>
 
 namespace pixelpart {
 class ParticleEmitter : public Node {
@@ -53,17 +54,22 @@ public:
 	ParticleEmitter() = default;
 	ParticleEmitter(id_t ownId, id_t parentId = id_t());
 
+	virtual void applyInputs(const ComputeGraph::InputSet& inputs) override;
+
+	void primary(bool mode);
+	bool primary() const;
+
+	void particleTypes(const std::vector<id_t>& particleTypes);
+	void addParticleType(id_t particleTypeId);
+	void removeParticleType(id_t particleTypeId);
+	bool hasParticleType(id_t particleTypeId) const;
+	const std::vector<id_t>& particleTypes() const;
+
 	void shape(Shape shape);
 	Shape shape() const;
 
 	Curve<float3_t>& path();
 	const Curve<float3_t>& path() const;
-
-	AnimatedProperty<float3_t>& size();
-	const AnimatedProperty<float3_t>& size() const;
-
-	AnimatedProperty<float3_t>& orientation();
-	const AnimatedProperty<float3_t>& orientation() const;
 
 	void distribution(Distribution distribution);
 	Distribution distribution() const;
@@ -88,11 +94,15 @@ public:
 	AnimatedProperty<float_t>& spread();
 	const AnimatedProperty<float_t>& spread() const;
 
+protected:
+	virtual Node* cloneImpl() const override;
+
 private:
+	bool primaryEmitter = true;
+	std::vector<id_t> emitterParticleTypes;
+
 	Shape emitterShape = Shape::point;
 	Curve<float3_t> emitterPath = Curve<float3_t>();
-	AnimatedProperty<float3_t> emitterSize = AnimatedProperty<float3_t>(float3_t(1.0));
-	AnimatedProperty<float3_t> emitterOrientation = AnimatedProperty<float3_t>(float3_t(0.0));
 
 	Distribution emitterDistribution = Distribution::uniform;
 	GridOrder emitterGridOrder = GridOrder::x_y_z;
@@ -146,6 +156,6 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ParticleEmitter::DirectionMode, {
 	{ ParticleEmitter::DirectionMode::inherit_inverse, "inherit_inverse" }
 })
 
-void to_json(nlohmann::ordered_json& j, const ParticleEmitter& emitter);
-void from_json(const nlohmann::ordered_json& j, ParticleEmitter& emitter);
+void to_json(nlohmann::ordered_json& j, const ParticleEmitter& particleEmitter);
+void from_json(const nlohmann::ordered_json& j, ParticleEmitter& particleEmitter);
 }

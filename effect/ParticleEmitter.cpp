@@ -1,8 +1,41 @@
 #include "ParticleEmitter.h"
+#include "NodeType.h"
+#include <algorithm>
 
 namespace pixelpart {
 ParticleEmitter::ParticleEmitter(id_t ownId, id_t parentId) : Node(ownId, parentId) {
 
+}
+
+void ParticleEmitter::applyInputs(const ComputeGraph::InputSet& inputs) {
+	Node::applyInputs(inputs);
+
+	emitterDirection.input(inputs);
+	emitterSpread.input(inputs);
+}
+
+void ParticleEmitter::primary(bool mode) {
+	primaryEmitter = mode;
+}
+bool ParticleEmitter::primary() const {
+	return primaryEmitter;
+}
+
+void ParticleEmitter::particleTypes(const std::vector<id_t>& particleTypes) {
+	emitterParticleTypes = particleTypes;
+}
+void ParticleEmitter::addParticleType(id_t particleTypeId) {
+	emitterParticleTypes.push_back(particleTypeId);
+}
+void ParticleEmitter::removeParticleType(id_t particleTypeId) {
+	emitterParticleTypes.erase(
+		std::remove(emitterParticleTypes.begin(), emitterParticleTypes.end(), particleTypeId), emitterParticleTypes.end());
+}
+bool ParticleEmitter::hasParticleType(id_t particleTypeId) const {
+	return std::find(emitterParticleTypes.begin(), emitterParticleTypes.end(), particleTypeId) != emitterParticleTypes.end();
+}
+const std::vector<id_t>& ParticleEmitter::particleTypes() const {
+	return emitterParticleTypes;
 }
 
 void ParticleEmitter::shape(Shape shape) {
@@ -17,20 +50,6 @@ Curve<float3_t>& ParticleEmitter::path() {
 }
 const Curve<float3_t>& ParticleEmitter::path() const {
 	return emitterPath;
-}
-
-AnimatedProperty<float3_t>& ParticleEmitter::size() {
-	return emitterSize;
-}
-const AnimatedProperty<float3_t>& ParticleEmitter::size() const {
-	return emitterSize;
-}
-
-AnimatedProperty<float3_t>& ParticleEmitter::orientation() {
-	return emitterOrientation;
-}
-const AnimatedProperty<float3_t>& ParticleEmitter::orientation() const {
-	return emitterOrientation;
 }
 
 void ParticleEmitter::distribution(Distribution distribution) {
@@ -90,20 +109,18 @@ const AnimatedProperty<float_t>& ParticleEmitter::spread() const {
 	return emitterSpread;
 }
 
-void to_json(nlohmann::ordered_json& j, const ParticleEmitter& particleEmitter) {
-	j = nlohmann::ordered_json{
-		{ "id", particleEmitter.id() },
-		{ "parent_id", particleEmitter.parentId() },
-		{ "name", particleEmitter.name() },
-		{ "lifetime_start", particleEmitter.start() },
-		{ "lifetime_duration", particleEmitter.duration() },
-		{ "repeat", particleEmitter.repeat() },
-		{ "position", particleEmitter.position() },
+Node* ParticleEmitter::cloneImpl() const {
+	return new ParticleEmitter(*this);
+}
 
+void to_json(nlohmann::ordered_json& j, const ParticleEmitter& particleEmitter) {
+	to_json(j, static_cast<const Node&>(particleEmitter));
+	j.update(nlohmann::ordered_json{
+		{ "node_type", NodeType::particle_emitter },
+		{ "primary", particleEmitter.primary() },
+		{ "particle_types", particleEmitter.particleTypes() },
 		{ "shape", particleEmitter.shape() },
 		{ "path", particleEmitter.path() },
-		{ "size", particleEmitter.size() },
-		{ "orientation", particleEmitter.orientation() },
 		{ "distribution", particleEmitter.distribution() },
 		{ "grid_order", particleEmitter.gridOrder() },
 		{ "grid_size_x", particleEmitter.gridSizeX() },
@@ -113,23 +130,17 @@ void to_json(nlohmann::ordered_json& j, const ParticleEmitter& particleEmitter) 
 		{ "direction_mode", particleEmitter.directionMode() },
 		{ "direction", particleEmitter.direction() },
 		{ "spread", particleEmitter.spread() },
-	};
+	});
 }
 void from_json(const nlohmann::ordered_json& j, ParticleEmitter& particleEmitter) {
-	particleEmitter = ParticleEmitter(
-		j.at("id"),
-		j.value("parent_id", id_t()));
+	particleEmitter = ParticleEmitter(j.at("id").get<id_t>());
 
-	particleEmitter.name(j.value("name", ""));
-	particleEmitter.start(j.value("lifetime_start", 0.0));
-	particleEmitter.duration(j.value("lifetime_duration", 1.0));
-	particleEmitter.repeat(j.value("repeat", true));
-	particleEmitter.position() = j.value("position", AnimatedProperty<float3_t>(0.0, float3_t(0.0)));
+	from_json(j, static_cast<Node&>(particleEmitter));
 
+	particleEmitter.primary(j.value("primary", true));
+	particleEmitter.particleTypes(j.value("particle_types", std::vector<id_t>()));
 	particleEmitter.shape(j.value("shape", ParticleEmitter::Shape::point));
 	particleEmitter.path() = j.value("path", Curve<float3_t>());
-	particleEmitter.size() = j.value("size", AnimatedProperty<float3_t>(float3_t(1.0)));
-	particleEmitter.orientation() = j.value("orientation", AnimatedProperty<float3_t>(float3_t(0.0)));
 	particleEmitter.distribution(j.value("distribution", ParticleEmitter::Distribution::uniform));
 	particleEmitter.gridOrder(j.value("grid_order", ParticleEmitter::GridOrder::x_y_z));
 	particleEmitter.gridSize(

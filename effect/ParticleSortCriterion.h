@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include "../json/json.hpp"
+#include <cstdint>
 
 namespace pixelpart {
 enum class ParticleSortCriterion : uint32_t {

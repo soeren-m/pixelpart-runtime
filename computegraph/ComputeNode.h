@@ -51,7 +51,7 @@ public:
 
 	virtual std::vector<VariantValue> evaluate(const std::vector<VariantValue>& in) const = 0;
 
-	std::unique_ptr<ComputeNode> clone();
+	std::unique_ptr<ComputeNode> clone() const;
 
 	void type(const std::string& type);
 	const std::string& type() const;

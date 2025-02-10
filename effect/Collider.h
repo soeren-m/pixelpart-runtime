@@ -1,14 +1,13 @@
 #pragma once
 
 #include "Node.h"
-#include "../common/Types.h"
-#include "../common/Math.h"
-#include "../common/Id.h"
-#include "NodeExclusionSet.h"
+#include "ColliderType.h"
 #include "StaticProperty.h"
 #include "AnimatedProperty.h"
+#include "../common/Types.h"
+#include "../common/Id.h"
 #include "../json/json.hpp"
-#include <vector>
+#include <set>
 
 namespace pixelpart {
 class Collider : public Node {
@@ -18,19 +17,12 @@ public:
 	Collider() = default;
 	Collider(id_t ownId, id_t parentId = id_t());
 
-	NodeExclusionSet& exclusionSet();
-	const NodeExclusionSet& exclusionSet() const;
+	virtual void applyInputs(const ComputeGraph::InputSet& inputs) override;
 
-	float3_t& point(std::size_t index);
-	const float3_t& point(std::size_t index) const;
-	PointList& points();
-	const PointList& points() const;
+	virtual ColliderType colliderType() const = 0;
 
-	StaticProperty<float_t>& width();
-	const StaticProperty<float_t>& width() const;
-
-	StaticProperty<float_t>& orientation();
-	const StaticProperty<float_t>& orientation() const;
+	std::set<id_t>& exclusionSet();
+	const std::set<id_t>& exclusionSet() const;
 
 	StaticProperty<bool>& killOnContact();
 	const StaticProperty<bool>& killOnContact() const;
@@ -42,13 +34,8 @@ public:
 	const AnimatedProperty<float_t>& friction() const;
 
 private:
-	NodeExclusionSet colliderExclusionSet;
-	PointList colliderPoints = PointList{
-		float3_t(-0.5, 0.0, 0.0),
-		float3_t(+0.5, 0.0, 0.0)
-	};
-	StaticProperty<float_t> colliderWidth = StaticProperty<float_t>(1.0);
-	StaticProperty<float_t> colliderOrientation = StaticProperty<float_t>(0.0);
+	std::set<id_t> colliderExclusionSet;
+
 	StaticProperty<bool> colliderKillOnContact = StaticProperty<bool>(false);
 
 	AnimatedProperty<float_t> colliderBounce = AnimatedProperty<float_t>(0.5);

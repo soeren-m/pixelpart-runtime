@@ -6,7 +6,6 @@
 #include "../computegraph/OutputComputeNode.h"
 #include "ComputeOutputOperation.h"
 #include "../json/json.hpp"
-#include <unordered_map>
 
 namespace pixelpart {
 template <typename T>

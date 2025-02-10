@@ -48,7 +48,17 @@ void ParticleCollection::remove(uint32_t index) {
 	std::swap(color[index], color[particleCount]);
 	std::swap(initialColor[index], initialColor[particleCount]);
 }
-void ParticleCollection::removeAll() {
+void ParticleCollection::removeDead() {
+	for(uint32_t index = 0u; index < particleCount; ) {
+		if(life[index] > 1.0) {
+			remove(index);
+		}
+		else {
+			index++;
+		}
+	}
+}
+void ParticleCollection::clear() {
 	particleCount = 0u;
 }
 
@@ -91,10 +101,10 @@ ParticleCollection::ReadPtr ParticleCollection::readPtr(uint32_t index) const {
 	};
 }
 
-uint32_t ParticleCollection::capacity() const {
-	return particleCapacity;
-}
 uint32_t ParticleCollection::count() const {
 	return particleCount;
+}
+uint32_t ParticleCollection::capacity() const {
+	return particleCapacity;
 }
 }

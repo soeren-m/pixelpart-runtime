@@ -1,14 +1,24 @@
 #pragma once
 
-#include "NodeCollection.h"
+#include "SceneGraph.h"
+#include "GroupNode.h"
 #include "ParticleEmitter.h"
-#include "ParticleType.h"
-#include "ForceField.h"
-#include "Collider.h"
-#include "LightSource.h"
+#include "AttractionField.h"
+#include "AccelerationField.h"
+#include "VectorField.h"
+#include "NoiseField.h"
+#include "DragField.h"
+#include "LineCollider.h"
+#include "PlaneCollider.h"
+#include "DirectionalLightSource.h"
+#include "PointLightSource.h"
+#include "SpotLightSource.h"
+#include "ParticleTypeCollection.h"
 #include "EffectInputCollection.h"
 #include "ResourceCollection.h"
+#include "ParticleRuntimePair.h"
 #include "../json/json.hpp"
+#include <vector>
 
 namespace pixelpart {
 class Effect {
@@ -19,20 +29,11 @@ public:
 	void enable3d(bool mode);
 	bool is3d() const;
 
-	NodeCollection<ParticleEmitter>& particleEmitters();
-	const NodeCollection<ParticleEmitter>& particleEmitters() const;
+	SceneGraph& sceneGraph();
+	const SceneGraph& sceneGraph() const;
 
-	NodeCollection<ParticleType>& particleTypes();
-	const NodeCollection<ParticleType>& particleTypes() const;
-
-	NodeCollection<ForceField>& forceFields();
-	const NodeCollection<ForceField>& forceFields() const;
-
-	NodeCollection<Collider>& colliders();
-	const NodeCollection<Collider>& colliders() const;
-
-	NodeCollection<LightSource>& lightSources();
-	const NodeCollection<LightSource>& lightSources() const;
+	ParticleTypeCollection& particleTypes();
+	const ParticleTypeCollection& particleTypes() const;
 
 	EffectInputCollection& inputs();
 	const EffectInputCollection& inputs() const;
@@ -40,19 +41,17 @@ public:
 	ResourceCollection& resources();
 	const ResourceCollection& resources() const;
 
-	void refreshProperties();
+	std::vector<ParticleRuntimePair> runtimePairs(id_t particleEmitterId) const;
+	std::vector<ParticleRuntimePair> runtimePairs() const;
+
+	void applyInputs();
 
 private:
 	bool effect3d = false;
 
-	NodeCollection<ParticleEmitter> effectParticleEmitters;
-	NodeCollection<ParticleType> effectParticleTypes;
-	NodeCollection<ForceField> effectForceFields;
-	NodeCollection<Collider> effectColliders;
-	NodeCollection<LightSource> effectLightSources;
-
+	SceneGraph effectSceneGraph;
+	ParticleTypeCollection effectParticleTypes;
 	EffectInputCollection effectInputs;
-
 	ResourceCollection effectResources;
 };
 

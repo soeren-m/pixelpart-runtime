@@ -1,10 +1,10 @@
 #pragma once
 
+#include "../json/json.hpp"
 #include <cstdint>
 #include <cstddef>
 #include <string>
 #include <vector>
-#include "../json/json.hpp"
 
 namespace pixelpart {
 enum class CompressionMethod : uint32_t {

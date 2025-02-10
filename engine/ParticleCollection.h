@@ -43,21 +43,22 @@ public:
 		const float4_t* initialColor = nullptr;
 	};
 
-	ParticleCollection(uint32_t capacity = 1024);
+	ParticleCollection(uint32_t capacity = 1024u);
 
 	uint32_t add(uint32_t number);
 	void remove(uint32_t index);
-	void removeAll();
+	void removeDead();
+	void clear();
 
 	WritePtr writePtr(uint32_t index = 0u);
 	ReadPtr readPtr(uint32_t index = 0u) const;
 
-	uint32_t capacity() const;
 	uint32_t count() const;
+	uint32_t capacity() const;
 
 private:
-	uint32_t particleCapacity = 0u;
 	uint32_t particleCount = 0u;
+	uint32_t particleCapacity = 1024u;
 
 	std::vector<uint32_t> id;
 	std::vector<uint32_t> parentId;

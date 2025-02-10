@@ -41,12 +41,12 @@ const int32_t gradTable4d[32][4] = {
 };
 
 inline uint8_t hash(int32_t i) {
-    return permutationTable[static_cast<uint8_t>(i)];
+	return permutationTable[static_cast<uint8_t>(i)];
 }
 
 inline int32_t fastfloor(float_t f) {
-    int32_t i = static_cast<int32_t>(f);
-    return f < i ? i - 1 : i;
+	int32_t i = static_cast<int32_t>(f);
+	return f < i ? i - 1 : i;
 }
 
 float_t grad(int32_t hash, float_t x) {
@@ -76,7 +76,7 @@ float_t grad(int32_t hash, float_t x, float_t y, float_t z, float_t w) {
 		gradTable4d[hash][3] * w;
 }
 
-float_t simplexNoise(float_t x) {
+float_t simplex(float_t x) {
 	int32_t i0 = fastfloor(x);
 	int32_t i1 = i0 + 1;
 
@@ -92,7 +92,7 @@ float_t simplexNoise(float_t x) {
 
 	return 0.395f * (n0 + n1);
 }
-float_t simplexNoise(float_t x, float_t y) {
+float_t simplex(float_t x, float_t y) {
 	static const float_t F2 = 0.366025403;
 	static const float_t G2 = 0.211324865;
 
@@ -159,7 +159,7 @@ float_t simplexNoise(float_t x, float_t y) {
 
 	return 45.23065 * (n0 + n1 + n2);
 }
-float_t simplexNoise(float_t x, float_t y, float_t z) {
+float_t simplex(float_t x, float_t y, float_t z) {
 	static const float_t F3 = 1.0 / 3.0;
 	static const float_t G3 = 1.0 / 6.0;
 
@@ -257,7 +257,7 @@ float_t simplexNoise(float_t x, float_t y, float_t z) {
 
 	return 32.0 * (n0 + n1 + n2 + n3);
 }
-float_t simplexNoise(float_t x, float_t y, float_t z, float_t w) {
+float_t simplex(float_t x, float_t y, float_t z, float_t w) {
 	static const float_t F4 = 0.3090169944;
 	static const float_t G4 = 0.1381966011;
 
@@ -380,13 +380,13 @@ float_t simplexNoise(float_t x, float_t y, float_t z, float_t w) {
 	return 27.0 * (n0 + n1 + n2 + n3 + n4);
 }
 
-float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x) {
+float_t simplexFBM(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x) {
 	float_t result = 0.0;
 	float_t amplitude = 1.0;
 	float_t denom = 0.0;
 
 	for(uint32_t o = 0u; o < octaves; o++) {
-		result += amplitude * simplexNoise(x * frequency);
+		result += amplitude * simplex(x * frequency);
 		denom += amplitude;
 
 		amplitude *= persistence;
@@ -395,13 +395,13 @@ float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence
 
 	return result / denom;
 }
-float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y) {
+float_t simplexFBM(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y) {
 	float_t result = 0.0;
 	float_t amplitude = 1.0;
 	float_t denom = 0.0;
 
 	for(uint32_t o = 0u; o < octaves; o++) {
-		result += amplitude * simplexNoise(x * frequency, y * frequency);
+		result += amplitude * simplex(x * frequency, y * frequency);
 		denom += amplitude;
 
 		amplitude *= persistence;
@@ -410,13 +410,13 @@ float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence
 
 	return result / denom;
 }
-float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y, float_t z) {
+float_t simplexFBM(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y, float_t z) {
 	float_t result = 0.0;
 	float_t amplitude = 1.0;
 	float_t denom = 0.0;
 
 	for(uint32_t o = 0u; o < octaves; o++) {
-		result += amplitude * simplexNoise(x * frequency, y * frequency, z * frequency);
+		result += amplitude * simplex(x * frequency, y * frequency, z * frequency);
 		denom += amplitude;
 
 		amplitude *= persistence;
@@ -425,13 +425,13 @@ float_t fBmSimplexNoise(uint32_t octaves, float_t frequency, float_t persistence
 
 	return result / denom;
 }
-float_t fBmSimplexNoise(uint32_t octaves,  float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y, float_t z, float_t w) {
+float_t simplexFBM(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y, float_t z, float_t w) {
 	float_t result = 0.0;
 	float_t amplitude = 1.0;
 	float_t denom = 0.0;
 
 	for(uint32_t o = 0u; o < octaves; o++) {
-		result += amplitude * simplexNoise(x * frequency, y * frequency, z * frequency, w * frequency);
+		result += amplitude * simplex(x * frequency, y * frequency, z * frequency, w * frequency);
 		denom += amplitude;
 
 		amplitude *= persistence;

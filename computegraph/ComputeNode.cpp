@@ -48,7 +48,7 @@ ComputeNode::ComputeNode(
 	}
 }
 
-std::unique_ptr<ComputeNode> ComputeNode::clone() {
+std::unique_ptr<ComputeNode> ComputeNode::clone() const {
 	std::unique_ptr<ComputeNode> clonedNode(cloneImpl());
 	clonedNode->nodeInputLinks = nodeInputLinks;
 	clonedNode->nodeParameterValues = nodeParameterValues;

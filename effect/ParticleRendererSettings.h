@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../common/Types.h"
 #include "ParticleSortCriterion.h"
+#include "../common/Types.h"
 #include "../json/json.hpp"
 #include <string>
 

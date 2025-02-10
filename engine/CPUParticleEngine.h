@@ -1,29 +1,32 @@
 #pragma once
 
+#include "../common/Types.h"
 #include "../common/Id.h"
 #include "ParticleEngine.h"
+#include "ParticleRuntimeInstance.h"
+#include "ParticleRuntimeInstanceCollection.h"
 #include "ParticleGenerator.h"
-#include "SizeSolver.h"
-#include "ColorSolver.h"
-#include "AccelerationSolver.h"
-#include "ForceSolver.h"
-#include "CollisionSolver.h"
-#include "MotionPathSolver.h"
-#include "RotationSolver.h"
-#include "IntegrationSolver.h"
-#include "LifeSolver.h"
-#include <vector>
+#include "SizeModifier.h"
+#include "ColorModifier.h"
+#include "AccelerationModifier.h"
+#include "ForceModifier.h"
+#include "CollisionModifier.h"
+#include "MotionPathModifier.h"
+#include "RotationModifier.h"
+#include "IntegrationModifier.h"
+#include "LifeModifier.h"
 
 #ifdef PIXELPART_MULTITHREADING
 #include "../common/ThreadPool.h"
+#include <memory>
 #endif
 
 namespace pixelpart {
 class CPUParticleEngine : public ParticleEngine {
 public:
-	CPUParticleEngine(const Effect& fx, uint32_t capacity);
+	CPUParticleEngine(const Effect& effect, uint32_t particleCapacity);
 #ifdef PIXELPART_MULTITHREADING
-	CPUParticleEngine(const Effect& fx, uint32_t capacity, std::shared_ptr<ThreadPool> thPool);
+	CPUParticleEngine(const Effect& effect, uint32_t particleCapacity, std::shared_ptr<ThreadPool> threadPl);
 #endif
 
 	virtual void step(float_t dt) override;
@@ -31,18 +34,22 @@ public:
 
 	virtual float_t currentTime() const override;
 
-	virtual void applySeed(uint32_t seed) override;
-	virtual void resetSeed() override;
+	virtual void seed(uint32_t seed) override;
 
-	virtual void spawnParticles(id_t particleTypeId, uint32_t count) override;
+	virtual void spawnParticles(id_t particleEmitterId, uint32_t count, float_t time = 0.0) override;
+	virtual void spawnParticles(id_t particleEmitterId, id_t particleTypeId, uint32_t count, float_t time = 0.0) override;
 
 	virtual uint32_t particleCount() const override;
-	virtual uint32_t particleCount(uint32_t particleTypeIndex) const override;
+	virtual uint32_t particleCount(id_t particleEmitterId, id_t particleTypeId) const override;
 
-	virtual ParticleCollection::ReadPtr particles(uint32_t particleTypeIndex) const override;
+	virtual const ParticleCollection* particles(id_t particleEmitterId, id_t particleTypeId) const override;
+
+	virtual const Effect& effect() const override;
 
 	uint32_t particleCapacity() const;
 
+	void particleCountPerThread(uint32_t count);
+	uint32_t particleCountPerThread() const;
 	uint32_t activeThreadCount() const;
 
 private:
@@ -50,29 +57,29 @@ private:
 		ParticleCollection::WritePtr particles, uint32_t particleCount,
 		float_t t, float_t dt) const;
 
-	std::vector<ParticleCollection> particleCollections;
+	const Effect& particleEffect;
 
-	std::vector<float_t> emissionCount;
-	uint32_t particleCap = 0u;
-	uint32_t activeSeed = 0u;
-	float_t time = 0.0;
+	ParticleRuntimeInstanceCollection particleRuntimeInstances;
+
+	uint32_t engineParticleCapacity = 0u;
+	float_t engineTime = 0.0;
 
 	ParticleGenerator particleGenerator;
 
-	SizeSolver sizeSolver;
-	ColorSolver colorSolver;
-	AccelerationSolver accelerationSolver;
-	ForceSolver forceSolver;
-	CollisionSolver collisionSolver;
-	MotionPathSolver motionPathSolver;
-	RotationSolver rotationSolver;
-	IntegrationSolver integrationSolver;
-	LifeSolver lifeSolver;
+	SizeModifier sizeModifier;
+	ColorModifier colorModifier;
+	AccelerationModifier accelerationModifier;
+	ForceModifier forceModifier;
+	CollisionModifier collisionModifier;
+	MotionPathModifier motionPathModifier;
+	RotationModifier rotationModifier;
+	IntegrationModifier integrationModifier;
+	LifeModifier lifeModifier;
 
 #ifdef PIXELPART_MULTITHREADING
 	std::shared_ptr<ThreadPool> threadPool;
 #endif
 	uint32_t totalActiveThreadCount = 0u;
-	uint32_t particleCountPerThread = 128u;
+	uint32_t workPerThread = 128u;
 };
 }

@@ -46,7 +46,7 @@ std::vector<uint8_t> decodeAndDecompress(const std::string& data, std::size_t un
 			static_cast<uLong>(compressedData.size()));
 
 		if(result != Z_OK) {
-			throw std::runtime_error("zlib decompression error:  " + std::to_string(result));
+			throw std::runtime_error("zlib decompression error: " + std::to_string(result));
 		}
 
 		return uncompressedData;

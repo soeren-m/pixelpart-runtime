@@ -1,0 +1,45 @@
+#include "ParticleRuntimeInstance.h"
+
+namespace pixelpart {
+ParticleRuntimeInstance::ParticleRuntimeInstance(id_t emitterId, id_t typeId, uint32_t particleCapacity) :
+	instanceEmitterId(emitterId), instanceTypeId(typeId), instanceParticles(particleCapacity) {
+
+}
+
+void ParticleRuntimeInstance::reset() {
+	instanceParticles.clear();
+	instanceEmissionCount = 0.0;
+	instanceEmitterGridIndex = 0u;
+}
+
+id_t ParticleRuntimeInstance::emitterId() const {
+	return instanceEmitterId;
+}
+id_t ParticleRuntimeInstance::typeId() const {
+	return instanceTypeId;
+}
+ParticleRuntimePair ParticleRuntimeInstance::key() const {
+	return ParticleRuntimePair(instanceEmitterId, instanceTypeId);
+}
+
+ParticleCollection& ParticleRuntimeInstance::particles() {
+	return instanceParticles;
+}
+const ParticleCollection& ParticleRuntimeInstance::particles() const {
+	return instanceParticles;
+}
+
+float_t& ParticleRuntimeInstance::emissionCount() {
+	return instanceEmissionCount;
+}
+float_t ParticleRuntimeInstance::emissionCount() const {
+	return instanceEmissionCount;
+}
+
+uint32_t& ParticleRuntimeInstance::emitterGridIndex() {
+	return instanceEmitterGridIndex;
+}
+uint32_t ParticleRuntimeInstance::emitterGridIndex() const {
+	return instanceEmitterGridIndex;
+}
+}

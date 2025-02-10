@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ComputeNodeBase.h"
+#include <string>
 
 namespace pixelpart {
 class BooleanConstantComputeNode : public ComputeNodeBase<BooleanConstantComputeNode> {

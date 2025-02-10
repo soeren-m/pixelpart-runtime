@@ -1,15 +1,14 @@
 #pragma once
 
+#include "ComputeOutputOperation.h"
+#include "ComputeOutputTarget.h"
+#include "../computegraph/ComputeGraph.h"
+#include "../computegraph/OutputComputeNode.h"
 #include "../common/Types.h"
 #include "../common/Curve.h"
 #include "../common/VariantValue.h"
-#include "../computegraph/ComputeGraph.h"
-#include "../computegraph/OutputComputeNode.h"
-#include "ComputeOutputOperation.h"
-#include "ComputeOutputTarget.h"
 #include "../json/json.hpp"
 #include <vector>
-#include <unordered_map>
 
 namespace pixelpart {
 template <typename T>

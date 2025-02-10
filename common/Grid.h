@@ -86,7 +86,7 @@ public:
 		return defaultValue;
 	}
 	template <typename IntT>
-	const T& value(const GridIndex3d<IntT>& index, const T& defaultValue) const {
+	const T& value(const GridIndex<IntT>& index, const T& defaultValue) const {
 		if(contains(index.x, index.y)) {
 			return operator()<IntT>(index);
 		}

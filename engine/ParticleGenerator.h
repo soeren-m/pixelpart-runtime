@@ -5,23 +5,27 @@
 #include "../effect/Effect.h"
 #include "../effect/ParticleEmitter.h"
 #include "ParticleCollection.h"
+#include "ParticleRuntimeInstance.h"
+#include "ParticleRuntimeInstanceCollection.h"
 #include "Random.h"
 #include <random>
-#include <vector>
 
 namespace pixelpart {
 class ParticleGenerator {
 public:
-	ParticleGenerator(const Effect& fx, std::vector<ParticleCollection>& particleColl);
+	ParticleGenerator(const Effect& fx, ParticleRuntimeInstanceCollection& particleRuntimeInsts);
 
-	uint32_t generate(uint32_t count, uint32_t parentParticle, uint32_t particleTypeIndex, uint32_t parentParticleTypeIndex, uint32_t particleEmitterIndex, float_t dt, float_t t);
+	void generate(float_t time, float_t dt);
+	void generate(id_t particleEmitterId, id_t particleTypeId, uint32_t count, float_t time);
 
-	void prepare();
 	void reset();
 
-	void applySeed(uint32_t seed);
+	void seed(uint32_t seed);
 
 private:
+	uint32_t generate(ParticleRuntimeInstance& runtimeInstance, uint32_t count, float_t time, float_t particleLifeFraction);
+	uint32_t generate(ParticleRuntimeInstance& runtimeInstance, ParticleRuntimeInstance* parentRuntimeInstance, uint32_t count, uint32_t parentParticle, float_t time, float_t particleLifeFraction);
+
 	static float_t sampleGrid1D(uint32_t gridIndex, uint32_t gridSize, float_t min, float_t max);
 	static float_t sampleGrid2D(uint32_t gridIndex, uint32_t gridSize1, uint32_t gridSize2, float_t min, float_t max);
 	static float_t sampleGrid3D(uint32_t gridIndex, uint32_t gridSize1, uint32_t gridSize2, uint32_t gridSize3, float_t min, float_t max);
@@ -65,10 +69,9 @@ private:
 		uint32_t gridSizeX, uint32_t gridSizeY, uint32_t gridSizeZ, uint32_t& gridIndex);
 
 	const Effect& effect;
-	std::vector<ParticleCollection>& particleCollections;
+	ParticleRuntimeInstanceCollection& particleRuntimeInstances;
 
 	uint32_t nextParticleId = 0u;
-	std::vector<uint32_t> particleEmitterGridIndices;
 	std::mt19937 rng;
 };
 }
