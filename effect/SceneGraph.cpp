@@ -192,7 +192,7 @@ NodeTransform SceneGraph::localBaseTransform(id_t nodeId, float_t time) const {
 NodeTransform SceneGraph::parentTransform(id_t nodeId, float_t time) const {
 	const Node& node = at(nodeId);
 	if(node.parentId()) {
-		return parentTransform(node.parentId(), time);
+		return globalTransform(node.parentId(), time);
 	}
 
 	return NodeTransform();
