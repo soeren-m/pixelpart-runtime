@@ -226,6 +226,7 @@ uint32_t ParticleGenerator::generate(ParticleRuntimeInstance& runtimeInstance, P
 				break;
 			case ParticleEmitter::Shape::path:
 				particleSpawnPosition = emitOnPath(
+					emitterSize,
 					emitter.path(),
 					emitter.distribution(),
 					emitter.gridOrder(),
@@ -619,7 +620,8 @@ float3_t ParticleGenerator::emitInRectangle(const float2_t& size,
 	return point;
 }
 
-float3_t ParticleGenerator::emitOnPath(const Curve<float3_t>& path,
+float3_t ParticleGenerator::emitOnPath(const float3_t& size,
+	const Curve<float3_t>& path,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
 	uint32_t gridSize, uint32_t& gridIndex) {
@@ -653,7 +655,7 @@ float3_t ParticleGenerator::emitOnPath(const Curve<float3_t>& path,
 		}
 	}
 
-	return path.at(x);
+	return path.at(x) * size;
 }
 
 float3_t ParticleGenerator::emitInEllipsoid(const float3_t& size,

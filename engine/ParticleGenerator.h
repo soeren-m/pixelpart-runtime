@@ -48,7 +48,8 @@ private:
 		ParticleEmitter::GridOrder gridOrder,
 		uint32_t gridSizeX, uint32_t gridSizeY, uint32_t& gridIndex);
 
-	float3_t emitOnPath(const Curve<float3_t>& path,
+	float3_t emitOnPath(const float3_t& size,
+		const Curve<float3_t>& path,
 		ParticleEmitter::Distribution distribution,
 		ParticleEmitter::GridOrder gridOrder,
 		uint32_t gridSize, uint32_t& gridIndex);
