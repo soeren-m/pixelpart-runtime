@@ -47,7 +47,6 @@ void CollisionModifier::prepare(const Effect& effect, float_t t) {
 	line2dColliderGrid.clear();
 
 	if(effect.is3d()) {
-
 		for(const Collider* collider : effect.sceneGraph().nodesWithType<Collider>()) {
 			const PlaneCollider* planeCollider = dynamic_cast<const PlaneCollider*>(collider);
 
@@ -105,21 +104,15 @@ CollisionModifier::Line2dColliderObject::Line2dColliderObject(const PlaneCollide
 }
 
 CollisionModifier::Plane3dColliderObject::Plane3dColliderObject(const PlaneCollider& collider, const NodeTransform& transform) : ColliderObject(collider) {
-	float3_t start = float3_t(transform * float4_t(-0.5, 0.0, 0.0, 1.0));
-	float3_t end = float3_t(transform * float4_t(+0.5, 0.0, 0.0, 1.0));
+	center = float3_t(transform * float4_t(0.0, 0.0, 0.0, 1.0));
+	normal = float3_t(transform * float4_t(0.0, 1.0, 0.0, 0.0));
 
-	center = (start + end) * 0.5;
-	rightVector = end - center;
-
-	normal = float3_t(1.0, 0.0, 0.0);
-	if(std::abs(rightVector.x) > 0.001) {
-		normal = glm::normalize(float3_t(-rightVector.y / rightVector.x, 1.0, 0.0));
-	}
-	else if(std::abs(rightVector.z) > 0.001) {
-		normal = glm::normalize(float3_t(0.0, 1.0, -rightVector.y / rightVector.z));
-	}
-
-	upVector = glm::cross(glm::normalize(rightVector), normal);
+	vertices = std::array<float3_t, 4>{
+		float3_t(transform * float4_t(-0.5, 0.0, -0.5, 1.0)),
+		float3_t(transform * float4_t(+0.5, 0.0, -0.5, 1.0)),
+		float3_t(transform * float4_t(-0.5, 0.0, +0.5, 1.0)),
+		float3_t(transform * float4_t(+0.5, 0.0, +0.5, 1.0))
+	};
 }
 
 CollisionModifier::Intersection::Intersection() {
@@ -130,50 +123,43 @@ CollisionModifier::Intersection::Intersection(const float3_t& p) : hit(true), po
 }
 
 bool CollisionModifier::isPointOnLineSegment(const float2_t& p, const float2_t& l1, const float2_t& l2) {
-	float_t A = glm::dot(l2 - l1, p - l1);
-	float_t B = glm::dot(l2 - l1, l2 - l1);
+	float_t a = glm::dot(l2 - l1, p - l1);
+	float_t b = glm::dot(l2 - l1, l2 - l1);
 
-	return A >= 0.0 && A < B;
+	return a >= 0.0 && a < b;
 }
 bool CollisionModifier::isPointOnLineSegment(const float3_t& p, const float3_t& l1, const float3_t& l2) {
-	float_t A = glm::dot(l2 - l1, p - l1);
-	float_t B = glm::dot(l2 - l1, l2 - l1);
+	float_t a = glm::dot(l2 - l1, p - l1);
+	float_t b = glm::dot(l2 - l1, l2 - l1);
 
-	return A >= 0.0 && A < B;
+	return a >= 0.0 && a < b;
 }
 bool CollisionModifier::isPointOnCollider(const float3_t& p, const Plane3dColliderObject& collider) {
-	float3_t vertices[4] = {
-		collider.center - collider.rightVector - collider.upVector,
-		collider.center + collider.rightVector - collider.upVector,
-		collider.center - collider.rightVector + collider.upVector,
-		collider.center + collider.rightVector + collider.upVector,
-	};
-
-	float3_t V1ToV0 = vertices[0] - vertices[1];
-	float3_t V1ToV3 = vertices[3] - vertices[1];
-	float3_t V2ToV0 = vertices[0] - vertices[2];
-	float3_t V2ToV3 = vertices[3] - vertices[2];
-	float3_t V1ToP = p - vertices[1];
-	float3_t V2ToP = p - vertices[2];
+	float3_t v1ToV0 = collider.vertices[0] - collider.vertices[1];
+	float3_t v1ToV3 = collider.vertices[3] - collider.vertices[1];
+	float3_t v2ToV0 = collider.vertices[0] - collider.vertices[2];
+	float3_t v2ToV3 = collider.vertices[3] - collider.vertices[2];
+	float3_t v1ToP = p - collider.vertices[1];
+	float3_t v2ToP = p - collider.vertices[2];
 
 	return
-		glm::dot(V1ToP, V1ToV0) > 0.0 &&
-		glm::dot(V1ToP, V1ToV3) > 0.0 &&
-		glm::dot(V2ToP, V2ToV0) > 0.0 &&
-		glm::dot(V2ToP, V2ToV3) > 0.0;
+		glm::dot(v1ToP, v1ToV0) > 0.0 &&
+		glm::dot(v1ToP, v1ToV3) > 0.0 &&
+		glm::dot(v2ToP, v2ToV0) > 0.0 &&
+		glm::dot(v2ToP, v2ToV3) > 0.0;
 }
 
 float2_t CollisionModifier::calculateClosestPointOnLine(const float2_t& p, const Line2dColliderObject& collider) {
-	float_t A1 = collider.end.y - collider.start.y;
-	float_t B1 = collider.start.x - collider.end.x;
-	float_t C1 = (collider.end.y - collider.start.y) * collider.start.x + (collider.start.x - collider.end.x) * collider.start.y;
-	float_t C2 = -B1 * p.x + A1 * p.y;
-	float_t det = A1 * A1 - -B1 * B1;
+	float_t a1 = collider.end.y - collider.start.y;
+	float_t b1 = collider.start.x - collider.end.x;
+	float_t c1 = (collider.end.y - collider.start.y) * collider.start.x + (collider.start.x - collider.end.x) * collider.start.y;
+	float_t c2 = -b1 * p.x + a1 * p.y;
+	float_t det = a1 * a1 - -b1 * b1;
 
 	return (det != 0.0)
 		? float2_t(
-			(A1 * C1 - B1 * C2) / det,
-			(A1 * C2 - -B1 * C1) / det)
+			(a1 * c1 - b1 * c2) / det,
+			(a1 * c2 - -b1 * c1) / det)
 		: p;
 }
 float3_t CollisionModifier::calculateClosestPointOnPlane(const float3_t& p, const Plane3dColliderObject& collider) {
@@ -182,21 +168,21 @@ float3_t CollisionModifier::calculateClosestPointOnPlane(const float3_t& p, cons
 	return p - collider.normal * signedDistance;
 }
 CollisionModifier::Intersection CollisionModifier::calculateRayColliderIntersection(const Line2dColliderObject& collider, const float2_t& rayOrigin, const float2_t& rayEnd) {
-	float_t A1 = collider.end.y - collider.start.y;
-	float_t B1 = collider.start.x - collider.end.x;
-	float_t C1 = A1 * collider.start.x + B1 * collider.start.y;
-	float_t A2 = rayEnd.y - rayOrigin.y;
-	float_t B2 = rayOrigin.x - rayEnd.x;
-	float_t C2 = A2 * rayOrigin.x + B2 * rayOrigin.y;
-	float_t det = A1 * B2 - A2 * B1;
+	float_t a1 = collider.end.y - collider.start.y;
+	float_t b1 = collider.start.x - collider.end.x;
+	float_t c1 = a1 * collider.start.x + b1 * collider.start.y;
+	float_t a2 = rayEnd.y - rayOrigin.y;
+	float_t b2 = rayOrigin.x - rayEnd.x;
+	float_t c2 = a2 * rayOrigin.x + b2 * rayOrigin.y;
+	float_t det = a1 * b2 - a2 * b1;
 
 	if(std::abs(det) < 0.00001) {
 		return Intersection();
 	}
 
 	float2_t point = float2_t(
-		(B2 * C1 - B1 * C2) / det,
-		(A1 * C2 - A2 * C1) / det);
+		(b2 * c1 - b1 * c2) / det,
+		(a1 * c2 - a2 * c1) / det);
 
 	if(!isPointOnLineSegment(point, collider.start, collider.end) || !isPointOnLineSegment(point, rayOrigin, rayEnd)) {
 		return Intersection();

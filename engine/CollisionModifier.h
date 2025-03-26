@@ -8,6 +8,7 @@
 #include "../common/Math.h"
 #include "../common/Curve.h"
 #include <bitset>
+#include <array>
 #include <vector>
 
 namespace pixelpart {
@@ -47,8 +48,7 @@ private:
 
 		float3_t center = float3_t(0.0, 0.0, 0.0);
 		float3_t normal = float3_t(0.0, 1.0, 0.0);
-		float3_t rightVector = float3_t(1.0, 0.0, 0.0);
-		float3_t upVector = float3_t(0.0, 0.0, 1.0);
+		std::array<float3_t, 4> vertices;
 	};
 
 	struct Intersection {
