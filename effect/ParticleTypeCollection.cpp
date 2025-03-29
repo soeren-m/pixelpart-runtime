@@ -54,14 +54,21 @@ ParticleType& ParticleTypeCollection::add() {
 
 	return particleType;
 }
-ParticleType& ParticleTypeCollection::add(const ParticleType& particleType) {
-	id_t id = particleType.id();
+ParticleType& ParticleTypeCollection::add(const ParticleType& particleType, id_t baseId) {
+	id_t id = particleType.id()
+		? id_t(baseId.value() + particleType.id().value())
+		: baseId;
+	id_t parentId = particleType.parentId()
+		? id_t(baseId.value() + particleType.parentId().value())
+		: id_t();
+
 	while(contains(id)) {
 		id++;
 	}
 
 	ParticleType& insertedParticleType = particleTypes.emplace_back(particleType);
 	insertedParticleType.particleTypeId = id;
+	insertedParticleType.parentParticleTypeId = parentId;
 	rebuildIndex();
 
 	return insertedParticleType;

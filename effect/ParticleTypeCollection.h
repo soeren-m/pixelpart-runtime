@@ -20,7 +20,7 @@ public:
 	const_iterator end() const;
 
 	ParticleType& add();
-	ParticleType& add(const ParticleType& particleType);
+	ParticleType& add(const ParticleType& particleType, id_t baseId = id_t(0u));
 	ParticleType& duplicate(id_t id);
 	void remove(id_t id);
 	void removeIndex(uint32_t index);
