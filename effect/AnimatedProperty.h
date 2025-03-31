@@ -31,6 +31,10 @@ public:
 		propertyComputeGraph(graph),
 		outputOperation(outputOp),
 		outputTarget(outputTgt) {
+		if(propertyComputeGraph.nodes().size() == 0u) {
+			propertyComputeGraph.addNode<OutputComputeNode>();
+		}
+
 		recalculateResult();
 	}
 
@@ -219,9 +223,14 @@ private:
 
 template <typename T>
 void to_json(nlohmann::ordered_json& j, const AnimatedProperty<T>& property) {
+	nlohmann::ordered_json jComputeGraph = nlohmann::ordered_json::object();
+	if(!property.computeGraph().empty()) {
+		jComputeGraph = property.computeGraph();
+	}
+
 	j = nlohmann::ordered_json{
 		{ "curve", property.curve() },
-		{ "compute_graph", property.computeGraph() },
+		{ "compute_graph", jComputeGraph },
 		{ "compute_operation", property.computeOutputOperation() },
 		{ "compute_target", property.computeOutputTarget() }
 	};

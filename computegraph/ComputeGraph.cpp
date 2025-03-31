@@ -373,10 +373,13 @@ void to_json(nlohmann::ordered_json& j, const ComputeGraph& computeGraph) {
 	}
 }
 void from_json(const nlohmann::ordered_json& j, ComputeGraph& computeGraph) {
-	ComputeGraph::ComputeNodeCollection nodes;
+	if(!j.contains("nodes")) {
+		computeGraph = ComputeGraph();
+		return;
+	}
 
-	const nlohmann::ordered_json& jNodes = j.at("nodes");
-	for(const nlohmann::ordered_json& jNodeEntry : jNodes) {
+	ComputeGraph::ComputeNodeCollection nodes;
+	for(const nlohmann::ordered_json& jNodeEntry : j.at("nodes")) {
 		id_t nodeId = jNodeEntry.at(0);
 
 		const nlohmann::ordered_json& jNode = jNodeEntry.at(1);
