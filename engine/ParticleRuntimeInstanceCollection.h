@@ -2,6 +2,7 @@
 
 #include "../common/Types.h"
 #include "../common/Id.h"
+#include "../effect/Effect.h"
 #include "ParticleRuntimeInstance.h"
 #include <vector>
 
@@ -17,6 +18,8 @@ public:
 	iterator end();
 	const_iterator begin() const;
 	const_iterator end() const;
+
+	void match(const Effect& effect, uint32_t particleCapacity);
 
 	ParticleRuntimeInstance& add(id_t particleEmitterId, id_t particleTypeId, uint32_t particleCapacity);
 	void remove(id_t particleEmitterId, id_t particleTypeId);

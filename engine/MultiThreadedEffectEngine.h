@@ -1,34 +1,20 @@
 #pragma once
 
-#include "../common/Types.h"
-#include "../common/Id.h"
-#include "../effect/RuntimeContext.h"
-#include "ParticleEngine.h"
+#ifdef PIXELPART_MULTITHREADING
+
+#include "EffectEngine.h"
 #include "ParticleRuntimeInstance.h"
 #include "ParticleRuntimeInstanceCollection.h"
 #include "ParticleGenerator.h"
-#include "SizeModifier.h"
-#include "ColorModifier.h"
-#include "AccelerationModifier.h"
-#include "ForceModifier.h"
-#include "CollisionModifier.h"
-#include "MotionPathModifier.h"
-#include "RotationModifier.h"
-#include "IntegrationModifier.h"
-#include "LifeModifier.h"
-
-#ifdef PIXELPART_MULTITHREADING
+#include "ParticleModifierPipeline.h"
 #include "../common/ThreadPool.h"
+#include <cstdint>
 #include <memory>
-#endif
 
 namespace pixelpart {
-class CPUParticleEngine : public ParticleEngine {
+class MultiThreadedEffectEngine : public EffectEngine {
 public:
-	CPUParticleEngine(const Effect& effect, uint32_t particleCapacity);
-#ifdef PIXELPART_MULTITHREADING
-	CPUParticleEngine(const Effect& effect, uint32_t particleCapacity, std::shared_ptr<ThreadPool> threadPl);
-#endif
+	MultiThreadedEffectEngine(const Effect& effect, uint32_t particleCapacity, std::shared_ptr<ThreadPool> threadPl);
 
 	virtual void step(float_t dt) override;
 	virtual void restart(bool reset) override;
@@ -54,39 +40,26 @@ public:
 
 	void particleCountPerThread(uint32_t count);
 	uint32_t particleCountPerThread() const;
+
 	uint32_t activeThreadCount() const;
 
 private:
-	void stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleCollection::WritePtr particles, uint32_t particleCount,
-		const RuntimeContext& rtContext) const;
-
-	const Effect& particleEffect;
+	const Effect& engineEffect;
 
 	ParticleRuntimeInstanceCollection particleRuntimeInstances;
+	uint32_t engineParticleCapacity = 0;
 
-	uint32_t engineParticleCapacity = 0u;
 	float_t engineTime = 0.0;
 	float_t engineDeltaTime = 0.0;
-
 	RuntimeContext::TriggerActivationTimeMap triggerActivationTimes;
 
 	ParticleGenerator particleGenerator;
+	ParticleModifierPipeline particleModifierPipeline;
 
-	SizeModifier sizeModifier;
-	ColorModifier colorModifier;
-	AccelerationModifier accelerationModifier;
-	ForceModifier forceModifier;
-	CollisionModifier collisionModifier;
-	MotionPathModifier motionPathModifier;
-	RotationModifier rotationModifier;
-	IntegrationModifier integrationModifier;
-	LifeModifier lifeModifier;
-
-#ifdef PIXELPART_MULTITHREADING
 	std::shared_ptr<ThreadPool> threadPool;
-#endif
-	uint32_t totalActiveThreadCount = 0u;
-	uint32_t workPerThread = 128u;
+	uint32_t workPerThread = 128;
+	uint32_t totalActiveThreadCount = 0;
 };
 }
+
+#endif

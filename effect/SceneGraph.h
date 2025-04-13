@@ -5,6 +5,7 @@
 #include "RuntimeContext.h"
 #include "../common/Types.h"
 #include "../common/Id.h"
+#include "../json/json.hpp"
 #include <memory>
 #include <string>
 #include <vector>

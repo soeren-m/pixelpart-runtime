@@ -1,4 +1,5 @@
 #include "ParticleRuntimeInstanceCollection.h"
+#include <unordered_set>
 #include <algorithm>
 #include <stdexcept>
 
@@ -14,6 +15,26 @@ ParticleRuntimeInstanceCollection::const_iterator ParticleRuntimeInstanceCollect
 }
 ParticleRuntimeInstanceCollection::const_iterator ParticleRuntimeInstanceCollection::end() const {
 	return instances.end();
+}
+
+void ParticleRuntimeInstanceCollection::match(const Effect& effect, uint32_t particleCapacity) {
+	std::unordered_set<ParticleRuntimePair> neededRuntimeInstances;
+
+	for(const ParticleEmitter* particleEmitter : effect.sceneGraph().nodesWithType<ParticleEmitter>()) {
+		for(id_t particleTypeId : particleEmitter->particleTypes()) {
+			if(!contains(particleEmitter->id(), particleTypeId)) {
+				add(particleEmitter->id(), particleTypeId, particleCapacity);
+			}
+
+			neededRuntimeInstances.insert(ParticleRuntimePair(particleEmitter->id(), particleTypeId));
+		}
+	}
+
+	remove(std::remove_if(begin(), end(),
+		[&neededRuntimeInstances](const ParticleRuntimeInstance& instance) {
+			return neededRuntimeInstances.count(instance.key()) == 0;
+		}),
+		end());
 }
 
 ParticleRuntimeInstance& ParticleRuntimeInstanceCollection::add(id_t particleEmitterId, id_t particleTypeId, uint32_t particleCapacity) {

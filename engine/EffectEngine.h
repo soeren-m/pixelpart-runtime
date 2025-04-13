@@ -7,7 +7,7 @@
 #include "ParticleCollection.h"
 
 namespace pixelpart {
-class ParticleEngine {
+class EffectEngine {
 public:
 	virtual void step(float_t dt) = 0;
 	virtual void restart(bool reset) = 0;
