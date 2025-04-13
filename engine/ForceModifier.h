@@ -17,20 +17,20 @@ public:
 	ForceModifier() = default;
 
 	virtual void run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const override;
+		ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const override;
 
-	virtual void prepare(const Effect& effect, float_t t) override;
+	virtual void prepare(const Effect& effect, const RuntimeContext& runtimeContext) override;
 
 private:
-	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t,
+	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 		const ParticleType& particleType, const AttractionField& attractionField, const SceneGraph& sceneGraph) const;
-	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t,
+	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 		const ParticleType& particleType, const AccelerationField& accelerationField, const SceneGraph& sceneGraph) const;
-	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t,
+	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 		const ParticleType& particleType, const VectorField& vectorField, const SceneGraph& sceneGraph) const;
-	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t,
+	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 		const ParticleType& particleType, const NoiseField& noiseField, const SceneGraph& sceneGraph) const;
-	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t,
+	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 		const ParticleType& particleType, const DragField& dragField, const SceneGraph& sceneGraph) const;
 
 	float3_t sampleAttractionField(const AttractionField& attractionField,

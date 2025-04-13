@@ -7,8 +7,11 @@
 
 namespace pixelpart {
 void CollisionModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
-	if( !line2dColliders.empty()) {
+	ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const {
+	float_t t = runtimeContext.currentTime();
+	float_t dt = runtimeContext.deltaTime();
+
+	if(!line2dColliders.empty()) {
 		for(uint32_t p = 0u; p < particleCount; p++) {
 			LineQueryGrid::QueryResult potentialColliderIndices = line2dColliderGrid.queryLine(
 				particles.globalPosition[p],
@@ -17,9 +20,7 @@ void CollisionModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter&
 
 			for(uint32_t colliderIndex : potentialColliderIndices) {
 				const Line2dColliderObject& collider = line2dColliders[colliderIndex];
-				if(collider.exclusionSet[particleType.id().value()] ||
-					(t < collider.startTime) ||
-					(t > collider.startTime + collider.duration && !collider.repeat)) {
+				if(collider.exclusionSet[particleType.id().value()]) {
 					continue;
 				}
 
@@ -29,9 +30,7 @@ void CollisionModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter&
 	}
 
 	for(const Plane3dColliderObject& planeCollider : plane3dColliders) {
-		if(planeCollider.exclusionSet[particleType.id().value()] ||
-			(t < planeCollider.startTime) ||
-			(t > planeCollider.startTime + planeCollider.duration && !planeCollider.repeat)) {
+		if(planeCollider.exclusionSet[particleType.id().value()]) {
 			continue;
 		}
 
@@ -41,27 +40,35 @@ void CollisionModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter&
 	}
 }
 
-void CollisionModifier::prepare(const Effect& effect, float_t t) {
+void CollisionModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
 	line2dColliders.clear();
 	plane3dColliders.clear();
 	line2dColliderGrid.clear();
 
 	if(effect.is3d()) {
 		for(const Collider* collider : effect.sceneGraph().nodesWithType<Collider>()) {
+			if(!collider->active(runtimeContext)) {
+				continue;
+			}
+
 			const PlaneCollider* planeCollider = dynamic_cast<const PlaneCollider*>(collider);
 
 			if(planeCollider) {
-				NodeTransform transform = effect.sceneGraph().globalTransform(collider->id(), t);
+				NodeTransform transform = effect.sceneGraph().globalTransform(collider->id(), runtimeContext);
 				plane3dColliders.emplace_back(*planeCollider, transform);
 			}
 		}
 	}
 	else {
 		for(const Collider* collider : effect.sceneGraph().nodesWithType<Collider>()) {
+			if(!collider->active(runtimeContext)) {
+				continue;
+			}
+
 			const LineCollider* lineCollider = dynamic_cast<const LineCollider*>(collider);
 			const PlaneCollider* planeCollider = dynamic_cast<const PlaneCollider*>(collider);
 
-			NodeTransform transform = effect.sceneGraph().globalTransform(collider->id(), t);
+			NodeTransform transform = effect.sceneGraph().globalTransform(collider->id(), runtimeContext);
 
 			if(lineCollider) {
 				for(std::size_t segmentIndex = 0u; segmentIndex + 1u < lineCollider->points().size(); segmentIndex++) {

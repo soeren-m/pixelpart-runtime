@@ -14,7 +14,7 @@ template <typename T>
 void refreshProperty(const EffectInputCollection& inputs, StaticProperty<T>& property) {
 	ComputeGraph::InputSet inputValues;
 	for(const auto& entry : inputs) {
-		inputValues[entry.first] = entry.second.value;
+		inputValues[entry.first] = entry.second.value();
 	}
 
 	property.input(inputValues);
@@ -24,7 +24,7 @@ template <typename T>
 void refreshProperty(const EffectInputCollection& inputs, AnimatedProperty<T>& property) {
 	ComputeGraph::InputSet inputValues;
 	for(const auto& entry : inputs) {
-		inputValues[entry.first] = entry.second.value;
+		inputValues[entry.first] = entry.second.value();
 	}
 
 	property.input(inputValues);

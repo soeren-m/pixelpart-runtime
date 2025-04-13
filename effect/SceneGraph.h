@@ -2,6 +2,7 @@
 
 #include "Node.h"
 #include "NodeTransform.h"
+#include "RuntimeContext.h"
 #include "../common/Types.h"
 #include "../common/Id.h"
 #include <memory>
@@ -83,12 +84,12 @@ public:
 		return static_cast<const T&>(atIndex(index));
 	}
 
-	NodeTransform localTransform(id_t nodeId, float_t time) const;
-	NodeTransform localBaseTransform(id_t nodeId, float_t time) const;
-	NodeTransform parentTransform(id_t nodeId, float_t time) const;
-	NodeTransform parentBaseTransform(id_t nodeId, float_t time) const;
-	NodeTransform globalTransform(id_t nodeId, float_t time) const;
-	NodeTransform globalBaseTransform(id_t nodeId, float_t time) const;
+	NodeTransform localTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
+	NodeTransform localBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
+	NodeTransform parentTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
+	NodeTransform parentBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
+	NodeTransform globalTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
+	NodeTransform globalBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
 
 	uint32_t count() const;
 	id_t maxId() const;

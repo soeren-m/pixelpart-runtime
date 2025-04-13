@@ -3,7 +3,9 @@
 
 namespace pixelpart {
 void RotationModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
+	ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const {
+	float_t dt = runtimeContext.deltaTime();
+
 	switch(particleType.rotationMode()) {
 		case RotationMode::angle: {
 			for(uint32_t p = 0u; p < particleCount; p++) {
@@ -29,7 +31,7 @@ void RotationModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& 
 	}
 }
 
-void RotationModifier::prepare(const Effect& effect, float_t t) {
+void RotationModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
 
 }
 }

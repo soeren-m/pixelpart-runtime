@@ -35,6 +35,13 @@ const EffectInputCollection& Effect::inputs() const {
 	return effectInputs;
 }
 
+TriggerCollection& Effect::triggers() {
+	return effectTriggers;
+}
+const TriggerCollection& Effect::triggers() const {
+	return effectTriggers;
+}
+
 ResourceCollection& Effect::resources() {
 	return effectResources;
 }
@@ -70,7 +77,7 @@ std::vector<ParticleRuntimePair> Effect::runtimePairs() const {
 void Effect::applyInputs() {
 	ComputeGraph::InputSet inputValues;
 	for(const auto& entry : effectInputs) {
-		inputValues[entry.first] = entry.second.value;
+		inputValues[entry.first] = entry.second.value();
 	}
 
 	for(std::unique_ptr<Node>& node : effectSceneGraph) {
@@ -88,6 +95,7 @@ void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 		{ "scene", effect.sceneGraph() },
 		{ "particles", effect.particleTypes() },
 		{ "inputs", effect.inputs() },
+		{ "triggers", effect.triggers() },
 		{ "resources", effect.resources() }
 	};
 }
@@ -96,6 +104,7 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 	effect.sceneGraph() = j.value("scene", SceneGraph());
 	effect.particleTypes() = j.value("particles", ParticleTypeCollection());
 	effect.inputs() = j.value("inputs", EffectInputCollection());
+	effect.triggers() = j.value("triggers", TriggerCollection());
 	effect.resources() = j.value("resources", ResourceCollection());
 }
 }

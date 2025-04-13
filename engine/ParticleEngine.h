@@ -3,6 +3,7 @@
 #include "../common/Types.h"
 #include "../common/Id.h"
 #include "../effect/Effect.h"
+#include "../effect/RuntimeContext.h"
 #include "ParticleCollection.h"
 
 namespace pixelpart {
@@ -12,8 +13,11 @@ public:
 	virtual void restart(bool reset) = 0;
 
 	virtual float_t currentTime() const = 0;
+	virtual RuntimeContext runtimeContext() const = 0;
 
 	virtual void seed(uint32_t seed) = 0;
+
+	virtual void activateTrigger(id_t triggerId) = 0;
 
 	virtual void spawnParticles(id_t particleEmitterId, uint32_t count, float_t time = 0.0) = 0;
 	virtual void spawnParticles(id_t particleEmitterId, id_t particleTypeId, uint32_t count, float_t time = 0.0) = 0;

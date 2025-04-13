@@ -5,12 +5,20 @@
 #include <string>
 
 namespace pixelpart {
-struct EffectInput {
+class EffectInput {
+public:
 	EffectInput() = default;
-	EffectInput(const std::string& inputName, const VariantValue& inputValue);
+	EffectInput(const std::string& inName, const VariantValue& inValue);
 
-	std::string name;
-	VariantValue value;
+	void name(const std::string& name);
+	const std::string& name() const;
+
+	void value(const VariantValue& value);
+	const VariantValue& value() const;
+
+private:
+	std::string inputName;
+	VariantValue inputValue;
 };
 
 void to_json(nlohmann::ordered_json& j, const EffectInput& input);

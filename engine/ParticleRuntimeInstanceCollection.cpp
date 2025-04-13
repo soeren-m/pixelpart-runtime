@@ -33,6 +33,23 @@ ParticleRuntimeInstanceCollection::iterator ParticleRuntimeInstanceCollection::r
 	return instances.erase(first, last);
 }
 
+ParticleRuntimeInstance& ParticleRuntimeInstanceCollection::at(id_t particleEmitterId, id_t particleTypeId) {
+	ParticleRuntimeInstance* instance = find(particleEmitterId, particleTypeId);
+	if(!instance) {
+		throw std::out_of_range("Particle runtime instance not found");
+	}
+
+	return *instance;
+}
+const ParticleRuntimeInstance& ParticleRuntimeInstanceCollection::at(id_t particleEmitterId, id_t particleTypeId) const {
+	const ParticleRuntimeInstance* instance = find(particleEmitterId, particleTypeId);
+	if(!instance) {
+		throw std::out_of_range("Particle runtime instance not found");
+	}
+
+	return *instance;
+}
+
 ParticleRuntimeInstance* ParticleRuntimeInstanceCollection::find(id_t particleEmitterId, id_t particleTypeId) {
 	for(ParticleRuntimeInstance& instance : instances) {
 		if(instance.emitterId() == particleEmitterId && instance.typeId() == particleTypeId) {

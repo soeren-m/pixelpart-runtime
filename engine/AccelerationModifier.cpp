@@ -3,8 +3,8 @@
 
 namespace pixelpart {
 void AccelerationModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
-	float3_t emitterPosition = sceneGraph.globalTransform(particleEmitter.id(), t).position();
+	ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const {
+	float3_t emitterPosition = sceneGraph.globalTransform(particleEmitter.id(), runtimeContext).position();
 
 	for(uint32_t p = 0u; p < particleCount; p++) {
 		float3_t forwardDirection = (particles.velocity[p] != float3_t(0.0))
@@ -19,7 +19,7 @@ void AccelerationModifier::run(const SceneGraph& sceneGraph, const ParticleEmitt
 	}
 }
 
-void AccelerationModifier::prepare(const Effect& effect, float_t t) {
+void AccelerationModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
 
 }
 }

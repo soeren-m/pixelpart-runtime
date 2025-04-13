@@ -2,6 +2,7 @@
 
 #include "AnimatedProperty.h"
 #include "NodeTransform.h"
+#include "RuntimeContext.h"
 #include "../computegraph/ComputeGraph.h"
 #include "../common/Types.h"
 #include "../common/Math.h"
@@ -40,8 +41,16 @@ public:
 	void repeat(bool repeat);
 	bool repeat() const;
 
-	float_t life(float_t time, bool forceRepeat = false) const;
-	bool active(float_t time) const;
+	void startTrigger(id_t triggerId);
+	id_t startTrigger() const;
+
+	void stopTrigger(id_t triggerId);
+	id_t stopTrigger() const;
+
+	float_t timeSinceStart(const RuntimeContext& runtimeContext, bool useTriggers = true) const;
+	float_t life(const RuntimeContext& runtimeContext, bool useTriggers = true) const;
+	bool active(const RuntimeContext& runtimeContext, bool useTriggers = true) const;
+	bool activatedByTrigger(const RuntimeContext& runtimeContext) const;
 
 	AnimatedProperty<float3_t>& position();
 	const AnimatedProperty<float3_t>& position() const;
@@ -52,20 +61,23 @@ public:
 	AnimatedProperty<float3_t>& size();
 	const AnimatedProperty<float3_t>& size() const;
 
-	NodeTransform transform(float_t time) const;
-	NodeTransform baseTransform(float_t time) const;
+	NodeTransform transform(const RuntimeContext& runtimeContext, bool useTriggers = true) const;
+	NodeTransform baseTransform(const RuntimeContext& runtimeContext) const;
 
 protected:
 	virtual Node* cloneImpl() const;
 
 private:
-	id_t nodeId = id_t();
-	id_t nodeParentId = id_t();
+	id_t nodeId;
+	id_t nodeParentId;
 	std::string nodeName;
 
 	float_t nodeLifetimeStart = 0.0;
 	float_t nodeLifetimeDuration = 1.0;
 	bool nodeRepeat = true;
+
+	id_t nodeStartTriggerId;
+	id_t nodeStopTriggerId;
 
 	AnimatedProperty<float3_t> nodePosition = AnimatedProperty<float3_t>(0.0, float3_t(0.0));
 	AnimatedProperty<float3_t> nodeOrientation = AnimatedProperty<float3_t>(float3_t(0.0));

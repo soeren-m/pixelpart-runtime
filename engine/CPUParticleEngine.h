@@ -2,6 +2,7 @@
 
 #include "../common/Types.h"
 #include "../common/Id.h"
+#include "../effect/RuntimeContext.h"
 #include "ParticleEngine.h"
 #include "ParticleRuntimeInstance.h"
 #include "ParticleRuntimeInstanceCollection.h"
@@ -33,8 +34,11 @@ public:
 	virtual void restart(bool reset) override;
 
 	virtual float_t currentTime() const override;
+	virtual RuntimeContext runtimeContext() const override;
 
 	virtual void seed(uint32_t seed) override;
+
+	virtual void activateTrigger(id_t triggerId) override;
 
 	virtual void spawnParticles(id_t particleEmitterId, uint32_t count, float_t time = 0.0) override;
 	virtual void spawnParticles(id_t particleEmitterId, id_t particleTypeId, uint32_t count, float_t time = 0.0) override;
@@ -55,7 +59,7 @@ public:
 private:
 	void stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
 		ParticleCollection::WritePtr particles, uint32_t particleCount,
-		float_t t, float_t dt) const;
+		const RuntimeContext& rtContext) const;
 
 	const Effect& particleEffect;
 
@@ -63,6 +67,9 @@ private:
 
 	uint32_t engineParticleCapacity = 0u;
 	float_t engineTime = 0.0;
+	float_t engineDeltaTime = 0.0;
+
+	RuntimeContext::TriggerActivationTimeMap triggerActivationTimes;
 
 	ParticleGenerator particleGenerator;
 

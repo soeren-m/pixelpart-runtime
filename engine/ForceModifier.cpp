@@ -7,49 +7,49 @@
 
 namespace pixelpart {
 void ForceModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t, float_t dt) const {
+	ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const {
 	for(const AttractionField& field : attractionFields) {
-		if(!field.active(t) || field.exclusionSet().count(particleType.id()) != 0u) {
+		if(field.exclusionSet().count(particleType.id()) != 0u) {
 			continue;
 		}
 
-		applyForce(particles, particleCount, t, particleType, field, sceneGraph);
+		applyForce(particles, particleCount, runtimeContext, particleType, field, sceneGraph);
 	}
 
 	for(const AccelerationField& field : accelerationFields) {
-		if(!field.active(t) || field.exclusionSet().count(particleType.id()) != 0u) {
+		if(field.exclusionSet().count(particleType.id()) != 0u) {
 			continue;
 		}
 
-		applyForce(particles, particleCount, t, particleType, field, sceneGraph);
+		applyForce(particles, particleCount, runtimeContext, particleType, field, sceneGraph);
 	}
 
 	for(const VectorField& field : vectorFields) {
-		if(!field.active(t) || field.exclusionSet().count(particleType.id()) != 0u) {
+		if(field.exclusionSet().count(particleType.id()) != 0u) {
 			continue;
 		}
 
-		applyForce(particles, particleCount, t, particleType, field, sceneGraph);
+		applyForce(particles, particleCount, runtimeContext, particleType, field, sceneGraph);
 	}
 
 	for(const NoiseField& field : noiseFields) {
-		if(!field.active(t) || field.exclusionSet().count(particleType.id()) != 0u) {
+		if(field.exclusionSet().count(particleType.id()) != 0u) {
 			continue;
 		}
 
-		applyForce(particles, particleCount, t, particleType, field, sceneGraph);
+		applyForce(particles, particleCount, runtimeContext, particleType, field, sceneGraph);
 	}
 
 	for(const DragField& field : dragFields) {
-		if(!field.active(t) || field.exclusionSet().count(particleType.id()) != 0u) {
+		if(field.exclusionSet().count(particleType.id()) != 0u) {
 			continue;
 		}
 
-		applyForce(particles, particleCount, t, particleType, field, sceneGraph);
+		applyForce(particles, particleCount, runtimeContext, particleType, field, sceneGraph);
 	}
 }
 
-void ForceModifier::prepare(const Effect& effect, float_t t) {
+void ForceModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
 	effectResources = &effect.resources();
 	is3d = effect.is3d();
 
@@ -60,6 +60,10 @@ void ForceModifier::prepare(const Effect& effect, float_t t) {
 	dragFields.clear();
 
 	for(const ForceField* forceField : effect.sceneGraph().nodesWithType<ForceField>()) {
+		if(!forceField->active(runtimeContext)) {
+			continue;
+		}
+
 		const pixelpart::AttractionField* attractionField = dynamic_cast<const pixelpart::AttractionField*>(forceField);
 		const pixelpart::AccelerationField* accelerationField = dynamic_cast<const pixelpart::AccelerationField*>(forceField);
 		const pixelpart::VectorField* vectorField = dynamic_cast<const pixelpart::VectorField*>(forceField);
@@ -84,10 +88,10 @@ void ForceModifier::prepare(const Effect& effect, float_t t) {
 	}
 }
 
-void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t,
+void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 	const ParticleType& particleType, const AttractionField& attractionField, const SceneGraph& sceneGraph) const {
-	float_t alpha = attractionField.life(t);
-	NodeTransform transform = sceneGraph.globalTransform(attractionField.id(), t);
+	float_t alpha = attractionField.life(runtimeContext);
+	NodeTransform transform = sceneGraph.globalTransform(attractionField.id(), runtimeContext);
 	float3_t center = transform.position();
 	float3_t size = transform.size() * 0.5;
 	float_t strength = attractionField.strength().at(alpha);
@@ -100,10 +104,10 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t 
 		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
 	}
 }
-void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t,
+void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 	const ParticleType& particleType, const AccelerationField& accelerationField, const SceneGraph& sceneGraph) const {
-	float_t alpha = accelerationField.life(t);
-	NodeTransform transform = sceneGraph.globalTransform(accelerationField.id(), t);
+	float_t alpha = accelerationField.life(runtimeContext);
+	NodeTransform transform = sceneGraph.globalTransform(accelerationField.id(), runtimeContext);
 	float3_t center = transform.position();
 	float3_t size = transform.size() * 0.5;
 	float3_t orientation = glm::radians(transform.orientation());
@@ -121,14 +125,14 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t 
 		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
 	}
 }
-void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t,
+void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 	const ParticleType& particleType, const VectorField& vectorField, const SceneGraph& sceneGraph) const {
 	if(effectResources == nullptr || effectResources->vectorFields().count(vectorField.vectorFieldResourceId()) == 0u) {
 		return;
 	}
 
-	float_t alpha = vectorField.life(t);
-	NodeTransform transform = sceneGraph.globalTransform(vectorField.id(), t);
+	float_t alpha = vectorField.life(runtimeContext);
+	NodeTransform transform = sceneGraph.globalTransform(vectorField.id(), runtimeContext);
 	float3_t center = transform.position();
 	float3_t size = transform.size() * 0.5;
 	float3_t orientation = glm::radians(transform.orientation());
@@ -154,10 +158,11 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t 
 		}
 	}
 }
-void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t,
+void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 	const ParticleType& particleType, const NoiseField& noiseField, const SceneGraph& sceneGraph) const {
-	float_t alpha = noiseField.life(t);
-	NodeTransform transform = sceneGraph.globalTransform(noiseField.id(), t);
+	float_t t = runtimeContext.currentTime();
+	float_t alpha = noiseField.life(runtimeContext);
+	NodeTransform transform = sceneGraph.globalTransform(noiseField.id(), runtimeContext);
 	float3_t center = transform.position();
 	float3_t size = transform.size() * 0.5;
 	float3_t orientation = glm::radians(transform.orientation());
@@ -174,10 +179,10 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t 
 		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
 	}
 }
-void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, float_t t,
+void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 	const ParticleType& particleType, const DragField& dragField, const SceneGraph& sceneGraph) const {
-	float_t alpha = dragField.life(t);
-	NodeTransform transform = sceneGraph.globalTransform(dragField.id(), t);
+	float_t alpha = dragField.life(runtimeContext);
+	NodeTransform transform = sceneGraph.globalTransform(dragField.id(), runtimeContext);
 	float3_t center = transform.position();
 	float3_t size = transform.size() * 0.5;
 	float3_t orientation = glm::radians(transform.orientation());

@@ -17,8 +17,7 @@ CPUParticleEngine::CPUParticleEngine(const Effect& effect, uint32_t particleCapa
 #endif
 
 void CPUParticleEngine::step(float_t dt) {
-	engineTime += dt;
-	totalActiveThreadCount = 1u;
+	engineDeltaTime = dt;
 
 	std::unordered_set<ParticleRuntimePair> neededRuntimeInstances;
 
@@ -38,17 +37,20 @@ void CPUParticleEngine::step(float_t dt) {
 		}),
 		particleRuntimeInstances.end());
 
-	particleGenerator.generate(engineTime, dt);
+	RuntimeContext rtContext = runtimeContext();
 
-	sizeModifier.prepare(particleEffect, engineTime);
-	colorModifier.prepare(particleEffect, engineTime);
-	accelerationModifier.prepare(particleEffect, engineTime);
-	forceModifier.prepare(particleEffect, engineTime);
-	collisionModifier.prepare(particleEffect, engineTime);
-	motionPathModifier.prepare(particleEffect, engineTime);
-	rotationModifier.prepare(particleEffect, engineTime);
-	integrationModifier.prepare(particleEffect, engineTime);
-	lifeModifier.prepare(particleEffect, engineTime);
+	particleGenerator.generate(rtContext);
+	sizeModifier.prepare(particleEffect, rtContext);
+	colorModifier.prepare(particleEffect, rtContext);
+	accelerationModifier.prepare(particleEffect, rtContext);
+	forceModifier.prepare(particleEffect, rtContext);
+	collisionModifier.prepare(particleEffect, rtContext);
+	motionPathModifier.prepare(particleEffect, rtContext);
+	rotationModifier.prepare(particleEffect, rtContext);
+	integrationModifier.prepare(particleEffect, rtContext);
+	lifeModifier.prepare(particleEffect, rtContext);
+
+	totalActiveThreadCount = 1u;
 
 	for(ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
 		const ParticleType& particleType = particleEffect.particleTypes().at(runtimeInstance.typeId());
@@ -75,7 +77,7 @@ void CPUParticleEngine::step(float_t dt) {
 				threadPool->enqueue(threadIndex, &CPUParticleEngine::stepParticles, this,
 					particleEmitter, particleType,
 					runtimeInstance.particles().writePtr(workgroupIndex), workgroupSize,
-					engineTime, dt);
+					rtContext);
 
 				workgroupIndex += workgroupSize;
 			}
@@ -89,7 +91,7 @@ void CPUParticleEngine::step(float_t dt) {
 		if(activeThreadCount <= 1u) {
 			stepParticles(particleEmitter, particleType,
 				runtimeInstance.particles().writePtr(), runtimeInstance.particles().count(),
-				engineTime, dt);
+				rtContext);
 		}
 
 		if(!particleEffect.is3d()) {
@@ -106,9 +108,13 @@ void CPUParticleEngine::step(float_t dt) {
 
 		totalActiveThreadCount = std::max(totalActiveThreadCount, activeThreadCount);
 	}
+
+	engineTime += dt;
 }
 void CPUParticleEngine::restart(bool reset) {
 	engineTime = 0.0;
+	engineDeltaTime = 0.0;
+	triggerActivationTimes.clear();
 
 	if(reset) {
 		particleGenerator.reset();
@@ -118,9 +124,21 @@ void CPUParticleEngine::restart(bool reset) {
 float_t CPUParticleEngine::currentTime() const {
 	return engineTime;
 }
+RuntimeContext CPUParticleEngine::runtimeContext() const {
+	return RuntimeContext(engineTime, engineDeltaTime, triggerActivationTimes);
+}
 
 void CPUParticleEngine::seed(uint32_t seed) {
 	particleGenerator.seed(seed);
+}
+
+void CPUParticleEngine::activateTrigger(id_t triggerId) {
+	if(particleEffect.triggers().count(triggerId) == 0 ||
+		triggerActivationTimes.count(triggerId) != 0) {
+		return;
+	}
+
+	triggerActivationTimes[triggerId] = engineTime;
 }
 
 void CPUParticleEngine::spawnParticles(id_t particleEmitterId, uint32_t count, float_t time) {
@@ -197,15 +215,15 @@ uint32_t CPUParticleEngine::activeThreadCount() const {
 
 void CPUParticleEngine::stepParticles(const ParticleEmitter& particleEmitter, const ParticleType& particleType,
 	ParticleCollection::WritePtr particles, uint32_t particleCount,
-	float_t t, float_t dt) const {
-	sizeModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, t, dt);
-	colorModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, t, dt);
-	accelerationModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, t, dt);
-	forceModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, t, dt);
-	collisionModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, t, dt);
-	motionPathModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, t, dt);
-	rotationModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, t, dt);
-	integrationModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, t, dt);
-	lifeModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, t, dt);
+	const RuntimeContext& rtContext) const {
+	sizeModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, rtContext);
+	colorModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, rtContext);
+	accelerationModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, rtContext);
+	forceModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, rtContext);
+	collisionModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, rtContext);
+	motionPathModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, rtContext);
+	rotationModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, rtContext);
+	integrationModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, rtContext);
+	lifeModifier.run(particleEffect.sceneGraph(), particleEmitter, particleType, particles, particleCount, rtContext);
 }
 }
