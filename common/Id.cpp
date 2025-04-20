@@ -1,6 +1,8 @@
 #include "Id.h"
 
 namespace pixelpart {
+const uint32_t id_t::nullValue = 0xFFFFFFFF;
+
 id_t::id_t(uint32_t id) : idValue(id) {
 
 }

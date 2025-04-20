@@ -1,6 +1,7 @@
 #include "ParticleGenerator.h"
 #include "../effect/ParticleRuntimePair.h"
 #include "../effect/NodeTransform.h"
+#define GLM_ENABLE_EXPERIMENTAL
 #include "../glm/gtx/euler_angles.hpp"
 #include "../glm/gtx/rotate_vector.hpp"
 #include <vector>

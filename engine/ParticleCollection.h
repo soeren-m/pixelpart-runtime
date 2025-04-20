@@ -23,6 +23,24 @@ public:
 		float_t* initialSize = nullptr;
 		float4_t* color = nullptr;
 		float4_t* initialColor = nullptr;
+
+		WritePtr() = default;
+		WritePtr(
+			uint32_t* idPtr,
+			uint32_t* parentIdPtr,
+			float_t* lifePtr,
+			float_t* lifespanPtr,
+			float3_t* positionPtr,
+			float3_t* globalPositionPtr,
+			float3_t* velocityPtr,
+			float3_t* forcePtr,
+			float3_t* rotationPtr,
+			float3_t* initialRotationPtr,
+			float3_t* initialAngularVelocityPtr,
+			float3_t* sizePtr,
+			float_t* initialSizePtr,
+			float4_t* colorPtr,
+			float4_t* initialColorPtr);
 	};
 
 	struct ReadPtr {
@@ -41,6 +59,24 @@ public:
 		const float_t* initialSize = nullptr;
 		const float4_t* color = nullptr;
 		const float4_t* initialColor = nullptr;
+
+		ReadPtr() = default;
+		ReadPtr(
+			const uint32_t* idPtr,
+			const uint32_t* parentIdPtr,
+			const float_t* lifePtr,
+			const float_t* lifespanPtr,
+			const float3_t* positionPtr,
+			const float3_t* globalPositionPtr,
+			const float3_t* velocityPtr,
+			const float3_t* forcePtr,
+			const float3_t* rotationPtr,
+			const float3_t* initialRotationPtr,
+			const float3_t* initialAngularVelocityPtr,
+			const float3_t* sizePtr,
+			const float_t* initialSizePtr,
+			const float4_t* colorPtr,
+			const float4_t* initialColorPtr);
 	};
 
 	ParticleCollection(uint32_t capacity = 1024u);

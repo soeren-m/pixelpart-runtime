@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef PIXELPART_MULTITHREADING
+#ifdef PIXELPART_RUNTIME_MULTITHREADING
 
 #include "EffectEngine.h"
 #include "ParticleRuntimeInstance.h"

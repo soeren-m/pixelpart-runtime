@@ -2,6 +2,50 @@
 #include <algorithm>
 
 namespace pixelpart {
+ParticleCollection::WritePtr::WritePtr(
+	uint32_t* idPtr,
+	uint32_t* parentIdPtr,
+	float_t* lifePtr,
+	float_t* lifespanPtr,
+	float3_t* positionPtr,
+	float3_t* globalPositionPtr,
+	float3_t* velocityPtr,
+	float3_t* forcePtr,
+	float3_t* rotationPtr,
+	float3_t* initialRotationPtr,
+	float3_t* initialAngularVelocityPtr,
+	float3_t* sizePtr,
+	float_t* initialSizePtr,
+	float4_t* colorPtr,
+	float4_t* initialColorPtr) :
+	id(idPtr), parentId(parentIdPtr), life(lifePtr), lifespan(lifespanPtr), position(positionPtr), globalPosition(globalPositionPtr),
+	velocity(velocityPtr), force(forcePtr), rotation(rotationPtr), initialRotation(initialRotationPtr), initialAngularVelocity(initialAngularVelocityPtr),
+	size(sizePtr), initialSize(initialSizePtr), color(colorPtr), initialColor(initialColorPtr) {
+
+}
+
+ParticleCollection::ReadPtr::ReadPtr(
+	const uint32_t* idPtr,
+	const uint32_t* parentIdPtr,
+	const float_t* lifePtr,
+	const float_t* lifespanPtr,
+	const float3_t* positionPtr,
+	const float3_t* globalPositionPtr,
+	const float3_t* velocityPtr,
+	const float3_t* forcePtr,
+	const float3_t* rotationPtr,
+	const float3_t* initialRotationPtr,
+	const float3_t* initialAngularVelocityPtr,
+	const float3_t* sizePtr,
+	const float_t* initialSizePtr,
+	const float4_t* colorPtr,
+	const float4_t* initialColorPtr) :
+	id(idPtr), parentId(parentIdPtr), life(lifePtr), lifespan(lifespanPtr), position(positionPtr), globalPosition(globalPositionPtr),
+	velocity(velocityPtr), force(forcePtr), rotation(rotationPtr), initialRotation(initialRotationPtr), initialAngularVelocity(initialAngularVelocityPtr),
+	size(sizePtr), initialSize(initialSizePtr), color(colorPtr), initialColor(initialColorPtr) {
+
+}
+
 ParticleCollection::ParticleCollection(uint32_t capacity) : particleCapacity(capacity) {
 	id.resize(particleCapacity);
 	parentId.resize(particleCapacity);
@@ -63,7 +107,7 @@ void ParticleCollection::clear() {
 }
 
 ParticleCollection::WritePtr ParticleCollection::writePtr(uint32_t index) {
-	return WritePtr{
+	return WritePtr(
 		id.data() + index,
 		parentId.data() + index,
 		life.data() + index,
@@ -78,11 +122,10 @@ ParticleCollection::WritePtr ParticleCollection::writePtr(uint32_t index) {
 		size.data() + index,
 		initialSize.data() + index,
 		color.data() + index,
-		initialColor.data() + index
-	};
+		initialColor.data() + index);
 }
 ParticleCollection::ReadPtr ParticleCollection::readPtr(uint32_t index) const {
-	return ReadPtr{
+	return ReadPtr(
 		id.data() + index,
 		parentId.data() + index,
 		life.data() + index,
@@ -97,8 +140,7 @@ ParticleCollection::ReadPtr ParticleCollection::readPtr(uint32_t index) const {
 		size.data() + index,
 		initialSize.data() + index,
 		color.data() + index,
-		initialColor.data() + index
-	};
+		initialColor.data() + index);
 }
 
 uint32_t ParticleCollection::count() const {

@@ -38,7 +38,9 @@ void ParticleRuntimeInstanceCollection::match(const Effect& effect, uint32_t par
 }
 
 ParticleRuntimeInstance& ParticleRuntimeInstanceCollection::add(id_t particleEmitterId, id_t particleTypeId, uint32_t particleCapacity) {
-	return instances.emplace_back(particleEmitterId, particleTypeId, particleCapacity);
+	instances.emplace_back(particleEmitterId, particleTypeId, particleCapacity);
+
+	return instances.back();
 }
 void ParticleRuntimeInstanceCollection::remove(id_t particleEmitterId, id_t particleTypeId) {
 	instances.erase(std::remove_if(instances.begin(), instances.end(),

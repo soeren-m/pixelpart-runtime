@@ -1,4 +1,4 @@
-#ifdef PIXELPART_MULTITHREADING
+#ifdef PIXELPART_RUNTIME_MULTITHREADING
 
 #include "MultiThreadedEffectEngine.h"
 #include "../effect/ParticleRuntimePair.h"

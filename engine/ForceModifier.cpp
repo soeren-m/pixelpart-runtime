@@ -1,5 +1,6 @@
 #include "ForceModifier.h"
 #include "Noise.h"
+#define GLM_ENABLE_EXPERIMENTAL
 #include "../glm/gtx/euler_angles.hpp"
 #include <cmath>
 #include <iterator>

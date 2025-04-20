@@ -59,7 +59,9 @@ Node& SceneGraph::add(const Node& node, id_t baseId) {
 		nodeId++;
 	}
 
-	std::unique_ptr<Node>& insertedNode = sceneNodes.emplace_back(node.clone());
+	sceneNodes.emplace_back(node.clone());
+
+	std::unique_ptr<Node>& insertedNode = sceneNodes.back();
 	insertedNode->nodeId = nodeId;
 	insertedNode->nodeParentId = parentId;
 	rebuildIndex();
@@ -74,7 +76,9 @@ Node& SceneGraph::duplicate(id_t nodeId) {
 		insertedNodeId++;
 	}
 
-	std::unique_ptr<Node>& insertedNode = sceneNodes.emplace_back(node.clone());
+	sceneNodes.emplace_back(node.clone());
+
+	std::unique_ptr<Node>& insertedNode = sceneNodes.back();
 	insertedNode->nodeId = insertedNodeId;
 
 	rebuildIndex();
