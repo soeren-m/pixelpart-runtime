@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Node.h"
-#include "NodeTransform.h"
 #include "RuntimeContext.h"
 #include "../common/Types.h"
+#include "../common/Transform.h"
 #include "../common/Id.h"
 #include "../json/json.hpp"
 #include <memory>
@@ -85,12 +85,12 @@ public:
 		return static_cast<const T&>(atIndex(index));
 	}
 
-	NodeTransform localTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
-	NodeTransform localBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
-	NodeTransform parentTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
-	NodeTransform parentBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
-	NodeTransform globalTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
-	NodeTransform globalBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
+	Transform localTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
+	Transform localBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
+	Transform parentTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
+	Transform parentBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
+	Transform globalTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
+	Transform globalBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
 
 	uint32_t count() const;
 	id_t maxId() const;

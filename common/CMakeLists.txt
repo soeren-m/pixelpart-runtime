@@ -5,5 +5,6 @@ target_sources(pixelpart-runtime PRIVATE
 	Id.cpp
 	Math.cpp
 	StringUtil.cpp
+	Transform.cpp
 	VariantParameter.cpp
 	VariantValue.cpp)

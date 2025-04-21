@@ -1,6 +1,6 @@
 #include "ParticleGenerator.h"
 #include "../effect/ParticleRuntimePair.h"
-#include "../effect/NodeTransform.h"
+#include "../common/Transform.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../glm/gtx/euler_angles.hpp"
 #include "../glm/gtx/rotate_vector.hpp"
@@ -154,8 +154,8 @@ uint32_t ParticleGenerator::generate(ParticleRuntimeInstance& runtimeInstance, P
 	RuntimeContext prevRuntimeContext(runtimeContext.currentTime() - 0.1, 0.0, runtimeContext.triggerActivationTimes());
 
 	float_t alpha = emitter.life(runtimeContext, useTriggers);
-	NodeTransform emitterTransform = effect.sceneGraph().globalTransform(emitter.id(), runtimeContext, useTriggers);
-	NodeTransform emitterPrevTransform = effect.sceneGraph().globalTransform(emitter.id(), prevRuntimeContext, useTriggers);
+	Transform emitterTransform = effect.sceneGraph().globalTransform(emitter.id(), runtimeContext, useTriggers);
+	Transform emitterPrevTransform = effect.sceneGraph().globalTransform(emitter.id(), prevRuntimeContext, useTriggers);
 	float3_t emitterPosition = emitterTransform.position();
 	float3_t emitterPrevPosition = emitterPrevTransform.position();
 	float3_t emitterOrientation = emitterTransform.orientation();

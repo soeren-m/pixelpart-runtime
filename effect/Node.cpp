@@ -159,18 +159,18 @@ const AnimatedProperty<float3_t>& Node::size() const {
 	return nodeSize;
 }
 
-NodeTransform Node::transform(const RuntimeContext& runtimeContext, bool useTriggers) const {
+Transform Node::transform(const RuntimeContext& runtimeContext, bool useTriggers) const {
 	float_t fraction = life(runtimeContext, useTriggers);
 
-	return NodeTransform(
+	return Transform(
 		nodePosition.at(fraction),
 		nodeOrientation.at(fraction),
 		nodeSize.at(fraction));
 }
-NodeTransform Node::baseTransform(const RuntimeContext& runtimeContext) const {
+Transform Node::baseTransform(const RuntimeContext& runtimeContext) const {
 	float_t fraction = life(runtimeContext, false);
 
-	return NodeTransform(
+	return Transform(
 		nodePosition.curve().at(fraction),
 		nodeOrientation.curve().at(fraction),
 		nodeSize.curve().at(fraction));

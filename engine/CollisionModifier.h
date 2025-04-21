@@ -4,9 +4,9 @@
 #include "LineQueryGrid.h"
 #include "../effect/LineCollider.h"
 #include "../effect/PlaneCollider.h"
-#include "../effect/NodeTransform.h"
 #include "../common/Math.h"
 #include "../common/Curve.h"
+#include "../common/Transform.h"
 #include <bitset>
 #include <array>
 #include <vector>
@@ -36,15 +36,15 @@ private:
 	};
 
 	struct Line2dColliderObject : ColliderObject {
-		Line2dColliderObject(const LineCollider& collider, const NodeTransform& transform, std::size_t segmentIndex);
-		Line2dColliderObject(const PlaneCollider& collider, const NodeTransform& transform);
+		Line2dColliderObject(const LineCollider& collider, const Transform& transform, std::size_t segmentIndex);
+		Line2dColliderObject(const PlaneCollider& collider, const Transform& transform);
 
 		float2_t start = float2_t(-1.0, 0.0);
 		float2_t end = float2_t(+1.0, 0.0);
 	};
 
 	struct Plane3dColliderObject : ColliderObject {
-		Plane3dColliderObject(const PlaneCollider& collider, const NodeTransform& transform);
+		Plane3dColliderObject(const PlaneCollider& collider, const Transform& transform);
 
 		float3_t center = float3_t(0.0, 0.0, 0.0);
 		float3_t normal = float3_t(0.0, 1.0, 0.0);

@@ -17,7 +17,6 @@ target_sources(pixelpart-runtime PRIVATE
 	MaterialResource.cpp
 	MeshResource.cpp
 	Node.cpp
-	NodeTransform.cpp
 	NoiseField.cpp
 	ParticleEmitter.cpp
 	ParticleRendererSettings.cpp

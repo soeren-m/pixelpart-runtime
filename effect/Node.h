@@ -1,11 +1,11 @@
 #pragma once
 
 #include "AnimatedProperty.h"
-#include "NodeTransform.h"
 #include "RuntimeContext.h"
 #include "../computegraph/ComputeGraph.h"
 #include "../common/Types.h"
 #include "../common/Math.h"
+#include "../common/Transform.h"
 #include "../common/Id.h"
 #include <memory>
 #include <string>
@@ -61,8 +61,8 @@ public:
 	AnimatedProperty<float3_t>& size();
 	const AnimatedProperty<float3_t>& size() const;
 
-	NodeTransform transform(const RuntimeContext& runtimeContext, bool useTriggers = true) const;
-	NodeTransform baseTransform(const RuntimeContext& runtimeContext) const;
+	Transform transform(const RuntimeContext& runtimeContext, bool useTriggers = true) const;
+	Transform baseTransform(const RuntimeContext& runtimeContext) const;
 
 protected:
 	virtual Node* cloneImpl() const;

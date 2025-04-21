@@ -55,7 +55,7 @@ void CollisionModifier::prepare(const Effect& effect, const RuntimeContext& runt
 			const PlaneCollider* planeCollider = dynamic_cast<const PlaneCollider*>(collider);
 
 			if(planeCollider) {
-				NodeTransform transform = effect.sceneGraph().globalTransform(collider->id(), runtimeContext);
+				Transform transform = effect.sceneGraph().globalTransform(collider->id(), runtimeContext);
 				plane3dColliders.emplace_back(*planeCollider, transform);
 			}
 		}
@@ -69,7 +69,7 @@ void CollisionModifier::prepare(const Effect& effect, const RuntimeContext& runt
 			const LineCollider* lineCollider = dynamic_cast<const LineCollider*>(collider);
 			const PlaneCollider* planeCollider = dynamic_cast<const PlaneCollider*>(collider);
 
-			NodeTransform transform = effect.sceneGraph().globalTransform(collider->id(), runtimeContext);
+			Transform transform = effect.sceneGraph().globalTransform(collider->id(), runtimeContext);
 
 			if(lineCollider) {
 				for(std::size_t segmentIndex = 0u; segmentIndex + 1u < lineCollider->points().size(); segmentIndex++) {
@@ -102,16 +102,16 @@ CollisionModifier::ColliderObject::ColliderObject(const Collider& collider) :
 	}
 }
 
-CollisionModifier::Line2dColliderObject::Line2dColliderObject(const LineCollider& collider, const NodeTransform& transform, std::size_t segmentIndex) : ColliderObject(collider) {
+CollisionModifier::Line2dColliderObject::Line2dColliderObject(const LineCollider& collider, const Transform& transform, std::size_t segmentIndex) : ColliderObject(collider) {
 	start = float2_t(transform * float4_t(collider.point(segmentIndex), 1.0));
 	end = float2_t(transform * float4_t(collider.point(segmentIndex + 1u), 1.0));
 }
-CollisionModifier::Line2dColliderObject::Line2dColliderObject(const PlaneCollider& collider, const NodeTransform& transform) : ColliderObject(collider) {
+CollisionModifier::Line2dColliderObject::Line2dColliderObject(const PlaneCollider& collider, const Transform& transform) : ColliderObject(collider) {
 	start = float2_t(transform * float4_t(-0.5, 0.0, 0.0, 1.0));
 	end = float2_t(transform * float4_t(+0.5, 0.0, 0.0, 1.0));
 }
 
-CollisionModifier::Plane3dColliderObject::Plane3dColliderObject(const PlaneCollider& collider, const NodeTransform& transform) : ColliderObject(collider) {
+CollisionModifier::Plane3dColliderObject::Plane3dColliderObject(const PlaneCollider& collider, const Transform& transform) : ColliderObject(collider) {
 	center = float3_t(transform * float4_t(0.0, 0.0, 0.0, 1.0));
 	normal = float3_t(transform * float4_t(0.0, 1.0, 0.0, 0.0));
 

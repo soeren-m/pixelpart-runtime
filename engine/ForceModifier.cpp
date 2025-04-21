@@ -1,5 +1,6 @@
 #include "ForceModifier.h"
 #include "Noise.h"
+#include "../common/Transform.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../glm/gtx/euler_angles.hpp"
 #include <cmath>
@@ -92,7 +93,7 @@ void ForceModifier::prepare(const Effect& effect, const RuntimeContext& runtimeC
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 	const ParticleType& particleType, const AttractionField& attractionField, const SceneGraph& sceneGraph) const {
 	float_t alpha = attractionField.life(runtimeContext);
-	NodeTransform transform = sceneGraph.globalTransform(attractionField.id(), runtimeContext);
+	Transform transform = sceneGraph.globalTransform(attractionField.id(), runtimeContext);
 	float3_t center = transform.position();
 	float3_t size = transform.size() * 0.5;
 	float_t strength = attractionField.strength().at(alpha);
@@ -108,7 +109,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t 
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 	const ParticleType& particleType, const AccelerationField& accelerationField, const SceneGraph& sceneGraph) const {
 	float_t alpha = accelerationField.life(runtimeContext);
-	NodeTransform transform = sceneGraph.globalTransform(accelerationField.id(), runtimeContext);
+	Transform transform = sceneGraph.globalTransform(accelerationField.id(), runtimeContext);
 	float3_t center = transform.position();
 	float3_t size = transform.size() * 0.5;
 	float3_t orientation = glm::radians(transform.orientation());
@@ -133,7 +134,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t 
 	}
 
 	float_t alpha = vectorField.life(runtimeContext);
-	NodeTransform transform = sceneGraph.globalTransform(vectorField.id(), runtimeContext);
+	Transform transform = sceneGraph.globalTransform(vectorField.id(), runtimeContext);
 	float3_t center = transform.position();
 	float3_t size = transform.size() * 0.5;
 	float3_t orientation = glm::radians(transform.orientation());
@@ -163,7 +164,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t 
 	const ParticleType& particleType, const NoiseField& noiseField, const SceneGraph& sceneGraph) const {
 	float_t t = runtimeContext.currentTime();
 	float_t alpha = noiseField.life(runtimeContext);
-	NodeTransform transform = sceneGraph.globalTransform(noiseField.id(), runtimeContext);
+	Transform transform = sceneGraph.globalTransform(noiseField.id(), runtimeContext);
 	float3_t center = transform.position();
 	float3_t size = transform.size() * 0.5;
 	float3_t orientation = glm::radians(transform.orientation());
@@ -183,7 +184,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t 
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 	const ParticleType& particleType, const DragField& dragField, const SceneGraph& sceneGraph) const {
 	float_t alpha = dragField.life(runtimeContext);
-	NodeTransform transform = sceneGraph.globalTransform(dragField.id(), runtimeContext);
+	Transform transform = sceneGraph.globalTransform(dragField.id(), runtimeContext);
 	float3_t center = transform.position();
 	float3_t size = transform.size() * 0.5;
 	float3_t orientation = glm::radians(transform.orientation());
