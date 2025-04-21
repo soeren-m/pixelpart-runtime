@@ -1,16 +1,19 @@
 #pragma once
 
 #include "Types.h"
+#include "Math.h"
 #include "../json/json.hpp"
 #include <cmath>
 #include <vector>
+#include <numeric>
 #include <algorithm>
 
 namespace pixelpart {
 enum class CurveInterpolation : uint32_t {
 	none = 0,
 	linear = 1,
-	spline = 2
+	spline = 2,
+	bezier = 3
 };
 
 template <typename T>
@@ -21,9 +24,9 @@ public:
 		T value;
 	};
 
-	static constexpr uint32_t minCacheSize = 256u;
-	static constexpr uint32_t maxCacheSize = 1024u;
-	static constexpr uint32_t invalidIndex = 0xFFFFFFFFu;
+	static constexpr std::size_t minCacheSize = 256;
+	static constexpr std::size_t maxCacheSize = 1024;
+	static constexpr std::size_t invalidIndex = 0xFFFFFFFF;
 
 	Curve() {
 		valueCache.resize(minCacheSize);
@@ -40,42 +43,50 @@ public:
 	Curve(const std::vector<Point>& pointList, CurveInterpolation interpolation = CurveInterpolation::linear) : Curve(interpolation) {
 		points(pointList);
 	}
+	Curve(const std::vector<Point>& pointList, const std::vector<T>& controlPointList, CurveInterpolation interpolation = CurveInterpolation::linear) : Curve(interpolation) {
+		curvePoints = pointList;
+		curveControlPoints = controlPointList;
+		curveControlPoints.resize(curvePoints.size() * 2, T(0));
+
+		updateCache();
+	}
 
 	T operator()(float_t position = 0.0) const {
 		return at(position);
 	}
 
 	T at(float_t position = 0.0) const {
+		position = std::min(std::max(position, 0.0), 1.0);
+
 		return valueCache[
-			static_cast<std::size_t>(std::min(std::max(position, 0.0), 1.0) * static_cast<float_t>(valueCache.size() - 1u))];
+			static_cast<std::size_t>(position * static_cast<float_t>(valueCache.size() - 1))];
 	}
 
 	void points(const std::vector<Point>& pointList) {
 		curvePoints = pointList;
+		curveControlPoints.clear();
+		curveControlPoints.resize(curvePoints.size() * 2, T(0));
+
 		updateCache();
 	}
 	void points(const Point* pointList, std::size_t count) {
-		curvePoints = pointList != nullptr && count > 0u
-			? std::vector<Point>(pointList, pointList + count)
-			: std::vector<Point>();
-		updateCache();
-	}
-
-	template <typename IntT>
-	void orderedPoints(const float_t* positionList, const T* valueList, const IntT* order, IntT count) {
 		curvePoints.clear();
-		if(positionList && valueList && order && count > 0) {
-			curvePoints.resize(count);
-			for(IntT i = 0; i < count; i++) {
-				curvePoints[i] = Point{ positionList[i], valueList[order[i]] };
-			}
+		curveControlPoints.clear();
+		if(pointList != nullptr && count > 0) {
+			curvePoints = std::vector<Point>(pointList, pointList + count);
+			curveControlPoints.resize(curvePoints.size() * 2, T(0));
 		}
 
 		updateCache();
 	}
 
 	void addPoint(float_t position, const T& value) {
-		curvePoints.push_back(Point{ std::min(std::max(position, 0.0), 1.0), value });
+		position = std::min(std::max(position, 0.0), 1.0);
+
+		curvePoints.push_back(Point{ position, value });
+		curveControlPoints.push_back(T(0));
+		curveControlPoints.push_back(T(0));
+
 		updateCache();
 	}
 	void removePoint(std::size_t index) {
@@ -84,6 +95,9 @@ public:
 		}
 
 		curvePoints.erase(curvePoints.begin() + index);
+		curveControlPoints.erase(curveControlPoints.begin() + index * 2);
+		curveControlPoints.erase(curveControlPoints.begin() + index * 2);
+
 		updateCache();
 	}
 	void setPointValue(std::size_t index, const T& value) {
@@ -102,18 +116,28 @@ public:
 		curvePoints[index].position = std::min(std::max(position, 0.0), 1.0);
 		updateCache();
 	}
+	void setControlPointValue(std::size_t index, const T& value) {
+		if(index >= curveControlPoints.size()) {
+			return;
+		}
+
+		curveControlPoints[index] = value;
+		updateCache();
+	}
 	void clear() {
 		curvePoints.clear();
+		curveControlPoints.clear();
+
 		updateCache();
 	}
 
 	bool empty() const {
 		return curvePoints.empty();
 	}
+
 	std::size_t pointCount() const {
 		return curvePoints.size();
 	}
-
 	const Point& point(std::size_t index) const {
 		return curvePoints.at(index);
 	}
@@ -121,7 +145,17 @@ public:
 		return curvePoints;
 	}
 
-	std::ptrdiff_t pointIndex(float_t position, float_t epsilon = 0.001) const {
+	std::size_t controlPointCount() const {
+		return curveControlPoints.size();
+	}
+	const T& controlPoint(std::size_t index) const {
+		return curveControlPoints.at(index);
+	}
+	const std::vector<T>& controlPoints() const {
+		return curveControlPoints;
+	}
+
+	ptrdiff_t pointIndex(float_t position, float_t epsilon = 0.001) const {
 		if(curvePoints.empty()) {
 			return -1;
 		}
@@ -164,7 +198,7 @@ public:
 	}
 	void enableFixedCache(std::size_t size) {
 		adaptiveCache = false;
-		valueCache.resize(std::max(size, static_cast<std::size_t>(1u)));
+		valueCache.resize(std::max(size, static_cast<std::size_t>(1)));
 		updateCache();
 	}
 	const std::vector<T>& cache() const {
@@ -173,125 +207,204 @@ public:
 
 private:
 	void updateCache() {
-		std::sort(curvePoints.begin(), curvePoints.end(), [](const Point& p1, const Point& p2) {
-			return p1.position < p2.position;
+		std::vector<std::size_t> sortIndices(curvePoints.size());
+		std::iota(sortIndices.begin(), sortIndices.end(), 0);
+		std::stable_sort(sortIndices.begin(), sortIndices.end(), [this](std::size_t i1, std::size_t i2) {
+			return curvePoints[i1].position < curvePoints[i2].position;
 		});
 
+		std::vector<Point> updatedPoints(curvePoints.size());
+		std::vector<T> updatedControlPoints(curveControlPoints.size());
+		for(std::size_t index = 0; index < sortIndices.size(); index++) {
+			std::size_t sortIndex = sortIndices[index];
+
+			updatedPoints[index] = curvePoints[sortIndex];
+			updatedControlPoints[index * 2 + 0] = curveControlPoints[sortIndex * 2 + 0];
+			updatedControlPoints[index * 2 + 1] = curveControlPoints[sortIndex * 2 + 1];
+		}
+
+		curvePoints = std::move(updatedPoints);
+		curveControlPoints = std::move(updatedControlPoints);
+
 		if(adaptiveCache) {
-			if(valueCache.size() < maxCacheSize && curvePoints.size() > valueCache.size() / 16u) {
-				valueCache.resize(valueCache.size() * 2u);
+			if(valueCache.size() < maxCacheSize && curvePoints.size() > valueCache.size() / 16) {
+				valueCache.resize(valueCache.size() * 2);
 			}
-			else if(valueCache.size() > minCacheSize && curvePoints.size() < valueCache.size() / 32u) {
-				valueCache.resize(valueCache.size() / 2u);
+			else if(valueCache.size() > minCacheSize && curvePoints.size() < valueCache.size() / 32) {
+				valueCache.resize(valueCache.size() / 2);
 			}
 		}
 
 		if(curvePoints.empty()) {
 			std::fill(valueCache.begin(), valueCache.end(), T(0));
+			return;
 		}
-		else if(curvePoints.size() == 1u) {
+		else if(curvePoints.size() == 1) {
 			std::fill(valueCache.begin(), valueCache.end(), curvePoints.back().value);
+			return;
 		}
-		else if(curveInterpolation == CurveInterpolation::none) {
-			for(std::size_t i = 0u, k0 = 0u; i < valueCache.size(); i++) {
-				float_t position = static_cast<float_t>(i) / static_cast<float_t>(valueCache.size() - 1u);
-				std::size_t k = findIndex(position, k0);
 
-				if(k == invalidIndex) {
-					valueCache[i] = curvePoints.front().value;
-				}
-				else if(k + 1u == curvePoints.size()) {
-					valueCache[i] = curvePoints.back().value;
-				}
-				else {
-					valueCache[i] = (std::abs(position - curvePoints[k].position) < std::abs(position - curvePoints[k + 1u].position))
-						? curvePoints[k].value
-						: curvePoints[k + 1u].value;
-
-					k0 = k;
-				}
-			}
-		}
-		else if(curveInterpolation == CurveInterpolation::linear) {
-			for(std::size_t i = 0u, k0 = 0u; i < valueCache.size(); i++) {
-				float_t position = static_cast<float_t>(i) / static_cast<float_t>(valueCache.size() - 1u);
-				std::size_t k = findIndex(position, k0);
-
-				if(k == invalidIndex) {
-					valueCache[i] = curvePoints.front().value;
-				}
-				else if(k + 1u == curvePoints.size()) {
-					valueCache[i] = curvePoints.back().value;
-				}
-				else {
-					float_t t = (position - curvePoints[k].position) / (curvePoints[k + 1u].position - curvePoints[k].position);
-					valueCache[i] =
-						(1.0 - t) * curvePoints[k].value +
-						t * curvePoints[k + 1u].value;
-
-					k0 = k;
-				}
-			}
-		}
-		else if(curveInterpolation == CurveInterpolation::spline) {
-			for(std::size_t i = 0u, k0 = 0u; i < valueCache.size(); i++) {
-				float_t position = static_cast<float_t>(i) / static_cast<float_t>(valueCache.size() - 1u);
-				std::size_t k = findIndex(position, k0);
-
-				if(k == invalidIndex) {
-					valueCache[i] = curvePoints.front().value;
-				}
-				else if(k + 1u == curvePoints.size()) {
-					valueCache[i] = curvePoints.back().value;
-				}
-				else {
-					const float_t alpha = 0.5;
-					const float_t tension = 0.0;
-
-					Point p0 = (k > 0u) ? curvePoints[k - 1u] : Point{ -0.1, curvePoints[k].value };
-					Point p1 = curvePoints[k];
-					Point p2 = curvePoints[k + 1u];
-					Point p3 = (k + 2u < curvePoints.size()) ? curvePoints[k + 2u] : Point{ +1.1, curvePoints[k + 1u].value };
-
-					float_t t = (position - p1.position) / (p2.position - p1.position);
-					float_t t0 = 0.0;
-					float_t t1 = t0 + std::pow(p1.position - p0.position, alpha);
-					float_t t2 = t1 + std::pow(p2.position - p1.position, alpha);
-					float_t t3 = t2 + std::pow(p3.position - p2.position, alpha);
-
-					T m1 = (1.0 - tension) * (t2 - t1) * ((p1.value - p0.value) / (t1 - t0) - (p2.value - p0.value) / (t2 - t0) + (p2.value - p1.value) / (t2 - t1));
-					T m2 = (1.0 - tension) * (t2 - t1) * ((p2.value - p1.value) / (t2 - t1) - (p3.value - p1.value) / (t3 - t1) + (p3.value - p2.value) / (t3 - t2));
-					T a = +2.0 * (p1.value - p2.value) + m1 + m2;
-					T b = -3.0 * (p1.value - p2.value) - m1 - m1 - m2;
-					T c = m1;
-					T d = p1.value;
-
-					valueCache[i] =
-						a * t * t * t +
-						b * t * t +
-						c * t +
-						d;
-
-					k0 = k;
-				}
-			}
+		switch(curveInterpolation) {
+			case CurveInterpolation::none:
+				fillCacheNone();
+				break;
+			case CurveInterpolation::linear:
+				fillCacheLinear();
+				break;
+			case CurveInterpolation::spline:
+				fillCacheSpline();
+				break;
+			case CurveInterpolation::bezier:
+				fillCacheBezier();
+				break;
+			default:
+				break;
 		}
 	}
 
-	std::size_t findIndex(float_t position, std::size_t indexStart) {
-		for(std::size_t i = indexStart; i < curvePoints.size(); i++) {
-			if(curvePoints[i].position >= position) {
-				return (i > 0u) ? (i - 1u) : invalidIndex;
+	void fillCacheNone() {
+		for(std::size_t cacheIndex = 0, pointStartIndex = 0; cacheIndex < valueCache.size(); cacheIndex++) {
+			float_t position = static_cast<float_t>(cacheIndex) / static_cast<float_t>(valueCache.size() - 1);
+			std::size_t pointIndex = findIndex(position, pointStartIndex);
+
+			if(pointIndex == invalidIndex) {
+				valueCache[cacheIndex] = curvePoints.front().value;
+				continue;
+			}
+			else if(pointIndex + 1 == curvePoints.size()) {
+				valueCache[cacheIndex] = curvePoints.back().value;
+				continue;
+			}
+
+			const Point& p1 = curvePoints[pointIndex];
+			const Point& p2 = curvePoints[pointIndex + 1];
+
+			valueCache[cacheIndex] = std::abs(position - p1.position) < std::abs(position - p2.position)
+				? p1.value
+				: p2.value;
+
+			pointStartIndex = pointIndex;
+		}
+	}
+
+	void fillCacheLinear() {
+		for(std::size_t cacheIndex = 0, pointStartIndex = 0; cacheIndex < valueCache.size(); cacheIndex++) {
+			float_t position = static_cast<float_t>(cacheIndex) / static_cast<float_t>(valueCache.size() - 1);
+			std::size_t pointIndex = findIndex(position, pointStartIndex);
+
+			if(pointIndex == invalidIndex) {
+				valueCache[cacheIndex] = curvePoints.front().value;
+				continue;
+			}
+			else if(pointIndex + 1 == curvePoints.size()) {
+				valueCache[cacheIndex] = curvePoints.back().value;
+				continue;
+			}
+
+			const Point& p1 = curvePoints[pointIndex];
+			const Point& p2 = curvePoints[pointIndex + 1];
+			float_t t = (position - p1.position) / (p2.position - p1.position);
+
+			valueCache[cacheIndex] = t * p2.value + (1.0 - t) * p1.value;
+
+			pointStartIndex = pointIndex;
+		}
+	}
+
+	void fillCacheSpline() {
+		const float_t alpha = 0.5;
+		const float_t tension = 0.0;
+		const float_t epsilon = 0.001;
+
+		for(std::size_t cacheIndex = 0, pointStartIndex = 0; cacheIndex < valueCache.size(); cacheIndex++) {
+			float_t position = static_cast<float_t>(cacheIndex) / static_cast<float_t>(valueCache.size() - 1);
+			std::size_t pointIndex = findIndex(position, pointStartIndex);
+
+			if(pointIndex == invalidIndex) {
+				valueCache[cacheIndex] = curvePoints.front().value;
+				continue;
+			}
+			else if(pointIndex + 1 == curvePoints.size()) {
+				valueCache[cacheIndex] = curvePoints.back().value;
+				continue;
+			}
+
+			const Point& p0 = curvePoints[pointIndex > 0 ? pointIndex - 1 : pointIndex];
+			const Point& p1 = curvePoints[pointIndex];
+			const Point& p2 = curvePoints[pointIndex + 1];
+			const Point& p3 = curvePoints[pointIndex + 2 < curvePoints.size() ? pointIndex + 2 : pointIndex + 1];
+
+			float_t t0 = 0.0;
+			float_t t1 = t0 + std::pow(std::max(glm::distance(p0.value, p1.value), epsilon), alpha);
+			float_t t2 = t1 + std::pow(std::max(glm::distance(p1.value, p2.value), epsilon), alpha);
+			float_t t3 = t2 + std::pow(std::max(glm::distance(p2.value, p3.value), epsilon), alpha);
+
+			T m1 = (1.0 - tension) * (t2 - t1) * ((p1.value - p0.value) / (t1 - t0) - (p2.value - p0.value) / (t2 - t0) + (p2.value - p1.value) / (t2 - t1));
+			T m2 = (1.0 - tension) * (t2 - t1) * ((p2.value - p1.value) / (t2 - t1) - (p3.value - p1.value) / (t3 - t1) + (p3.value - p2.value) / (t3 - t2));
+			T a = +2.0 * (p1.value - p2.value) + m1 + m2;
+			T b = -3.0 * (p1.value - p2.value) - m1 - m1 - m2;
+			T c = m1;
+			T d = p1.value;
+
+			float_t t = (position - p1.position) / (p2.position - p1.position);
+
+			valueCache[cacheIndex] =
+				a * t * t * t +
+				b * t * t +
+				c * t +
+				d;
+
+			pointStartIndex = pointIndex;
+		}
+	}
+
+	void fillCacheBezier() {
+		for(std::size_t cacheIndex = 0, pointStartIndex = 0; cacheIndex < valueCache.size(); cacheIndex++) {
+			float_t position = static_cast<float_t>(cacheIndex) / static_cast<float_t>(valueCache.size() - 1);
+			std::size_t pointIndex = findIndex(position, pointStartIndex);
+
+			if(pointIndex == invalidIndex) {
+				valueCache[cacheIndex] = curvePoints.front().value;
+				continue;
+			}
+			else if(pointIndex + 1 == curvePoints.size()) {
+				valueCache[cacheIndex] = curvePoints.back().value;
+				continue;
+			}
+
+			const Point& p1 = curvePoints[pointIndex];
+			const Point& p2 = curvePoints[pointIndex + 1];
+			T c1 = p1.value + curveControlPoints[pointIndex * 2 + 1];
+			T c2 = p2.value + curveControlPoints[pointIndex * 2 + 2];
+
+			float_t t = (position - p1.position) / (p2.position - p1.position);
+
+			valueCache[cacheIndex] =
+				p1.value * (1.0 - t) * (1.0 - t) * (1.0 - t) +
+				c1 * (1.0 - t) * (1.0 - t) * t * 3.0 +
+				c2 * (1.0 - t) * t * t * 3.0 +
+				p2.value * t * t * t;
+
+			pointStartIndex = pointIndex;
+		}
+	}
+
+	std::size_t findIndex(float_t position, std::size_t indexStart) const {
+		for(std::size_t index = indexStart; index < curvePoints.size(); index++) {
+			if(curvePoints[index].position >= position) {
+				return index > 0 ? index - 1 : invalidIndex;
 			}
 		}
 
-		return curvePoints.size() - 1u;
+		return curvePoints.size() - 1;
 	}
 
 	CurveInterpolation curveInterpolation = CurveInterpolation::linear;
 	bool adaptiveCache = true;
 
 	std::vector<Point> curvePoints;
+	std::vector<T> curveControlPoints;
+
 	std::vector<T> valueCache;
 };
 
@@ -311,7 +424,7 @@ Curve<T> flattenCurve(const Curve<T>& curve, const T& value) {
 		point.value = value;
 	}
 
-	return Curve<T>(points, curve.interpolation());
+	return Curve<T>(points, curve.controlPoints(), curve.interpolation());
 }
 
 template <typename T>
@@ -321,7 +434,7 @@ Curve<T> moveCurve(const Curve<T>& curve, const T& delta) {
 		point.value += delta;
 	}
 
-	return Curve<T>(points, curve.interpolation());
+	return Curve<T>(points, curve.controlPoints(), curve.interpolation());
 }
 
 template <typename T>
@@ -331,7 +444,7 @@ Curve<T> scaleCurve(const Curve<T>& curve, const T& factor) {
 		point.value *= factor;
 	}
 
-	return Curve<T>(points, curve.interpolation());
+	return Curve<T>(points, curve.controlPoints(), curve.interpolation());
 }
 
 template <typename T>
@@ -341,23 +454,24 @@ Curve<T> shiftCurve(const Curve<T>& curve, float_t delta) {
 		point.position = std::min(std::max(point.position + delta, 0.0), 1.0);
 	}
 
-	return Curve<T>(points, curve.interpolation());
+	return Curve<T>(points, curve.controlPoints(), curve.interpolation());
 }
 
 template <typename T>
-Curve<T> shiftCurveByFactor(const Curve<T>& curve, float_t factor) {
+Curve<T> scaleShiftCurve(const Curve<T>& curve, float_t factor) {
 	std::vector<typename Curve<T>::Point> points = curve.points();
 	for(typename Curve<T>::Point& point : points) {
 		point.position = std::min(std::max(point.position * factor, 0.0), 1.0);
 	}
 
-	return Curve<T>(points, curve.interpolation());
+	return Curve<T>(points, curve.controlPoints(), curve.interpolation());
 }
 
 NLOHMANN_JSON_SERIALIZE_ENUM(CurveInterpolation, {
 	{ CurveInterpolation::none, "none" },
 	{ CurveInterpolation::linear, "linear" },
-	{ CurveInterpolation::spline, "spline" }
+	{ CurveInterpolation::spline, "spline" },
+	{ CurveInterpolation::bezier, "bezier" }
 })
 
 template <typename T>
@@ -385,7 +499,8 @@ void to_json(nlohmann::ordered_json& j, const Curve<T>& curve) {
 
 	j = nlohmann::ordered_json{
 		{ "interpolation", curve.interpolation() },
-		{ "points", jPointList }
+		{ "points", jPointList },
+		{ "control_points", curve.controlPoints() }
 	};
 }
 template <typename T>
@@ -400,6 +515,9 @@ void from_json(const nlohmann::ordered_json& j, Curve<T>& curve) {
 		points.push_back(point);
 	}
 
-	curve = Curve<T>(points, j.value("interpolation", CurveInterpolation::linear));
+	curve = Curve<T>(
+		points,
+		j.value("control_points", std::vector<T>()),
+		j.value("interpolation", CurveInterpolation::linear));
 }
 }
