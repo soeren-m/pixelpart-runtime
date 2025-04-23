@@ -4,77 +4,87 @@
 #include <algorithm>
 
 namespace pixelpart {
-ImageResource::ImageResource(const std::string& name, uint32_t w, uint32_t h, uint32_t bpp) :
-	Resource(name), width(w), height(h), bitsPerPixel(bpp) {
-	data.resize(width * height * bitsPerPixel / 8u);
+ImageResource::ImageResource(const std::string& name, uint32_t w, uint32_t h, uint32_t ch, ColorSpace cs) :
+	Resource(name), imageWidth(w), imageHeight(h), imageChannels(ch), imageColorSpace(cs) {
+	imageData.resize(imageWidth * imageHeight * imageChannels);
 }
-ImageResource::ImageResource(const std::string& name, uint32_t w, uint32_t h, uint32_t bpp, const unsigned char* source) :
-	ImageResource(name, w, h, bpp) {
-	copy(source, data.size());
+ImageResource::ImageResource(const std::string& name, uint32_t w, uint32_t h, uint32_t ch, ColorSpace cs, const uint8_t* source) :
+	ImageResource(name, w, h, ch, cs) {
+	copy(source, imageData.size());
 }
 
 void ImageResource::resize(uint32_t w, uint32_t h) {
-	width = w;
-	height = h;
-	data.resize(width * height * bitsPerPixel / 8u, 0u);
+	imageWidth = w;
+	imageHeight = h;
+	imageData.resize(imageWidth * imageHeight * imageChannels, 0);
 }
-void ImageResource::assign(uint32_t w, uint32_t h, unsigned char value) {
-	width = w;
-	height = h;
-	data.assign(width * height * bitsPerPixel / 8u, value);
+void ImageResource::assign(uint32_t w, uint32_t h, uint8_t value) {
+	imageWidth = w;
+	imageHeight = h;
+	imageData.assign(imageWidth * imageHeight * imageChannels, value);
 }
-void ImageResource::clear(unsigned char value) {
-	data.assign(width * height * bitsPerPixel / 8u, value);
-}
-
-void ImageResource::copy(const unsigned char* source, std::size_t size) {
-	std::memcpy(&data.front(), source, std::min(size, data.size()));
+void ImageResource::clear(uint8_t value) {
+	imageData.assign(imageWidth * imageHeight * imageChannels, value);
 }
 
-uint32_t ImageResource::imageWidth() const {
-	return width;
-}
-uint32_t ImageResource::imageHeight() const {
-	return height;
-}
-uint32_t ImageResource::imageBitsPerPixel() const {
-	return bitsPerPixel;
+void ImageResource::copy(const uint8_t* source, std::size_t size) {
+	std::memcpy(&imageData.front(), source, std::min(size, imageData.size()));
 }
 
-std::size_t ImageResource::imageDataSize() const {
-	return data.size();
+uint32_t ImageResource::width() const {
+	return imageWidth;
+}
+uint32_t ImageResource::height() const {
+	return imageHeight;
+}
+uint32_t ImageResource::channels() const {
+	return imageChannels;
+}
+ColorSpace ImageResource::colorSpace() const {
+	return imageColorSpace;
 }
 
-std::vector<unsigned char>& ImageResource::imageData() {
-	return data;
+std::size_t ImageResource::dataSize() const {
+	return imageData.size();
 }
-const std::vector<unsigned char>& ImageResource::imageData() const {
-	return data;
+
+std::vector<uint8_t>& ImageResource::data() {
+	return imageData;
+}
+const std::vector<uint8_t>& ImageResource::data() const {
+	return imageData;
 }
 
 void to_json(nlohmann::ordered_json& j, const ImageResource& resource) {
 	std::string compressedData = compressAndEncode(
-		resource.imageData().data(), resource.imageData().size(), CompressionMethod::zlib);
+		resource.data().data(), resource.data().size(), CompressionMethod::zlib);
 
 	j = nlohmann::ordered_json{
 		{ "name", resource.name() },
-		{ "width", resource.imageWidth() },
-		{ "height", resource.imageHeight() },
-		{ "bpp", resource.imageBitsPerPixel() },
+		{ "width", resource.width() },
+		{ "height", resource.height() },
+		{ "channels", resource.channels() },
+		{ "color_space", resource.colorSpace() },
 		{ "compression", CompressionMethod::zlib },
 		{ "data", compressedData }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ImageResource& resource) {
+	uint32_t channels = j.value("channels", 0u);
+	if(channels == 0) {
+		channels = j.value("bpp", 0u) / 8;
+	}
+
 	resource = ImageResource(
 		j.value("name", "unknown"),
 		j.value("width", 0u),
 		j.value("height", 0u),
-		j.value("bpp", 0u));
+		channels,
+		j.value("color_space", ColorSpace::srgb));
 
-	resource.imageData() = decodeAndDecompress(
+	resource.data() = decodeAndDecompress(
 		j.at("data").get<std::string>(),
-		resource.imageDataSize(),
+		resource.dataSize(),
 		j.value("compression", CompressionMethod::none));
 }
 }
