@@ -9,7 +9,7 @@
 namespace pixelpart {
 void CollisionModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
 	ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const {
-	float_t t = runtimeContext.currentTime();
+	float_t t = runtimeContext.time();
 	float_t dt = runtimeContext.deltaTime();
 
 	if(!line2dColliders.empty()) {

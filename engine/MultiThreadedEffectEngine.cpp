@@ -1,7 +1,7 @@
 #ifdef PIXELPART_RUNTIME_MULTITHREADING
 
 #include "MultiThreadedEffectEngine.h"
-#include "../effect/ParticleRuntimePair.h"
+#include "../effect/ParticleRuntimeId.h"
 #include <algorithm>
 
 namespace pixelpart {
@@ -11,7 +11,7 @@ MultiThreadedEffectEngine::MultiThreadedEffectEngine(const Effect& effect, uint3
 
 }
 
-void MultiThreadedEffectEngine::step(float_t dt) {
+void MultiThreadedEffectEngine::advance(float_t dt) {
 	engineDeltaTime = dt;
 	RuntimeContext rtContext = runtimeContext();
 
@@ -77,13 +77,6 @@ void MultiThreadedEffectEngine::restart(bool reset) {
 	}
 }
 
-float_t MultiThreadedEffectEngine::currentTime() const {
-	return engineTime;
-}
-RuntimeContext MultiThreadedEffectEngine::runtimeContext() const {
-	return RuntimeContext(engineTime, engineDeltaTime, triggerActivationTimes);
-}
-
 void MultiThreadedEffectEngine::seed(uint32_t seed) {
 	particleGenerator.seed(seed);
 }
@@ -125,14 +118,15 @@ void MultiThreadedEffectEngine::spawnParticles(id_t particleEmitterId, id_t part
 	particleGenerator.generate(particleEmitterId, particleTypeId, count, time);
 }
 
-uint32_t MultiThreadedEffectEngine::particleCount() const {
-	uint32_t count = 0;
-	for(const ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
-		count += runtimeInstance.particles().count();
+const ParticleCollection* MultiThreadedEffectEngine::particles(id_t particleEmitterId, id_t particleTypeId) const {
+	const ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
+	if(!runtimeInstance) {
+		return nullptr;
 	}
 
-	return count;
+	return &runtimeInstance->particles();
 }
+
 uint32_t MultiThreadedEffectEngine::particleCount(id_t particleEmitterId, id_t particleTypeId) const {
 	const ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
 	if(!runtimeInstance) {
@@ -141,14 +135,17 @@ uint32_t MultiThreadedEffectEngine::particleCount(id_t particleEmitterId, id_t p
 
 	return runtimeInstance->particles().count();
 }
-
-const ParticleCollection* MultiThreadedEffectEngine::particles(id_t particleEmitterId, id_t particleTypeId) const {
-	const ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
-	if(!runtimeInstance) {
-		return nullptr;
+uint32_t MultiThreadedEffectEngine::particleCount() const {
+	uint32_t count = 0;
+	for(const ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
+		count += runtimeInstance.particles().count();
 	}
 
-	return &runtimeInstance->particles();
+	return count;
+}
+
+RuntimeContext MultiThreadedEffectEngine::runtimeContext() const {
+	return RuntimeContext(engineTime, engineDeltaTime, triggerActivationTimes);
 }
 
 const Effect& MultiThreadedEffectEngine::effect() const {

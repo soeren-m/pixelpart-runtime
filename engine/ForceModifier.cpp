@@ -162,7 +162,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t 
 }
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
 	const ParticleType& particleType, const NoiseField& noiseField, const SceneGraph& sceneGraph) const {
-	float_t t = runtimeContext.currentTime();
+	float_t t = runtimeContext.time();
 	float_t alpha = noiseField.life(runtimeContext);
 	Transform transform = sceneGraph.globalTransform(noiseField.id(), runtimeContext);
 	float3_t center = transform.position();

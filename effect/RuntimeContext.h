@@ -13,7 +13,7 @@ public:
 	RuntimeContext(float_t t, float_t dt);
 	RuntimeContext(float_t t, float_t dt, const TriggerActivationTimeMap& triggerActivationTimes);
 
-	float_t currentTime() const;
+	float_t time() const;
 	float_t deltaTime() const;
 
 	bool triggerActivated(id_t triggerId) const;
@@ -21,7 +21,7 @@ public:
 	const TriggerActivationTimeMap& triggerActivationTimes() const;
 
 private:
-	float_t contextCurrentTime = 0.0;
+	float_t contextTime = 0.0;
 	float_t contextDeltaTime = 0.0;
 
 	TriggerActivationTimeMap contextTriggerActivationTimes;

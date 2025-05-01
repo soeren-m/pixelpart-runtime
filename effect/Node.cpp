@@ -81,10 +81,10 @@ float_t Node::timeSinceStart(const RuntimeContext& runtimeContext, bool useTrigg
 			return 0.0;
 		}
 
-		return runtimeContext.currentTime() - (runtimeContext.triggerActivationTime(nodeStartTriggerId) + nodeLifetimeStart);
+		return runtimeContext.time() - (runtimeContext.triggerActivationTime(nodeStartTriggerId) + nodeLifetimeStart);
 	}
 
-	return runtimeContext.currentTime() - nodeLifetimeStart;
+	return runtimeContext.time() - nodeLifetimeStart;
 }
 float_t Node::life(const RuntimeContext& runtimeContext, bool useTriggers) const {
 	float_t startTime = nodeLifetimeStart;
@@ -106,8 +106,8 @@ float_t Node::life(const RuntimeContext& runtimeContext, bool useTriggers) const
 	}
 
 	return nodeRepeat
-		? std::fmod(runtimeContext.currentTime() - startTime, nodeLifetimeDuration) / nodeLifetimeDuration
-		: (runtimeContext.currentTime() - startTime) / nodeLifetimeDuration;
+		? std::fmod(runtimeContext.time() - startTime, nodeLifetimeDuration) / nodeLifetimeDuration
+		: (runtimeContext.time() - startTime) / nodeLifetimeDuration;
 }
 bool Node::active(const RuntimeContext& runtimeContext, bool useTriggers) const {
 	float_t startTime = nodeLifetimeStart;
@@ -129,8 +129,8 @@ bool Node::active(const RuntimeContext& runtimeContext, bool useTriggers) const 
 	}
 
 	return
-		(runtimeContext.currentTime() >= startTime) &&
-		(runtimeContext.currentTime() <= startTime + nodeLifetimeDuration || nodeRepeat);
+		(runtimeContext.time() >= startTime) &&
+		(runtimeContext.time() <= startTime + nodeLifetimeDuration || nodeRepeat);
 }
 bool Node::activatedByTrigger(const RuntimeContext& runtimeContext) const {
 	return

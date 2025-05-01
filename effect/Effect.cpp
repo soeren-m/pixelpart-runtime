@@ -49,29 +49,29 @@ const ResourceCollection& Effect::resources() const {
 	return effectResources;
 }
 
-std::vector<ParticleRuntimePair> Effect::runtimePairs(id_t particleEmitterId) const {
+std::vector<ParticleRuntimeId> Effect::particleRuntimeIds(id_t particleEmitterId) const {
 	if(!effectSceneGraph.contains(particleEmitterId)) {
-		return std::vector<ParticleRuntimePair>();
+		return std::vector<ParticleRuntimeId>();
 	}
 
 	const ParticleEmitter& particleEmitter = effectSceneGraph.at<ParticleEmitter>(particleEmitterId);
 
-	std::vector<ParticleRuntimePair> pairs;
+	std::vector<ParticleRuntimeId> runtimeIds;
 	for(id_t particleTypeId : particleEmitter.particleTypes()) {
-		pairs.emplace_back(particleEmitter.id(), particleTypeId);
+		runtimeIds.emplace_back(particleEmitter.id(), particleTypeId);
 	}
 
-	return pairs;
+	return runtimeIds;
 }
-std::vector<ParticleRuntimePair> Effect::runtimePairs() const {
-	std::vector<ParticleRuntimePair> pairs;
+std::vector<ParticleRuntimeId> Effect::particleRuntimeIds() const {
+	std::vector<ParticleRuntimeId> runtimeIds;
 	for(const ParticleEmitter* particleEmitter : effectSceneGraph.nodesWithType<ParticleEmitter>()) {
 		for(id_t particleTypeId : particleEmitter->particleTypes()) {
-			pairs.emplace_back(particleEmitter->id(), particleTypeId);
+			runtimeIds.emplace_back(particleEmitter->id(), particleTypeId);
 		}
 	}
 
-	return pairs;
+	return runtimeIds;
 }
 
 void Effect::applyInputs() {

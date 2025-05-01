@@ -18,8 +18,8 @@ id_t ParticleRuntimeInstance::emitterId() const {
 id_t ParticleRuntimeInstance::typeId() const {
 	return instanceTypeId;
 }
-ParticleRuntimePair ParticleRuntimeInstance::key() const {
-	return ParticleRuntimePair(instanceEmitterId, instanceTypeId);
+ParticleRuntimeId ParticleRuntimeInstance::id() const {
+	return ParticleRuntimeId(instanceEmitterId, instanceTypeId);
 }
 
 ParticleCollection& ParticleRuntimeInstance::particles() {

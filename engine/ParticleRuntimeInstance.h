@@ -2,7 +2,7 @@
 
 #include "../common/Types.h"
 #include "../common/Id.h"
-#include "../effect/ParticleRuntimePair.h"
+#include "../effect/ParticleRuntimeId.h"
 #include "ParticleCollection.h"
 
 namespace pixelpart {
@@ -14,7 +14,7 @@ public:
 
 	id_t emitterId() const;
 	id_t typeId() const;
-	ParticleRuntimePair key() const;
+	ParticleRuntimeId id() const;
 
 	ParticleCollection& particles();
 	const ParticleCollection& particles() const;

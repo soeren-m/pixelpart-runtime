@@ -17,7 +17,7 @@
 #include "EffectInputCollection.h"
 #include "TriggerCollection.h"
 #include "ResourceCollection.h"
-#include "ParticleRuntimePair.h"
+#include "ParticleRuntimeId.h"
 #include "../json/json.hpp"
 #include <vector>
 
@@ -45,8 +45,8 @@ public:
 	ResourceCollection& resources();
 	const ResourceCollection& resources() const;
 
-	std::vector<ParticleRuntimePair> runtimePairs(id_t particleEmitterId) const;
-	std::vector<ParticleRuntimePair> runtimePairs() const;
+	std::vector<ParticleRuntimeId> particleRuntimeIds(id_t particleEmitterId) const;
+	std::vector<ParticleRuntimeId> particleRuntimeIds() const;
 
 	void applyInputs();
 

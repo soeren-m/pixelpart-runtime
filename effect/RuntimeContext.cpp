@@ -2,16 +2,16 @@
 
 namespace pixelpart {
 RuntimeContext::RuntimeContext(float_t t, float_t dt) :
-	contextCurrentTime(t), contextDeltaTime(dt) {
+	contextTime(t), contextDeltaTime(dt) {
 
 }
 RuntimeContext::RuntimeContext(float_t t, float_t dt, const TriggerActivationTimeMap& triggerActivationTimes) :
-	contextCurrentTime(t), contextDeltaTime(dt), contextTriggerActivationTimes(triggerActivationTimes) {
+	contextTime(t), contextDeltaTime(dt), contextTriggerActivationTimes(triggerActivationTimes) {
 
 }
 
-float_t RuntimeContext::currentTime() const {
-	return contextCurrentTime;
+float_t RuntimeContext::time() const {
+	return contextTime;
 }
 float_t RuntimeContext::deltaTime() const {
 	return contextDeltaTime;

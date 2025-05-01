@@ -1,5 +1,5 @@
 #include "SingleThreadedEffectEngine.h"
-#include "../effect/ParticleRuntimePair.h"
+#include "../effect/ParticleRuntimeId.h"
 
 namespace pixelpart {
 SingleThreadedEffectEngine::SingleThreadedEffectEngine(const Effect& effect, uint32_t particleCapacity) : EffectEngine(),
@@ -7,7 +7,7 @@ SingleThreadedEffectEngine::SingleThreadedEffectEngine(const Effect& effect, uin
 
 }
 
-void SingleThreadedEffectEngine::step(float_t dt) {
+void SingleThreadedEffectEngine::advance(float_t dt) {
 	engineDeltaTime = dt;
 	RuntimeContext rtContext = runtimeContext();
 
@@ -40,13 +40,6 @@ void SingleThreadedEffectEngine::restart(bool reset) {
 	if(reset) {
 		particleGenerator.reset();
 	}
-}
-
-float_t SingleThreadedEffectEngine::currentTime() const {
-	return engineTime;
-}
-RuntimeContext SingleThreadedEffectEngine::runtimeContext() const {
-	return RuntimeContext(engineTime, engineDeltaTime, triggerActivationTimes);
 }
 
 void SingleThreadedEffectEngine::seed(uint32_t seed) {
@@ -90,14 +83,15 @@ void SingleThreadedEffectEngine::spawnParticles(id_t particleEmitterId, id_t par
 	particleGenerator.generate(particleEmitterId, particleTypeId, count, time);
 }
 
-uint32_t SingleThreadedEffectEngine::particleCount() const {
-	uint32_t count = 0;
-	for(const ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
-		count += runtimeInstance.particles().count();
+const ParticleCollection* SingleThreadedEffectEngine::particles(id_t particleEmitterId, id_t particleTypeId) const {
+	const ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
+	if(!runtimeInstance) {
+		return nullptr;
 	}
 
-	return count;
+	return &runtimeInstance->particles();
 }
+
 uint32_t SingleThreadedEffectEngine::particleCount(id_t particleEmitterId, id_t particleTypeId) const {
 	const ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
 	if(!runtimeInstance) {
@@ -106,14 +100,17 @@ uint32_t SingleThreadedEffectEngine::particleCount(id_t particleEmitterId, id_t 
 
 	return runtimeInstance->particles().count();
 }
-
-const ParticleCollection* SingleThreadedEffectEngine::particles(id_t particleEmitterId, id_t particleTypeId) const {
-	const ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
-	if(!runtimeInstance) {
-		return nullptr;
+uint32_t SingleThreadedEffectEngine::particleCount() const {
+	uint32_t count = 0;
+	for(const ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
+		count += runtimeInstance.particles().count();
 	}
 
-	return &runtimeInstance->particles();
+	return count;
+}
+
+RuntimeContext SingleThreadedEffectEngine::runtimeContext() const {
+	return RuntimeContext(engineTime, engineDeltaTime, triggerActivationTimes);
 }
 
 const Effect& SingleThreadedEffectEngine::effect() const {

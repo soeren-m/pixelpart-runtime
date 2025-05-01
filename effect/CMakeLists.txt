@@ -20,7 +20,7 @@ target_sources(pixelpart-runtime PRIVATE
 	NoiseField.cpp
 	ParticleEmitter.cpp
 	ParticleRendererSettings.cpp
-	ParticleRuntimePair.cpp
+	ParticleRuntimeId.cpp
 	ParticleType.cpp
 	ParticleTypeCollection.cpp
 	PlaneCollider.cpp

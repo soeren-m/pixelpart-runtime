@@ -5,15 +5,13 @@
 #include "../effect/Effect.h"
 #include "../effect/RuntimeContext.h"
 #include "ParticleCollection.h"
+#include <cstdint>
 
 namespace pixelpart {
 class EffectEngine {
 public:
-	virtual void step(float_t dt) = 0;
+	virtual void advance(float_t dt) = 0;
 	virtual void restart(bool reset) = 0;
-
-	virtual float_t currentTime() const = 0;
-	virtual RuntimeContext runtimeContext() const = 0;
 
 	virtual void seed(uint32_t seed) = 0;
 
@@ -22,10 +20,12 @@ public:
 	virtual void spawnParticles(id_t particleEmitterId, uint32_t count, float_t time = 0.0) = 0;
 	virtual void spawnParticles(id_t particleEmitterId, id_t particleTypeId, uint32_t count, float_t time = 0.0) = 0;
 
-	virtual uint32_t particleCount() const = 0;
-	virtual uint32_t particleCount(id_t particleEmitterId, id_t particleTypeId) const = 0;
-
 	virtual const ParticleCollection* particles(id_t particleEmitterId, id_t particleTypeId) const = 0;
+
+	virtual uint32_t particleCount(id_t particleEmitterId, id_t particleTypeId) const = 0;
+	virtual uint32_t particleCount() const = 0;
+
+	virtual RuntimeContext runtimeContext() const = 0;
 
 	virtual const Effect& effect() const = 0;
 };

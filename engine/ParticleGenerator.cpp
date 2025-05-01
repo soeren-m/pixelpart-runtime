@@ -1,5 +1,5 @@
 #include "ParticleGenerator.h"
-#include "../effect/ParticleRuntimePair.h"
+#include "../effect/ParticleRuntimeId.h"
 #include "../common/Transform.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../glm/gtx/euler_angles.hpp"
@@ -36,8 +36,8 @@ void ParticleGenerator::generate(const RuntimeContext& runtimeContext) {
 			: particleEmitter.start();
 
 		float_t emissionTime = particleEmitter.repeat()
-			? std::fmod(runtimeContext.currentTime() - startTime, particleEmitter.duration())
-			: runtimeContext.currentTime() - startTime;
+			? std::fmod(runtimeContext.time() - startTime, particleEmitter.duration())
+			: runtimeContext.time() - startTime;
 
 		switch(particleEmitter.emissionMode()) {
 			case ParticleEmitter::EmissionMode::continuous:
@@ -60,10 +60,10 @@ void ParticleGenerator::generate(const RuntimeContext& runtimeContext) {
 		}
 	}
 
-	std::unordered_map<ParticleRuntimePair, std::vector<ParticleRuntimeInstanceCollection::iterator>> instanceSubInstances;
+	std::unordered_map<ParticleRuntimeId, std::vector<ParticleRuntimeInstanceCollection::iterator>> instanceSubInstances;
 
 	for(auto instanceIt = particleRuntimeInstances.begin(); instanceIt != particleRuntimeInstances.end(); instanceIt++) {
-		std::vector<ParticleRuntimeInstanceCollection::iterator>& subInstances = instanceSubInstances[instanceIt->key()];
+		std::vector<ParticleRuntimeInstanceCollection::iterator>& subInstances = instanceSubInstances[instanceIt->id()];
 		const ParticleType& particleType = effect.particleTypes().at(instanceIt->typeId());
 
 		for(auto otherInstanceIt = particleRuntimeInstances.begin(); otherInstanceIt != particleRuntimeInstances.end(); otherInstanceIt++) {
@@ -84,7 +84,7 @@ void ParticleGenerator::generate(const RuntimeContext& runtimeContext) {
 	}
 
 	for(ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
-		const std::vector<ParticleRuntimeInstanceCollection::iterator>& subInstances = instanceSubInstances.at(runtimeInstance.key());
+		const std::vector<ParticleRuntimeInstanceCollection::iterator>& subInstances = instanceSubInstances.at(runtimeInstance.id());
 		if(subInstances.empty()) {
 			continue;
 		}
@@ -151,7 +151,7 @@ uint32_t ParticleGenerator::generate(ParticleRuntimeInstance& runtimeInstance, P
 	ParticleCollection::WritePtr particles = particleCollection.writePtr();
 	ParticleCollection::ReadPtr parentParticles = parentRuntimeInstance ? parentRuntimeInstance->particles().readPtr() : ParticleCollection::ReadPtr();
 
-	RuntimeContext prevRuntimeContext(runtimeContext.currentTime() - 0.1, 0.0, runtimeContext.triggerActivationTimes());
+	RuntimeContext prevRuntimeContext(runtimeContext.time() - 0.1, 0.0, runtimeContext.triggerActivationTimes());
 
 	float_t alpha = emitter.life(runtimeContext, useTriggers);
 	Transform emitterTransform = effect.sceneGraph().globalTransform(emitter.id(), runtimeContext, useTriggers);
