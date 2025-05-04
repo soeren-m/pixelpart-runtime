@@ -38,7 +38,7 @@ void to_json(nlohmann::ordered_json& j, const DragField& field) {
 	to_json(j, static_cast<const ForceField&>(field));
 
 	j.update(nlohmann::ordered_json{
-		{ "force_field_type", ForceFieldType::vector },
+		{ "force_field_type", ForceFieldType::drag },
 		{ "drag", nlohmann::ordered_json{
 			{ "velocity_influence", field.velocityInfluence() },
 			{ "size_influence", field.sizeInfluence() }
