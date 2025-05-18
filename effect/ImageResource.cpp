@@ -56,7 +56,7 @@ const std::vector<uint8_t>& ImageResource::data() const {
 }
 
 void to_json(nlohmann::ordered_json& j, const ImageResource& resource) {
-	std::string compressedData = compressAndEncode(
+	std::string compressedData = compressBase64(
 		resource.data().data(), resource.data().size(), CompressionMethod::zlib);
 
 	j = nlohmann::ordered_json{
@@ -82,7 +82,7 @@ void from_json(const nlohmann::ordered_json& j, ImageResource& resource) {
 		channels,
 		j.value("color_space", ColorSpace::srgb));
 
-	resource.data() = decodeAndDecompress(
+	resource.data() = decompressBase64(
 		j.at("data").get<std::string>(),
 		resource.dataSize(),
 		j.value("compression", CompressionMethod::none));

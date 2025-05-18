@@ -1,4 +1,6 @@
 #include "MaterialAsset.h"
+#include "../common/SerializationException.h"
+#include "../common/DeserializationException.h"
 
 namespace pixelpart {
 const uint32_t MaterialAsset::version = 9;
@@ -18,25 +20,45 @@ const std::unordered_map<std::string, ImageResource>& MaterialAsset::images() co
 }
 
 std::string serializeMaterialAsset(const MaterialAsset& asset, int32_t indent) {
-	nlohmann::ordered_json jsonData = asset;
+	try {
+		nlohmann::ordered_json jsonData = asset;
 
-	return jsonData.dump(indent);
+		return jsonData.dump(indent);
+	}
+	catch(const nlohmann::ordered_json::exception& e) {
+		throw SerializationException(e.what());
+	}
 }
 
 MaterialAsset deserializeMaterialAsset(std::istream& stream) {
-	nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(stream);
+	try {
+		nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(stream);
 
-	return jsonData.get<MaterialAsset>();
+		return jsonData.get<MaterialAsset>();
+	}
+	catch(const nlohmann::ordered_json::exception& e) {
+		throw DeserializationException(e.what());
+	}
 }
 MaterialAsset deserializeMaterialAsset(const std::string& data) {
-	nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(data);
+	try {
+		nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(data);
 
-	return jsonData.get<MaterialAsset>();
+		return jsonData.get<MaterialAsset>();
+	}
+	catch(const nlohmann::ordered_json::exception& e) {
+		throw DeserializationException(e.what());
+	}
 }
 MaterialAsset deserializeMaterialAsset(const char* data, std::size_t size) {
-	nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(data, data + size);
+	try {
+		nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(data, data + size);
 
-	return jsonData.get<MaterialAsset>();
+		return jsonData.get<MaterialAsset>();
+	}
+	catch(const nlohmann::ordered_json::exception& e) {
+		throw DeserializationException(e.what());
+	}
 }
 
 void to_json(nlohmann::ordered_json& j, const MaterialAsset& asset) {
@@ -49,7 +71,7 @@ void to_json(nlohmann::ordered_json& j, const MaterialAsset& asset) {
 void from_json(const nlohmann::ordered_json& j, MaterialAsset& asset) {
 	uint32_t version = j.at("version");
 	if(version != MaterialAsset::version) {
-		throw std::runtime_error("Unsupported material asset version " + std::to_string(version));
+		throw DeserializationException("Unsupported material asset version " + std::to_string(version));
 	}
 
 	asset.material() = j.value("material", MaterialResource());

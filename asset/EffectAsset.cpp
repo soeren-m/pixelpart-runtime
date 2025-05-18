@@ -1,4 +1,6 @@
 #include "EffectAsset.h"
+#include "../common/SerializationException.h"
+#include "../common/DeserializationException.h"
 #include "../effect/Node.h"
 #include "../effect/ParticleType.h"
 #include <memory>
@@ -86,25 +88,45 @@ bool EffectAsset::usesResource(const std::string& resourceId) const {
 }
 
 std::string serializeEffectAsset(const EffectAsset& asset, int32_t indent) {
-	nlohmann::ordered_json jsonData = asset;
+	try {
+		nlohmann::ordered_json jsonData = asset;
 
-	return jsonData.dump(indent);
+		return jsonData.dump(indent);
+	}
+	catch(const nlohmann::ordered_json::exception& e) {
+		throw SerializationException(e.what());
+	}
 }
 
 EffectAsset deserializeEffectAsset(std::istream& stream) {
-	nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(stream);
+	try {
+		nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(stream);
 
-	return jsonData.get<EffectAsset>();
+		return jsonData.get<EffectAsset>();
+	}
+	catch(const nlohmann::ordered_json::exception& e) {
+		throw DeserializationException(e.what());
+	}
 }
 EffectAsset deserializeEffectAsset(const std::string& data) {
-	nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(data);
+	try {
+		nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(data);
 
-	return jsonData.get<EffectAsset>();
+		return jsonData.get<EffectAsset>();
+	}
+	catch(const nlohmann::ordered_json::exception& e) {
+		throw DeserializationException(e.what());
+	}
 }
 EffectAsset deserializeEffectAsset(const char* data, std::size_t size) {
-	nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(data, data + size);
+	try {
+		nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(data, data + size);
 
-	return jsonData.get<EffectAsset>();
+		return jsonData.get<EffectAsset>();
+	}
+	catch(const nlohmann::ordered_json::exception& e) {
+		throw DeserializationException(e.what());
+	}
 }
 
 void to_json(nlohmann::ordered_json& j, const EffectAsset& asset) {
@@ -120,7 +142,7 @@ void to_json(nlohmann::ordered_json& j, const EffectAsset& asset) {
 void from_json(const nlohmann::ordered_json& j, EffectAsset& asset) {
 	uint32_t version = j.at("version");
 	if(version != EffectAsset::version) {
-		throw std::runtime_error("Unsupported effect asset version " + std::to_string(version));
+		throw DeserializationException("Unsupported effect asset version " + std::to_string(version));
 	}
 
 	asset.effect() = j.value("effect", Effect());

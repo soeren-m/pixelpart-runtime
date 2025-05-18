@@ -1,8 +1,8 @@
 #include "Base64.h"
-#include <stdexcept>
+#include "DecodingException.h"
 
 namespace pixelpart {
-std::string encodeBase64(const unsigned char* data, std::size_t size) {
+std::string encodeBase64(const uint8_t* data, std::size_t size) {
 	static const char* base64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 	std::string result;
@@ -51,7 +51,7 @@ std::string decodeBase64(const std::string& data) {
 			return 63u;
 		}
 
-		throw std::runtime_error("base64 decoding error");
+		throw DecodingException("Unknown base64 character");
 	};
 
 	std::string result;
