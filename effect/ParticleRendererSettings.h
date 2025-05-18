@@ -11,11 +11,11 @@ struct ParticleSpriteRendererSettings {
 };
 
 struct ParticleTrailRendererSettings {
-	enum class SmoothingMethod : uint32_t {
+	enum class SmoothingMethod : std::uint32_t {
 		none = 0,
 		spline = 1
 	};
-	enum class TextureRotation : uint32_t {
+	enum class TextureRotation : std::uint32_t {
 		up = 0,
 		left = 1,
 		down = 2,
@@ -23,7 +23,7 @@ struct ParticleTrailRendererSettings {
 	};
 
 	SmoothingMethod smoothingMethod = SmoothingMethod::none;
-	uint32_t smoothingSegmentCount = 100u;
+	std::uint32_t smoothingSegmentCount = 100;
 	TextureRotation textureRotation = TextureRotation::up;
 	float_t textureUVFactor = 1.0;
 };

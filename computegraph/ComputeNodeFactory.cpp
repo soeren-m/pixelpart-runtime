@@ -74,7 +74,7 @@ void ComputeNodeFactory::registerBuiltInNodes() {
 }
 
 std::unique_ptr<ComputeNode> ComputeNodeFactory::create(const std::string& name) const {
-	if(nodeTypeFunctions.count(name) == 0u) {
+	if(nodeTypeFunctions.count(name) == 0) {
 		return nullptr;
 	}
 

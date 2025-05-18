@@ -14,10 +14,10 @@ MaterialInstance::MaterialInstance(const std::string& materialId, const Material
 	for(const auto& parameterEntry : material.shaderGraph().shaderParameters()) {
 		const pixelpart::VariantParameter& parameter = parameterEntry.second;
 
-		if(instanceMaterialParameters.count(parameterEntry.first) == 0u) {
+		if(instanceMaterialParameters.count(parameterEntry.first) == 0) {
 			pixelpart::VariantParameter::Value initialValue = parameter.def();
 			if(material.shaderGraph().containsNode(parameterEntry.first)) {
-				initialValue = material.shaderGraph().node(parameterEntry.first).parameters().at(0u);
+				initialValue = material.shaderGraph().node(parameterEntry.first).parameters().at(0);
 			}
 
 			instanceMaterialParameters[parameterEntry.first] = initialValue;

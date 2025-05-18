@@ -23,7 +23,7 @@ public:
 		propertyBaseValue(initialValue),
 		propertyComputeGraph(graph),
 		outputOperation(outputOp) {
-		if(propertyComputeGraph.nodes().size() == 0u) {
+		if(propertyComputeGraph.nodes().size() == 0) {
 			propertyComputeGraph.addNode<OutputComputeNode>();
 		}
 
@@ -49,7 +49,7 @@ public:
 		propertyComputeGraph.unlinkRemovedInputs(inputs);
 
 		try {
-			graphOutputValue = propertyComputeGraph.evaluate(inputs).at(0u).template value<T>();
+			graphOutputValue = propertyComputeGraph.evaluate(inputs).at(0).template value<T>();
 
 			useGraphOutput = true;
 			recalculateResult();

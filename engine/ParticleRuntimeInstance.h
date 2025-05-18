@@ -8,7 +8,7 @@
 namespace pixelpart {
 class ParticleRuntimeInstance {
 public:
-	ParticleRuntimeInstance(id_t emitterId, id_t typeId, uint32_t particleCapacity);
+	ParticleRuntimeInstance(id_t emitterId, id_t typeId, std::uint32_t particleCapacity);
 
 	void reset();
 
@@ -22,8 +22,8 @@ public:
 	float_t& emissionCount();
 	float_t emissionCount() const;
 
-	uint32_t& emitterGridIndex();
-	uint32_t emitterGridIndex() const;
+	std::uint32_t& emitterGridIndex();
+	std::uint32_t emitterGridIndex() const;
 
 private:
 	id_t instanceEmitterId;
@@ -31,6 +31,6 @@ private:
 
 	ParticleCollection instanceParticles;
 	float_t instanceEmissionCount = 0.0;
-	uint32_t instanceEmitterGridIndex = 0u;
+	std::uint32_t instanceEmitterGridIndex = 0;
 };
 }

@@ -1,7 +1,7 @@
 #include "ParticleRuntimeInstance.h"
 
 namespace pixelpart {
-ParticleRuntimeInstance::ParticleRuntimeInstance(id_t emitterId, id_t typeId, uint32_t particleCapacity) :
+ParticleRuntimeInstance::ParticleRuntimeInstance(id_t emitterId, id_t typeId, std::uint32_t particleCapacity) :
 	instanceEmitterId(emitterId), instanceTypeId(typeId), instanceParticles(particleCapacity) {
 
 }
@@ -9,7 +9,7 @@ ParticleRuntimeInstance::ParticleRuntimeInstance(id_t emitterId, id_t typeId, ui
 void ParticleRuntimeInstance::reset() {
 	instanceParticles.clear();
 	instanceEmissionCount = 0.0;
-	instanceEmitterGridIndex = 0u;
+	instanceEmitterGridIndex = 0;
 }
 
 id_t ParticleRuntimeInstance::emitterId() const {
@@ -36,10 +36,10 @@ float_t ParticleRuntimeInstance::emissionCount() const {
 	return instanceEmissionCount;
 }
 
-uint32_t& ParticleRuntimeInstance::emitterGridIndex() {
+std::uint32_t& ParticleRuntimeInstance::emitterGridIndex() {
 	return instanceEmitterGridIndex;
 }
-uint32_t ParticleRuntimeInstance::emitterGridIndex() const {
+std::uint32_t ParticleRuntimeInstance::emitterGridIndex() const {
 	return instanceEmitterGridIndex;
 }
 }

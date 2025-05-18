@@ -17,7 +17,7 @@ ParticleRuntimeInstanceCollection::const_iterator ParticleRuntimeInstanceCollect
 	return instances.end();
 }
 
-void ParticleRuntimeInstanceCollection::match(const Effect& effect, uint32_t particleCapacity) {
+void ParticleRuntimeInstanceCollection::match(const Effect& effect, std::uint32_t particleCapacity) {
 	std::unordered_set<ParticleRuntimeId> neededRuntimeInstances;
 
 	for(const ParticleEmitter* particleEmitter : effect.sceneGraph().nodesWithType<ParticleEmitter>()) {
@@ -37,7 +37,7 @@ void ParticleRuntimeInstanceCollection::match(const Effect& effect, uint32_t par
 		end());
 }
 
-ParticleRuntimeInstance& ParticleRuntimeInstanceCollection::add(id_t particleEmitterId, id_t particleTypeId, uint32_t particleCapacity) {
+ParticleRuntimeInstance& ParticleRuntimeInstanceCollection::add(id_t particleEmitterId, id_t particleTypeId, std::uint32_t particleCapacity) {
 	instances.emplace_back(particleEmitterId, particleTypeId, particleCapacity);
 
 	return instances.back();

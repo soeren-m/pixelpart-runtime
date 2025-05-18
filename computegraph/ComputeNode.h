@@ -18,12 +18,12 @@ class ComputeNode {
 public:
 	class InputException : public std::runtime_error {
 	public:
-		InputException(const std::string& msg, uint32_t index = id_t::nullValue);
+		InputException(const std::string& msg, std::uint32_t index = id_t::nullValue);
 
-		uint32_t index() const;
+		std::uint32_t index() const;
 
 	private:
-		uint32_t inputIndex = id_t::nullValue;
+		std::uint32_t inputIndex = id_t::nullValue;
 	};
 
 	struct Signature {
@@ -32,11 +32,11 @@ public:
 	};
 	struct Link {
 		Link() = default;
-		Link(id_t linkId, id_t linkNodeId, uint32_t linkSlot);
+		Link(id_t linkId, id_t linkNodeId, std::uint32_t linkSlot);
 
 		id_t id;
 		id_t nodeId;
-		uint32_t slot = id_t::nullValue;
+		std::uint32_t slot = id_t::nullValue;
 	};
 
 	ComputeNode(
@@ -84,9 +84,9 @@ public:
 	const std::vector<VariantParameter::Value>& parameterValues() const;
 	const VariantParameter::Value& parameterValue(std::size_t index) const;
 
-	uint32_t findInputSlot(const std::string& slotName) const;
-	uint32_t findOutputSlot(const std::string& slotName) const;
-	uint32_t findParameter(const std::string& parameterName) const;
+	std::uint32_t findInputSlot(const std::string& slotName) const;
+	std::uint32_t findOutputSlot(const std::string& slotName) const;
+	std::uint32_t findParameter(const std::string& parameterName) const;
 
 	void move(const float2_t& pos);
 	float2_t position() const;

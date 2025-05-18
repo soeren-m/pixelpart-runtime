@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace pixelpart {
-enum class ParticleSortCriterion : uint32_t {
+enum class ParticleSortCriterion : std::uint32_t {
 	none = 0,
 	age = 1,
 	distance = 2

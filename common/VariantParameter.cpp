@@ -72,16 +72,16 @@ VariantParameter::Value VariantParameter::Value::CurveValue(const Curve<float_t>
 	value.valueType = type_curve;
 	value.data.integer = static_cast<int_t>(v.interpolation());
 
-	for(std::size_t i = 0u; i < 64u; i++) {
-		if(i < v.pointCount()) {
-			const Curve<float_t>::Point& point = v.point(i);
+	for(std::size_t pointIndex = 0; pointIndex < 64; pointIndex++) {
+		if(pointIndex < v.pointCount()) {
+			const Curve<float_t>::Point& point = v.point(pointIndex);
 
-			value.data.numbers[i * 2u + 0u] = point.position;
-			value.data.numbers[i * 2u + 1u] = point.value;
+			value.data.numbers[pointIndex * 2 + 0] = point.position;
+			value.data.numbers[pointIndex * 2 + 1] = point.value;
 		}
 		else {
-			value.data.numbers[i * 2u + 0u] = -1.0;
-			value.data.numbers[i * 2u + 1u] = -1.0;
+			value.data.numbers[pointIndex * 2 + 0] = -1.0;
+			value.data.numbers[pointIndex * 2 + 1] = -1.0;
 		}
 	}
 
@@ -92,20 +92,20 @@ VariantParameter::Value VariantParameter::Value::GradientValue(const Curve<float
 	value.valueType = type_gradient;
 	value.data.integer = static_cast<int_t>(v.interpolation());
 
-	for(std::size_t i = 0u; i < 64u; i++) {
-		if(i < v.pointCount()) {
-			const Curve<float3_t>::Point& point = v.point(i);
+	for(std::size_t pointIndex = 0; pointIndex < 64; pointIndex++) {
+		if(pointIndex < v.pointCount()) {
+			const Curve<float3_t>::Point& point = v.point(pointIndex);
 
-			value.data.numbers[i * 4u + 0u] = point.position;
-			value.data.numbers[i * 4u + 1u] = point.value.x;
-			value.data.numbers[i * 4u + 2u] = point.value.y;
-			value.data.numbers[i * 4u + 3u] = point.value.z;
+			value.data.numbers[pointIndex * 4 + 0] = point.position;
+			value.data.numbers[pointIndex * 4 + 1] = point.value.x;
+			value.data.numbers[pointIndex * 4 + 2] = point.value.y;
+			value.data.numbers[pointIndex * 4 + 3] = point.value.z;
 		}
 		else {
-			value.data.numbers[i * 4u + 0u] = -1.0;
-			value.data.numbers[i * 4u + 1u] = -1.0;
-			value.data.numbers[i * 4u + 2u] = -1.0;
-			value.data.numbers[i * 4u + 3u] = -1.0;
+			value.data.numbers[pointIndex * 4 + 0] = -1.0;
+			value.data.numbers[pointIndex * 4 + 1] = -1.0;
+			value.data.numbers[pointIndex * 4 + 2] = -1.0;
+			value.data.numbers[pointIndex * 4 + 3] = -1.0;
 		}
 	}
 
@@ -116,20 +116,20 @@ VariantParameter::Value VariantParameter::Value::GradientValue(const Curve<float
 	value.valueType = type_gradient;
 	value.data.integer = static_cast<int_t>(v.interpolation());
 
-	for(std::size_t i = 0u; i < 64u; i++) {
-		if(i < v.pointCount()) {
-			const Curve<float4_t>::Point& point = v.point(i);
+	for(std::size_t pointIndex = 0; pointIndex < 64; pointIndex++) {
+		if(pointIndex < v.pointCount()) {
+			const Curve<float4_t>::Point& point = v.point(pointIndex);
 
-			value.data.numbers[i * 4u + 0u] = point.position;
-			value.data.numbers[i * 4u + 1u] = point.value.x;
-			value.data.numbers[i * 4u + 2u] = point.value.y;
-			value.data.numbers[i * 4u + 3u] = point.value.z;
+			value.data.numbers[pointIndex * 4 + 0] = point.position;
+			value.data.numbers[pointIndex * 4 + 1] = point.value.x;
+			value.data.numbers[pointIndex * 4 + 2] = point.value.y;
+			value.data.numbers[pointIndex * 4 + 3] = point.value.z;
 		}
 		else {
-			value.data.numbers[i * 4u + 0u] = -1.0;
-			value.data.numbers[i * 4u + 1u] = -1.0;
-			value.data.numbers[i * 4u + 2u] = -1.0;
-			value.data.numbers[i * 4u + 3u] = -1.0;
+			value.data.numbers[pointIndex * 4 + 0] = -1.0;
+			value.data.numbers[pointIndex * 4 + 1] = -1.0;
+			value.data.numbers[pointIndex * 4 + 2] = -1.0;
+			value.data.numbers[pointIndex * 4 + 3] = -1.0;
 		}
 	}
 
@@ -173,14 +173,14 @@ float4_t VariantParameter::Value::valueColor() const {
 }
 Curve<float_t> VariantParameter::Value::valueCurve() const {
 	std::vector<Curve<float_t>::Point> points;
-	for(std::size_t i = 0u; i < 64u; i++) {
-		if(data.numbers[i * 2u] < 0.0) {
+	for(std::size_t pointIndex = 0; pointIndex < 64; pointIndex++) {
+		if(data.numbers[pointIndex * 2] < 0.0) {
 			break;
 		}
 
 		points.push_back(Curve<float_t>::Point{
-			data.numbers[i * 2u + 0u],
-			data.numbers[i * 2u + 1u]
+			data.numbers[pointIndex * 2 + 0],
+			data.numbers[pointIndex * 2 + 1]
 		});
 	}
 
@@ -188,17 +188,17 @@ Curve<float_t> VariantParameter::Value::valueCurve() const {
 }
 Curve<float3_t> VariantParameter::Value::valueGradient() const {
 	std::vector<Curve<float3_t>::Point> points;
-	for(std::size_t i = 0u; i < 64u; i++) {
-		if(data.numbers[i * 4u] < 0.0) {
+	for(std::size_t pointIndex = 0; pointIndex < 64; pointIndex++) {
+		if(data.numbers[pointIndex * 4] < 0.0) {
 			break;
 		}
 
 		points.push_back(Curve<float3_t>::Point{
-			data.numbers[i * 4u + 0u],
+			data.numbers[pointIndex * 4 + 0],
 			float3_t(
-				data.numbers[i * 4u + 1u],
-				data.numbers[i * 4u + 2u],
-				data.numbers[i * 4u + 3u])
+				data.numbers[pointIndex * 4 + 1],
+				data.numbers[pointIndex * 4 + 2],
+				data.numbers[pointIndex * 4 + 3])
 		});
 	}
 
@@ -206,17 +206,17 @@ Curve<float3_t> VariantParameter::Value::valueGradient() const {
 }
 Curve<float4_t> VariantParameter::Value::valueGradient4() const {
 	std::vector<Curve<float4_t>::Point> points;
-	for(std::size_t i = 0u; i < 64u; i++) {
-		if(data.numbers[i * 4u] < 0.0) {
+	for(std::size_t pointIndex = 0; pointIndex < 64; pointIndex++) {
+		if(data.numbers[pointIndex * 4] < 0.0) {
 			break;
 		}
 
 		points.push_back(Curve<float4_t>::Point{
-			data.numbers[i * 4 + 0],
+			data.numbers[pointIndex * 4 + 0],
 			float4_t(
-				data.numbers[i * 4u + 1u],
-				data.numbers[i * 4u + 2u],
-				data.numbers[i * 4u + 3u],
+				data.numbers[pointIndex * 4 + 1],
+				data.numbers[pointIndex * 4 + 2],
+				data.numbers[pointIndex * 4 + 3],
 				1.0)
 		});
 	}

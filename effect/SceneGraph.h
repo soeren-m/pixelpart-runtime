@@ -28,7 +28,7 @@ public:
 
 	template <typename T>
 	T& add(id_t parentId = id_t()) {
-		id_t nodeId = 0u;
+		id_t nodeId = 0;
 		while(contains(nodeId)) {
 			nodeId++;
 		}
@@ -39,24 +39,24 @@ public:
 		return *static_cast<T*>(node.get());
 	}
 
-	Node& add(const Node& node, id_t baseId = id_t(0u));
+	Node& add(const Node& node, id_t baseId = id_t(0));
 	Node& duplicate(id_t nodeId);
 
 	void set(std::vector<std::unique_ptr<Node>>&& nodeList);
 
 	void remove(id_t nodeId);
-	void removeIndex(uint32_t index);
+	void removeIndex(std::uint32_t index);
 	void clear();
 
 	void parent(id_t nodeId, id_t parentId);
 	id_t parentId(id_t nodeId) const;
 	std::vector<id_t> childIds(id_t nodeId) const;
 
-	uint32_t indexOf(id_t nodeId) const;
-	uint32_t indexOfName(const std::string& name) const;
+	std::uint32_t indexOf(id_t nodeId) const;
+	std::uint32_t indexOfName(const std::string& name) const;
 
 	bool contains(id_t nodeId) const;
-	bool containsIndex(uint32_t index) const;
+	bool containsIndex(std::uint32_t index) const;
 
 	template <typename T>
 	bool contains(id_t nodeId) const {
@@ -64,16 +64,16 @@ public:
 	}
 
 	Node& at(id_t nodeId);
-	Node& atIndex(uint32_t index);
+	Node& atIndex(std::uint32_t index);
 	const Node& at(id_t nodeId) const;
-	const Node& atIndex(uint32_t index) const;
+	const Node& atIndex(std::uint32_t index) const;
 
 	template <typename T>
 	T& at(id_t nodeId) {
 		return static_cast<T&>(at(nodeId));
 	}
 	template <typename T>
-	T& atIndex(uint32_t index) {
+	T& atIndex(std::uint32_t index) {
 		return static_cast<T&>(atIndex(index));
 	}
 	template <typename T>
@@ -81,7 +81,7 @@ public:
 		return static_cast<const T&>(at(nodeId));
 	}
 	template <typename T>
-	const T& atIndex(uint32_t index) const {
+	const T& atIndex(std::uint32_t index) const {
 		return static_cast<const T&>(atIndex(index));
 	}
 
@@ -92,7 +92,7 @@ public:
 	Transform globalTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
 	Transform globalBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
 
-	uint32_t count() const;
+	std::uint32_t count() const;
 	id_t maxId() const;
 
 	const std::vector<std::unique_ptr<Node>>& nodes() const;
@@ -126,7 +126,7 @@ private:
 	void rebuildIndex();
 
 	std::vector<std::unique_ptr<Node>> sceneNodes;
-	std::vector<uint32_t> indexMap;
+	std::vector<std::uint32_t> indexMap;
 };
 
 void to_json(nlohmann::ordered_json& j, const SceneGraph& sceneGraph);

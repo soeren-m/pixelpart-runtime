@@ -3,7 +3,7 @@
 
 namespace pixelpart {
 void MotionPathModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const {
+	ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const {
 	const float_t positionLookahead = 0.1;
 	const float_t targetLookahead = 0.01;
 
@@ -11,7 +11,7 @@ void MotionPathModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter
 		return;
 	}
 
-	for(uint32_t p = 0u; p < particleCount; p++) {
+	for(std::uint32_t p = 0; p < particleCount; p++) {
 		float3_t predictedPosition = particles.position[p] +
 			particles.velocity[p] * positionLookahead +
 			particles.force[p] * positionLookahead * positionLookahead;

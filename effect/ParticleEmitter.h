@@ -12,7 +12,7 @@
 namespace pixelpart {
 class ParticleEmitter : public Node {
 public:
-	enum class Shape : uint32_t {
+	enum class Shape : std::uint32_t {
 		point = 0,
 		line = 1,
 		ellipse = 2,
@@ -22,7 +22,7 @@ public:
 		cuboid = 6,
 		cylinder = 7
 	};
-	enum class Distribution : uint32_t {
+	enum class Distribution : std::uint32_t {
 		uniform = 0,
 		center = 1,
 		hole = 2,
@@ -30,7 +30,7 @@ public:
 		grid_random = 4,
 		grid_ordered = 5
 	};
-	enum class GridOrder : uint32_t {
+	enum class GridOrder : std::uint32_t {
 		x_y_z = 0,
 		x_z_y = 1,
 		y_x_z = 2,
@@ -38,12 +38,12 @@ public:
 		z_x_y = 4,
 		z_y_x = 5
 	};
-	enum class EmissionMode : uint32_t {
+	enum class EmissionMode : std::uint32_t {
 		continuous = 0,
 		burst_start = 1,
 		burst_end = 2
 	};
-	enum class DirectionMode : uint32_t {
+	enum class DirectionMode : std::uint32_t {
 		fixed = 0,
 		outwards = 1,
 		inwards = 2,
@@ -77,10 +77,10 @@ public:
 	void gridOrder(GridOrder gridOrder);
 	GridOrder gridOrder() const;
 
-	void gridSize(uint32_t x, uint32_t y, uint32_t z);
-	uint32_t gridSizeX() const;
-	uint32_t gridSizeY() const;
-	uint32_t gridSizeZ() const;
+	void gridSize(std::uint32_t x, std::uint32_t y, std::uint32_t z);
+	std::uint32_t gridSizeX() const;
+	std::uint32_t gridSizeY() const;
+	std::uint32_t gridSizeZ() const;
 
 	void emissionMode(EmissionMode emissionMode);
 	EmissionMode emissionMode() const;
@@ -106,7 +106,7 @@ private:
 
 	Distribution emitterDistribution = Distribution::uniform;
 	GridOrder emitterGridOrder = GridOrder::x_y_z;
-	uint32_t emitterGridSize[3] = { 5u, 5u, 5u };
+	std::uint32_t emitterGridSize[3] = { 5, 5, 5 };
 	EmissionMode emitterEmissionMode = EmissionMode::continuous;
 	DirectionMode emitterDirectionMode = DirectionMode::fixed;
 	AnimatedProperty<float3_t> emitterDirection = AnimatedProperty<float3_t>(float3_t(0.0));

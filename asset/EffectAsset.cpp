@@ -6,7 +6,7 @@
 #include <memory>
 
 namespace pixelpart {
-const uint32_t EffectAsset::version = 9u;
+const std::uint32_t EffectAsset::version = 9;
 
 Effect& EffectAsset::effect() {
 	return assetEffect;
@@ -87,7 +87,7 @@ bool EffectAsset::usesResource(const std::string& resourceId) const {
 	return false;
 }
 
-std::string serializeEffectAsset(const EffectAsset& asset, int32_t indent) {
+std::string serializeEffectAsset(const EffectAsset& asset, std::int32_t indent) {
 	try {
 		nlohmann::ordered_json jsonData = asset;
 
@@ -140,7 +140,7 @@ void to_json(nlohmann::ordered_json& j, const EffectAsset& asset) {
 	};
 }
 void from_json(const nlohmann::ordered_json& j, EffectAsset& asset) {
-	uint32_t version = j.at("version");
+	std::uint32_t version = j.at("version");
 	if(version != EffectAsset::version) {
 		throw DeserializationException("Unsupported effect asset version " + std::to_string(version));
 	}
@@ -152,7 +152,7 @@ void from_json(const nlohmann::ordered_json& j, EffectAsset& asset) {
 			continue;
 		}
 
-		uint32_t counter = 1u;
+		std::uint32_t counter = 1;
 		std::string name = "Node";
 		while(asset.usesName(name)) {
 			name = "Node" + std::to_string(counter++);
@@ -166,7 +166,7 @@ void from_json(const nlohmann::ordered_json& j, EffectAsset& asset) {
 			continue;
 		}
 
-		uint32_t counter = 1u;
+		std::uint32_t counter = 1;
 		std::string name = "Particle";
 		while(asset.usesName(name)) {
 			name = "Particle" + std::to_string(counter++);

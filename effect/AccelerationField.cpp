@@ -38,7 +38,7 @@ const AnimatedProperty<float_t>& AccelerationField::accelerationStrengthVariance
 	return fieldAccelerationStrengthVariance;
 }
 
-void AccelerationField::accelerationGrid(int32_t x, int32_t y, int32_t z) {
+void AccelerationField::accelerationGrid(std::int32_t x, std::int32_t y, std::int32_t z) {
 	fieldAccelerationGridSize[0] = x;
 	fieldAccelerationGridSize[1] = y;
 	fieldAccelerationGridSize[2] = z;
@@ -49,7 +49,7 @@ void AccelerationField::accelerationGrid(int32_t x, int32_t y, int32_t z) {
 	fieldAccelerationDirectionGrid.resize(cellCount, float3_t(0.0));
 	fieldAccelerationStrengthGrid.resize(cellCount, 0.0);
 }
-void AccelerationField::accelerationGrid(int32_t x, int32_t y, int32_t z,
+void AccelerationField::accelerationGrid(std::int32_t x, std::int32_t y, std::int32_t z,
 	const std::vector<float3_t>& directionGrid, const std::vector<float_t>& strengthGrid) {
 	fieldAccelerationGridSize[0] = x;
 	fieldAccelerationGridSize[1] = y;
@@ -67,13 +67,13 @@ const std::vector<float3_t>& AccelerationField::accelerationDirectionGrid() cons
 const std::vector<float_t>& AccelerationField::accelerationStrengthGrid() const {
 	return fieldAccelerationStrengthGrid;
 }
-int32_t AccelerationField::accelerationGridSizeX() const {
+std::int32_t AccelerationField::accelerationGridSizeX() const {
 	return fieldAccelerationGridSize[0];
 }
-int32_t AccelerationField::accelerationGridSizeY() const {
+std::int32_t AccelerationField::accelerationGridSizeY() const {
 	return fieldAccelerationGridSize[1];
 }
-int32_t AccelerationField::accelerationGridSizeZ() const {
+std::int32_t AccelerationField::accelerationGridSizeZ() const {
 	return fieldAccelerationGridSize[2];
 }
 

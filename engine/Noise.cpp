@@ -2,7 +2,7 @@
 
 namespace pixelpart {
 namespace noise {
-const uint8_t permutationTable[256] = {
+const std::uint8_t permutationTable[256] = {
 	151, 160, 137, 91, 90, 15,
 	131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23,
 	190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33,
@@ -18,7 +18,7 @@ const uint8_t permutationTable[256] = {
 	138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180
 };
 
-const int32_t simplexTable4d[64][4] = {
+const std::int32_t simplexTable4d[64][4] = {
 	{0, 1, 2, 3}, {0, 1, 3, 2}, {0, 0, 0, 0}, {0, 2, 3, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {1, 2, 3, 0},
 	{0, 2, 1, 3}, {0, 0, 0, 0}, {0, 3, 1, 2}, {0, 3, 2, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {1, 3, 2, 0},
 	{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0},
@@ -29,7 +29,7 @@ const int32_t simplexTable4d[64][4] = {
 	{2, 1, 0, 3}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {3, 1, 0, 2}, {0, 0, 0, 0}, {3, 2, 0, 1}, {3, 2, 1, 0}
 };
 
-const int32_t gradTable4d[32][4] = {
+const std::int32_t gradTable4d[32][4] = {
 	{+0, +1, +1, +1}, {+0, +1, +1, -1}, {+0, +1, -1, +1}, {+0, +1, -1, -1},
 	{+0, -1, +1, +1}, {+0, -1, +1, -1}, {+0, -1, -1, +1}, {+0, -1, -1, -1},
 	{+1, +0, +1, +1}, {+1, +0, +1, -1}, {+1, +0, -1, +1}, {+1, +0, -1, -1},
@@ -40,36 +40,36 @@ const int32_t gradTable4d[32][4] = {
 	{-1, +1, +1, +0}, {-1, +1, -1, +0}, {-1, -1, +1, +0}, {-1, -1, -1, +0}
 };
 
-inline uint8_t hash(int32_t i) {
-	return permutationTable[static_cast<uint8_t>(i)];
+inline std::uint8_t hash(std::int32_t i) {
+	return permutationTable[static_cast<std::uint8_t>(i)];
 }
 
-inline int32_t fastfloor(float_t f) {
-	int32_t i = static_cast<int32_t>(f);
+inline std::int32_t fastfloor(float_t f) {
+	std::int32_t i = static_cast<std::int32_t>(f);
 	return f < i ? i - 1 : i;
 }
 
-float_t grad(int32_t hash, float_t x) {
-	int32_t h = hash & 0x0F;
+float_t grad(std::int32_t hash, float_t x) {
+	std::int32_t h = hash & 0x0F;
 	float_t grad = 1.0 + (h & 7);
 
 	return ((h & 8) ? -grad : grad) * x;
 }
-float_t grad(int32_t hash, float_t x, float_t y) {
-	int32_t h = hash & 0x3F;
+float_t grad(std::int32_t hash, float_t x, float_t y) {
+	std::int32_t h = hash & 0x3F;
 	float_t u = h < 4 ? x : y;
 	float_t v = h < 4 ? y : x;
 
 	return ((h & 1) ? -u : u) + ((h & 2) ? -2.0 * v : 2.0 * v);
 }
-float_t grad(int32_t hash, float_t x, float_t y, float_t z) {
-	int32_t h = hash & 15;
+float_t grad(std::int32_t hash, float_t x, float_t y, float_t z) {
+	std::int32_t h = hash & 15;
 	float_t u = h < 8 ? x : y;
 	float_t v = h < 4 ? y : h == 12 || h == 14 ? x : z;
 
 	return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
 }
-float_t grad(int32_t hash, float_t x, float_t y, float_t z, float_t w) {
+float_t grad(std::int32_t hash, float_t x, float_t y, float_t z, float_t w) {
 	return gradTable4d[hash][0] * x +
 		gradTable4d[hash][1] * y +
 		gradTable4d[hash][2] * z +
@@ -77,8 +77,8 @@ float_t grad(int32_t hash, float_t x, float_t y, float_t z, float_t w) {
 }
 
 float_t simplex(float_t x) {
-	int32_t i0 = fastfloor(x);
-	int32_t i1 = i0 + 1;
+	std::int32_t i0 = fastfloor(x);
+	std::int32_t i1 = i0 + 1;
 
 	float_t x0 = x - i0;
 	float_t t0 = 1.0 - x0 * x0;
@@ -99,8 +99,8 @@ float_t simplex(float_t x, float_t y) {
 	const float_t s = (x + y) * F2;
 	const float_t xs = x + s;
 	const float_t ys = y + s;
-	const int32_t i = fastfloor(xs);
-	const int32_t j = fastfloor(ys);
+	const std::int32_t i = fastfloor(xs);
+	const std::int32_t j = fastfloor(ys);
 
 	const float_t t = static_cast<float_t>(i + j) * G2;
 	const float_t X0 = i - t;
@@ -108,7 +108,7 @@ float_t simplex(float_t x, float_t y) {
 	const float_t x0 = x - X0;
 	const float_t y0 = y - Y0;
 
-	int32_t i1, j1;
+	std::int32_t i1, j1;
 	if (x0 > y0) {
 		i1 = 1;
 		j1 = 0;
@@ -123,9 +123,9 @@ float_t simplex(float_t x, float_t y) {
 	const float_t x2 = x0 - 1.0 + 2.0 * G2;
 	const float_t y2 = y0 - 1.0 + 2.0 * G2;
 
-	const int32_t gi0 = hash(i + hash(j));
-	const int32_t gi1 = hash(i + i1 + hash(j + j1));
-	const int32_t gi2 = hash(i + 1 + hash(j + 1));
+	const std::int32_t gi0 = hash(i + hash(j));
+	const std::int32_t gi1 = hash(i + i1 + hash(j + j1));
+	const std::int32_t gi2 = hash(i + 1 + hash(j + 1));
 
 	float_t n0;
 	float_t t0 = 0.5 - x0 * x0 - y0 * y0;
@@ -164,9 +164,9 @@ float_t simplex(float_t x, float_t y, float_t z) {
 	static const float_t G3 = 1.0 / 6.0;
 
 	float_t s = (x + y + z) * F3;
-	int32_t i = fastfloor(x + s);
-	int32_t j = fastfloor(y + s);
-	int32_t k = fastfloor(z + s);
+	std::int32_t i = fastfloor(x + s);
+	std::int32_t j = fastfloor(y + s);
+	std::int32_t k = fastfloor(z + s);
 	float_t t = (i + j + k) * G3;
 	float_t X0 = i - t;
 	float_t Y0 = j - t;
@@ -175,8 +175,8 @@ float_t simplex(float_t x, float_t y, float_t z) {
 	float_t y0 = y - Y0;
 	float_t z0 = z - Z0;
 
-	int32_t i1, j1, k1;
-	int32_t i2, j2, k2;
+	std::int32_t i1, j1, k1;
+	std::int32_t i2, j2, k2;
 	if (x0 >= y0) {
 		if (y0 >= z0) {
 			i1 = 1; j1 = 0; k1 = 0; i2 = 1; j2 = 1; k2 = 0;
@@ -210,10 +210,10 @@ float_t simplex(float_t x, float_t y, float_t z) {
 	float_t y3 = y0 - 1.0 + 3.0 * G3;
 	float_t z3 = z0 - 1.0 + 3.0 * G3;
 
-	int32_t gi0 = hash(i + hash(j + hash(k)));
-	int32_t gi1 = hash(i + i1 + hash(j + j1 + hash(k + k1)));
-	int32_t gi2 = hash(i + i2 + hash(j + j2 + hash(k + k2)));
-	int32_t gi3 = hash(i + 1 + hash(j + 1 + hash(k + 1)));
+	std::int32_t gi0 = hash(i + hash(j + hash(k)));
+	std::int32_t gi1 = hash(i + i1 + hash(j + j1 + hash(k + k1)));
+	std::int32_t gi2 = hash(i + i2 + hash(j + j2 + hash(k + k2)));
+	std::int32_t gi3 = hash(i + 1 + hash(j + 1 + hash(k + 1)));
 
 	float_t n0;
 	float_t t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0;
@@ -262,10 +262,10 @@ float_t simplex(float_t x, float_t y, float_t z, float_t w) {
 	static const float_t G4 = 0.1381966011;
 
 	float_t s = (x + y + z + w) * F4;
-	int32_t i = fastfloor(x + s);
-	int32_t j = fastfloor(y + s);
-	int32_t k = fastfloor(z + s);
-	int32_t l = fastfloor(w + s);
+	std::int32_t i = fastfloor(x + s);
+	std::int32_t j = fastfloor(y + s);
+	std::int32_t k = fastfloor(z + s);
+	std::int32_t l = fastfloor(w + s);
 	float_t t = (i + j + k + l) * G4;
 
 	float_t X0 = i - t;
@@ -277,28 +277,28 @@ float_t simplex(float_t x, float_t y, float_t z, float_t w) {
 	float_t z0 = z - Z0;
 	float_t w0 = w - W0;
 
-	int32_t c1 = (x0 > y0) ? 32 : 0;
-	int32_t c2 = (x0 > z0) ? 16 : 0;
-	int32_t c3 = (y0 > z0) ? 8 : 0;
-	int32_t c4 = (x0 > w0) ? 4 : 0;
-	int32_t c5 = (y0 > w0) ? 2 : 0;
-	int32_t c6 = (z0 > w0) ? 1 : 0;
-	int32_t c = c1 + c2 + c3 + c4 + c5 + c6;
+	std::int32_t c1 = (x0 > y0) ? 32 : 0;
+	std::int32_t c2 = (x0 > z0) ? 16 : 0;
+	std::int32_t c3 = (y0 > z0) ? 8 : 0;
+	std::int32_t c4 = (x0 > w0) ? 4 : 0;
+	std::int32_t c5 = (y0 > w0) ? 2 : 0;
+	std::int32_t c6 = (z0 > w0) ? 1 : 0;
+	std::int32_t c = c1 + c2 + c3 + c4 + c5 + c6;
 
-	int32_t i1 = simplexTable4d[c][0] >= 3 ? 1 : 0;
-	int32_t j1 = simplexTable4d[c][1] >= 3 ? 1 : 0;
-	int32_t k1 = simplexTable4d[c][2] >= 3 ? 1 : 0;
-	int32_t l1 = simplexTable4d[c][3] >= 3 ? 1 : 0;
+	std::int32_t i1 = simplexTable4d[c][0] >= 3 ? 1 : 0;
+	std::int32_t j1 = simplexTable4d[c][1] >= 3 ? 1 : 0;
+	std::int32_t k1 = simplexTable4d[c][2] >= 3 ? 1 : 0;
+	std::int32_t l1 = simplexTable4d[c][3] >= 3 ? 1 : 0;
 
-	int32_t i2 = simplexTable4d[c][0] >= 2 ? 1 : 0;
-	int32_t j2 = simplexTable4d[c][1] >= 2 ? 1 : 0;
-	int32_t k2 = simplexTable4d[c][2] >= 2 ? 1 : 0;
-	int32_t l2 = simplexTable4d[c][3] >= 2 ? 1 : 0;
+	std::int32_t i2 = simplexTable4d[c][0] >= 2 ? 1 : 0;
+	std::int32_t j2 = simplexTable4d[c][1] >= 2 ? 1 : 0;
+	std::int32_t k2 = simplexTable4d[c][2] >= 2 ? 1 : 0;
+	std::int32_t l2 = simplexTable4d[c][3] >= 2 ? 1 : 0;
 
-	int32_t i3 = simplexTable4d[c][0] >= 1 ? 1 : 0;
-	int32_t j3 = simplexTable4d[c][1] >= 1 ? 1 : 0;
-	int32_t k3 = simplexTable4d[c][2] >= 1 ? 1 : 0;
-	int32_t l3 = simplexTable4d[c][3] >= 1 ? 1 : 0;
+	std::int32_t i3 = simplexTable4d[c][0] >= 1 ? 1 : 0;
+	std::int32_t j3 = simplexTable4d[c][1] >= 1 ? 1 : 0;
+	std::int32_t k3 = simplexTable4d[c][2] >= 1 ? 1 : 0;
+	std::int32_t l3 = simplexTable4d[c][3] >= 1 ? 1 : 0;
 
 	float_t x1 = x0 - i1 + G4;
 	float_t y1 = y0 - j1 + G4;
@@ -317,15 +317,15 @@ float_t simplex(float_t x, float_t y, float_t z, float_t w) {
 	float_t z4 = z0 - 1.0 + 4.0 * G4;
 	float_t w4 = w0 - 1.0 + 4.0 * G4;
 
-	int32_t ii = i & 255;
-	int32_t jj = j & 255;
-	int32_t kk = k & 255;
-	int32_t ll = l & 255;
-	int32_t gi0 = hash(ii + hash(jj + hash(kk + hash(ll)))) % 32;
-	int32_t gi1 = hash(ii + i1 + hash(jj + j1 + hash(kk + k1 + hash(ll + l1)))) % 32;
-	int32_t gi2 = hash(ii + i2 + hash(jj + j2 + hash(kk + k2 + hash(ll + l2)))) % 32;
-	int32_t gi3 = hash(ii + i3 + hash(jj + j3 + hash(kk + k3 + hash(ll + l3)))) % 32;
-	int32_t gi4 = hash(ii + 1 + hash(jj + 1 + hash(kk + 1 + hash(ll + 1)))) % 32;
+	std::int32_t ii = i & 255;
+	std::int32_t jj = j & 255;
+	std::int32_t kk = k & 255;
+	std::int32_t ll = l & 255;
+	std::int32_t gi0 = hash(ii + hash(jj + hash(kk + hash(ll)))) % 32;
+	std::int32_t gi1 = hash(ii + i1 + hash(jj + j1 + hash(kk + k1 + hash(ll + l1)))) % 32;
+	std::int32_t gi2 = hash(ii + i2 + hash(jj + j2 + hash(kk + k2 + hash(ll + l2)))) % 32;
+	std::int32_t gi3 = hash(ii + i3 + hash(jj + j3 + hash(kk + k3 + hash(ll + l3)))) % 32;
+	std::int32_t gi4 = hash(ii + 1 + hash(jj + 1 + hash(kk + 1 + hash(ll + 1)))) % 32;
 
 	float_t n0;
 	float_t t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0 - w0 * w0;
@@ -380,12 +380,12 @@ float_t simplex(float_t x, float_t y, float_t z, float_t w) {
 	return 27.0 * (n0 + n1 + n2 + n3 + n4);
 }
 
-float_t simplexFBM(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x) {
+float_t simplexFBM(std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x) {
 	float_t result = 0.0;
 	float_t amplitude = 1.0;
 	float_t denom = 0.0;
 
-	for(uint32_t o = 0u; o < octaves; o++) {
+	for(std::uint32_t octave = 0; octave < octaves; octave++) {
 		result += amplitude * simplex(x * frequency);
 		denom += amplitude;
 
@@ -395,12 +395,12 @@ float_t simplexFBM(uint32_t octaves, float_t frequency, float_t persistence, flo
 
 	return result / denom;
 }
-float_t simplexFBM(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y) {
+float_t simplexFBM(std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y) {
 	float_t result = 0.0;
 	float_t amplitude = 1.0;
 	float_t denom = 0.0;
 
-	for(uint32_t o = 0u; o < octaves; o++) {
+	for(std::uint32_t octave = 0; octave < octaves; octave++) {
 		result += amplitude * simplex(x * frequency, y * frequency);
 		denom += amplitude;
 
@@ -410,12 +410,12 @@ float_t simplexFBM(uint32_t octaves, float_t frequency, float_t persistence, flo
 
 	return result / denom;
 }
-float_t simplexFBM(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y, float_t z) {
+float_t simplexFBM(std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y, float_t z) {
 	float_t result = 0.0;
 	float_t amplitude = 1.0;
 	float_t denom = 0.0;
 
-	for(uint32_t o = 0u; o < octaves; o++) {
+	for(std::uint32_t octave = 0; octave < octaves; octave++) {
 		result += amplitude * simplex(x * frequency, y * frequency, z * frequency);
 		denom += amplitude;
 
@@ -425,12 +425,12 @@ float_t simplexFBM(uint32_t octaves, float_t frequency, float_t persistence, flo
 
 	return result / denom;
 }
-float_t simplexFBM(uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y, float_t z, float_t w) {
+float_t simplexFBM(std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity, float_t x, float_t y, float_t z, float_t w) {
 	float_t result = 0.0;
 	float_t amplitude = 1.0;
 	float_t denom = 0.0;
 
-	for(uint32_t o = 0u; o < octaves; o++) {
+	for(std::uint32_t octave = 0; octave < octaves; octave++) {
 		result += amplitude * simplex(x * frequency, y * frequency, z * frequency, w * frequency);
 		denom += amplitude;
 

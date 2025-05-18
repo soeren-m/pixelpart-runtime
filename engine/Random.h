@@ -11,8 +11,8 @@ float_t uniform(T& rng, float_t min, float_t max) {
 }
 
 template <typename T>
-float_t uniformInt(T& rng, int32_t min, int32_t max) {
-	return std::uniform_int_distribution<int32_t>(min, max)(rng);
+float_t uniformInt(T& rng, std::int32_t min, std::int32_t max) {
+	return std::uniform_int_distribution<std::int32_t>(min, max)(rng);
 }
 
 template <typename T>
@@ -40,13 +40,13 @@ float_t normalReverse(T& rng, float_t min, float_t max) {
 }
 
 template <typename T>
-float_t uniformGrid(T& rng, uint32_t size) {
-	return static_cast<float_t>(uniformInt(rng, 0, size - 1u)) / static_cast<float_t>(size - 1u);
+float_t uniformGrid(T& rng, std::uint32_t size) {
+	return static_cast<float_t>(uniformInt(rng, 0, size - 1)) / static_cast<float_t>(size - 1);
 }
 
 template <typename T>
-float_t uniformGrid(T& rng, uint32_t size, float_t min, float_t max) {
-	return static_cast<float_t>(uniformInt(rng, 0, size - 1u)) / static_cast<float_t>(size - 1u) * (max - min) + min;
+float_t uniformGrid(T& rng, std::uint32_t size, float_t min, float_t max) {
+	return static_cast<float_t>(uniformInt(rng, 0, size - 1)) / static_cast<float_t>(size - 1) * (max - min) + min;
 }
 }
 }

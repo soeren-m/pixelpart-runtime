@@ -8,8 +8,8 @@ namespace pixelpart {
 class ParticleCollection {
 public:
 	struct WritePtr {
-		uint32_t* id = nullptr;
-		uint32_t* parentId = nullptr;
+		std::uint32_t* id = nullptr;
+		std::uint32_t* parentId = nullptr;
 		float_t* life = nullptr;
 		float_t* lifespan = nullptr;
 		float3_t* position = nullptr;
@@ -26,8 +26,8 @@ public:
 
 		WritePtr() = default;
 		WritePtr(
-			uint32_t* idPtr,
-			uint32_t* parentIdPtr,
+			std::uint32_t* idPtr,
+			std::uint32_t* parentIdPtr,
 			float_t* lifePtr,
 			float_t* lifespanPtr,
 			float3_t* positionPtr,
@@ -44,8 +44,8 @@ public:
 	};
 
 	struct ReadPtr {
-		const uint32_t* id = nullptr;
-		const uint32_t* parentId = nullptr;
+		const std::uint32_t* id = nullptr;
+		const std::uint32_t* parentId = nullptr;
 		const float_t* life = nullptr;
 		const float_t* lifespan = nullptr;
 		const float3_t* position = nullptr;
@@ -62,8 +62,8 @@ public:
 
 		ReadPtr() = default;
 		ReadPtr(
-			const uint32_t* idPtr,
-			const uint32_t* parentIdPtr,
+			const std::uint32_t* idPtr,
+			const std::uint32_t* parentIdPtr,
 			const float_t* lifePtr,
 			const float_t* lifespanPtr,
 			const float3_t* positionPtr,
@@ -79,25 +79,25 @@ public:
 			const float4_t* initialColorPtr);
 	};
 
-	ParticleCollection(uint32_t capacity = 1024u);
+	ParticleCollection(std::uint32_t capacity = 1024);
 
-	uint32_t add(uint32_t number);
-	void remove(uint32_t index);
+	std::uint32_t add(std::uint32_t number);
+	void remove(std::uint32_t index);
 	void removeDead();
 	void clear();
 
-	WritePtr writePtr(uint32_t index = 0u);
-	ReadPtr readPtr(uint32_t index = 0u) const;
+	WritePtr writePtr(std::uint32_t index = 0);
+	ReadPtr readPtr(std::uint32_t index = 0) const;
 
-	uint32_t count() const;
-	uint32_t capacity() const;
+	std::uint32_t count() const;
+	std::uint32_t capacity() const;
 
 private:
-	uint32_t particleCount = 0u;
-	uint32_t particleCapacity = 1024u;
+	std::uint32_t particleCount = 0;
+	std::uint32_t particleCapacity = 1024;
 
-	std::vector<uint32_t> id;
-	std::vector<uint32_t> parentId;
+	std::vector<std::uint32_t> id;
+	std::vector<std::uint32_t> parentId;
 	std::vector<float_t> life;
 	std::vector<float_t> lifespan;
 	std::vector<float3_t> position;

@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace pixelpart {
-enum class ForceFieldType : uint32_t {
+enum class ForceFieldType : std::uint32_t {
 	attraction = 0,
 	acceleration = 1,
 	vector = 2,

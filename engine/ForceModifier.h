@@ -17,20 +17,20 @@ public:
 	ForceModifier() = default;
 
 	virtual void run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const override;
+		ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const override;
 
 	virtual void prepare(const Effect& effect, const RuntimeContext& runtimeContext) override;
 
 private:
-	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
+	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
 		const ParticleType& particleType, const AttractionField& attractionField, const SceneGraph& sceneGraph) const;
-	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
+	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
 		const ParticleType& particleType, const AccelerationField& accelerationField, const SceneGraph& sceneGraph) const;
-	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
+	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
 		const ParticleType& particleType, const VectorField& vectorField, const SceneGraph& sceneGraph) const;
-	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
+	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
 		const ParticleType& particleType, const NoiseField& noiseField, const SceneGraph& sceneGraph) const;
-	void applyForce(ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext,
+	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
 		const ParticleType& particleType, const DragField& dragField, const SceneGraph& sceneGraph) const;
 
 	float3_t sampleAttractionField(const AttractionField& attractionField,
@@ -49,10 +49,10 @@ private:
 		const float3_t& position, const float3_t& size, const mat4_t& orientationMatrix,
 		const float3_t& particlePosition, const float3_t& particleVelocity, const float3_t& particleSize) const;
 
-	float3_t computeStaticCurlNoise2d(const float2_t& samplePosition, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
-	float3_t computeStaticCurlNoise3d(const float3_t& samplePosition, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
-	float3_t computeAnimatedCurlNoise2d(const float2_t& samplePosition, float_t animationTime, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
-	float3_t computeAnimatedCurlNoise3d(const float3_t& samplePosition, float_t animationTime, uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
+	float3_t computeStaticCurlNoise2d(const float2_t& samplePosition, std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
+	float3_t computeStaticCurlNoise3d(const float3_t& samplePosition, std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
+	float3_t computeAnimatedCurlNoise2d(const float2_t& samplePosition, float_t animationTime, std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
+	float3_t computeAnimatedCurlNoise3d(const float3_t& samplePosition, float_t animationTime, std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
 
 	const ResourceCollection* effectResources = nullptr;
 	bool is3d = false;

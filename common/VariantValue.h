@@ -29,7 +29,7 @@ struct VariantTag<float4_t> { typedef Float4Tag Type; };
 
 class VariantValue {
 public:
-	enum Type : int32_t {
+	enum Type : std::int32_t {
 		type_null = -1,
 		type_bool,
 		type_int,

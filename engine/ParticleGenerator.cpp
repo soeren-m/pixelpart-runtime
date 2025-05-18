@@ -21,7 +21,7 @@ void ParticleGenerator::generate(const RuntimeContext& runtimeContext) {
 	for(ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
 		const ParticleType& particleType = effect.particleTypes().at(runtimeInstance.typeId());
 
-		uint32_t particleEmitterIndex = effect.sceneGraph().indexOf(runtimeInstance.emitterId());
+		std::uint32_t particleEmitterIndex = effect.sceneGraph().indexOf(runtimeInstance.emitterId());
 		if(particleEmitterIndex == id_t::nullValue) {
 			continue;
 		}
@@ -53,7 +53,7 @@ void ParticleGenerator::generate(const RuntimeContext& runtimeContext) {
 				break;
 		}
 
-		uint32_t emittedParticleCount = static_cast<uint32_t>(std::max(runtimeInstance.emissionCount(), 0.0));
+		std::uint32_t emittedParticleCount = static_cast<std::uint32_t>(std::max(runtimeInstance.emissionCount(), 0.0));
 		if(emittedParticleCount > 0) {
 			runtimeInstance.emissionCount() -= static_cast<float_t>(
 				generate(runtimeInstance, nullptr, emittedParticleCount, id_t::nullValue, runtimeContext, true));
@@ -92,7 +92,7 @@ void ParticleGenerator::generate(const RuntimeContext& runtimeContext) {
 		const ParticleEmitter& particleEmitter = effect.sceneGraph().at<ParticleEmitter>(runtimeInstance.emitterId());
 		ParticleCollection::WritePtr particles = runtimeInstance.particles().writePtr();
 
-		for(uint32_t p = 0; p < runtimeInstance.particles().count(); p++) {
+		for(std::uint32_t p = 0; p < runtimeInstance.particles().count(); p++) {
 			for(auto subInstanceIt : subInstances) {
 				ParticleRuntimeInstance& subRuntimeInstance = *subInstanceIt;
 				const ParticleType& subParticleType = effect.particleTypes().at(subRuntimeInstance.typeId());
@@ -121,7 +121,7 @@ void ParticleGenerator::generate(const RuntimeContext& runtimeContext) {
 						break;
 				}
 
-				uint32_t emittedParticleCount = static_cast<uint32_t>(std::max(subRuntimeInstance.emissionCount(), 0.0));
+				std::uint32_t emittedParticleCount = static_cast<std::uint32_t>(std::max(subRuntimeInstance.emissionCount(), 0.0));
 				if(emittedParticleCount > 0) {
 					RuntimeContext particleRuntimeContext(particleTime, 0.0);
 
@@ -132,7 +132,7 @@ void ParticleGenerator::generate(const RuntimeContext& runtimeContext) {
 		}
 	}
 }
-void ParticleGenerator::generate(id_t particleEmitterId, id_t particleTypeId, uint32_t count, float_t time) {
+void ParticleGenerator::generate(id_t particleEmitterId, id_t particleTypeId, std::uint32_t count, float_t time) {
 	ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
 	if(!runtimeInstance) {
 		return;
@@ -141,8 +141,8 @@ void ParticleGenerator::generate(id_t particleEmitterId, id_t particleTypeId, ui
 	generate(*runtimeInstance, nullptr, count, id_t::nullValue, RuntimeContext(time, 0.0), false);
 }
 
-uint32_t ParticleGenerator::generate(ParticleRuntimeInstance& runtimeInstance, ParticleRuntimeInstance* parentRuntimeInstance, uint32_t count,
-	uint32_t parentParticle, const RuntimeContext& runtimeContext, bool useTriggers) {
+std::uint32_t ParticleGenerator::generate(ParticleRuntimeInstance& runtimeInstance, ParticleRuntimeInstance* parentRuntimeInstance, std::uint32_t count,
+	std::uint32_t parentParticle, const RuntimeContext& runtimeContext, bool useTriggers) {
 	ParticleCollection& particleCollection = runtimeInstance.particles();
 	count = particleCollection.add(count);
 
@@ -161,8 +161,8 @@ uint32_t ParticleGenerator::generate(ParticleRuntimeInstance& runtimeInstance, P
 	float3_t emitterOrientation = emitterTransform.orientation();
 	float3_t emitterSize = emitterTransform.size();
 
-	for(uint32_t addIndex = 0; addIndex < count; addIndex++) {
-		uint32_t p = particleCollection.count() - count + addIndex;
+	for(std::uint32_t addIndex = 0; addIndex < count; addIndex++) {
+		std::uint32_t p = particleCollection.count() - count + addIndex;
 
 		particles.id[p] = nextParticleId++;
 		particles.parentId[p] = parentParticle != id_t::nullValue ? parentParticles.id[parentParticle] : id_t::nullValue;
@@ -346,18 +346,18 @@ void ParticleGenerator::reset() {
 	nextParticleId = 0;
 }
 
-void ParticleGenerator::seed(uint32_t seed) {
+void ParticleGenerator::seed(std::uint32_t seed) {
 	rng = std::mt19937(seed);
 }
 
-float_t ParticleGenerator::sampleGrid1D(uint32_t gridIndex, uint32_t gridSize, float_t min, float_t max) {
-	return static_cast<float_t>(gridIndex % gridSize) / static_cast<float_t>(gridSize - 1u) * (max - min) + min;
+float_t ParticleGenerator::sampleGrid1D(std::uint32_t gridIndex, std::uint32_t gridSize, float_t min, float_t max) {
+	return static_cast<float_t>(gridIndex % gridSize) / static_cast<float_t>(gridSize - 1) * (max - min) + min;
 }
-float_t ParticleGenerator::sampleGrid2D(uint32_t gridIndex, uint32_t gridSize1, uint32_t gridSize2, float_t min, float_t max) {
-	return static_cast<float_t>(gridIndex / gridSize1 % gridSize2) / static_cast<float_t>(gridSize2 - 1u) * (max - min) + min;
+float_t ParticleGenerator::sampleGrid2D(std::uint32_t gridIndex, std::uint32_t gridSize1, std::uint32_t gridSize2, float_t min, float_t max) {
+	return static_cast<float_t>(gridIndex / gridSize1 % gridSize2) / static_cast<float_t>(gridSize2 - 1) * (max - min) + min;
 }
-float_t ParticleGenerator::sampleGrid3D(uint32_t gridIndex, uint32_t gridSize1, uint32_t gridSize2, uint32_t gridSize3, float_t min, float_t max) {
-	return static_cast<float_t>(gridIndex / gridSize1 / gridSize2 % gridSize3) / static_cast<float_t>(gridSize3 - 1u) * (max - min) + min;
+float_t ParticleGenerator::sampleGrid3D(std::uint32_t gridIndex, std::uint32_t gridSize1, std::uint32_t gridSize2, std::uint32_t gridSize3, float_t min, float_t max) {
+	return static_cast<float_t>(gridIndex / gridSize1 / gridSize2 % gridSize3) / static_cast<float_t>(gridSize3 - 1) * (max - min) + min;
 }
 
 float3_t ParticleGenerator::rotate2d(const float3_t& v, float_t a) {
@@ -370,7 +370,7 @@ float3_t ParticleGenerator::rotate3d(const float3_t& v, const float3_t& a) {
 float3_t ParticleGenerator::emitOnSegment(float_t length,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
-	uint32_t gridSize, uint32_t& gridIndex) {
+	std::uint32_t gridSize, std::uint32_t& gridIndex) {
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform:
 		case ParticleEmitter::Distribution::boundary: {
@@ -387,7 +387,7 @@ float3_t ParticleGenerator::emitOnSegment(float_t length,
 		}
 		case ParticleEmitter::Distribution::grid_ordered: {
 			float_t y = sampleGrid1D(gridIndex, gridSize, -length, +length) * 0.5;
-			gridIndex = (gridIndex + 1u) % gridSize;
+			gridIndex = (gridIndex + 1) % gridSize;
 			return float3_t(0.0, y, 0.0);
 		}
 		default: {
@@ -399,7 +399,7 @@ float3_t ParticleGenerator::emitOnSegment(float_t length,
 float3_t ParticleGenerator::emitInEllipse(const float2_t& size,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
-	uint32_t gridSizeX, uint32_t gridSizeY, uint32_t& gridIndex) {
+	std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t& gridIndex) {
 	float_t r = 0.0;
 	float_t phi = 0.0;
 	float3_t point = float3_t(0.0);
@@ -478,7 +478,7 @@ float3_t ParticleGenerator::emitInEllipse(const float2_t& size,
 					break;
 			}
 
-			gridIndex = (gridIndex + 1u) % (gridSizeX * gridSizeY);
+			gridIndex = (gridIndex + 1) % (gridSizeX * gridSizeY);
 			point = float3_t(
 				std::cos(phi),
 				std::sin(phi),
@@ -500,7 +500,7 @@ float3_t ParticleGenerator::emitInEllipse(const float2_t& size,
 float3_t ParticleGenerator::emitInRectangle(const float2_t& size,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
-	uint32_t gridSizeX, uint32_t gridSizeY, uint32_t& gridIndex) {
+	std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t& gridIndex) {
 	float3_t point = float3_t(0.0);
 
 	switch(distribution) {
@@ -583,7 +583,7 @@ float3_t ParticleGenerator::emitInRectangle(const float2_t& size,
 					break;
 			}
 
-			gridIndex = (gridIndex + 1u) % (gridSizeX * gridSizeY);
+			gridIndex = (gridIndex + 1) % (gridSizeX * gridSizeY);
 
 			break;
 		}
@@ -599,7 +599,7 @@ float3_t ParticleGenerator::emitOnPath(const float3_t& size,
 	const Curve<float3_t>& path,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
-	uint32_t gridSize, uint32_t& gridIndex) {
+	std::uint32_t gridSize, std::uint32_t& gridIndex) {
 	float_t x = 0.0;
 
 	switch(distribution) {
@@ -622,7 +622,7 @@ float3_t ParticleGenerator::emitOnPath(const float3_t& size,
 		}
 		case ParticleEmitter::Distribution::grid_ordered: {
 			x = sampleGrid1D(gridIndex, gridSize, 0.0, 1.0);
-			gridIndex = (gridIndex + 1u) % gridSize;
+			gridIndex = (gridIndex + 1) % gridSize;
 			break;
 		}
 		default: {
@@ -636,7 +636,7 @@ float3_t ParticleGenerator::emitOnPath(const float3_t& size,
 float3_t ParticleGenerator::emitInEllipsoid(const float3_t& size,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
-	uint32_t gridSizeX, uint32_t gridSizeY, uint32_t gridSizeZ, uint32_t& gridIndex) {
+	std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t gridSizeZ, std::uint32_t& gridIndex) {
 	float_t r = 0.0;
 	float_t phi = 0.0;
 	float_t theta = 0.0;
@@ -739,7 +739,7 @@ float3_t ParticleGenerator::emitInEllipsoid(const float3_t& size,
 					break;
 			}
 
-			gridIndex = (gridIndex + 1u) % (gridSizeX * gridSizeY * gridSizeZ);
+			gridIndex = (gridIndex + 1) % (gridSizeX * gridSizeY * gridSizeZ);
 			point = float3_t(
 				std::sin(theta) * std::cos(phi),
 				std::sin(theta) * std::sin(phi),
@@ -760,7 +760,7 @@ float3_t ParticleGenerator::emitInEllipsoid(const float3_t& size,
 float3_t ParticleGenerator::emitInCuboid(const float3_t& size,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
-	uint32_t gridSizeX, uint32_t gridSizeY, uint32_t gridSizeZ, uint32_t& gridIndex) {
+	std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t gridSizeZ, std::uint32_t& gridIndex) {
 	float3_t point = float3_t(0.0);
 
 	switch(distribution) {
@@ -794,7 +794,7 @@ float3_t ParticleGenerator::emitInCuboid(const float3_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::boundary: {
-			int32_t side = random::uniformInt(rng, 0, 5);
+			std::int32_t side = random::uniformInt(rng, 0, 5);
 			switch(side) {
 				case 0:
 					point = float3_t(-size.x, random::uniform(rng, -size.y, +size.y), random::uniform(rng, -size.z, +size.z)) * 0.5;
@@ -871,7 +871,7 @@ float3_t ParticleGenerator::emitInCuboid(const float3_t& size,
 					break;
 			}
 
-			gridIndex = (gridIndex + 1u) % (gridSizeX * gridSizeY * gridSizeZ);
+			gridIndex = (gridIndex + 1) % (gridSizeX * gridSizeY * gridSizeZ);
 
 			break;
 		}
@@ -886,7 +886,7 @@ float3_t ParticleGenerator::emitInCuboid(const float3_t& size,
 float3_t ParticleGenerator::emitInCylinder(const float3_t& size,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
-	uint32_t gridSizeX, uint32_t gridSizeY, uint32_t gridSizeZ, uint32_t& gridIndex) {
+	std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t gridSizeZ, std::uint32_t& gridIndex) {
 	float_t h = 0.0;
 	float_t r = 0.0;
 	float_t phi = 0.0;
@@ -1005,7 +1005,7 @@ float3_t ParticleGenerator::emitInCylinder(const float3_t& size,
 					break;
 			}
 
-			gridIndex = (gridIndex + 1u) % (gridSizeX * gridSizeY * gridSizeZ);
+			gridIndex = (gridIndex + 1) % (gridSizeX * gridSizeY * gridSizeZ);
 			point = float3_t(
 				std::cos(phi) * r,
 				std::sin(phi) * r,

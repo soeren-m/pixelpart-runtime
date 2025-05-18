@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace pixelpart {
-enum class ColliderType : uint32_t {
+enum class ColliderType : std::uint32_t {
 	line = 0,
 	plane = 1
 };

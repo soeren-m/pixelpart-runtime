@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace pixelpart {
-enum class ParticleRendererType : uint32_t {
+enum class ParticleRendererType : std::uint32_t {
 	sprite = 0,
 	trail = 1,
 	mesh = 2

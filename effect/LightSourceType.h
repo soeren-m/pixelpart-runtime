@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace pixelpart {
-enum class LightSourceType : uint32_t {
+enum class LightSourceType : std::uint32_t {
 	directional = 0,
 	point = 1,
 	spot = 2

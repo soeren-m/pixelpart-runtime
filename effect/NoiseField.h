@@ -41,7 +41,7 @@ protected:
 	virtual Node* cloneImpl() const override;
 
 private:
-	StaticProperty<int64_t> fieldNoiseOctaves = StaticProperty<int64_t>(4);
+	StaticProperty<int_t> fieldNoiseOctaves = StaticProperty<int_t>(4);
 	AnimatedProperty<float_t> fieldNoiseFrequency = AnimatedProperty<float_t>(1.0);
 	AnimatedProperty<float_t> fieldNoisePersistence = AnimatedProperty<float_t>(0.5);
 	AnimatedProperty<float_t> fieldNoiseLacunarity = AnimatedProperty<float_t>(2.0);

@@ -8,7 +8,7 @@ public:
 	SizeModifier() = default;
 
 	virtual void run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const override;
+		ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const override;
 
 	virtual void prepare(const Effect& effect, const RuntimeContext& runtimeContext) override;
 };

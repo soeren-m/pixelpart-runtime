@@ -142,7 +142,7 @@ public:
 
 	template <typename Fn>
 	void forEach1d(Fn&& func) const {
-		for(std::size_t i = 0u; i < sizeX * sizeY * sizeZ; i++) {
+		for(std::size_t i = 0; i < sizeX * sizeY * sizeZ; i++) {
 			func(i);
 		}
 	}
@@ -155,9 +155,9 @@ public:
 
 	template <typename Fn>
 	void forEach3d(Fn&& func) const {
-		for(std::size_t z = 0u; z < sizeZ; z++) {
-			for(std::size_t y = 0u; y < sizeY; y++) {
-				for(std::size_t x = 0u; x < sizeX; x++) {
+		for(std::size_t z = 0; z < sizeZ; z++) {
+			for(std::size_t y = 0; y < sizeY; y++) {
+				for(std::size_t x = 0; x < sizeX; x++) {
 					func(x, y, z);
 				}
 			}
@@ -175,9 +175,9 @@ public:
 	}
 
 private:
-	std::size_t sizeX = 0u;
-	std::size_t sizeY = 0u;
-	std::size_t sizeZ = 0u;
+	std::size_t sizeX = 0;
+	std::size_t sizeY = 0;
+	std::size_t sizeZ = 0;
 
 	std::vector<T> data;
 };

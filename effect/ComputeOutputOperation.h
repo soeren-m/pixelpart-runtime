@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace pixelpart {
-enum class ComputeOutputOperation : uint32_t {
+enum class ComputeOutputOperation : std::uint32_t {
 	set = 0,
 	add = 1,
 	multiply = 2

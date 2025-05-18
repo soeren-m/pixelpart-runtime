@@ -8,18 +8,18 @@
 
 namespace pixelpart {
 void CollisionModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const {
+	ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const {
 	float_t t = runtimeContext.time();
 	float_t dt = runtimeContext.deltaTime();
 
 	if(!line2dColliders.empty()) {
-		for(uint32_t p = 0u; p < particleCount; p++) {
+		for(std::uint32_t p = 0; p < particleCount; p++) {
 			LineQueryGrid::QueryResult potentialColliderIndices = line2dColliderGrid.queryLine(
 				particles.globalPosition[p],
 				particles.globalPosition[p] + particles.velocity[p] * dt + particles.force[p] * dt * dt,
 				particles.size[p] * particleType.physicalSize().at(particles.life[p]));
 
-			for(uint32_t colliderIndex : potentialColliderIndices) {
+			for(std::uint32_t colliderIndex : potentialColliderIndices) {
 				const Line2dColliderObject& collider = line2dColliders[colliderIndex];
 				if(collider.exclusionSet[particleType.id().value()]) {
 					continue;
@@ -35,7 +35,7 @@ void CollisionModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter&
 			continue;
 		}
 
-		for(uint32_t p = 0u; p < particleCount; p++) {
+		for(std::uint32_t p = 0; p < particleCount; p++) {
 			collide(particleType, particles, p, t, dt, planeCollider);
 		}
 	}
@@ -72,7 +72,7 @@ void CollisionModifier::prepare(const Effect& effect, const RuntimeContext& runt
 			Transform transform = effect.sceneGraph().globalTransform(collider->id(), runtimeContext);
 
 			if(lineCollider) {
-				for(std::size_t segmentIndex = 0u; segmentIndex + 1u < lineCollider->points().size(); segmentIndex++) {
+				for(std::size_t segmentIndex = 0; segmentIndex + 1 < lineCollider->points().size(); segmentIndex++) {
 					line2dColliders.emplace_back(*lineCollider, transform, segmentIndex);
 				}
 			}
@@ -104,7 +104,7 @@ CollisionModifier::ColliderObject::ColliderObject(const Collider& collider) :
 
 CollisionModifier::Line2dColliderObject::Line2dColliderObject(const LineCollider& collider, const Transform& transform, std::size_t segmentIndex) : ColliderObject(collider) {
 	start = float2_t(transform * float4_t(collider.point(segmentIndex), 1.0));
-	end = float2_t(transform * float4_t(collider.point(segmentIndex + 1u), 1.0));
+	end = float2_t(transform * float4_t(collider.point(segmentIndex + 1), 1.0));
 }
 CollisionModifier::Line2dColliderObject::Line2dColliderObject(const PlaneCollider& collider, const Transform& transform) : ColliderObject(collider) {
 	start = float2_t(transform * float4_t(-0.5, 0.0, 0.0, 1.0));
@@ -216,7 +216,7 @@ CollisionModifier::Intersection CollisionModifier::calculateRayColliderIntersect
 	return Intersection(point);
 }
 
-void CollisionModifier::collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, uint32_t p, float_t t, float_t dt, const Line2dColliderObject& collider) const {
+void CollisionModifier::collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, std::uint32_t p, float_t t, float_t dt, const Line2dColliderObject& collider) const {
 	float2_t closestPoint = calculateClosestPointOnLine(particles.globalPosition[p], collider);
 	if(!isPointOnLineSegment(closestPoint, collider.start, collider.end)) {
 		return;
@@ -267,7 +267,7 @@ void CollisionModifier::collide(const ParticleType& particleType, ParticleCollec
 		}
 	}
 }
-void CollisionModifier::collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, uint32_t p, float_t t, float_t dt, const Plane3dColliderObject& collider) const {
+void CollisionModifier::collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, std::uint32_t p, float_t t, float_t dt, const Plane3dColliderObject& collider) const {
 	float3_t closestPoint = calculateClosestPointOnPlane(particles.globalPosition[p], collider);
 	if(!isPointOnCollider(closestPoint, collider)) {
 		return;

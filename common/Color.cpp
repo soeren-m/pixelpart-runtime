@@ -63,13 +63,13 @@ float4_t hsv2rgb(const float4_t& colorHSV) {
 
 	hh /= 60.0;
 
-	uint32_t i = static_cast<uint32_t>(hh);
-	float_t ff = hh - i;
+	std::uint32_t phase = static_cast<std::uint32_t>(hh);
+	float_t ff = hh - phase;
 	float_t p = colorHSV.z * (1.0 - colorHSV.y);
 	float_t q = colorHSV.z * (1.0 - (colorHSV.y * ff));
 	float_t t = colorHSV.z * (1.0 - (colorHSV.y * (1.0 - ff)));
 
-	switch(i) {
+	switch(phase) {
 		case 0:
 			return float4_t(colorHSV.z, t, p, colorHSV.a);
 		case 1:

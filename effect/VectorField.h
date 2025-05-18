@@ -9,7 +9,7 @@
 namespace pixelpart {
 class VectorField : public ForceField {
 public:
-	enum class Filter : uint32_t {
+	enum class Filter : std::uint32_t {
 		none = 0,
 		linear = 1
 	};

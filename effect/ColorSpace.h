@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace pixelpart {
-enum class ColorSpace : uint32_t {
+enum class ColorSpace : std::uint32_t {
 	linear = 0,
 	srgb = 1
 };

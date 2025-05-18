@@ -19,9 +19,9 @@ public:
 	const_iterator begin() const;
 	const_iterator end() const;
 
-	void match(const Effect& effect, uint32_t particleCapacity);
+	void match(const Effect& effect, std::uint32_t particleCapacity);
 
-	ParticleRuntimeInstance& add(id_t particleEmitterId, id_t particleTypeId, uint32_t particleCapacity);
+	ParticleRuntimeInstance& add(id_t particleEmitterId, id_t particleTypeId, std::uint32_t particleCapacity);
 	void remove(id_t particleEmitterId, id_t particleTypeId);
 	iterator remove(const_iterator position);
 	iterator remove(const_iterator first, const_iterator last);

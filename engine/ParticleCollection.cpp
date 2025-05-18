@@ -3,8 +3,8 @@
 
 namespace pixelpart {
 ParticleCollection::WritePtr::WritePtr(
-	uint32_t* idPtr,
-	uint32_t* parentIdPtr,
+	std::uint32_t* idPtr,
+	std::uint32_t* parentIdPtr,
 	float_t* lifePtr,
 	float_t* lifespanPtr,
 	float3_t* positionPtr,
@@ -25,8 +25,8 @@ ParticleCollection::WritePtr::WritePtr(
 }
 
 ParticleCollection::ReadPtr::ReadPtr(
-	const uint32_t* idPtr,
-	const uint32_t* parentIdPtr,
+	const std::uint32_t* idPtr,
+	const std::uint32_t* parentIdPtr,
 	const float_t* lifePtr,
 	const float_t* lifespanPtr,
 	const float3_t* positionPtr,
@@ -46,7 +46,7 @@ ParticleCollection::ReadPtr::ReadPtr(
 
 }
 
-ParticleCollection::ParticleCollection(uint32_t capacity) : particleCapacity(capacity) {
+ParticleCollection::ParticleCollection(std::uint32_t capacity) : particleCapacity(capacity) {
 	id.resize(particleCapacity);
 	parentId.resize(particleCapacity);
 	life.resize(particleCapacity);
@@ -64,7 +64,7 @@ ParticleCollection::ParticleCollection(uint32_t capacity) : particleCapacity(cap
 	initialColor.resize(particleCapacity);
 }
 
-uint32_t ParticleCollection::add(uint32_t number) {
+std::uint32_t ParticleCollection::add(std::uint32_t number) {
 	number = (particleCount + number > particleCapacity)
 		? particleCapacity - particleCount
 		: number;
@@ -73,7 +73,7 @@ uint32_t ParticleCollection::add(uint32_t number) {
 
 	return number;
 }
-void ParticleCollection::remove(uint32_t index) {
+void ParticleCollection::remove(std::uint32_t index) {
 	particleCount--;
 
 	std::swap(id[index], id[particleCount]);
@@ -93,7 +93,7 @@ void ParticleCollection::remove(uint32_t index) {
 	std::swap(initialColor[index], initialColor[particleCount]);
 }
 void ParticleCollection::removeDead() {
-	for(uint32_t index = 0u; index < particleCount; ) {
+	for(std::uint32_t index = 0; index < particleCount; ) {
 		if(life[index] > 1.0) {
 			remove(index);
 		}
@@ -103,10 +103,10 @@ void ParticleCollection::removeDead() {
 	}
 }
 void ParticleCollection::clear() {
-	particleCount = 0u;
+	particleCount = 0;
 }
 
-ParticleCollection::WritePtr ParticleCollection::writePtr(uint32_t index) {
+ParticleCollection::WritePtr ParticleCollection::writePtr(std::uint32_t index) {
 	return WritePtr(
 		id.data() + index,
 		parentId.data() + index,
@@ -124,7 +124,7 @@ ParticleCollection::WritePtr ParticleCollection::writePtr(uint32_t index) {
 		color.data() + index,
 		initialColor.data() + index);
 }
-ParticleCollection::ReadPtr ParticleCollection::readPtr(uint32_t index) const {
+ParticleCollection::ReadPtr ParticleCollection::readPtr(std::uint32_t index) const {
 	return ReadPtr(
 		id.data() + index,
 		parentId.data() + index,
@@ -143,10 +143,10 @@ ParticleCollection::ReadPtr ParticleCollection::readPtr(uint32_t index) const {
 		initialColor.data() + index);
 }
 
-uint32_t ParticleCollection::count() const {
+std::uint32_t ParticleCollection::count() const {
 	return particleCount;
 }
-uint32_t ParticleCollection::capacity() const {
+std::uint32_t ParticleCollection::capacity() const {
 	return particleCapacity;
 }
 }

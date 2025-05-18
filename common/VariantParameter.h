@@ -12,7 +12,7 @@ class VariantParameter {
 public:
 	class Value {
 	public:
-		enum Type : uint32_t {
+		enum Type : std::uint32_t {
 			type_int,
 			type_float,
 			type_float2,

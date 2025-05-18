@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace pixelpart {
-enum class LightingMode : uint32_t {
+enum class LightingMode : std::uint32_t {
 	unlit = 0,
 	lit = 1
 };

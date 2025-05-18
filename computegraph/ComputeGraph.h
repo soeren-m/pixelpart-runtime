@@ -20,17 +20,17 @@ public:
 
 	class EvaluationException : public std::runtime_error {
 	public:
-		EvaluationException(const std::string& msg, id_t node = id_t(), uint32_t slot = id_t::nullValue);
+		EvaluationException(const std::string& msg, id_t node = id_t(), std::uint32_t slot = id_t::nullValue);
 
 		id_t nodeId() const;
-		uint32_t slotIndex() const;
+		std::uint32_t slotIndex() const;
 
 	private:
 		id_t computeNodeId;
-		uint32_t computeSlotIndex;
+		std::uint32_t computeSlotIndex;
 	};
 
-	enum TypeMatch : uint32_t {
+	enum TypeMatch : std::uint32_t {
 		typematch_exact,
 		typematch_upcast,
 		typematch_downcast,
@@ -38,7 +38,7 @@ public:
 	};
 
 	struct BuildResult {
-		std::unordered_map<id_t, uint32_t> nodeSignatures;
+		std::unordered_map<id_t, std::uint32_t> nodeSignatures;
 		std::unordered_map<id_t, std::vector<VariantValue>> nodeOutputs;
 	};
 
@@ -51,7 +51,7 @@ public:
 	ComputeGraph& operator=(const ComputeGraph& other);
 
 	std::vector<VariantValue> evaluate(const InputSet& graphInputs) const;
-	std::vector<VariantValue> evaluate(const InputSet& graphInputs, BuildResult& result, id_t nodeId = id_t(0u)) const;
+	std::vector<VariantValue> evaluate(const InputSet& graphInputs, BuildResult& result, id_t nodeId = id_t(0)) const;
 
 	template <typename TNode>
 	id_t addNode() {
@@ -66,15 +66,15 @@ public:
 	void removeNode(id_t nodeId);
 	bool containsNode(id_t nodeId) const;
 
-	void linkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t sourceSlot, uint32_t targetSlot);
+	void linkNodes(id_t sourceNodeId, id_t targetNodeId, std::uint32_t sourceSlot, std::uint32_t targetSlot);
 	void linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::string& sourceSlotName, const std::string& targetSlotName);
-	void linkNodeToInput(id_t targetNodeId, uint32_t targetSlot, id_t inputId);
-	void unlinkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t targetSlot);
+	void linkNodeToInput(id_t targetNodeId, std::uint32_t targetSlot, id_t inputId);
+	void unlinkNodes(id_t sourceNodeId, id_t targetNodeId, std::uint32_t targetSlot);
 	void unlinkNodes(id_t linkId);
 	void unlinkRemovedInputs(const InputSet& graphInputs);
 
 	void nodeName(id_t nodeId, const std::string& name);
-	void nodeParameter(id_t nodeId, uint32_t parameterIndex, VariantParameter::Value value);
+	void nodeParameter(id_t nodeId, std::uint32_t parameterIndex, VariantParameter::Value value);
 	void nodeParameter(id_t nodeId, const std::string& parameterName, VariantParameter::Value value);
 	void nodePosition(id_t nodeId, const float2_t& position);
 
@@ -84,12 +84,12 @@ public:
 	bool empty() const;
 
 private:
-	uint32_t findNodeType(const std::string& typeName) const;
-	uint32_t findNodeSignature(const InputSet& graphInputs, const BuildResult& result, const ComputeNode& activeNode, std::vector<TypeMatch>& typeMatch) const;
+	std::uint32_t findNodeType(const std::string& typeName) const;
+	std::uint32_t findNodeSignature(const InputSet& graphInputs, const BuildResult& result, const ComputeNode& activeNode, std::vector<TypeMatch>& typeMatch) const;
 
 	ComputeNodeCollection computeNodes;
-	id_t nextNodeId = id_t(0u);
-	id_t nextLinkId = id_t(0u);
+	id_t nextNodeId = id_t(0);
+	id_t nextLinkId = id_t(0);
 };
 
 void to_json(nlohmann::ordered_json& j, const ComputeGraph& computeGraph);

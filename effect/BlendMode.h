@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace pixelpart {
-enum class BlendMode : uint32_t {
+enum class BlendMode : std::uint32_t {
 	off = 0,
 	normal = 1,
 	additive = 2,

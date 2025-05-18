@@ -20,10 +20,10 @@ public:
 	using Task = std::function<void()>;
 
 	ThreadPool(std::size_t threads) {
-		for(std::size_t i = 0u; i < threads; i++) {
+		for(std::size_t threadIndex = 0; threadIndex < threads; threadIndex++) {
 			workers.emplace_back([this]() {
 				while(true) {
-					uint32_t taskId = 0u;
+					std::uint32_t taskId = 0;
 					Task task;
 
 					{
@@ -68,7 +68,7 @@ public:
 	}
 
 	template<typename F, typename... Args>
-	void enqueue(uint32_t taskId, F&& f, Args&&... args) {
+	void enqueue(std::uint32_t taskId, F&& f, Args&&... args) {
 		auto task = std::make_shared<std::packaged_task<typename std::result_of<F(Args...)>::type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
 
 		{
@@ -90,11 +90,11 @@ public:
 		}
 	}
 
-	void wait(uint32_t taskId) {
+	void wait(std::uint32_t taskId) {
 		std::unique_lock<std::mutex> lock(stateMutex);
 
 		completionCondition.wait(lock, [this, taskId]() {
-			return runningTasks.count(taskId) == 0u;
+			return runningTasks.count(taskId) == 0;
 		});
 	}
 
@@ -104,8 +104,8 @@ public:
 
 private:
 	std::vector<std::thread> workers;
-	std::queue<std::pair<uint32_t, Task>> tasks;
-	std::unordered_set<uint32_t> runningTasks;
+	std::queue<std::pair<std::uint32_t, Task>> tasks;
+	std::unordered_set<std::uint32_t> runningTasks;
 
 	std::mutex queueMutex;
 	std::mutex stateMutex;

@@ -6,10 +6,10 @@
 
 namespace pixelpart {
 struct RenderSettings {
-	uint32_t simulationSeed = 0u;
+	std::uint32_t simulationSeed = 0;
 
-	uint32_t frameWidth = 1u;
-	uint32_t frameHeight = 1u;
+	std::uint32_t frameWidth = 1;
+	std::uint32_t frameHeight = 1;
 
 	float_t captureRate = 30.0;
 	float_t duration = 1.0;

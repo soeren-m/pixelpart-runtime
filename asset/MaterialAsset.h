@@ -11,7 +11,7 @@
 namespace pixelpart {
 class MaterialAsset {
 public:
-	static const uint32_t version;
+	static const std::uint32_t version;
 
 	MaterialAsset() = default;
 
@@ -26,7 +26,7 @@ private:
 	std::unordered_map<std::string, ImageResource> assetImages;
 };
 
-std::string serializeMaterialAsset(const MaterialAsset& asset, int32_t indent = 4);
+std::string serializeMaterialAsset(const MaterialAsset& asset, std::int32_t indent = 4);
 
 MaterialAsset deserializeMaterialAsset(std::istream& stream);
 MaterialAsset deserializeMaterialAsset(const std::string& data);

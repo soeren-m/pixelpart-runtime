@@ -14,11 +14,11 @@ class ShaderNode {
 public:
 	struct Link {
 		Link() = default;
-		Link(id_t linkId, id_t linkNodeId, uint32_t slotIndex);
+		Link(id_t linkId, id_t linkNodeId, std::uint32_t slotIndex);
 
 		id_t id;
 		id_t nodeId;
-		uint32_t slot = 0u;
+		std::uint32_t slot = 0;
 	};
 
 	ShaderNode() = default;

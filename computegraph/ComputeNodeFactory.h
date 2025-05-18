@@ -16,7 +16,7 @@ public:
 
 	template <typename T>
 	void registerNode() {
-		if(nodeTypeFunctions.count(T::typeName) != 0u) {
+		if(nodeTypeFunctions.count(T::typeName) != 0) {
 			return;
 		}
 

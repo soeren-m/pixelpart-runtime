@@ -66,18 +66,18 @@ ParticleEmitter::GridOrder ParticleEmitter::gridOrder() const {
 	return emitterGridOrder;
 }
 
-void ParticleEmitter::gridSize(uint32_t x, uint32_t y, uint32_t z) {
+void ParticleEmitter::gridSize(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
 	emitterGridSize[0] = x;
 	emitterGridSize[1] = y;
 	emitterGridSize[2] = z;
 }
-uint32_t ParticleEmitter::gridSizeX() const {
+std::uint32_t ParticleEmitter::gridSizeX() const {
 	return emitterGridSize[0];
 }
-uint32_t ParticleEmitter::gridSizeY() const {
+std::uint32_t ParticleEmitter::gridSizeY() const {
 	return emitterGridSize[1];
 }
-uint32_t ParticleEmitter::gridSizeZ() const {
+std::uint32_t ParticleEmitter::gridSizeZ() const {
 	return emitterGridSize[2];
 }
 

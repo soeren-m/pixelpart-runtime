@@ -1,7 +1,7 @@
 #include "ComputeOutputTarget.h"
 
 namespace pixelpart {
-ComputeOutputTarget::ComputeOutputTarget(Type targetType, uint32_t targetIndex) : type(targetType), index(targetIndex) {
+ComputeOutputTarget::ComputeOutputTarget(Type targetType, std::uint32_t targetIndex) : type(targetType), index(targetIndex) {
 
 }
 

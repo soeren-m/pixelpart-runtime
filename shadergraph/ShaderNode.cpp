@@ -1,15 +1,15 @@
 #include "ShaderNode.h"
 
 namespace pixelpart {
-ShaderNode::Link::Link(id_t linkId, id_t linkNodeId, uint32_t slotIndex) :
+ShaderNode::Link::Link(id_t linkId, id_t linkNodeId, std::uint32_t slotIndex) :
 	id(linkId), nodeId(linkNodeId), slot(slotIndex) {
 
 }
 
 ShaderNode::ShaderNode(const ShaderNodeType& nodeType) :
 	nodeTypeId(nodeType.name), nodeInputs(nodeType.inputs.size()), nodeParameters(nodeType.parameters.size()) {
-	for(std::size_t p = 0u; p < nodeParameters.size(); p++) {
-		nodeParameters[p] = nodeType.parameters[p].def();
+	for(std::size_t parameterIndex = 0; parameterIndex < nodeParameters.size(); parameterIndex++) {
+		nodeParameters[parameterIndex] = nodeType.parameters[parameterIndex].def();
 	}
 }
 ShaderNode::ShaderNode(const std::string& typeId, const std::string& name,

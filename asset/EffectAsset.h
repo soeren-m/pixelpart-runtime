@@ -12,7 +12,7 @@
 namespace pixelpart {
 class EffectAsset {
 public:
-	static const uint32_t version;
+	static const std::uint32_t version;
 
 	EffectAsset() = default;
 
@@ -43,7 +43,7 @@ private:
 	RenderSettings assetPreviewSettings;
 };
 
-std::string serializeEffectAsset(const EffectAsset& asset, int32_t indent = 4);
+std::string serializeEffectAsset(const EffectAsset& asset, std::int32_t indent = 4);
 
 EffectAsset deserializeEffectAsset(std::istream& stream);
 EffectAsset deserializeEffectAsset(const std::string& data);

@@ -9,7 +9,7 @@
 #include <algorithm>
 
 namespace pixelpart {
-enum class CurveInterpolation : uint32_t {
+enum class CurveInterpolation : std::uint32_t {
 	none = 0,
 	linear = 1,
 	spline = 2,

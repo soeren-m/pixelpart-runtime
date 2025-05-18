@@ -51,8 +51,8 @@ public:
 	void visible(bool mode);
 	bool visible() const;
 
-	void layer(uint32_t layer);
-	uint32_t layer() const;
+	void layer(std::uint32_t layer);
+	std::uint32_t layer() const;
 
 	MaterialInstance& materialInstance();
 	const MaterialInstance& materialInstance() const;
@@ -163,7 +163,7 @@ private:
 	StaticProperty<float_t> particleMotionPathForce = StaticProperty<float_t>(0.0);
 
 	bool particleVisible = true;
-	uint32_t particleLayer = 0u;
+	std::uint32_t particleLayer = 0;
 	MaterialInstance particleMaterialInstance;
 	ParticleRendererType particleRenderer = ParticleRendererType::sprite;
 	ParticleSpriteRendererSettings particleSpriteRendererSettings;

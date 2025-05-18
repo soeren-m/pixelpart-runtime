@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace pixelpart {
-enum class RotationMode : uint32_t {
+enum class RotationMode : std::uint32_t {
 	angle = 0,
 	velocity = 1
 };

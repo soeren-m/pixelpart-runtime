@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace pixelpart {
-enum class AlignmentMode : uint32_t {
+enum class AlignmentMode : std::uint32_t {
 	none = 0,
 	camera = 1,
 	motion = 2,

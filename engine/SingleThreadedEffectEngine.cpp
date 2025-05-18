@@ -2,7 +2,7 @@
 #include "../effect/ParticleRuntimeId.h"
 
 namespace pixelpart {
-SingleThreadedEffectEngine::SingleThreadedEffectEngine(const Effect& effect, uint32_t particleCapacity) : EffectEngine(),
+SingleThreadedEffectEngine::SingleThreadedEffectEngine(const Effect& effect, std::uint32_t particleCapacity) : EffectEngine(),
 	engineEffect(effect), engineParticleCapacity(particleCapacity), particleGenerator(effect, particleRuntimeInstances) {
 
 }
@@ -23,7 +23,7 @@ void SingleThreadedEffectEngine::advance(float_t dt) {
 		runtimeInstance.particles().removeDead();
 
 		ParticleCollection::WritePtr particles = runtimeInstance.particles().writePtr();
-		uint32_t particleCount = runtimeInstance.particles().count();
+		std::uint32_t particleCount = runtimeInstance.particles().count();
 
 		particleModifierPipeline.run(
 			engineEffect.sceneGraph(), particleEmitter, particleType,
@@ -42,7 +42,7 @@ void SingleThreadedEffectEngine::restart(bool reset) {
 	}
 }
 
-void SingleThreadedEffectEngine::seed(uint32_t seed) {
+void SingleThreadedEffectEngine::seed(std::uint32_t seed) {
 	particleGenerator.seed(seed);
 }
 
@@ -55,7 +55,7 @@ void SingleThreadedEffectEngine::activateTrigger(id_t triggerId) {
 	triggerActivationTimes[triggerId] = engineTime;
 }
 
-void SingleThreadedEffectEngine::spawnParticles(id_t particleEmitterId, uint32_t count, float_t time) {
+void SingleThreadedEffectEngine::spawnParticles(id_t particleEmitterId, std::uint32_t count, float_t time) {
 	for(ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
 		if(runtimeInstance.emitterId() != particleEmitterId) {
 			continue;
@@ -69,7 +69,7 @@ void SingleThreadedEffectEngine::spawnParticles(id_t particleEmitterId, uint32_t
 		particleGenerator.generate(particleEmitterId, runtimeInstance.typeId(), count, time);
 	}
 }
-void SingleThreadedEffectEngine::spawnParticles(id_t particleEmitterId, id_t particleTypeId, uint32_t count, float_t time) {
+void SingleThreadedEffectEngine::spawnParticles(id_t particleEmitterId, id_t particleTypeId, std::uint32_t count, float_t time) {
 	ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
 	if(!runtimeInstance) {
 		return;
@@ -92,7 +92,7 @@ const ParticleCollection* SingleThreadedEffectEngine::particles(id_t particleEmi
 	return &runtimeInstance->particles();
 }
 
-uint32_t SingleThreadedEffectEngine::particleCount(id_t particleEmitterId, id_t particleTypeId) const {
+std::uint32_t SingleThreadedEffectEngine::particleCount(id_t particleEmitterId, id_t particleTypeId) const {
 	const ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
 	if(!runtimeInstance) {
 		return 0;
@@ -100,8 +100,8 @@ uint32_t SingleThreadedEffectEngine::particleCount(id_t particleEmitterId, id_t 
 
 	return runtimeInstance->particles().count();
 }
-uint32_t SingleThreadedEffectEngine::particleCount() const {
-	uint32_t count = 0;
+std::uint32_t SingleThreadedEffectEngine::particleCount() const {
+	std::uint32_t count = 0;
 	for(const ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
 		count += runtimeInstance.particles().count();
 	}
@@ -117,7 +117,7 @@ const Effect& SingleThreadedEffectEngine::effect() const {
 	return engineEffect;
 }
 
-uint32_t SingleThreadedEffectEngine::particleCapacity() const {
+std::uint32_t SingleThreadedEffectEngine::particleCapacity() const {
 	return engineParticleCapacity;
 }
 

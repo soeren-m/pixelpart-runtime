@@ -93,7 +93,7 @@ void from_json(const nlohmann::ordered_json& j, NoiseField& field) {
 	from_json(j, static_cast<ForceField&>(field));
 
 	nlohmann::ordered_json jNoiseField = j.value("noise", nlohmann::ordered_json());
-	field.noiseOctaves() = jNoiseField.value("octaves", StaticProperty<int64_t>(4));
+	field.noiseOctaves() = jNoiseField.value("octaves", StaticProperty<int_t>(4));
 	field.noiseFrequency() = jNoiseField.value("frequency", AnimatedProperty<float_t>(1.0));
 	field.noisePersistence() = jNoiseField.value("persistence", AnimatedProperty<float_t>(0.5));
 	field.noiseLacunarity() = jNoiseField.value("lacunarity", AnimatedProperty<float_t>(2.0));

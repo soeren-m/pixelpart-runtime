@@ -118,10 +118,10 @@ bool ParticleType::visible() const {
 	return particleVisible;
 }
 
-void ParticleType::layer(uint32_t layer) {
+void ParticleType::layer(std::uint32_t layer) {
 	particleLayer = layer;
 }
-uint32_t ParticleType::layer() const {
+std::uint32_t ParticleType::layer() const {
 	return particleLayer;
 }
 

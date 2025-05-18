@@ -1,16 +1,16 @@
 #include "ComputeNode.h"
 
 namespace pixelpart {
-ComputeNode::InputException::InputException(const std::string& msg, uint32_t index) :
+ComputeNode::InputException::InputException(const std::string& msg, std::uint32_t index) :
 	std::runtime_error(msg), inputIndex(index) {
 
 }
 
-uint32_t ComputeNode::InputException::index() const {
+std::uint32_t ComputeNode::InputException::index() const {
 	return inputIndex;
 }
 
-ComputeNode::Link::Link(id_t linkId, id_t linkNodeId, uint32_t linkSlot) :
+ComputeNode::Link::Link(id_t linkId, id_t linkNodeId, std::uint32_t linkSlot) :
 	id(linkId), nodeId(linkNodeId), slot(linkSlot) {
 
 }
@@ -43,8 +43,8 @@ ComputeNode::ComputeNode(
 	nodeInputLinks.resize(nodeInputSlots.size());
 
 	nodeParameterValues.resize(nodeParameters.size());
-	for(std::size_t p = 0u; p < nodeParameters.size(); p++) {
-		nodeParameterValues[p] = nodeParameters[p].def();
+	for(std::size_t parameterIndex = 0; parameterIndex < nodeParameters.size(); parameterIndex++) {
+		nodeParameterValues[parameterIndex] = nodeParameters[parameterIndex].def();
 	}
 }
 
@@ -130,33 +130,33 @@ const VariantParameter::Value& ComputeNode::parameterValue(std::size_t index) co
 	return nodeParameterValues.at(index);
 }
 
-uint32_t ComputeNode::findInputSlot(const std::string& slotName) const {
-	uint32_t slot = id_t::nullValue;
-	for(uint32_t o = 0u; o < nodeInputSlots.size(); o++) {
-		if(nodeInputSlots[o] == slotName) {
-			slot = o;
+std::uint32_t ComputeNode::findInputSlot(const std::string& slotName) const {
+	std::uint32_t slot = id_t::nullValue;
+	for(std::uint32_t inputSlot = 0; inputSlot < nodeInputSlots.size(); inputSlot++) {
+		if(nodeInputSlots[inputSlot] == slotName) {
+			slot = inputSlot;
 			break;
 		}
 	}
 
 	return slot;
 }
-uint32_t ComputeNode::findOutputSlot(const std::string& slotName) const {
-	uint32_t slot = id_t::nullValue;
-	for(uint32_t o = 0u; o < nodeOutputSlots.size(); o++) {
-		if(nodeOutputSlots[o] == slotName) {
-			slot = o;
+std::uint32_t ComputeNode::findOutputSlot(const std::string& slotName) const {
+	std::uint32_t slot = id_t::nullValue;
+	for(std::uint32_t outputSlot = 0; outputSlot < nodeOutputSlots.size(); outputSlot++) {
+		if(nodeOutputSlots[outputSlot] == slotName) {
+			slot = outputSlot;
 			break;
 		}
 	}
 
 	return slot;
 }
-uint32_t ComputeNode::findParameter(const std::string& parameterName) const {
-	uint32_t index = id_t::nullValue;
-	for(uint32_t o = 0u; o < nodeParameters.size(); o++) {
-		if(nodeParameters[o].name() == parameterName) {
-			index = o;
+std::uint32_t ComputeNode::findParameter(const std::string& parameterName) const {
+	std::uint32_t index = id_t::nullValue;
+	for(std::uint32_t parameterIndex = 0; parameterIndex < nodeParameters.size(); parameterIndex++) {
+		if(nodeParameters[parameterIndex].name() == parameterName) {
+			index = parameterIndex;
 			break;
 		}
 	}

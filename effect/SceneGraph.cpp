@@ -71,7 +71,7 @@ Node& SceneGraph::add(const Node& node, id_t baseId) {
 Node& SceneGraph::duplicate(id_t nodeId) {
 	Node& node = at(nodeId);
 
-	id_t insertedNodeId = 0u;
+	id_t insertedNodeId = 0;
 	while(contains(insertedNodeId)) {
 		insertedNodeId++;
 	}
@@ -94,7 +94,7 @@ void SceneGraph::set(std::vector<std::unique_ptr<Node>>&& nodeList) {
 			continue;
 		}
 
-		id_t nodeId = 0u;
+		id_t nodeId = 0;
 		while(contains(nodeId)) {
 			nodeId++;
 		}
@@ -108,7 +108,7 @@ void SceneGraph::set(std::vector<std::unique_ptr<Node>>&& nodeList) {
 void SceneGraph::remove(id_t nodeId) {
 	removeIndex(indexOf(nodeId));
 }
-void SceneGraph::removeIndex(uint32_t index) {
+void SceneGraph::removeIndex(std::uint32_t index) {
 	if(index >= sceneNodes.size()) {
 		return;
 	}
@@ -152,13 +152,13 @@ std::vector<id_t> SceneGraph::childIds(id_t nodeId) const {
 	return result;
 }
 
-uint32_t SceneGraph::indexOf(id_t nodeId) const {
+std::uint32_t SceneGraph::indexOf(id_t nodeId) const {
 	return nodeId.value() < indexMap.size()
 		? indexMap[nodeId.value()]
 		: id_t::nullValue;
 }
-uint32_t SceneGraph::indexOfName(const std::string& name) const {
-	for(uint32_t index = 0u; index < sceneNodes.size(); index++) {
+std::uint32_t SceneGraph::indexOfName(const std::string& name) const {
+	for(std::uint32_t index = 0; index < sceneNodes.size(); index++) {
 		if(sceneNodes[index]->nodeName == name) {
 			return index;
 		}
@@ -170,20 +170,20 @@ uint32_t SceneGraph::indexOfName(const std::string& name) const {
 bool SceneGraph::contains(id_t nodeId) const {
 	return indexOf(nodeId) != id_t::nullValue;
 }
-bool SceneGraph::containsIndex(uint32_t index) const {
+bool SceneGraph::containsIndex(std::uint32_t index) const {
 	return index < sceneNodes.size();
 }
 
 Node& SceneGraph::at(id_t nodeId) {
 	return *sceneNodes.at(indexOf(nodeId));
 }
-Node& SceneGraph::atIndex(uint32_t index) {
+Node& SceneGraph::atIndex(std::uint32_t index) {
 	return *sceneNodes.at(index);
 }
 const Node& SceneGraph::at(id_t nodeId) const {
 	return *sceneNodes.at(indexOf(nodeId));
 }
-const Node& SceneGraph::atIndex(uint32_t index) const {
+const Node& SceneGraph::atIndex(std::uint32_t index) const {
 	return *sceneNodes.at(index);
 }
 
@@ -226,11 +226,11 @@ Transform SceneGraph::globalBaseTransform(id_t nodeId, const RuntimeContext& run
 	return localBaseTransform(nodeId, runtimeContext);
 }
 
-uint32_t SceneGraph::count() const {
-	return static_cast<uint32_t>(sceneNodes.size());
+std::uint32_t SceneGraph::count() const {
+	return static_cast<std::uint32_t>(sceneNodes.size());
 }
 id_t SceneGraph::maxId() const {
-	id_t maxId = 0u;
+	id_t maxId = 0;
 	for(const std::unique_ptr<Node>& node : sceneNodes) {
 		maxId = std::max(maxId, node->nodeId);
 	}
@@ -246,10 +246,10 @@ void SceneGraph::rebuildIndex() {
 	indexMap.clear();
 	indexMap.reserve(sceneNodes.size());
 
-	for(uint32_t nodeIndex = 0u; nodeIndex < sceneNodes.size(); nodeIndex++) {
+	for(std::uint32_t nodeIndex = 0; nodeIndex < sceneNodes.size(); nodeIndex++) {
 		id_t nodeId = sceneNodes[nodeIndex]->nodeId;
 		if(nodeId.value() >= indexMap.size()) {
-			indexMap.resize(nodeId.value() + 1u, id_t::nullValue);
+			indexMap.resize(nodeId.value() + 1, id_t::nullValue);
 		}
 
 		indexMap[nodeId.value()] = nodeIndex;

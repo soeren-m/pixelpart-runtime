@@ -3,10 +3,10 @@
 
 namespace pixelpart {
 void IntegrationModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const {
+	ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const {
 	float_t dt = runtimeContext.deltaTime();
 
-	for(uint32_t p = 0u; p < particleCount; p++) {
+	for(std::uint32_t p = 0; p < particleCount; p++) {
 		particles.velocity[p] += particles.force[p] * dt;
 		particles.position[p] += particles.velocity[p] * dt;
 	}
@@ -14,12 +14,12 @@ void IntegrationModifier::run(const SceneGraph& sceneGraph, const ParticleEmitte
 	if(particleType.positionRelative()) {
 		float3_t origin = sceneGraph.globalTransform(particleEmitter.id(), runtimeContext).position();
 
-		for(uint32_t p = 0u; p < particleCount; p++) {
+		for(std::uint32_t p = 0; p < particleCount; p++) {
 			particles.globalPosition[p] = particles.position[p] + origin;
 		}
 	}
 	else {
-		for(uint32_t p = 0u; p < particleCount; p++) {
+		for(std::uint32_t p = 0; p < particleCount; p++) {
 			particles.globalPosition[p] = particles.position[p];
 		}
 	}

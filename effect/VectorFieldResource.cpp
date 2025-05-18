@@ -20,9 +20,9 @@ const Grid3d<float3_t>& VectorFieldResource::field() const {
 
 void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
 	std::string dataString;
-	for(std::size_t z = 0u; z < resource.field().depth(); z++) {
-		for(std::size_t y = 0u; y < resource.field().height(); y++) {
-			for(std::size_t x = 0u; x < resource.field().width(); x++) {
+	for(std::size_t z = 0; z < resource.field().depth(); z++) {
+		for(std::size_t y = 0; y < resource.field().height(); y++) {
+			for(std::size_t x = 0; x < resource.field().width(); x++) {
 				const float3_t& vector = resource.field()(x, y, z);
 
 				dataString += std::to_string(vector.x);
@@ -35,7 +35,7 @@ void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
 		}
 	}
 
-	std::string compressedData = compressBase64(reinterpret_cast<const uint8_t*>(dataString.data()), dataString.size(), CompressionMethod::zlib);
+	std::string compressedData = compressBase64(reinterpret_cast<const std::uint8_t*>(dataString.data()), dataString.size(), CompressionMethod::zlib);
 
 	j = nlohmann::ordered_json{
 		{ "name", resource.name() },
@@ -56,16 +56,16 @@ void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
 	CompressionMethod compressionMethod = j.value("compression", CompressionMethod::none);
 	std::size_t uncompressedSize = j.value("uncompressed_size", 0u);
 
-	std::vector<uint8_t> uncompressedData = decompressBase64(j.at("field").get<std::string>(), uncompressedSize, compressionMethod);
+	std::vector<std::uint8_t> uncompressedData = decompressBase64(j.at("field").get<std::string>(), uncompressedSize, compressionMethod);
 	std::istringstream dataStream(
 		std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
 	Grid3d<float3_t> field = Grid3d<float3_t>(width, height, depth, float3_t(0.0));
 
 	bool finished = false;
-	for(std::size_t z = 0u; z < field.depth() && !finished; z++) {
-		for(std::size_t y = 0u; y < field.height() && !finished; y++) {
-			for(std::size_t x = 0u; x < field.width() && !finished; x++) {
+	for(std::size_t z = 0; z < field.depth() && !finished; z++) {
+		for(std::size_t y = 0; y < field.height() && !finished; y++) {
+			for(std::size_t x = 0; x < field.width() && !finished; x++) {
 				if(dataStream.eof()) {
 					finished = true;
 					break;

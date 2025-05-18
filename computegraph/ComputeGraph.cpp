@@ -2,7 +2,7 @@
 #include <algorithm>
 
 namespace pixelpart {
-ComputeGraph::EvaluationException::EvaluationException(const std::string& msg, id_t node, uint32_t slot) :
+ComputeGraph::EvaluationException::EvaluationException(const std::string& msg, id_t node, std::uint32_t slot) :
 	std::runtime_error(msg), computeNodeId(node), computeSlotIndex(slot) {
 
 }
@@ -10,7 +10,7 @@ ComputeGraph::EvaluationException::EvaluationException(const std::string& msg, i
 id_t ComputeGraph::EvaluationException::nodeId() const {
 	return computeNodeId;
 }
-uint32_t ComputeGraph::EvaluationException::slotIndex() const {
+std::uint32_t ComputeGraph::EvaluationException::slotIndex() const {
 	return computeSlotIndex;
 }
 
@@ -33,8 +33,8 @@ ComputeGraph::ComputeGraph(const ComputeNodeCollection& initialNodes) {
 		}
 	}
 
-	id_t maxNodeId = 0u;
-	id_t maxLinkId = 0u;
+	id_t maxNodeId = 0;
+	id_t maxLinkId = 0;
 
 	for(const auto& node : computeNodes) {
 		maxNodeId = std::max(maxNodeId, node.first);
@@ -48,8 +48,8 @@ ComputeGraph::ComputeGraph(const ComputeNodeCollection& initialNodes) {
 		}
 	}
 
-	nextNodeId = maxNodeId.value() + 1u;
-	nextLinkId = maxLinkId.value() + 1u;
+	nextNodeId = maxNodeId.value() + 1;
+	nextLinkId = maxLinkId.value() + 1;
 }
 
 ComputeGraph& ComputeGraph::operator=(const ComputeGraph& other) {
@@ -80,14 +80,14 @@ std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, Bu
 	const std::unique_ptr<ComputeNode>& activeNode = nodeEntry->second;
 	std::vector<VariantValue> in(activeNode->inputLinks().size());
 
-	for(uint32_t inputSlot = 0u; inputSlot < activeNode->inputLinks().size(); inputSlot++) {
+	for(std::uint32_t inputSlot = 0; inputSlot < activeNode->inputLinks().size(); inputSlot++) {
 		const ComputeNode::Link& link = activeNode->inputLinks()[inputSlot];
 
 		VariantValue::Type sourceValueType = VariantValue::type_null;
 		VariantValue inputValue;
 
 		if(containsNode(link.nodeId)) {
-			if(result.nodeOutputs.count(link.nodeId) == 0u) {
+			if(result.nodeOutputs.count(link.nodeId) == 0) {
 				result.nodeOutputs[link.nodeId] = evaluate(graphInputs, result, link.nodeId);
 			}
 
@@ -101,7 +101,7 @@ std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, Bu
 			sourceValueType = sourceNodeSignature.outputTypes[link.slot];
 			inputValue = result.nodeOutputs[link.nodeId][link.slot];
 		}
-		else if(!link.nodeId && graphInputs.count(link.slot) != 0u) {
+		else if(!link.nodeId && graphInputs.count(link.slot) != 0) {
 			sourceValueType = graphInputs.at(link.slot).type();
 			inputValue = graphInputs.at(link.slot);
 		}
@@ -122,7 +122,7 @@ std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, Bu
 		throw EvaluationException("No matching node signature found", nodeId);
 	}
 
-	for(uint32_t inputSlot = 0u; inputSlot < activeNode->inputLinks().size(); inputSlot++) {
+	for(std::uint32_t inputSlot = 0; inputSlot < activeNode->inputLinks().size(); inputSlot++) {
 		if(typeMatch[inputSlot] == typematch_none) {
 			throw EvaluationException("Types do not match", nodeId, inputSlot);
 		}
@@ -162,7 +162,7 @@ bool ComputeGraph::containsNode(id_t nodeId) const {
 	return nodeEntry->second != nullptr;
 }
 
-void ComputeGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t sourceSlot, uint32_t targetSlot) {
+void ComputeGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, std::uint32_t sourceSlot, std::uint32_t targetSlot) {
 	if(!containsNode(sourceNodeId) || !containsNode(targetNodeId)) {
 		return;
 	}
@@ -186,8 +186,8 @@ void ComputeGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::st
 	ComputeNode& sourceNode = *(computeNodes.at(sourceNodeId));
 	ComputeNode& targetNode = *(computeNodes.at(targetNodeId));
 
-	uint32_t sourceSlot = sourceNode.findOutputSlot(sourceSlotName);
-	uint32_t targetSlot = targetNode.findInputSlot(targetSlotName);
+	std::uint32_t sourceSlot = sourceNode.findOutputSlot(sourceSlotName);
+	std::uint32_t targetSlot = targetNode.findInputSlot(targetSlotName);
 
 	if(sourceSlot != id_t::nullValue && targetSlot != id_t::nullValue) {
 		targetNode.inputLinks()[targetSlot] = ComputeNode::Link(
@@ -196,7 +196,7 @@ void ComputeGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::st
 			sourceSlot);
 	}
 }
-void ComputeGraph::linkNodeToInput(id_t targetNodeId, uint32_t targetSlot, id_t inputId) {
+void ComputeGraph::linkNodeToInput(id_t targetNodeId, std::uint32_t targetSlot, id_t inputId) {
 	if(!containsNode(targetNodeId)) {
 		return;
 	}
@@ -209,9 +209,9 @@ void ComputeGraph::linkNodeToInput(id_t targetNodeId, uint32_t targetSlot, id_t 
 	targetNode.inputLinks()[targetSlot] = ComputeNode::Link(
 		nextLinkId++,
 		id_t(),
-		static_cast<uint32_t>(inputId));
+		static_cast<std::uint32_t>(inputId));
 }
-void ComputeGraph::unlinkNodes(id_t sourceNodeId, id_t targetNodeId, uint32_t targetSlot) {
+void ComputeGraph::unlinkNodes(id_t sourceNodeId, id_t targetNodeId, std::uint32_t targetSlot) {
 	if(!containsNode(sourceNodeId) || !containsNode(targetNodeId)) {
 		return;
 	}
@@ -236,7 +236,7 @@ void ComputeGraph::unlinkNodes(id_t linkId) {
 void ComputeGraph::unlinkRemovedInputs(const InputSet& graphInputs) {
 	for(auto& nodeEntry : computeNodes) {
 		for(ComputeNode::Link& link : nodeEntry.second->inputLinks()) {
-			if(!link.nodeId && link.slot != id_t::nullValue && graphInputs.count(link.slot) == 0u) {
+			if(!link.nodeId && link.slot != id_t::nullValue && graphInputs.count(link.slot) == 0) {
 				link = ComputeNode::Link();
 			}
 		}
@@ -251,7 +251,7 @@ void ComputeGraph::nodeName(id_t nodeId, const std::string& name) {
 	auto& node = computeNodes.at(nodeId);
 	node->name(name);
 }
-void ComputeGraph::nodeParameter(id_t nodeId, uint32_t parameterIndex, VariantParameter::Value value) {
+void ComputeGraph::nodeParameter(id_t nodeId, std::uint32_t parameterIndex, VariantParameter::Value value) {
 	if(!containsNode(nodeId)) {
 		return;
 	}
@@ -265,7 +265,7 @@ void ComputeGraph::nodeParameter(id_t nodeId, const std::string& parameterName, 
 	}
 
 	auto& node = computeNodes.at(nodeId);
-	uint32_t parameterIndex = node->findParameter(parameterName);
+	std::uint32_t parameterIndex = node->findParameter(parameterName);
 	if(parameterIndex == id_t::nullValue) {
 		return;
 	}
@@ -289,13 +289,13 @@ const ComputeGraph::ComputeNodeCollection& ComputeGraph::nodes() const {
 }
 
 bool ComputeGraph::empty() const {
-	return computeNodes.size() == 0u || (computeNodes.size() == 1u &&
+	return computeNodes.size() == 0 || (computeNodes.size() == 1 &&
 		std::all_of(computeNodes.begin()->second->inputLinks().begin(), computeNodes.begin()->second->inputLinks().end(), [](const ComputeNode::Link& l) {
 			return !l.id;
 		}));
 }
 
-uint32_t ComputeGraph::findNodeSignature(const InputSet& graphInputs, const BuildResult& result, const ComputeNode& activeNode, std::vector<TypeMatch>& typeMatch) const {
+std::uint32_t ComputeGraph::findNodeSignature(const InputSet& graphInputs, const BuildResult& result, const ComputeNode& activeNode, std::vector<TypeMatch>& typeMatch) const {
 	const auto matchTypes = [](VariantValue::Type type1, VariantValue::Type type2) {
 		if(type1 == VariantValue::type_null || type2 == VariantValue::type_null) {
 			return ComputeGraph::typematch_none;
@@ -313,48 +313,48 @@ uint32_t ComputeGraph::findNodeSignature(const InputSet& graphInputs, const Buil
 		return ComputeGraph::typematch_none;
 	};
 
-	uint32_t bestSignature = id_t::nullValue;
+	std::uint32_t bestSignature = id_t::nullValue;
 	typeMatch = std::vector<TypeMatch>(activeNode.inputLinks().size(), typematch_none);
 
-	for(uint32_t s = 0u; s < static_cast<uint32_t>(activeNode.signatures().size()); s++) {
-		const ComputeNode::Signature& signature = activeNode.signatures()[s];
+	for(std::size_t signatureIndex = 0; signatureIndex < activeNode.signatures().size(); signatureIndex++) {
+		const ComputeNode::Signature& signature = activeNode.signatures()[signatureIndex];
 
 		std::vector<TypeMatch> currentMatch(activeNode.inputLinks().size(), typematch_none);
-		for(std::size_t i = 0u; i < activeNode.inputLinks().size(); i++) {
+		for(std::size_t inputIndex = 0; inputIndex < activeNode.inputLinks().size(); inputIndex++) {
 			VariantValue::Type inputType = VariantValue::type_null;
-			id_t sourceNodeId = activeNode.inputLinks()[i].nodeId;
+			id_t sourceNodeId = activeNode.inputLinks()[inputIndex].nodeId;
 
 			if(containsNode(sourceNodeId)) {
-				uint32_t sourceSlot = activeNode.inputLinks()[i].slot;
-				uint32_t sourceSignature = result.nodeSignatures.at(sourceNodeId);
+				std::uint32_t sourceSlot = activeNode.inputLinks()[inputIndex].slot;
+				std::uint32_t sourceSignature = result.nodeSignatures.at(sourceNodeId);
 
 				inputType = node(sourceNodeId).signatures()[sourceSignature].outputTypes[sourceSlot];
 			}
-			else if(!activeNode.inputLinks()[i].nodeId && graphInputs.count(activeNode.inputLinks()[i].slot) != 0u) {
-				inputType = graphInputs.at(activeNode.inputLinks()[i].slot).type();
+			else if(!activeNode.inputLinks()[inputIndex].nodeId && graphInputs.count(activeNode.inputLinks()[inputIndex].slot) != 0) {
+				inputType = graphInputs.at(activeNode.inputLinks()[inputIndex].slot).type();
 			}
 			else {
-				inputType = activeNode.defaultInputs()[i].type();
+				inputType = activeNode.defaultInputs()[inputIndex].type();
 			}
 
-			currentMatch[i] = matchTypes(inputType, signature.inputTypes[i]);
+			currentMatch[inputIndex] = matchTypes(inputType, signature.inputTypes[inputIndex]);
 		}
 
 		bool matchNotWorse = true;
 		bool matchBetterForAnyInput = activeNode.inputLinks().empty();
-		for(uint32_t i = 0u; i < activeNode.inputLinks().size(); i++) {
-			if(currentMatch[i] == typematch_none || currentMatch[i] > typeMatch[i]) {
+		for(std::size_t inputIndex = 0; inputIndex < activeNode.inputLinks().size(); inputIndex++) {
+			if(currentMatch[inputIndex] == typematch_none || currentMatch[inputIndex] > typeMatch[inputIndex]) {
 				matchNotWorse = false;
 				break;
 			}
-			else if(currentMatch[i] < typeMatch[i]) {
+			else if(currentMatch[inputIndex] < typeMatch[inputIndex]) {
 				matchBetterForAnyInput = true;
 			}
 		}
 
 		if(matchNotWorse && matchBetterForAnyInput) {
 			typeMatch = currentMatch;
-			bestSignature = s;
+			bestSignature = static_cast<std::uint32_t>(signatureIndex);
 		}
 	}
 

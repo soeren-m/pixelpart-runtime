@@ -3,7 +3,7 @@
 #include "../common/DeserializationException.h"
 
 namespace pixelpart {
-const uint32_t MaterialAsset::version = 9;
+const std::uint32_t MaterialAsset::version = 9;
 
 MaterialResource& MaterialAsset::material() {
 	return assetMaterial;
@@ -19,7 +19,7 @@ const std::unordered_map<std::string, ImageResource>& MaterialAsset::images() co
 	return assetImages;
 }
 
-std::string serializeMaterialAsset(const MaterialAsset& asset, int32_t indent) {
+std::string serializeMaterialAsset(const MaterialAsset& asset, std::int32_t indent) {
 	try {
 		nlohmann::ordered_json jsonData = asset;
 
@@ -69,7 +69,7 @@ void to_json(nlohmann::ordered_json& j, const MaterialAsset& asset) {
 	};
 }
 void from_json(const nlohmann::ordered_json& j, MaterialAsset& asset) {
-	uint32_t version = j.at("version");
+	std::uint32_t version = j.at("version");
 	if(version != MaterialAsset::version) {
 		throw DeserializationException("Unsupported material asset version " + std::to_string(version));
 	}

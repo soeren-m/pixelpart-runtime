@@ -2,7 +2,7 @@
 
 namespace pixelpart {
 void ParticleModifierPipeline::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const {
+	ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const {
 	sizeModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);
 	colorModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);
 	accelerationModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);

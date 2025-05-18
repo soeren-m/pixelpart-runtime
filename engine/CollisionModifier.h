@@ -17,7 +17,7 @@ public:
 	CollisionModifier() = default;
 
 	virtual void run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleCollection::WritePtr particles, uint32_t particleCount, const RuntimeContext& runtimeContext) const override;
+		ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const override;
 
 	virtual void prepare(const Effect& effect, const RuntimeContext& runtimeContext) override;
 
@@ -67,8 +67,8 @@ private:
 	static Intersection calculateRayColliderIntersection(const Line2dColliderObject& collider, const float2_t& rayOrigin, const float2_t& rayEnd);
 	static Intersection calculateRayColliderIntersection(const Plane3dColliderObject& collider, const float3_t& rayOrigin, const float3_t& rayEnd);
 
-	void collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, uint32_t p, float_t t, float_t dt, const Line2dColliderObject& collider) const;
-	void collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, uint32_t p, float_t t, float_t dt, const Plane3dColliderObject& collider) const;
+	void collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, std::uint32_t p, float_t t, float_t dt, const Line2dColliderObject& collider) const;
+	void collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, std::uint32_t p, float_t t, float_t dt, const Plane3dColliderObject& collider) const;
 
 	std::vector<Line2dColliderObject> line2dColliders;
 	std::vector<Plane3dColliderObject> plane3dColliders;

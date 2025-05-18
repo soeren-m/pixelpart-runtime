@@ -2,7 +2,7 @@
 #include <cstdint>
 
 namespace pixelpart {
-enum class CompressionMethod : uint32_t {
+enum class CompressionMethod : std::uint32_t {
 	none = 0,
 	zlib = 1
 };

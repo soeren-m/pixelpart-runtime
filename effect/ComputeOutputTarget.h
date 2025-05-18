@@ -5,16 +5,16 @@
 
 namespace pixelpart {
 struct ComputeOutputTarget {
-	enum Type : uint32_t {
+	enum Type : std::uint32_t {
 		result = 0,
 		keyframe = 1
 	};
 
 	ComputeOutputTarget() = default;
-	ComputeOutputTarget(Type targetType, uint32_t targetIndex = 0u);
+	ComputeOutputTarget(Type targetType, std::uint32_t targetIndex = 0);
 
 	Type type = result;
-	uint32_t index = 0u;
+	std::uint32_t index = 0;
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ComputeOutputTarget::Type, {

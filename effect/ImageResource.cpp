@@ -4,40 +4,40 @@
 #include <algorithm>
 
 namespace pixelpart {
-ImageResource::ImageResource(const std::string& name, uint32_t w, uint32_t h, uint32_t ch, ColorSpace cs) :
+ImageResource::ImageResource(const std::string& name, std::uint32_t w, std::uint32_t h, std::uint32_t ch, ColorSpace cs) :
 	Resource(name), imageWidth(w), imageHeight(h), imageChannels(ch), imageColorSpace(cs) {
 	imageData.resize(imageWidth * imageHeight * imageChannels);
 }
-ImageResource::ImageResource(const std::string& name, uint32_t w, uint32_t h, uint32_t ch, ColorSpace cs, const uint8_t* source) :
+ImageResource::ImageResource(const std::string& name, std::uint32_t w, std::uint32_t h, std::uint32_t ch, ColorSpace cs, const std::uint8_t* source) :
 	ImageResource(name, w, h, ch, cs) {
 	copy(source, imageData.size());
 }
 
-void ImageResource::resize(uint32_t w, uint32_t h) {
+void ImageResource::resize(std::uint32_t w, std::uint32_t h) {
 	imageWidth = w;
 	imageHeight = h;
 	imageData.resize(imageWidth * imageHeight * imageChannels, 0);
 }
-void ImageResource::assign(uint32_t w, uint32_t h, uint8_t value) {
+void ImageResource::assign(std::uint32_t w, std::uint32_t h, std::uint8_t value) {
 	imageWidth = w;
 	imageHeight = h;
 	imageData.assign(imageWidth * imageHeight * imageChannels, value);
 }
-void ImageResource::clear(uint8_t value) {
+void ImageResource::clear(std::uint8_t value) {
 	imageData.assign(imageWidth * imageHeight * imageChannels, value);
 }
 
-void ImageResource::copy(const uint8_t* source, std::size_t size) {
+void ImageResource::copy(const std::uint8_t* source, std::size_t size) {
 	std::memcpy(&imageData.front(), source, std::min(size, imageData.size()));
 }
 
-uint32_t ImageResource::width() const {
+std::uint32_t ImageResource::width() const {
 	return imageWidth;
 }
-uint32_t ImageResource::height() const {
+std::uint32_t ImageResource::height() const {
 	return imageHeight;
 }
-uint32_t ImageResource::channels() const {
+std::uint32_t ImageResource::channels() const {
 	return imageChannels;
 }
 ColorSpace ImageResource::colorSpace() const {
@@ -48,10 +48,10 @@ std::size_t ImageResource::dataSize() const {
 	return imageData.size();
 }
 
-std::vector<uint8_t>& ImageResource::data() {
+std::vector<std::uint8_t>& ImageResource::data() {
 	return imageData;
 }
-const std::vector<uint8_t>& ImageResource::data() const {
+const std::vector<std::uint8_t>& ImageResource::data() const {
 	return imageData;
 }
 
@@ -70,7 +70,7 @@ void to_json(nlohmann::ordered_json& j, const ImageResource& resource) {
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ImageResource& resource) {
-	uint32_t channels = j.value("channels", 0u);
+	std::uint32_t channels = j.value("channels", 0u);
 	if(channels == 0) {
 		channels = j.value("bpp", 0u) / 8;
 	}
