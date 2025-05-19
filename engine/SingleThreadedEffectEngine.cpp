@@ -52,7 +52,7 @@ void SingleThreadedEffectEngine::activateTrigger(id_t triggerId) {
 		return;
 	}
 
-	triggerActivationTimes[triggerId] = engineTime;
+	triggerActivationTimes[triggerId] = engineTime + engineDeltaTime * 0.5;
 }
 
 void SingleThreadedEffectEngine::spawnParticles(id_t particleEmitterId, std::uint32_t count, float_t time) {

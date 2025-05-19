@@ -41,13 +41,16 @@ void ParticleGenerator::generate(const RuntimeContext& runtimeContext) {
 
 		switch(particleEmitter.emissionMode()) {
 			case ParticleEmitter::EmissionMode::continuous:
-				runtimeInstance.emissionCount() += particleType.count().at(emissionTime / particleEmitter.duration()) * runtimeContext.deltaTime();
+				runtimeInstance.emissionCount() +=
+					particleType.count().at(emissionTime / particleEmitter.duration()) * runtimeContext.deltaTime();
 				break;
 			case ParticleEmitter::EmissionMode::burst_start:
-				runtimeInstance.emissionCount() += emissionTime < runtimeContext.deltaTime() * 0.5 ? particleType.count().at(0.0) : 0.0;
+				runtimeInstance.emissionCount() +=
+					emissionTime < runtimeContext.deltaTime() ? particleType.count().at(0) : 0.0;
 				break;
 			case ParticleEmitter::EmissionMode::burst_end:
-				runtimeInstance.emissionCount() += emissionTime > particleEmitter.duration() - runtimeContext.deltaTime() * 0.5 ? particleType.count().at(1.0) : 0.0;
+				runtimeInstance.emissionCount() +=
+					emissionTime > particleEmitter.duration() - runtimeContext.deltaTime() ? particleType.count().at(1) : 0.0;
 				break;
 			default:
 				break;
@@ -109,13 +112,16 @@ void ParticleGenerator::generate(const RuntimeContext& runtimeContext) {
 
 				switch(subParticleEmitter.emissionMode()) {
 					case ParticleEmitter::EmissionMode::continuous:
-						subRuntimeInstance.emissionCount() += subParticleType.count().at(emissionTime / particleEmitter.duration()) * runtimeContext.deltaTime();
+						subRuntimeInstance.emissionCount() +=
+							subParticleType.count().at(emissionTime / particleEmitter.duration()) * runtimeContext.deltaTime();
 						break;
 					case ParticleEmitter::EmissionMode::burst_start:
-						subRuntimeInstance.emissionCount() += particles.life[p] < runtimeContext.deltaTime() / particles.lifespan[p] * 0.5 ? subParticleType.count().at(0.0) : 0.0;
+						subRuntimeInstance.emissionCount() +=
+							particles.life[p] < runtimeContext.deltaTime() / particles.lifespan[p] ? subParticleType.count().at(0) : 0.0;
 						break;
 					case ParticleEmitter::EmissionMode::burst_end:
-						subRuntimeInstance.emissionCount() += particles.life[p] > 1.0 ? subParticleType.count().at(1.0) : 0.0;
+						subRuntimeInstance.emissionCount() +=
+							particles.life[p] > 1.0 ? subParticleType.count().at(1) : 0.0;
 						break;
 					default:
 						break;
