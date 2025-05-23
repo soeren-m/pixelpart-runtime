@@ -7,11 +7,11 @@ class Transform {
 public:
 	Transform() = default;
 	Transform(const mat4_t& matrix);
-	Transform(const float3_t& position, const float3_t& orientation, const float3_t& size);
+	Transform(const float3_t& position, const float3_t& rotation, const float3_t& scale);
 
 	float3_t position() const;
-	float3_t orientation() const;
-	float3_t size() const;
+	float3_t rotation() const;
+	float3_t scale() const;
 
 	const mat4_t& matrix() const;
 

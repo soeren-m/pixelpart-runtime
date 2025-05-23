@@ -55,11 +55,11 @@ public:
 	AnimatedProperty<float3_t>& position();
 	const AnimatedProperty<float3_t>& position() const;
 
-	AnimatedProperty<float3_t>& orientation();
-	const AnimatedProperty<float3_t>& orientation() const;
+	AnimatedProperty<float3_t>& rotation();
+	const AnimatedProperty<float3_t>& rotation() const;
 
-	AnimatedProperty<float3_t>& size();
-	const AnimatedProperty<float3_t>& size() const;
+	AnimatedProperty<float3_t>& scale();
+	const AnimatedProperty<float3_t>& scale() const;
 
 	Transform transform(const RuntimeContext& runtimeContext, bool useTriggers = true) const;
 	Transform baseTransform(const RuntimeContext& runtimeContext) const;
@@ -80,8 +80,8 @@ private:
 	id_t nodeStopTriggerId;
 
 	AnimatedProperty<float3_t> nodePosition = AnimatedProperty<float3_t>(0.0, float3_t(0.0));
-	AnimatedProperty<float3_t> nodeOrientation = AnimatedProperty<float3_t>(float3_t(0.0));
-	AnimatedProperty<float3_t> nodeSize = AnimatedProperty<float3_t>(float3_t(1.0));
+	AnimatedProperty<float3_t> nodeRotation = AnimatedProperty<float3_t>(float3_t(0.0));
+	AnimatedProperty<float3_t> nodeScale = AnimatedProperty<float3_t>(float3_t(1.0));
 };
 
 void to_json(nlohmann::ordered_json& j, const Node& node);

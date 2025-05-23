@@ -164,8 +164,8 @@ std::uint32_t ParticleGenerator::generate(ParticleRuntimeInstance& runtimeInstan
 	Transform emitterPrevTransform = effect.sceneGraph().globalTransform(emitter.id(), prevRuntimeContext, useTriggers);
 	float3_t emitterPosition = emitterTransform.position();
 	float3_t emitterPrevPosition = emitterPrevTransform.position();
-	float3_t emitterOrientation = emitterTransform.orientation();
-	float3_t emitterSize = emitterTransform.size();
+	float3_t emitterRotation = emitterTransform.rotation();
+	float3_t emitterSize = emitterTransform.scale();
 
 	for(std::uint32_t addIndex = 0; addIndex < count; addIndex++) {
 		std::uint32_t p = particleCollection.count() - count + addIndex;
@@ -243,8 +243,8 @@ std::uint32_t ParticleGenerator::generate(ParticleRuntimeInstance& runtimeInstan
 		}
 
 		particleSpawnPosition = effect.is3d()
-			? rotate3d(particleSpawnPosition, emitterOrientation)
-			: rotate2d(particleSpawnPosition, emitterOrientation.x);
+			? rotate3d(particleSpawnPosition, emitterRotation)
+			: rotate2d(particleSpawnPosition, emitterRotation.x);
 
 		float3_t particleSpawnCenter = parentParticle != id_t::nullValue
 			? (parentParticles.globalPosition[parentParticle] + emitterPosition)
