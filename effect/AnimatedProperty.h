@@ -88,12 +88,6 @@ public:
 		recalculateResult();
 	}
 
-	template <typename IntT>
-	void orderedKeyframes(const float_t* positionList, const T* valueList, const IntT* order, IntT count) {
-		propertyCurve.orderedPoints(positionList, valueList, order, count);
-		recalculateResult();
-	}
-
 	void addKeyframe(float_t position, const T& value) {
 		propertyCurve.addPoint(position, value);
 		recalculateResult();
