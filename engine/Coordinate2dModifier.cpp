@@ -12,8 +12,6 @@ void Coordinate2dModifier::run(const Effect* effect, RuntimeContext runtimeConte
 		particles.rotation[p].z = 0.0;
 		particles.force[p].z = 0.0;
 		particles.velocity[p].z = 0.0;
-		particles.position[p].z = 0.0;
-		particles.globalPosition[p].z = 0.0;
 	}
 }
 
