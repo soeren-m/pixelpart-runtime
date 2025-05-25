@@ -1,5 +1,6 @@
 #include "CollisionModifier.h"
 #include "../common/Id.h"
+#include "../effect/ParticleType.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../glm/gtx/norm.hpp"
 #include "../glm/gtx/rotate_vector.hpp"
@@ -7,8 +8,9 @@
 #include <algorithm>
 
 namespace pixelpart {
-void CollisionModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const {
+void CollisionModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
+	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
+	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
 	float_t t = runtimeContext.time();
 	float_t dt = runtimeContext.deltaTime();
 

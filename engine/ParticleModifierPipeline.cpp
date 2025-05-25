@@ -1,18 +1,18 @@
 #include "ParticleModifierPipeline.h"
 
 namespace pixelpart {
-void ParticleModifierPipeline::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const {
-	sizeModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);
-	colorModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);
-	accelerationModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);
-	forceModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);
-	collisionModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);
-	motionPathModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);
-	rotationModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);
-	integrationModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);
-	lifeModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);
-	coordinate2dModifier.run(sceneGraph, particleEmitter, particleType, particles, particleCount, runtimeContext);
+void ParticleModifierPipeline::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
+	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
+	sizeModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
+	colorModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
+	accelerationModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
+	forceModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
+	collisionModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
+	motionPathModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
+	rotationModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
+	integrationModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
+	lifeModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
+	coordinate2dModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
 }
 
 void ParticleModifierPipeline::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {

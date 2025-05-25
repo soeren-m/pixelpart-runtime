@@ -1,6 +1,8 @@
 #include "ForceModifier.h"
 #include "Noise.h"
 #include "../common/Transform.h"
+#include "../effect/SceneGraph.h"
+#include "../effect/ParticleType.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../glm/gtx/euler_angles.hpp"
 #include <cmath>
@@ -8,14 +10,16 @@
 #include <algorithm>
 
 namespace pixelpart {
-void ForceModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const {
+void ForceModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
+	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
+	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
+
 	for(const AttractionField& field : attractionFields) {
 		if(field.exclusionSet().count(particleType.id()) != 0) {
 			continue;
 		}
 
-		applyForce(particles, particleCount, runtimeContext, particleType, field, sceneGraph);
+		applyForce(particles, particleCount, runtimeContext, particleType, field, effect->sceneGraph());
 	}
 
 	for(const AccelerationField& field : accelerationFields) {
@@ -23,7 +27,7 @@ void ForceModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& par
 			continue;
 		}
 
-		applyForce(particles, particleCount, runtimeContext, particleType, field, sceneGraph);
+		applyForce(particles, particleCount, runtimeContext, particleType, field, effect->sceneGraph());
 	}
 
 	for(const VectorField& field : vectorFields) {
@@ -31,7 +35,7 @@ void ForceModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& par
 			continue;
 		}
 
-		applyForce(particles, particleCount, runtimeContext, particleType, field, sceneGraph);
+		applyForce(particles, particleCount, runtimeContext, particleType, field, effect->sceneGraph());
 	}
 
 	for(const NoiseField& field : noiseFields) {
@@ -39,7 +43,7 @@ void ForceModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& par
 			continue;
 		}
 
-		applyForce(particles, particleCount, runtimeContext, particleType, field, sceneGraph);
+		applyForce(particles, particleCount, runtimeContext, particleType, field, effect->sceneGraph());
 	}
 
 	for(const DragField& field : dragFields) {
@@ -47,7 +51,7 @@ void ForceModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& par
 			continue;
 		}
 
-		applyForce(particles, particleCount, runtimeContext, particleType, field, sceneGraph);
+		applyForce(particles, particleCount, runtimeContext, particleType, field, effect->sceneGraph());
 	}
 }
 

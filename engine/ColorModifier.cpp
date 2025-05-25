@@ -1,11 +1,14 @@
 #include "ColorModifier.h"
 #include "../common/Math.h"
 #include "../common/Color.h"
+#include "../effect/ParticleType.h"
 #include <cmath>
 
 namespace pixelpart {
-void ColorModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const {
+void ColorModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
+	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
+	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
+
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		float4_t hsv = rgb2hsv(particleType.color().at(particles.life[p]));
 

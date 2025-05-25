@@ -4,6 +4,7 @@
 #include "../common/Math.h"
 #include "../effect/Effect.h"
 #include "../effect/ParticleEmitter.h"
+#include "../effect/ParticleType.h"
 #include "../effect/RuntimeContext.h"
 #include "ParticleCollection.h"
 #include "ParticleRuntimeInstance.h"
@@ -24,8 +25,15 @@ public:
 	void seed(std::uint32_t seed);
 
 private:
-	std::uint32_t generate(ParticleRuntimeInstance& runtimeInstance, ParticleRuntimeInstance* parentRuntimeInstance, std::uint32_t count,
-		std::uint32_t parentParticle, const RuntimeContext& runtimeContext, bool useTriggers);
+	std::uint32_t generate(ParticleRuntimeInstance& runtimeInstance, const ParticleRuntimeInstance& parentRuntimeInstance, std::uint32_t count,
+		std::uint32_t parentParticle, const RuntimeContext& runtimeContext);
+	std::uint32_t generate(ParticleRuntimeInstance& runtimeInstance, std::uint32_t count,
+		const RuntimeContext& runtimeContext, bool useTriggers);
+
+	void initializeParticle(ParticleRuntimeInstance& runtimeInstance, ParticleCollection::WritePtr particles, std::uint32_t p, std::uint32_t parentId,
+		const ParticleEmitter& particleEmitter, const ParticleType& particleType, float_t alpha,
+		const float3_t& globalEmitterPosition, const float3_t& globalEmitterRotation, const float3_t& globalEmitterSize,
+		const float3_t& emissionPosition, const float3_t& parentVelocity);
 
 	static float_t sampleGrid1D(std::uint32_t gridIndex, std::uint32_t gridSize, float_t min, float_t max);
 	static float_t sampleGrid2D(std::uint32_t gridIndex, std::uint32_t gridSize1, std::uint32_t gridSize2, float_t min, float_t max);

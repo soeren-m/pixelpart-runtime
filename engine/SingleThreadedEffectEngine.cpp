@@ -17,17 +17,12 @@ void SingleThreadedEffectEngine::advance(float_t dt) {
 	particleModifierPipeline.prepare(engineEffect, rtContext);
 
 	for(ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
-		const ParticleType& particleType = engineEffect.particleTypes().at(runtimeInstance.typeId());
-		const ParticleEmitter& particleEmitter = engineEffect.sceneGraph().at<ParticleEmitter>(runtimeInstance.emitterId());
-
 		runtimeInstance.particles().removeDead();
 
-		ParticleCollection::WritePtr particles = runtimeInstance.particles().writePtr();
-		std::uint32_t particleCount = runtimeInstance.particles().count();
-
-		particleModifierPipeline.run(
-			engineEffect.sceneGraph(), particleEmitter, particleType,
-			particles, particleCount, rtContext);
+		particleModifierPipeline.run(&engineEffect,
+			rtContext, runtimeInstance.id(),
+			runtimeInstance.particles().writePtr(),
+			runtimeInstance.particles().count());
 	}
 
 	engineTime += dt;

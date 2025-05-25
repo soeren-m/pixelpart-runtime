@@ -23,15 +23,10 @@ void MultiThreadedEffectEngine::advance(float_t dt) {
 	totalActiveThreadCount = 1;
 
 	for(ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
-		const ParticleType& particleType = engineEffect.particleTypes().at(runtimeInstance.typeId());
-		const ParticleEmitter& particleEmitter = engineEffect.sceneGraph().at<ParticleEmitter>(runtimeInstance.emitterId());
-
 		runtimeInstance.particles().removeDead();
 
-		std::uint32_t activeThreadCount = 1;
-
 		std::uint32_t availableThreadCount = threadPool ? static_cast<std::uint32_t>(threadPool->threadCount()) : 1;
-		activeThreadCount = std::min(std::max(runtimeInstance.particles().count() / workPerThread, 1u), availableThreadCount);
+		std::uint32_t activeThreadCount = std::min(std::max(runtimeInstance.particles().count() / workPerThread, 1u), availableThreadCount);
 
 		if(activeThreadCount > 1) {
 			std::uint32_t particleCountInThisThread = runtimeInstance.particles().count() / activeThreadCount;
@@ -44,9 +39,10 @@ void MultiThreadedEffectEngine::advance(float_t dt) {
 					: particleCountInThisThread + 1;
 
 				threadPool->enqueue(threadIndex, &ParticleModifierPipeline::run, &particleModifierPipeline,
-					engineEffect.sceneGraph(), particleEmitter, particleType,
-					runtimeInstance.particles().writePtr(workgroupIndex), workgroupSize,
-					rtContext);
+					&engineEffect,
+					rtContext, runtimeInstance.id(),
+					runtimeInstance.particles().writePtr(workgroupIndex),
+					workgroupSize);
 
 				workgroupIndex += workgroupSize;
 			}
@@ -56,10 +52,10 @@ void MultiThreadedEffectEngine::advance(float_t dt) {
 			}
 		}
 		else {
-			particleModifierPipeline.run(
-				engineEffect.sceneGraph(), particleEmitter, particleType,
-				runtimeInstance.particles().writePtr(), runtimeInstance.particles().count(),
-				rtContext);
+			particleModifierPipeline.run(&engineEffect,
+				rtContext, runtimeInstance.id(),
+				runtimeInstance.particles().writePtr(),
+				runtimeInstance.particles().count());
 		}
 
 		totalActiveThreadCount = std::max(totalActiveThreadCount, activeThreadCount);

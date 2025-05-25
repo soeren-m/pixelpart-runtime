@@ -1,9 +1,14 @@
 #include "IntegrationModifier.h"
 #include "../common/Math.h"
+#include "../effect/ParticleType.h"
+#include "../effect/ParticleEmitter.h"
+#include <algorithm>
 
 namespace pixelpart {
-void IntegrationModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const {
+void IntegrationModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
+	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
+	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
+	const ParticleEmitter& particleEmitter = effect->sceneGraph().at<ParticleEmitter>(runtimeId.emitterId);
 	float_t dt = runtimeContext.deltaTime();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
@@ -11,16 +16,13 @@ void IntegrationModifier::run(const SceneGraph& sceneGraph, const ParticleEmitte
 		particles.position[p] += particles.velocity[p] * dt;
 	}
 
+	std::copy(particles.position, particles.position + particleCount, particles.globalPosition);
+
 	if(particleType.positionRelative()) {
-		float3_t origin = sceneGraph.globalTransform(particleEmitter.id(), runtimeContext).position();
+		float3_t origin = effect->sceneGraph().globalTransform(particleEmitter.id(), runtimeContext).position();
 
 		for(std::uint32_t p = 0; p < particleCount; p++) {
-			particles.globalPosition[p] = particles.position[p] + origin;
-		}
-	}
-	else {
-		for(std::uint32_t p = 0; p < particleCount; p++) {
-			particles.globalPosition[p] = particles.position[p];
+			particles.globalPosition[p] += origin;
 		}
 	}
 }

@@ -1,9 +1,11 @@
 #include "RotationModifier.h"
 #include "../common/Math.h"
+#include "../effect/ParticleType.h"
 
 namespace pixelpart {
-void RotationModifier::run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const {
+void RotationModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
+	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
+	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
 	float_t dt = runtimeContext.deltaTime();
 
 	switch(particleType.rotationMode()) {

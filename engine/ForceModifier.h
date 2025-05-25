@@ -16,8 +16,8 @@ class ForceModifier : public ParticleModifier {
 public:
 	ForceModifier() = default;
 
-	virtual void run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const override;
+	virtual void run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
+		ParticleCollection::WritePtr particles, std::uint32_t particleCount) const override;
 
 	virtual void prepare(const Effect& effect, const RuntimeContext& runtimeContext) override;
 

@@ -2,10 +2,8 @@
 
 #include "../common/Types.h"
 #include "../effect/Effect.h"
-#include "../effect/SceneGraph.h"
-#include "../effect/ParticleEmitter.h"
-#include "../effect/ParticleType.h"
-#include "../effect/RuntimeContext.h"
+#include "../effect/ParticleRuntimeId.h"
+#include "ParticleRuntimeInstanceCollection.h"
 #include "ParticleCollection.h"
 
 namespace pixelpart {
@@ -13,8 +11,8 @@ class ParticleModifier {
 public:
 	virtual ~ParticleModifier() = default;
 
-	virtual void run(const SceneGraph& sceneGraph, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
-		ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext) const = 0;
+	virtual void run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
+		ParticleCollection::WritePtr particles, std::uint32_t particleCount) const = 0;
 
 	virtual void prepare(const Effect& effect, const RuntimeContext& runtimeContext) = 0;
 };
