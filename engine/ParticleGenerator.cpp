@@ -314,6 +314,10 @@ void ParticleGenerator::initializeParticle(ParticleRuntimeInstance& runtimeInsta
 		: particles.position[p];
 
 	if(effect.is3d()) {
+		mat3_t rotationMatrix = mat3_t(glm::yawPitchRoll(
+			glm::radians(globalEmitterRotation.y),
+			glm::radians(globalEmitterRotation.z),
+			glm::radians(globalEmitterRotation.x)));
 		mat3_t directionMatrix = mat3_t(glm::yawPitchRoll(
 			glm::radians(particleEmitter.direction().at(alpha).y + particleEmitter.spread().at(alpha) * random::uniform(rng, -0.5, +0.5)),
 			glm::radians(particleEmitter.direction().at(alpha).z + particleEmitter.spread().at(alpha) * random::uniform(rng, -0.5, +0.5)),
@@ -329,18 +333,22 @@ void ParticleGenerator::initializeParticle(ParticleRuntimeInstance& runtimeInsta
 					((particleSpawnPosition != float3_t(0.0)) ? glm::normalize(-particleSpawnPosition) : worldUpVector3);
 				break;
 			case ParticleEmitter::DirectionMode::inherit:
-				particles.velocity[p] = directionMatrix * glm::normalize(parentVelocity != float3_t(0.0) ? +parentVelocity : worldUpVector3);
+				particles.velocity[p] = directionMatrix *
+					glm::normalize(parentVelocity != float3_t(0.0) ? +parentVelocity : worldUpVector3);
 				break;
 			case ParticleEmitter::DirectionMode::inherit_inverse:
-				particles.velocity[p] = directionMatrix * glm::normalize(parentVelocity != float3_t(0.0) ? -parentVelocity : worldUpVector3);
+				particles.velocity[p] = directionMatrix *
+					glm::normalize(parentVelocity != float3_t(0.0) ? -parentVelocity : worldUpVector3);
 				break;
 			default:
-				particles.velocity[p] = directionMatrix * worldUpVector3;
+				particles.velocity[p] = rotationMatrix * directionMatrix * worldUpVector3;
 				break;
 		}
 	}
 	else {
-		float_t direction = glm::radians(particleEmitter.direction().at(alpha).x + particleEmitter.spread().at(alpha) * random::uniform(rng,-0.5, +0.5));
+		float_t direction = glm::radians(
+			particleEmitter.direction().at(alpha).x +
+			particleEmitter.spread().at(alpha) * random::uniform(rng,-0.5, +0.5));
 
 		switch(particleEmitter.directionMode()) {
 			case ParticleEmitter::DirectionMode::outwards:
@@ -362,7 +370,7 @@ void ParticleGenerator::initializeParticle(ParticleRuntimeInstance& runtimeInsta
 					float2_t(glm::normalize(parentVelocity != float3_t(0.0) ? -parentVelocity : worldUpVector3)), direction), 0.0);
 				break;
 			default:
-				particles.velocity[p] = float3_t(glm::rotate(worldUpVector2, direction), 0.0);
+				particles.velocity[p] = float3_t(glm::rotate(worldUpVector2, glm::radians(globalEmitterRotation.x) + direction), 0.0);
 				break;
 		}
 	}

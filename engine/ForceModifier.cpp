@@ -117,7 +117,8 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	float3_t center = transform.position();
 	float3_t size = transform.scale() * 0.5;
 	float3_t rotation = glm::radians(transform.rotation());
-	mat4_t rotationMatrix = glm::yawPitchRoll(-rotation.y, -rotation.z, -rotation.x);
+	mat4_t rotationMatrix = glm::yawPitchRoll(rotation.y, rotation.z, rotation.x);
+	mat4_t inverseRotationMatrix = glm::yawPitchRoll(-rotation.y, -rotation.z, -rotation.x);
 	float3_t direction = glm::radians(accelerationField.accelerationDirection().at(alpha));
 	mat4_t directionMatrix = glm::yawPitchRoll(direction.y, direction.z, direction.x);
 	float_t strength = accelerationField.strength().at(alpha);
@@ -125,7 +126,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		float3_t forceVector = sampleAccelerationField(accelerationField,
 			center, size,
-			rotationMatrix, directionMatrix,
+			rotationMatrix, inverseRotationMatrix, directionMatrix,
 			particles.globalPosition[p]);
 
 		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
@@ -142,18 +143,18 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	float3_t center = transform.position();
 	float3_t size = transform.scale() * 0.5;
 	float3_t rotation = glm::radians(transform.rotation());
-	mat4_t rotationMatrix = glm::yawPitchRoll(-rotation.y, -rotation.z, -rotation.x);
+	mat4_t rotationMatrix = glm::yawPitchRoll(rotation.y, rotation.z, rotation.x);
+	mat4_t inverseRotationMatrix = glm::yawPitchRoll(-rotation.y, -rotation.z, -rotation.x);
 	float_t strength = vectorField.strength().at(alpha);
 
 	const VectorFieldResource& vectorFieldResource = effectResources->vectorFields().at(vectorField.vectorFieldResourceId());
-	mat4_t directionMatrix = glm::yawPitchRoll(rotation.y, rotation.z, rotation.x);
 	float_t tightness = glm::clamp(vectorField.tightness().at(alpha), 0.0, 1.0);
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		bool inside = false;
 		float3_t forceVector = sampleVectorField(vectorField, vectorFieldResource,
 			center, size,
-			rotationMatrix, directionMatrix,
+			rotationMatrix, inverseRotationMatrix,
 			particles.globalPosition[p], inside);
 
 		if(inside) {
@@ -172,13 +173,12 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	float3_t center = transform.position();
 	float3_t size = transform.scale() * 0.5;
 	float3_t rotation = glm::radians(transform.rotation());
-	mat4_t rotationMatrix = glm::yawPitchRoll(-rotation.y, -rotation.z, -rotation.x);
+	mat4_t inverseRotationMatrix = glm::yawPitchRoll(-rotation.y, -rotation.z, -rotation.x);
 	float_t strength = noiseField.strength().at(alpha);
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		float3_t forceVector = sampleNoiseField(noiseField,
-			center, size,
-			rotationMatrix,
+			center, size, inverseRotationMatrix,
 			particles.globalPosition[p],
 			alpha, t);
 
@@ -192,13 +192,12 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	float3_t center = transform.position();
 	float3_t size = transform.scale() * 0.5;
 	float3_t rotation = glm::radians(transform.rotation());
-	mat4_t rotationMatrix = glm::yawPitchRoll(-rotation.y, -rotation.z, -rotation.x);
+	mat4_t inverseRotationMatrix = glm::yawPitchRoll(-rotation.y, -rotation.z, -rotation.x);
 	float_t strength = dragField.strength().at(alpha);
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		float3_t forceVector = sampleDragField(dragField,
-			center, size,
-			rotationMatrix,
+			center, size, inverseRotationMatrix,
 			particles.globalPosition[p], particles.velocity[p], particles.size[p] * particleType.physicalSize().at(particles.life[p]));
 
 		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
@@ -218,9 +217,10 @@ float3_t ForceModifier::sampleAttractionField(const AttractionField& attractionF
 	return (position - particlePosition) / (distanceToCenter * distanceToCenter);
 }
 float3_t ForceModifier::sampleAccelerationField(const AccelerationField& accelerationField,
-	const float3_t& position, const float3_t& size, const mat4_t& rotationMatrix, const mat4_t& directionMatrix,
+	const float3_t& position, const float3_t& size,
+	const mat4_t& rotationMatrix, const mat4_t& inverseRotationMatrix, const mat4_t& directionMatrix,
 	const float3_t& particlePosition) const {
-	float3_t rotatedParticlePosition = position + float3_t(rotationMatrix * float4_t(particlePosition - position, 1.0));
+	float3_t rotatedParticlePosition = position + float3_t(inverseRotationMatrix * float4_t(particlePosition - position, 1.0));
 	if(((rotatedParticlePosition.x < position.x - size.x || rotatedParticlePosition.x > position.x + size.x) ||
 		(rotatedParticlePosition.y < position.y - size.y || rotatedParticlePosition.y > position.y + size.y) ||
 		(rotatedParticlePosition.z < position.z - size.z || rotatedParticlePosition.z > position.z + size.z)) && !accelerationField.infinite()) {
@@ -245,15 +245,16 @@ float3_t ForceModifier::sampleAccelerationField(const AccelerationField& acceler
 	float_t gridStrengthOffset = accelerationField.accelerationStrengthVariance().at() * accelerationField.accelerationStrengthGrid()[gridCellIndex] + 1.0;
 
 	float3_t result = float3_t(glm::yawPitchRoll(gridDirectionOffset.y, gridDirectionOffset.z, gridDirectionOffset.x) *
-		float4_t(float3_t(directionMatrix * worldUpVector4), 0.0));
+		float4_t(float3_t(rotationMatrix * directionMatrix * worldUpVector4), 0.0));
 	result *= gridStrengthOffset;
 
 	return result;
 }
 float3_t ForceModifier::sampleVectorField(const VectorField& vectorField, const VectorFieldResource& resource,
-	const float3_t& position, const float3_t& size, const mat4_t& rotationMatrix, const mat4_t& directionMatrix,
+	const float3_t& position, const float3_t& size,
+	const mat4_t& rotationMatrix, const mat4_t& inverseRotationMatrix,
 	const float3_t& particlePosition, bool& inside) const {
-	float3_t rotatedParticlePosition = position + float3_t(rotationMatrix * float4_t(particlePosition - position, 1.0));
+	float3_t rotatedParticlePosition = position + float3_t(inverseRotationMatrix * float4_t(particlePosition - position, 1.0));
 	if((rotatedParticlePosition.x < position.x - size.x || rotatedParticlePosition.x > position.x + size.x ||
 		rotatedParticlePosition.y < position.y - size.y || rotatedParticlePosition.y > position.y + size.y ||
 		rotatedParticlePosition.z < position.z - size.z || rotatedParticlePosition.z > position.z + size.z) && !vectorField.infinite()) {
@@ -411,12 +412,12 @@ float3_t ForceModifier::sampleVectorField(const VectorField& vectorField, const 
 
 	inside = true;
 
-	return float3_t(directionMatrix * float4_t(result, 0.0));
+	return float3_t(rotationMatrix * float4_t(result, 0.0));
 }
 float3_t ForceModifier::sampleNoiseField(const NoiseField& noiseField,
-	const float3_t& position, const float3_t& size, const mat4_t& rotationMatrix,
+	const float3_t& position, const float3_t& size, const mat4_t& inverseRotationMatrix,
 	const float3_t& particlePosition, float_t life, float_t t) const {
-	float3_t rotatedParticlePosition = position + float3_t(rotationMatrix * float4_t(particlePosition - position, 1.0));
+	float3_t rotatedParticlePosition = position + float3_t(inverseRotationMatrix * float4_t(particlePosition - position, 1.0));
 	if(((rotatedParticlePosition.x < position.x - size.x || rotatedParticlePosition.x > position.x + size.x) ||
 		(rotatedParticlePosition.y < position.y - size.y || rotatedParticlePosition.y > position.y + size.y) ||
 		(rotatedParticlePosition.z < position.z - size.z || rotatedParticlePosition.z > position.z + size.z)) && !noiseField.infinite()) {
@@ -443,9 +444,9 @@ float3_t ForceModifier::sampleNoiseField(const NoiseField& noiseField,
 	}
 }
 float3_t ForceModifier::sampleDragField(const DragField& dragField,
-	const float3_t& position, const float3_t& size, const mat4_t& rotationMatrix,
+	const float3_t& position, const float3_t& size, const mat4_t& inverseRotationMatrix,
 	const float3_t& particlePosition, const float3_t& particleVelocity, const float3_t& particleSize) const {
-	float3_t rotatedParticlePosition = position + float3_t(rotationMatrix * float4_t(particlePosition - position, 1.0));
+	float3_t rotatedParticlePosition = position + float3_t(inverseRotationMatrix * float4_t(particlePosition - position, 1.0));
 	if(((rotatedParticlePosition.x < position.x - size.x || rotatedParticlePosition.x > position.x + size.x) ||
 		(rotatedParticlePosition.y < position.y - size.y || rotatedParticlePosition.y > position.y + size.y) ||
 		(rotatedParticlePosition.z < position.z - size.z || rotatedParticlePosition.z > position.z + size.z)) && !dragField.infinite()) {
