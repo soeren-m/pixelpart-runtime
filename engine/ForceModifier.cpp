@@ -243,9 +243,9 @@ float3_t ForceModifier::sampleAccelerationField(const AccelerationField& acceler
 
 	float3_t gridDirectionOffset = glm::radians(accelerationField.accelerationDirectionVariance().at() * accelerationField.accelerationDirectionGrid()[gridCellIndex]);
 	float_t gridStrengthOffset = accelerationField.accelerationStrengthVariance().at() * accelerationField.accelerationStrengthGrid()[gridCellIndex] + 1.0;
+	mat4_t directionOffsetMatrix = glm::yawPitchRoll(gridDirectionOffset.y, gridDirectionOffset.z, gridDirectionOffset.x);
 
-	float3_t result = float3_t(glm::yawPitchRoll(gridDirectionOffset.y, gridDirectionOffset.z, gridDirectionOffset.x) *
-		float4_t(float3_t(rotationMatrix * directionMatrix * worldUpVector4), 0.0));
+	float3_t result = float3_t(rotationMatrix * directionOffsetMatrix * directionMatrix * worldUpVector4);
 	result *= gridStrengthOffset;
 
 	return result;

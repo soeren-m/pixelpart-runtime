@@ -10,9 +10,9 @@ void ParticleModifierPipeline::run(const Effect* effect, RuntimeContext runtimeC
 	collisionModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
 	motionPathModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
 	rotationModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
+	coordinate2dModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
 	integrationModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
 	lifeModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
-	coordinate2dModifier.run(effect, runtimeContext, runtimeId, particles, particleCount);
 }
 
 void ParticleModifierPipeline::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
@@ -23,8 +23,8 @@ void ParticleModifierPipeline::prepare(const Effect& effect, const RuntimeContex
 	collisionModifier.prepare(effect, runtimeContext);
 	motionPathModifier.prepare(effect, runtimeContext);
 	rotationModifier.prepare(effect, runtimeContext);
+	coordinate2dModifier.prepare(effect, runtimeContext);
 	integrationModifier.prepare(effect, runtimeContext);
 	lifeModifier.prepare(effect, runtimeContext);
-	coordinate2dModifier.prepare(effect, runtimeContext);
 }
 }
