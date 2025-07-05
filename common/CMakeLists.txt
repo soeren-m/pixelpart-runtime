@@ -11,5 +11,6 @@ target_sources(pixelpart-runtime PRIVATE
 	SerializationException.cpp
 	StringUtil.cpp
 	Transform.cpp
+	Types.cpp
 	VariantParameter.cpp
 	VariantValue.cpp)

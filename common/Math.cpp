@@ -5,6 +5,45 @@ const float2_t worldUpVector2 = float2_t(0.0, 1.0);
 const float3_t worldUpVector3 = float3_t(0.0, 1.0, 0.0);
 const float4_t worldUpVector4 = float4_t(0.0, 1.0, 0.0, 0.0);
 
+
+pixelpart::float_t* valuePtr(pixelpart::float2_t& v) {
+	return &(v.x);
+}
+pixelpart::float_t* valuePtr(pixelpart::float3_t& v) {
+	return &(v.x);
+}
+pixelpart::float_t* valuePtr(pixelpart::float4_t& v) {
+	return &(v.x);
+}
+pixelpart::float_t* valuePtr(pixelpart::mat2_t& v) {
+	return &(v[0].x);
+}
+pixelpart::float_t* valuePtr(pixelpart::mat3_t& v) {
+	return &(v[0].x);
+}
+pixelpart::float_t* valuePtr(pixelpart::mat4_t& v) {
+	return &(v[0].x);
+}
+
+const pixelpart::float_t* valuePtr(const pixelpart::float2_t& v) {
+	return &(v.x);
+}
+const pixelpart::float_t* valuePtr(const pixelpart::float3_t& v) {
+	return &(v.x);
+}
+const pixelpart::float_t* valuePtr(const pixelpart::float4_t& v) {
+	return &(v.x);
+}
+const pixelpart::float_t* valuePtr(const pixelpart::mat2_t& v) {
+	return &(v[0].x);
+}
+const pixelpart::float_t* valuePtr(const pixelpart::mat3_t& v) {
+	return &(v[0].x);
+}
+const pixelpart::float_t* valuePtr(const pixelpart::mat4_t& v) {
+	return &(v[0].x);
+}
+
 void to_json(nlohmann::ordered_json& j, const float2_t& v) {
 	j = nlohmann::ordered_json{
 		{ "x", v.x },
