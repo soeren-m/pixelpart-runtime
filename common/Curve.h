@@ -19,6 +19,8 @@ enum class CurveInterpolation : std::uint32_t {
 template <typename T>
 class Curve {
 public:
+	using ValueType = T;
+
 	struct Point {
 		float_t position;
 		T value;
