@@ -10,6 +10,8 @@
 namespace pixelpart {
 class EffectEngine {
 public:
+	virtual ~EffectEngine() = default;
+
 	virtual void advance(float_t dt) = 0;
 	virtual void restart(bool reset) = 0;
 

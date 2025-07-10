@@ -278,6 +278,8 @@ float3_t ForceModifier::sampleVectorField(const VectorField& vectorField, const 
 					static_cast<std::int32_t>(normalizedSamplePosition.y),
 					static_cast<std::int32_t>(normalizedSamplePosition.z),
 					float3_t(0.0));
+
+				break;
 			}
 
 			case VectorField::Filter::linear: {
@@ -344,6 +346,8 @@ float3_t ForceModifier::sampleVectorField(const VectorField& vectorField, const 
 						glm::mix(sample6, sample7, glm::abs(fractX - 0.5)),
 						glm::abs(fractY - 0.5)),
 					glm::abs(fractZ - 0.5));
+
+				break;
 			}
 
 			default: {
@@ -364,6 +368,8 @@ float3_t ForceModifier::sampleVectorField(const VectorField& vectorField, const 
 					static_cast<std::int32_t>(normalizedSamplePosition.y),
 					static_cast<std::int32_t>(normalizedSamplePosition.z),
 					float3_t(0.0));
+
+				break;
 			}
 
 			case VectorField::Filter::linear: {
@@ -402,6 +408,8 @@ float3_t ForceModifier::sampleVectorField(const VectorField& vectorField, const 
 					glm::mix(sample0, sample1, glm::abs(fractX - 0.5)),
 					glm::mix(sample2, sample3, glm::abs(fractX - 0.5)),
 					glm::abs(fractY - 0.5));
+
+				break;
 			}
 
 			default: {
