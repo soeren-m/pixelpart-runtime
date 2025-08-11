@@ -2,8 +2,14 @@ target_sources(pixelpart-runtime PRIVATE
 	AccelerationField.cpp
 	AttractionField.cpp
 	Collider.cpp
+	ColorComputeNodes.cpp
+	ComparisonComputeNodes.cpp
+	ComputeGraph.cpp
+	ComputeNode.cpp
+	ComputeNodeFactory.cpp
 	ComputeOutputOperation.cpp
 	ComputeOutputTarget.cpp
+	ConstantComputeNodes.cpp
 	DirectionalLightSource.cpp
 	DragField.cpp
 	Effect.cpp
@@ -13,11 +19,14 @@ target_sources(pixelpart-runtime PRIVATE
 	ImageResource.cpp
 	LightSource.cpp
 	LineCollider.cpp
+	LogicComputeNodes.cpp
 	MaterialInstance.cpp
 	MaterialResource.cpp
+	MathComputeNodes.cpp
 	MeshResource.cpp
 	Node.cpp
 	NoiseField.cpp
+	OutputComputeNode.cpp
 	ParticleEmitter.cpp
 	ParticleRendererSettings.cpp
 	ParticleRuntimeId.cpp
@@ -29,7 +38,12 @@ target_sources(pixelpart-runtime PRIVATE
 	ResourceCollection.cpp
 	RuntimeContext.cpp
 	SceneGraph.cpp
+	ShaderGraph.cpp
+	ShaderGraphLanguage.cpp
+	ShaderNode.cpp
+	ShaderNodeType.cpp
 	SpotLightSource.cpp
 	Trigger.cpp
+	UtilComputeNodes.cpp
 	VectorField.cpp
 	VectorFieldResource.cpp)

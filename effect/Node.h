@@ -2,7 +2,7 @@
 
 #include "AnimatedProperty.h"
 #include "RuntimeContext.h"
-#include "../computegraph/ComputeGraph.h"
+#include "ComputeGraph.h"
 #include "../common/Types.h"
 #include "../common/Math.h"
 #include "../common/Transform.h"

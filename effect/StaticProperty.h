@@ -1,10 +1,10 @@
 #pragma once
 
+#include "ComputeGraph.h"
+#include "OutputComputeNode.h"
+#include "ComputeOutputOperation.h"
 #include "../common/Types.h"
 #include "../common/VariantValue.h"
-#include "../computegraph/ComputeGraph.h"
-#include "../computegraph/OutputComputeNode.h"
-#include "ComputeOutputOperation.h"
 #include "../json/json.hpp"
 
 namespace pixelpart {

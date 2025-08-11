@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../common/Math.h"
+#include "Math.h"
 
 namespace pixelpart {
 class Transform {

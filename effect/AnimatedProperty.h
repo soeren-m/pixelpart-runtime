@@ -2,8 +2,8 @@
 
 #include "ComputeOutputOperation.h"
 #include "ComputeOutputTarget.h"
-#include "../computegraph/ComputeGraph.h"
-#include "../computegraph/OutputComputeNode.h"
+#include "ComputeGraph.h"
+#include "OutputComputeNode.h"
 #include "../common/Types.h"
 #include "../common/Curve.h"
 #include "../common/VariantValue.h"

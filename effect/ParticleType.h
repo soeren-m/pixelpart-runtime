@@ -7,7 +7,7 @@
 #include "ParticleRendererSettings.h"
 #include "StaticProperty.h"
 #include "AnimatedProperty.h"
-#include "../computegraph/ComputeGraph.h"
+#include "ComputeGraph.h"
 #include "../common/Types.h"
 #include "../common/Math.h"
 #include "../common/Id.h"
