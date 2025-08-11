@@ -14,3 +14,15 @@ target_sources(pixelpart-runtime PRIVATE
 	trees.c
 	uncompr.c
 	zutil.c)
+
+include(CheckIncludeFile)
+
+check_include_file(stdarg.h HAVE_STDARG_H)
+check_include_file(unistd.h HAVE_UNISTD_H)
+
+if(HAVE_STDARG_H)
+	add_compile_definitions(HAVE_STDARG_H)
+endif()
+if(HAVE_UNISTD_H)
+	add_compile_definitions(HAVE_UNISTD_H)
+endif()

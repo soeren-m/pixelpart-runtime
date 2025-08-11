@@ -50,11 +50,6 @@ endif()
 # Include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-if(UNIX)
-	target_compile_definitions(pixelpart-runtime PRIVATE
-		HAVE_UNISTD_H)
-endif()
-
 # Subdirectories
 add_subdirectory(asset)
 add_subdirectory(common)
