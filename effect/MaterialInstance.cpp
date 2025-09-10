@@ -12,10 +12,10 @@ MaterialInstance::MaterialInstance(const std::string& materialId, bool builtIn, 
 MaterialInstance::MaterialInstance(const std::string& materialId, const MaterialResource& material) :
 	instanceMaterialId(materialId), instanceBuiltInMaterial(false) {
 	for(const auto& parameterEntry : material.shaderGraph().shaderParameters()) {
-		const pixelpart::VariantParameter& parameter = parameterEntry.second;
+		const VariantParameter& parameter = parameterEntry.second;
 
 		if(instanceMaterialParameters.count(parameterEntry.first) == 0) {
-			pixelpart::VariantParameter::Value initialValue = parameter.def();
+			VariantParameter::Value initialValue = parameter.def();
 			if(material.shaderGraph().containsNode(parameterEntry.first)) {
 				initialValue = material.shaderGraph().node(parameterEntry.first).parameters().at(0);
 			}

@@ -49,7 +49,7 @@ bool ParticleType::usesResource(const std::string& resourceId) const {
 	}
 
 	for(const auto& materialParameterEntry : particleMaterialInstance.materialParameters()) {
-		if(materialParameterEntry.second.type() == pixelpart::VariantParameter::Value::type_resource_image &&
+		if(materialParameterEntry.second.type() == VariantParameter::Value::type_resource_image &&
 			resourceId == materialParameterEntry.second.valueResourceId()) {
 			return true;
 		}

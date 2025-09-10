@@ -16,19 +16,19 @@ extern const float2_t worldUpVector2;
 extern const float3_t worldUpVector3;
 extern const float4_t worldUpVector4;
 
-pixelpart::float_t* valuePtr(pixelpart::float2_t& v);
-pixelpart::float_t* valuePtr(pixelpart::float3_t& v);
-pixelpart::float_t* valuePtr(pixelpart::float4_t& v);
-pixelpart::float_t* valuePtr(pixelpart::mat2_t& v);
-pixelpart::float_t* valuePtr(pixelpart::mat3_t& v);
-pixelpart::float_t* valuePtr(pixelpart::mat4_t& v);
+float_t* valuePtr(float2_t& v);
+float_t* valuePtr(float3_t& v);
+float_t* valuePtr(float4_t& v);
+float_t* valuePtr(mat2_t& v);
+float_t* valuePtr(mat3_t& v);
+float_t* valuePtr(mat4_t& v);
 
-const pixelpart::float_t* valuePtr(const pixelpart::float2_t& v);
-const pixelpart::float_t* valuePtr(const pixelpart::float3_t& v);
-const pixelpart::float_t* valuePtr(const pixelpart::float4_t& v);
-const pixelpart::float_t* valuePtr(const pixelpart::mat2_t& v);
-const pixelpart::float_t* valuePtr(const pixelpart::mat3_t& v);
-const pixelpart::float_t* valuePtr(const pixelpart::mat4_t& v);
+const float_t* valuePtr(const float2_t& v);
+const float_t* valuePtr(const float3_t& v);
+const float_t* valuePtr(const float4_t& v);
+const float_t* valuePtr(const mat2_t& v);
+const float_t* valuePtr(const mat3_t& v);
+const float_t* valuePtr(const mat4_t& v);
 
 void to_json(nlohmann::ordered_json& j, const float2_t& v);
 void to_json(nlohmann::ordered_json& j, const float3_t& v);

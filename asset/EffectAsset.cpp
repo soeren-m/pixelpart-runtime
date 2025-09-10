@@ -76,7 +76,7 @@ bool EffectAsset::usesResource(const std::string& resourceId) const {
 
 		for(const auto& nodeEntry : material.shaderGraph().nodes()) {
 			for(const auto& nodeParameter : nodeEntry.second.parameters()) {
-				if(nodeParameter.type() == pixelpart::VariantParameter::Value::type_resource_image &&
+				if(nodeParameter.type() == VariantParameter::Value::type_resource_image &&
 					resourceId == nodeParameter.valueResourceId()) {
 					return true;
 				}

@@ -70,11 +70,11 @@ void ForceModifier::prepare(const Effect& effect, const RuntimeContext& runtimeC
 			continue;
 		}
 
-		const pixelpart::AttractionField* attractionField = dynamic_cast<const pixelpart::AttractionField*>(forceField);
-		const pixelpart::AccelerationField* accelerationField = dynamic_cast<const pixelpart::AccelerationField*>(forceField);
-		const pixelpart::VectorField* vectorField = dynamic_cast<const pixelpart::VectorField*>(forceField);
-		const pixelpart::NoiseField* noiseField = dynamic_cast<const pixelpart::NoiseField*>(forceField);
-		const pixelpart::DragField* dragField = dynamic_cast<const pixelpart::DragField*>(forceField);
+		const AttractionField* attractionField = dynamic_cast<const AttractionField*>(forceField);
+		const AccelerationField* accelerationField = dynamic_cast<const AccelerationField*>(forceField);
+		const VectorField* vectorField = dynamic_cast<const VectorField*>(forceField);
+		const NoiseField* noiseField = dynamic_cast<const NoiseField*>(forceField);
+		const DragField* dragField = dynamic_cast<const DragField*>(forceField);
 
 		if(attractionField) {
 			attractionFields.emplace_back(*attractionField);
