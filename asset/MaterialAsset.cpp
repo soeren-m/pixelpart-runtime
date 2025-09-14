@@ -1,6 +1,7 @@
 #include "MaterialAsset.h"
 #include "../common/SerializationException.h"
 #include "../common/DeserializationException.h"
+#include "../common/SortedJson.h"
 
 namespace pixelpart {
 const std::uint32_t MaterialAsset::version = 9;
@@ -12,10 +13,10 @@ const MaterialResource& MaterialAsset::material() const {
 	return assetMaterial;
 }
 
-std::unordered_map<std::string, ImageResource>& MaterialAsset::images() {
+ResourceMap<ImageResource>& MaterialAsset::images() {
 	return assetImages;
 }
-const std::unordered_map<std::string, ImageResource>& MaterialAsset::images() const {
+const ResourceMap<ImageResource>& MaterialAsset::images() const {
 	return assetImages;
 }
 
@@ -65,7 +66,7 @@ void to_json(nlohmann::ordered_json& j, const MaterialAsset& asset) {
 	j = nlohmann::ordered_json{
 		{ "version", MaterialAsset::version },
 		{ "material", asset.material() },
-		{ "images", asset.images() }
+		{ "images", toSortedJson(asset.images()) }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, MaterialAsset& asset) {
@@ -75,6 +76,6 @@ void from_json(const nlohmann::ordered_json& j, MaterialAsset& asset) {
 	}
 
 	asset.material() = j.value("material", MaterialResource());
-	asset.images() = j.value("images", std::unordered_map<std::string, ImageResource>());
+	asset.images() = j.value("images", ResourceMap<ImageResource>());
 }
 }

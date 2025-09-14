@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../common/Types.h"
+#include "../effect/ResourceMap.h"
 #include "../effect/MaterialResource.h"
 #include "../effect/ImageResource.h"
 #include "../json/json.hpp"
 #include <string>
-#include <unordered_map>
 #include <istream>
 
 namespace pixelpart {
@@ -18,12 +18,12 @@ public:
 	MaterialResource& material();
 	const MaterialResource& material() const;
 
-	std::unordered_map<std::string, ImageResource>& images();
-	const std::unordered_map<std::string, ImageResource>& images() const;
+	ResourceMap<ImageResource>& images();
+	const ResourceMap<ImageResource>& images() const;
 
 private:
 	MaterialResource assetMaterial;
-	std::unordered_map<std::string, ImageResource> assetImages;
+	ResourceMap<ImageResource> assetImages;
 };
 
 std::string serializeMaterialAsset(const MaterialAsset& asset, std::int32_t indent = 4);

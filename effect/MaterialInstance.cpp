@@ -1,11 +1,12 @@
 #include "MaterialInstance.h"
+#include "../common/SortedJson.h"
 
 namespace pixelpart {
 MaterialInstance::MaterialInstance(const std::string& materialId, bool builtIn) :
 	instanceMaterialId(materialId), instanceBuiltInMaterial(builtIn) {
 
 }
-MaterialInstance::MaterialInstance(const std::string& materialId, bool builtIn, const std::unordered_map<id_t, VariantParameter::Value>& parameters) :
+MaterialInstance::MaterialInstance(const std::string& materialId, bool builtIn, const ParameterValueMap& parameters) :
 	instanceMaterialId(materialId), instanceBuiltInMaterial(builtIn), instanceMaterialParameters(parameters) {
 
 }
@@ -33,10 +34,10 @@ bool MaterialInstance::builtInMaterial() const {
 	return instanceBuiltInMaterial;
 }
 
-std::unordered_map<id_t, VariantParameter::Value>& MaterialInstance::materialParameters() {
+MaterialInstance::ParameterValueMap& MaterialInstance::materialParameters() {
 	return instanceMaterialParameters;
 }
-const std::unordered_map<id_t, VariantParameter::Value>& MaterialInstance::materialParameters() const {
+const MaterialInstance::ParameterValueMap& MaterialInstance::materialParameters() const {
 	return instanceMaterialParameters;
 }
 
@@ -44,13 +45,13 @@ void to_json(nlohmann::ordered_json& j, const MaterialInstance& materialInstance
 	j = nlohmann::ordered_json{
 		{ "builtin_material", materialInstance.builtInMaterial() },
 		{ "material_id", materialInstance.materialId() },
-		{ "material_parameters", materialInstance.materialParameters() }
+		{ "material_parameters", toSortedJson(materialInstance.materialParameters()) }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, MaterialInstance& materialInstance) {
 	materialInstance = MaterialInstance(
 		j.at("material_id"),
 		j.value("builtin_material", true),
-		j.value("material_parameters", std::unordered_map<id_t, VariantParameter::Value>()));
+		j.value("material_parameters", MaterialInstance::ParameterValueMap()));
 }
 }

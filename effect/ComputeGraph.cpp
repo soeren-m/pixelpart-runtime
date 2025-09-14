@@ -362,12 +362,20 @@ std::uint32_t ComputeGraph::findNodeSignature(const InputSet& graphInputs, const
 }
 
 void to_json(nlohmann::ordered_json& j, const ComputeGraph& computeGraph) {
+	std::vector<id_t> ids;
+	ids.reserve(computeGraph.nodes().size());
+	for(const auto& entry : computeGraph.nodes()) {
+		ids.push_back(entry.first);
+	}
+
+	std::sort(ids.begin(), ids.end());
+
 	nlohmann::ordered_json& jNodes = j["nodes"];
 
-	for(const auto& nodeEntry : computeGraph.nodes()) {
+	for(id_t id : ids) {
 		nlohmann::ordered_json jNodeEntry;
-		jNodeEntry.push_back(nodeEntry.first);
-		jNodeEntry.push_back(*nodeEntry.second);
+		jNodeEntry.push_back(id);
+		jNodeEntry.push_back(computeGraph.node(id));
 
 		jNodes.push_back(jNodeEntry);
 	}

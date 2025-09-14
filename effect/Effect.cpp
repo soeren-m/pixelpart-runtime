@@ -1,5 +1,6 @@
 #include "Effect.h"
 #include "../common/Id.h"
+#include "../common/SortedJson.h"
 #include <memory>
 
 namespace pixelpart {
@@ -94,8 +95,8 @@ void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 		{ "3d", effect.is3d() },
 		{ "scene", effect.sceneGraph() },
 		{ "particles", effect.particleTypes() },
-		{ "inputs", effect.inputs() },
-		{ "triggers", effect.triggers() },
+		{ "inputs", toSortedJson(effect.inputs()) },
+		{ "triggers", toSortedJson(effect.triggers()) },
 		{ "resources", effect.resources() }
 	};
 }

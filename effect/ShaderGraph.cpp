@@ -1,6 +1,7 @@
 #include "ShaderGraph.h"
 #include "../common/VariantValue.h"
 #include "../common/StringUtil.h"
+#include "../common/SortedJson.h"
 #include <algorithm>
 
 namespace pixelpart {
@@ -557,7 +558,7 @@ std::uint32_t ShaderGraph::findNodeSignature(const BuildResult& result, const Sh
 
 void to_json(nlohmann::ordered_json& j, const ShaderGraph& shader) {
 	j = nlohmann::ordered_json{
-		{ "nodes", shader.nodes() }
+		{ "nodes", toSortedJson(shader.nodes()) }
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ShaderGraph& shader) {

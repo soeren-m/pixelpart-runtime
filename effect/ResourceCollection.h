@@ -1,48 +1,48 @@
 #pragma once
 
+#include "ResourceMap.h"
 #include "ImageResource.h"
 #include "MeshResource.h"
 #include "MaterialResource.h"
 #include "VectorFieldResource.h"
 #include "../json/json.hpp"
 #include <string>
-#include <unordered_map>
 
 namespace pixelpart {
 class ResourceCollection {
 public:
 	ResourceCollection() = default;
 	ResourceCollection(
-		const std::unordered_map<std::string, ImageResource>& images,
-		const std::unordered_map<std::string, MeshResource>& meshes,
-		const std::unordered_map<std::string, MaterialResource>& materials,
-		const std::unordered_map<std::string, VectorFieldResource>& vectorFields);
+		const ResourceMap<ImageResource>& images,
+		const ResourceMap<MeshResource>& meshes,
+		const ResourceMap<MaterialResource>& materials,
+		const ResourceMap<VectorFieldResource>& vectorFields);
 
 	ImageResource& image(const std::string& name);
 	const ImageResource& image(const std::string& name) const;
-	std::unordered_map<std::string, ImageResource>& images();
-	const std::unordered_map<std::string, ImageResource>& images() const;
+	ResourceMap<ImageResource>& images();
+	const ResourceMap<ImageResource>& images() const;
 
 	MeshResource& mesh(const std::string& name);
 	const MeshResource& mesh(const std::string& name) const;
-	std::unordered_map<std::string, MeshResource>& meshes();
-	const std::unordered_map<std::string, MeshResource>& meshes() const;
+	ResourceMap<MeshResource>& meshes();
+	const ResourceMap<MeshResource>& meshes() const;
 
 	MaterialResource& material(const std::string& name);
 	const MaterialResource& material(const std::string& name) const;
-	std::unordered_map<std::string, MaterialResource>& materials();
-	const std::unordered_map<std::string, MaterialResource>& materials() const;
+	ResourceMap<MaterialResource>& materials();
+	const ResourceMap<MaterialResource>& materials() const;
 
 	VectorFieldResource& vectorField(const std::string& name);
 	const VectorFieldResource& vectorField(const std::string& name) const;
-	std::unordered_map<std::string, VectorFieldResource>& vectorFields();
-	const std::unordered_map<std::string, VectorFieldResource>& vectorFields() const;
+	ResourceMap<VectorFieldResource>& vectorFields();
+	const ResourceMap<VectorFieldResource>& vectorFields() const;
 
 private:
-	std::unordered_map<std::string, ImageResource> imageResources;
-	std::unordered_map<std::string, MeshResource> meshResources;
-	std::unordered_map<std::string, MaterialResource> materialResources;
-	std::unordered_map<std::string, VectorFieldResource> vectorFieldResources;
+	ResourceMap<ImageResource> imageResources;
+	ResourceMap<MeshResource> meshResources;
+	ResourceMap<MaterialResource> materialResources;
+	ResourceMap<VectorFieldResource> vectorFieldResources;
 };
 
 void to_json(nlohmann::ordered_json& j, const ResourceCollection& resources);
