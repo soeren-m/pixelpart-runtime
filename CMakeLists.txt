@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-set(PIXELPART_RUNTIME_VERSION 1.8.1)
+set(PIXELPART_RUNTIME_VERSION 1.8.2)
 
 project(pixelpart-runtime
 	VERSION ${PIXELPART_RUNTIME_VERSION}
