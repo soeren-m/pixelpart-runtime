@@ -18,11 +18,11 @@ public:
 
 	virtual VertexDataBufferDimensions buildGeometry(
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) override;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) override;
 
 	virtual void generateVertexData(const VertexDataBufferCollection& dataBuffers,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const override;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const override;
 
 private:
 	struct Trail {

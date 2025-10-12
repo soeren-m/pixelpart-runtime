@@ -16,21 +16,21 @@ class ForceModifier : public ParticleModifier {
 public:
 	ForceModifier() = default;
 
-	virtual void run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-		ParticleCollection::WritePtr particles, std::uint32_t particleCount) const override;
+	virtual void apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+		const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const override;
 
-	virtual void prepare(const Effect& effect, const RuntimeContext& runtimeContext) override;
+	virtual void reset(const Effect* effect, EffectRuntimeContext runtimeContext) override;
 
 private:
-	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
+	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 		const ParticleType& particleType, const AttractionField& attractionField, const SceneGraph& sceneGraph) const;
-	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
+	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 		const ParticleType& particleType, const AccelerationField& accelerationField, const SceneGraph& sceneGraph) const;
-	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
+	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 		const ParticleType& particleType, const VectorField& vectorField, const SceneGraph& sceneGraph) const;
-	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
+	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 		const ParticleType& particleType, const NoiseField& noiseField, const SceneGraph& sceneGraph) const;
-	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
+	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 		const ParticleType& particleType, const DragField& dragField, const SceneGraph& sceneGraph) const;
 
 	float3_t sampleAttractionField(const AttractionField& attractionField,

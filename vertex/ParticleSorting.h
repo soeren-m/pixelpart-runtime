@@ -13,7 +13,7 @@ void sortParticles(ParticleCollection& resultCollection,
 	const SceneContext& sceneContext,
 	ParticleSortCriterion sortCriterion);
 
-#ifdef PIXELPART_RUNTIME_MULTITHREADING
+#if defined(PIXELPART_RUNTIME_MULTITHREADING) || defined(__INTELLISENSE__)
 void sortParticles(ParticleCollection& resultCollection,
 	const ParticleCollection::ReadPtr& particles, std::uint32_t particleCount,
 	const SceneContext& sceneContext,

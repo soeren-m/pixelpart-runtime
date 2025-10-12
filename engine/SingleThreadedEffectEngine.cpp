@@ -1,119 +1,98 @@
 #include "SingleThreadedEffectEngine.h"
-#include "../effect/ParticleRuntimeId.h"
+#include "ParticleCollection.h"
+#include "ParticleEmissionState.h"
+#include "../common/MapSync.h"
+#include "../effect/ParticleEmissionPair.h"
+#include <algorithm>
 
 namespace pixelpart {
-SingleThreadedEffectEngine::SingleThreadedEffectEngine(const Effect& effect, std::uint32_t particleCapacity) : EffectEngine(),
-	engineEffect(effect), engineParticleCapacity(particleCapacity), particleGenerator(effect, particleRuntimeInstances) {
+SingleThreadedEffectEngine::SingleThreadedEffectEngine(const Effect& effect,
+	std::shared_ptr<ParticleGenerator> particleGenerator, std::shared_ptr<ParticleModifier> particleModifier,
+	std::uint32_t particleCapacity) : EffectEngine(),
+	engineEffect(effect),
+	engineParticleGenerator(particleGenerator),
+	engineParticleModifier(particleModifier),
+	engineParticleCapacity(particleCapacity) {
+
+}
+SingleThreadedEffectEngine::SingleThreadedEffectEngine(const Effect& effect,
+	std::shared_ptr<ParticleGenerator> particleGenerator,
+	std::shared_ptr<ParticleModifier> particleModifier,
+	std::uint32_t particleCapacity,
+	const EffectRuntimeState& initialState,
+	const EffectRuntimeContext& initialContext) : EffectEngine(),
+	engineEffect(effect),
+	engineParticleGenerator(particleGenerator),
+	engineParticleModifier(particleModifier),
+	engineParticleCapacity(particleCapacity),
+	engineState(initialState),
+	engineContext(initialContext) {
 
 }
 
 void SingleThreadedEffectEngine::advance(float_t dt) {
-	engineDeltaTime = dt;
-	RuntimeContext rtContext = runtimeContext();
+	dt = std::max(dt, 0.0);
+	engineContext.deltaTime() = dt;
 
-	particleRuntimeInstances.match(engineEffect, engineParticleCapacity);
+	syncMapToKeys(engineState.particleCollections(), engineEffect.particleEmissionPairs(), engineParticleCapacity);
+	syncMapToKeys(engineState.particleEmissionStates(), engineEffect.particleEmissionPairs());
 
-	particleGenerator.generate(rtContext);
-	particleModifierPipeline.prepare(engineEffect, rtContext);
+	engineParticleGenerator->generate(engineState, &engineEffect, engineContext);
 
-	for(ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
-		runtimeInstance.particles().removeDead();
+	engineParticleModifier->reset(&engineEffect, engineContext);
 
-		particleModifierPipeline.run(&engineEffect,
-			rtContext, runtimeInstance.id(),
-			runtimeInstance.particles().writePtr(),
-			runtimeInstance.particles().count());
+	for(auto& collectionEntry : engineState.particleCollections()) {
+		ParticleEmissionPair emissionPair = collectionEntry.first;
+		ParticleCollection& particleCollection = collectionEntry.second;
+
+		engineParticleModifier->apply(
+			particleCollection.writePtr(),
+			particleCollection.count(),
+			&engineEffect,
+			emissionPair.emitterId, emissionPair.typeId,
+			engineContext);
 	}
 
-	engineTime += dt;
+	engineContext.time() += dt;
 }
-void SingleThreadedEffectEngine::restart(bool reset) {
-	engineTime = 0.0;
-	engineDeltaTime = 0.0;
-	triggerActivationTimes.clear();
-
-	if(reset) {
-		particleGenerator.reset();
-	}
+void SingleThreadedEffectEngine::restart() {
+	engineContext.time() = 0.0;
+	engineContext.deltaTime() = 0.0;
+	engineContext.triggerActivationTimes().clear();
+}
+void SingleThreadedEffectEngine::reseed(std::uint32_t seed) {
+	engineState.rng() = std::mt19937(seed);
 }
 
-void SingleThreadedEffectEngine::seed(std::uint32_t seed) {
-	particleGenerator.seed(seed);
+void SingleThreadedEffectEngine::generateParticles(std::uint32_t count, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) {
+	engineParticleGenerator->generate(engineState,
+		count, &engineEffect, particleEmitterId, particleTypeId, runtimeContext);
+}
+void SingleThreadedEffectEngine::clearParticles() {
+	engineParticleGenerator->clear(engineState);
 }
 
 void SingleThreadedEffectEngine::activateTrigger(id_t triggerId) {
 	if(engineEffect.triggers().count(triggerId) == 0 ||
-		triggerActivationTimes.count(triggerId) != 0) {
+		engineContext.triggerActivationTimes().count(triggerId) != 0) {
 		return;
 	}
 
-	triggerActivationTimes[triggerId] = engineTime + engineDeltaTime * 0.5;
-}
-
-void SingleThreadedEffectEngine::spawnParticles(id_t particleEmitterId, std::uint32_t count, float_t time) {
-	for(ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
-		if(runtimeInstance.emitterId() != particleEmitterId) {
-			continue;
-		}
-
-		const ParticleEmitter& particleEmitter = engineEffect.sceneGraph().at<ParticleEmitter>(runtimeInstance.emitterId());
-		if(!particleEmitter.primary()) {
-			continue;
-		}
-
-		particleGenerator.generate(particleEmitterId, runtimeInstance.typeId(), count, time);
-	}
-}
-void SingleThreadedEffectEngine::spawnParticles(id_t particleEmitterId, id_t particleTypeId, std::uint32_t count, float_t time) {
-	ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
-	if(!runtimeInstance) {
-		return;
-	}
-
-	const ParticleEmitter& particleEmitter = engineEffect.sceneGraph().at<ParticleEmitter>(runtimeInstance->emitterId());
-	if(!particleEmitter.primary()) {
-		return;
-	}
-
-	particleGenerator.generate(particleEmitterId, particleTypeId, count, time);
-}
-
-const ParticleCollection* SingleThreadedEffectEngine::particles(id_t particleEmitterId, id_t particleTypeId) const {
-	const ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
-	if(!runtimeInstance) {
-		return nullptr;
-	}
-
-	return &runtimeInstance->particles();
-}
-
-std::uint32_t SingleThreadedEffectEngine::particleCount(id_t particleEmitterId, id_t particleTypeId) const {
-	const ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
-	if(!runtimeInstance) {
-		return 0;
-	}
-
-	return runtimeInstance->particles().count();
-}
-std::uint32_t SingleThreadedEffectEngine::particleCount() const {
-	std::uint32_t count = 0;
-	for(const ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
-		count += runtimeInstance.particles().count();
-	}
-
-	return count;
-}
-
-RuntimeContext SingleThreadedEffectEngine::runtimeContext() const {
-	return RuntimeContext(engineTime, engineDeltaTime, triggerActivationTimes);
+	engineContext.triggerActivationTimes()[triggerId] = engineContext.time() + engineContext.deltaTime() * 0.5;
 }
 
 const Effect& SingleThreadedEffectEngine::effect() const {
 	return engineEffect;
 }
 
+const EffectRuntimeState& SingleThreadedEffectEngine::state() const {
+	return engineState;
+}
+const EffectRuntimeContext& SingleThreadedEffectEngine::context() const {
+	return engineContext;
+}
+
 std::uint32_t SingleThreadedEffectEngine::particleCapacity() const {
 	return engineParticleCapacity;
 }
-
 }

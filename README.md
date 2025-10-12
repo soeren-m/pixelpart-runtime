@@ -19,31 +19,36 @@ Below is a basic program that uses the Pixelpart library. It loads an effect fro
 
 ```cpp
 #include <pixelpart-runtime/Pixelpart.h>
+#include <memory>
 #include <iostream>
 #include <fstream>
 
 int main(int argc, char* argv[]) {
-	pixelpart::EffectAsset effectAsset;
+    pixelpart::EffectAsset effectAsset;
 
-	try {
-		std::ifstream file("effect.ppfx");
-		effectAsset = pixelpart::deserializeEffectAsset(file);
+    try {
+        std::ifstream file("effect.ppfx");
+        effectAsset = pixelpart::deserializeEffectAsset(file);
 
-		std::cout << "Successfully loaded effect" << std::endl;
-	}
-	catch(const std::exception& e) {
-		std::cerr << "Failed to load effect: " << e.what() << std::endl;
-		return 0;
-	}
+        std::cout << "Successfully loaded effect" << std::endl;
+    }
+    catch(const std::exception& e) {
+        std::cerr << "Failed to load effect: " << e.what() << std::endl;
+        return 0;
+    }
 
-	pixelpart::SingleThreadedEffectEngine effectEngine(effectAsset.effect(), 1000);
-	for(float t = 0.0f; t < 1.0f; t += 0.01f) {
-		std::cout << "[" << t << "s] "
-			<< effectEngine.particleCount() << " particles" << std::endl;
+    pixelpart::SingleThreadedEffectEngine effectEngine(effectAsset.effect(),
+        std::shared_ptr<pixelpart::DefaultParticleGenerator>(new pixelpart::DefaultParticleGenerator()),
+        std::shared_ptr<pixelpart::DefaultParticleModifier>(new pixelpart::DefaultParticleModifier()),
+        1000);
 
-		effectEngine.advance(0.01);
-	}
+    for(float t = 0.0f; t < 1.0f; t += 0.01f) {
+        std::cout << "[" << t << "s] "
+            << effectEngine.particleCount() << " particles" << std::endl;
 
-	return 0;
+        effectEngine.advance(0.01);
+    }
+
+    return 0;
 }
 ```

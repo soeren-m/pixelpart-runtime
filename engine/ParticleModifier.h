@@ -1,19 +1,20 @@
 #pragma once
 
-#include "../common/Types.h"
-#include "../effect/Effect.h"
-#include "../effect/ParticleRuntimeId.h"
-#include "ParticleRuntimeInstanceCollection.h"
 #include "ParticleCollection.h"
+#include "../common/Types.h"
+#include "../common/Id.h"
+#include "../effect/Effect.h"
+#include "../effect/EffectRuntimeContext.h"
+#include <cstdint>
 
 namespace pixelpart {
 class ParticleModifier {
 public:
 	virtual ~ParticleModifier() = default;
 
-	virtual void run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-		ParticleCollection::WritePtr particles, std::uint32_t particleCount) const = 0;
+	virtual void apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+		const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const = 0;
 
-	virtual void prepare(const Effect& effect, const RuntimeContext& runtimeContext) = 0;
+	virtual void reset(const Effect* effect, EffectRuntimeContext runtimeContext) = 0;
 };
 }

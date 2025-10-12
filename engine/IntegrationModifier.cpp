@@ -5,10 +5,10 @@
 #include <algorithm>
 
 namespace pixelpart {
-void IntegrationModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
-	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
-	const ParticleEmitter& particleEmitter = effect->sceneGraph().at<ParticleEmitter>(runtimeId.emitterId);
+void IntegrationModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
+	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
+	const ParticleEmitter& particleEmitter = effect->sceneGraph().at<ParticleEmitter>(particleEmitterId);
 	float_t dt = runtimeContext.deltaTime();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
@@ -27,7 +27,7 @@ void IntegrationModifier::run(const Effect* effect, RuntimeContext runtimeContex
 	}
 }
 
-void IntegrationModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
+void IntegrationModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
 
 }
 }

@@ -3,9 +3,9 @@
 #include "../effect/ParticleType.h"
 
 namespace pixelpart {
-void SizeModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
-	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
+void SizeModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
+	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		particles.size[p] = particleType.size().at(particles.life[p]) * particles.initialSize[p];
@@ -13,7 +13,7 @@ void SizeModifier::run(const Effect* effect, RuntimeContext runtimeContext, Part
 	}
 }
 
-void SizeModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
+void SizeModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
 
 }
 }

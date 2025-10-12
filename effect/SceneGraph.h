@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Node.h"
-#include "RuntimeContext.h"
+#include "EffectRuntimeContext.h"
 #include "../common/Types.h"
 #include "../common/Transform.h"
 #include "../common/Id.h"
@@ -85,12 +85,12 @@ public:
 		return static_cast<const T&>(atIndex(index));
 	}
 
-	Transform localTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
-	Transform localBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
-	Transform parentTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
-	Transform parentBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
-	Transform globalTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers = true) const;
-	Transform globalBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const;
+	Transform localTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext, bool useTriggers = true) const;
+	Transform localBaseTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext) const;
+	Transform parentTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext, bool useTriggers = true) const;
+	Transform parentBaseTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext) const;
+	Transform globalTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext, bool useTriggers = true) const;
+	Transform globalBaseTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext) const;
 
 	std::uint32_t count() const;
 	id_t maxId() const;

@@ -46,54 +46,54 @@ ParticleCollection::ReadPtr::ReadPtr(
 
 }
 
-ParticleCollection::ParticleCollection(std::uint32_t capacity) : particleCapacity(capacity) {
-	id.resize(particleCapacity);
-	parentId.resize(particleCapacity);
-	life.resize(particleCapacity);
-	lifespan.resize(particleCapacity);
-	position.resize(particleCapacity);
-	globalPosition.resize(particleCapacity);
-	velocity.resize(particleCapacity);
-	force.resize(particleCapacity);
-	rotation.resize(particleCapacity);
-	initialRotation.resize(particleCapacity);
-	initialAngularVelocity.resize(particleCapacity);
-	size.resize(particleCapacity);
-	initialSize.resize(particleCapacity);
-	color.resize(particleCapacity);
-	initialColor.resize(particleCapacity);
+ParticleCollection::ParticleCollection(std::uint32_t capacity) : collectionCapacity(capacity) {
+	id.resize(collectionCapacity);
+	parentId.resize(collectionCapacity);
+	life.resize(collectionCapacity);
+	lifespan.resize(collectionCapacity);
+	position.resize(collectionCapacity);
+	globalPosition.resize(collectionCapacity);
+	velocity.resize(collectionCapacity);
+	force.resize(collectionCapacity);
+	rotation.resize(collectionCapacity);
+	initialRotation.resize(collectionCapacity);
+	initialAngularVelocity.resize(collectionCapacity);
+	size.resize(collectionCapacity);
+	initialSize.resize(collectionCapacity);
+	color.resize(collectionCapacity);
+	initialColor.resize(collectionCapacity);
 }
 
 std::uint32_t ParticleCollection::add(std::uint32_t number) {
-	number = (particleCount + number > particleCapacity)
-		? particleCapacity - particleCount
+	number = (collectionCount + number > collectionCapacity)
+		? collectionCapacity - collectionCount
 		: number;
 
-	particleCount += number;
+	collectionCount += number;
 
 	return number;
 }
 void ParticleCollection::remove(std::uint32_t index) {
-	particleCount--;
+	collectionCount--;
 
-	std::swap(id[index], id[particleCount]);
-	std::swap(parentId[index], parentId[particleCount]);
-	std::swap(life[index], life[particleCount]);
-	std::swap(lifespan[index], lifespan[particleCount]);
-	std::swap(position[index], position[particleCount]);
-	std::swap(globalPosition[index], globalPosition[particleCount]);
-	std::swap(velocity[index], velocity[particleCount]);
-	std::swap(force[index], force[particleCount]);
-	std::swap(rotation[index], rotation[particleCount]);
-	std::swap(initialRotation[index], initialRotation[particleCount]);
-	std::swap(initialAngularVelocity[index], initialAngularVelocity[particleCount]);
-	std::swap(size[index], size[particleCount]);
-	std::swap(initialSize[index], initialSize[particleCount]);
-	std::swap(color[index], color[particleCount]);
-	std::swap(initialColor[index], initialColor[particleCount]);
+	std::swap(id[index], id[collectionCount]);
+	std::swap(parentId[index], parentId[collectionCount]);
+	std::swap(life[index], life[collectionCount]);
+	std::swap(lifespan[index], lifespan[collectionCount]);
+	std::swap(position[index], position[collectionCount]);
+	std::swap(globalPosition[index], globalPosition[collectionCount]);
+	std::swap(velocity[index], velocity[collectionCount]);
+	std::swap(force[index], force[collectionCount]);
+	std::swap(rotation[index], rotation[collectionCount]);
+	std::swap(initialRotation[index], initialRotation[collectionCount]);
+	std::swap(initialAngularVelocity[index], initialAngularVelocity[collectionCount]);
+	std::swap(size[index], size[collectionCount]);
+	std::swap(initialSize[index], initialSize[collectionCount]);
+	std::swap(color[index], color[collectionCount]);
+	std::swap(initialColor[index], initialColor[collectionCount]);
 }
 void ParticleCollection::removeDead() {
-	for(std::uint32_t index = 0; index < particleCount; ) {
+	for(std::uint32_t index = 0; index < collectionCount; ) {
 		if(life[index] > 1.0) {
 			remove(index);
 		}
@@ -103,7 +103,7 @@ void ParticleCollection::removeDead() {
 	}
 }
 void ParticleCollection::clear() {
-	particleCount = 0;
+	collectionCount = 0;
 }
 
 ParticleCollection::WritePtr ParticleCollection::writePtr(std::uint32_t index) {
@@ -144,9 +144,9 @@ ParticleCollection::ReadPtr ParticleCollection::readPtr(std::uint32_t index) con
 }
 
 std::uint32_t ParticleCollection::count() const {
-	return particleCount;
+	return collectionCount;
 }
 std::uint32_t ParticleCollection::capacity() const {
-	return particleCapacity;
+	return collectionCapacity;
 }
 }

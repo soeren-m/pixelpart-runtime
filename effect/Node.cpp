@@ -75,7 +75,7 @@ id_t Node::stopTrigger() const {
 	return nodeStopTriggerId;
 }
 
-float_t Node::timeSinceStart(const RuntimeContext& runtimeContext, bool useTriggers) const {
+float_t Node::timeSinceStart(const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
 	if(useTriggers && nodeStartTriggerId) {
 		if(!runtimeContext.triggerActivated(nodeStartTriggerId)) {
 			return 0.0;
@@ -86,7 +86,7 @@ float_t Node::timeSinceStart(const RuntimeContext& runtimeContext, bool useTrigg
 
 	return runtimeContext.time() - nodeLifetimeStart;
 }
-float_t Node::life(const RuntimeContext& runtimeContext, bool useTriggers) const {
+float_t Node::life(const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
 	float_t startTime = nodeLifetimeStart;
 
 	if(useTriggers) {
@@ -109,7 +109,7 @@ float_t Node::life(const RuntimeContext& runtimeContext, bool useTriggers) const
 		? std::fmod(runtimeContext.time() - startTime, nodeLifetimeDuration) / nodeLifetimeDuration
 		: (runtimeContext.time() - startTime) / nodeLifetimeDuration;
 }
-bool Node::active(const RuntimeContext& runtimeContext, bool useTriggers) const {
+bool Node::active(const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
 	float_t startTime = nodeLifetimeStart;
 
 	if(useTriggers) {
@@ -132,7 +132,7 @@ bool Node::active(const RuntimeContext& runtimeContext, bool useTriggers) const 
 		(runtimeContext.time() >= startTime) &&
 		(runtimeContext.time() <= startTime + nodeLifetimeDuration || nodeRepeat);
 }
-bool Node::activatedByTrigger(const RuntimeContext& runtimeContext) const {
+bool Node::activatedByTrigger(const EffectRuntimeContext& runtimeContext) const {
 	return
 		(!nodeStartTriggerId || runtimeContext.triggerActivated(nodeStartTriggerId)) &&
 		(!nodeStopTriggerId || !runtimeContext.triggerActivated(nodeStopTriggerId));
@@ -159,7 +159,7 @@ const AnimatedProperty<float3_t>& Node::scale() const {
 	return nodeScale;
 }
 
-Transform Node::transform(const RuntimeContext& runtimeContext, bool useTriggers) const {
+Transform Node::transform(const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
 	float_t fraction = life(runtimeContext, useTriggers);
 
 	return Transform(
@@ -167,7 +167,7 @@ Transform Node::transform(const RuntimeContext& runtimeContext, bool useTriggers
 		nodeRotation.at(fraction),
 		nodeScale.at(fraction));
 }
-Transform Node::baseTransform(const RuntimeContext& runtimeContext) const {
+Transform Node::baseTransform(const EffectRuntimeContext& runtimeContext) const {
 	float_t fraction = life(runtimeContext, false);
 
 	return Transform(

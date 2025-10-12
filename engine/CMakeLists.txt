@@ -3,6 +3,9 @@ target_sources(pixelpart-runtime PRIVATE
 	CollisionModifier.cpp
 	ColorModifier.cpp
 	Coordinate2dModifier.cpp
+	DefaultParticleGenerator.cpp
+	DefaultParticleModifier.cpp
+	EffectRuntimeState.cpp
 	ForceModifier.cpp
 	IntegrationModifier.cpp
 	LifeModifier.cpp
@@ -11,10 +14,6 @@ target_sources(pixelpart-runtime PRIVATE
 	MultiThreadedEffectEngine.cpp
 	Noise.cpp
 	ParticleCollection.cpp
-	ParticleGenerator.cpp
-	ParticleModifierPipeline.cpp
-	ParticleRuntimeInstance.cpp
-	ParticleRuntimeInstanceCollection.cpp
 	RotationModifier.cpp
 	SingleThreadedEffectEngine.cpp
 	SizeModifier.cpp)

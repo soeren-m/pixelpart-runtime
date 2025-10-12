@@ -5,9 +5,9 @@
 #include <cmath>
 
 namespace pixelpart {
-void ColorModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
-	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
+void ColorModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
+	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		float4_t hsv = rgb2hsv(particleType.color().at(particles.life[p]));
@@ -22,7 +22,7 @@ void ColorModifier::run(const Effect* effect, RuntimeContext runtimeContext, Par
 	}
 }
 
-void ColorModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
+void ColorModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
 
 }
 }

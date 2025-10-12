@@ -14,6 +14,7 @@ target_sources(pixelpart-runtime PRIVATE
 	DragField.cpp
 	Effect.cpp
 	EffectInput.cpp
+	EffectRuntimeContext.cpp
 	ForceField.cpp
 	GroupNode.cpp
 	ImageResource.cpp
@@ -27,16 +28,15 @@ target_sources(pixelpart-runtime PRIVATE
 	Node.cpp
 	NoiseField.cpp
 	OutputComputeNode.cpp
+	ParticleEmissionPair.cpp
 	ParticleEmitter.cpp
 	ParticleRendererSettings.cpp
-	ParticleRuntimeId.cpp
 	ParticleType.cpp
 	ParticleTypeCollection.cpp
 	PlaneCollider.cpp
 	PointLightSource.cpp
 	Resource.cpp
 	ResourceCollection.cpp
-	RuntimeContext.cpp
 	SceneGraph.cpp
 	ShaderGraph.cpp
 	ShaderGraphLanguage.cpp

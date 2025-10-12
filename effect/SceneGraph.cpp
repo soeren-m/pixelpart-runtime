@@ -187,13 +187,13 @@ const Node& SceneGraph::atIndex(std::uint32_t index) const {
 	return *sceneNodes.at(index);
 }
 
-Transform SceneGraph::localTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers) const {
+Transform SceneGraph::localTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
 	return at(nodeId).transform(runtimeContext, useTriggers);
 }
-Transform SceneGraph::localBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const {
+Transform SceneGraph::localBaseTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext) const {
 	return at(nodeId).baseTransform(runtimeContext);
 }
-Transform SceneGraph::parentTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers) const {
+Transform SceneGraph::parentTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
 	const Node& node = at(nodeId);
 	if(node.parentId()) {
 		return globalTransform(node.parentId(), runtimeContext, useTriggers);
@@ -201,7 +201,7 @@ Transform SceneGraph::parentTransform(id_t nodeId, const RuntimeContext& runtime
 
 	return Transform();
 }
-Transform SceneGraph::parentBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const {
+Transform SceneGraph::parentBaseTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext) const {
 	const Node& node = at(nodeId);
 	if(node.parentId()) {
 		return globalBaseTransform(node.parentId(), runtimeContext);
@@ -209,7 +209,7 @@ Transform SceneGraph::parentBaseTransform(id_t nodeId, const RuntimeContext& run
 
 	return Transform();
 }
-Transform SceneGraph::globalTransform(id_t nodeId, const RuntimeContext& runtimeContext, bool useTriggers) const {
+Transform SceneGraph::globalTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
 	const Node& node = at(nodeId);
 	if(node.parentId()) {
 		return globalTransform(node.parentId(), runtimeContext, useTriggers) * localTransform(nodeId, runtimeContext, useTriggers);
@@ -217,7 +217,7 @@ Transform SceneGraph::globalTransform(id_t nodeId, const RuntimeContext& runtime
 
 	return localTransform(nodeId, runtimeContext, useTriggers);
 }
-Transform SceneGraph::globalBaseTransform(id_t nodeId, const RuntimeContext& runtimeContext) const {
+Transform SceneGraph::globalBaseTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext) const {
 	const Node& node = at(nodeId);
 	if(node.parentId()) {
 		return globalBaseTransform(node.parentId(), runtimeContext) * localBaseTransform(nodeId, runtimeContext);

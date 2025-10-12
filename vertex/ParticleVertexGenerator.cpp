@@ -15,7 +15,7 @@ ParticleVertexGenerator::ParticleVertexGenerator(const Effect& effect, id_t part
 
 VertexDataBufferDimensions ParticleVertexGenerator::buildGeometry(
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) {
 	updateBaseGenerator();
 	if(!generatorBaseGenerator) {
 		return VertexDataBufferDimensions();
@@ -26,7 +26,7 @@ VertexDataBufferDimensions ParticleVertexGenerator::buildGeometry(
 
 void ParticleVertexGenerator::generateVertexData(const VertexDataBufferCollection& dataBuffers,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	if(!generatorBaseGenerator) {
 		return;
 	}

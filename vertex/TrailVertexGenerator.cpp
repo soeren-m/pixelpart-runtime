@@ -18,7 +18,7 @@ TrailVertexGenerator::TrailVertexGenerator(const Effect& effect, id_t particleEm
 
 VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) {
 	const float_t epsilon = 0.000001;
 
 	const ParticleEmitter& particleEmitter = generatorEffect.sceneGraph().at<ParticleEmitter>(generatorParticleEmitterId);
@@ -230,7 +230,7 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 
 void TrailVertexGenerator::generateVertexData(const VertexDataBufferCollection& dataBuffers,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	for(const VertexAttribute& attribute : generatorVertexFormat.attributes()) {
 		if(attribute.bufferIndex >= dataBuffers.size()) {
 			continue;

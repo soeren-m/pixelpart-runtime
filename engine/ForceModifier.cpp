@@ -10,9 +10,9 @@
 #include <algorithm>
 
 namespace pixelpart {
-void ForceModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
-	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
+void ForceModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
+	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
 
 	for(const AttractionField& field : attractionFields) {
 		if(field.exclusionSet().count(particleType.id()) != 0) {
@@ -55,9 +55,9 @@ void ForceModifier::run(const Effect* effect, RuntimeContext runtimeContext, Par
 	}
 }
 
-void ForceModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
-	effectResources = &effect.resources();
-	is3d = effect.is3d();
+void ForceModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
+	effectResources = &effect->resources();
+	is3d = effect->is3d();
 
 	attractionFields.clear();
 	accelerationFields.clear();
@@ -65,7 +65,7 @@ void ForceModifier::prepare(const Effect& effect, const RuntimeContext& runtimeC
 	noiseFields.clear();
 	dragFields.clear();
 
-	for(const ForceField* forceField : effect.sceneGraph().nodesWithType<ForceField>()) {
+	for(const ForceField* forceField : effect->sceneGraph().nodesWithType<ForceField>()) {
 		if(!forceField->active(runtimeContext)) {
 			continue;
 		}
@@ -94,7 +94,7 @@ void ForceModifier::prepare(const Effect& effect, const RuntimeContext& runtimeC
 	}
 }
 
-void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
+void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 	const ParticleType& particleType, const AttractionField& attractionField, const SceneGraph& sceneGraph) const {
 	float_t alpha = attractionField.life(runtimeContext);
 	Transform transform = sceneGraph.globalTransform(attractionField.id(), runtimeContext);
@@ -110,7 +110,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
 	}
 }
-void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
+void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 	const ParticleType& particleType, const AccelerationField& accelerationField, const SceneGraph& sceneGraph) const {
 	float_t alpha = accelerationField.life(runtimeContext);
 	Transform transform = sceneGraph.globalTransform(accelerationField.id(), runtimeContext);
@@ -132,7 +132,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
 	}
 }
-void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
+void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 	const ParticleType& particleType, const VectorField& vectorField, const SceneGraph& sceneGraph) const {
 	if(effectResources == nullptr || effectResources->vectorFields().count(vectorField.vectorFieldResourceId()) == 0) {
 		return;
@@ -165,7 +165,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 		}
 	}
 }
-void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
+void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 	const ParticleType& particleType, const NoiseField& noiseField, const SceneGraph& sceneGraph) const {
 	float_t t = runtimeContext.time();
 	float_t alpha = noiseField.life(runtimeContext);
@@ -185,7 +185,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
 	}
 }
-void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const RuntimeContext& runtimeContext,
+void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 	const ParticleType& particleType, const DragField& dragField, const SceneGraph& sceneGraph) const {
 	float_t alpha = dragField.life(runtimeContext);
 	Transform transform = sceneGraph.globalTransform(dragField.id(), runtimeContext);

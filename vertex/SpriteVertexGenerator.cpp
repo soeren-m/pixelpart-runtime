@@ -21,7 +21,7 @@ SpriteVertexGenerator::SpriteVertexGenerator(const Effect& effect, id_t particle
 
 VertexDataBufferDimensions SpriteVertexGenerator::buildGeometry(
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 	ParticleSortCriterion sortCriterion = particleType.spriteRendererSettings().sortCriterion;
 
@@ -59,7 +59,7 @@ VertexDataBufferDimensions SpriteVertexGenerator::buildGeometry(
 
 void SpriteVertexGenerator::generateVertexData(const VertexDataBufferCollection& dataBuffers,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 	ParticleSortCriterion sortCriterion = particleType.spriteRendererSettings().sortCriterion;
 
@@ -200,7 +200,7 @@ void SpriteVertexGenerator::validateVertexFormat() const {
 
 void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
@@ -305,7 +305,7 @@ void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Verte
 }
 void SpriteVertexGenerator::generatePosition3d(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
@@ -416,7 +416,7 @@ void SpriteVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Verte
 }
 void SpriteVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);

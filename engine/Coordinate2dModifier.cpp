@@ -1,8 +1,8 @@
 #include "Coordinate2dModifier.h"
 
 namespace pixelpart {
-void Coordinate2dModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
+void Coordinate2dModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
 	if(effect->is3d()) {
 		return;
 	}
@@ -15,7 +15,7 @@ void Coordinate2dModifier::run(const Effect* effect, RuntimeContext runtimeConte
 	}
 }
 
-void Coordinate2dModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
+void Coordinate2dModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
 
 }
 }

@@ -3,9 +3,9 @@
 #include "../effect/ParticleType.h"
 
 namespace pixelpart {
-void RotationModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
-	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
+void RotationModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
+	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
 	float_t dt = runtimeContext.deltaTime();
 
 	switch(particleType.rotationMode()) {
@@ -33,7 +33,7 @@ void RotationModifier::run(const Effect* effect, RuntimeContext runtimeContext, 
 	}
 }
 
-void RotationModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
+void RotationModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
 
 }
 }

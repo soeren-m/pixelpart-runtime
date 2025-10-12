@@ -2,4 +2,6 @@
 #include "asset/MaterialAsset.h"
 #include "engine/SingleThreadedEffectEngine.h"
 #include "engine/MultiThreadedEffectEngine.h"
+#include "engine/DefaultParticleGenerator.h"
+#include "engine/DefaultParticleModifier.h"
 #include "vertex/ParticleVertexGenerator.h"

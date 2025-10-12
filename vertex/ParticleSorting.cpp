@@ -19,7 +19,7 @@ void insertionSort(It begin, It end, Comp comp = Comp()) {
 	}
 }
 
-#ifdef PIXELPART_RUNTIME_MULTITHREADING
+#if defined(PIXELPART_RUNTIME_MULTITHREADING) || defined(__INTELLISENSE__)
 template<typename It, typename Comp>
 std::vector<typename It::value_type> merge(It begin, It mid, It end, Comp comp) {
 	std::vector<typename It::value_type> result;
@@ -144,7 +144,7 @@ void sortParticles(ParticleCollection& resultCollection,
 	applySortKeys(resultCollection, particles, particleCount, sortKeys);
 }
 
-#ifdef PIXELPART_RUNTIME_MULTITHREADING
+#if defined(PIXELPART_RUNTIME_MULTITHREADING) || defined(__INTELLISENSE__)
 void sortParticles(ParticleCollection& resultCollection,
 	const ParticleCollection::ReadPtr& particles, std::uint32_t particleCount,
 	const SceneContext& sceneContext,

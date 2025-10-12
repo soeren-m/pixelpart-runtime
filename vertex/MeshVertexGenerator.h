@@ -15,11 +15,11 @@ public:
 
 	virtual VertexDataBufferDimensions buildGeometry(
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) override;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) override;
 
 	virtual void generateVertexData(const VertexDataBufferCollection& dataBuffers,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const override;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const override;
 
 private:
 	void validateVertexFormat() const;
@@ -59,16 +59,16 @@ private:
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
 	void generateMatrix4x4ColumnMajor(std::uint8_t* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
 	void generateMatrix4x3ColumnMajor(std::uint8_t* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
 	void generateMatrix4x4RowMajor(std::uint8_t* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
 	void generateMatrix4x3RowMajor(std::uint8_t* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
 
 	static mat4_t generateTransformationMatrix(AlignmentMode alignmentMode, const float3_t& pivot,
 		const float3_t& emitterPosition, const mat3_t& emitterRotation,

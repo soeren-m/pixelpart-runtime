@@ -8,9 +8,9 @@
 #include <algorithm>
 
 namespace pixelpart {
-void CollisionModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
-	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
+void CollisionModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
+	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
 	float_t t = runtimeContext.time();
 	float_t dt = runtimeContext.deltaTime();
 
@@ -43,13 +43,13 @@ void CollisionModifier::run(const Effect* effect, RuntimeContext runtimeContext,
 	}
 }
 
-void CollisionModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
+void CollisionModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
 	line2dColliders.clear();
 	plane3dColliders.clear();
 	line2dColliderGrid.clear();
 
-	if(effect.is3d()) {
-		for(const Collider* collider : effect.sceneGraph().nodesWithType<Collider>()) {
+	if(effect->is3d()) {
+		for(const Collider* collider : effect->sceneGraph().nodesWithType<Collider>()) {
 			if(!collider->active(runtimeContext)) {
 				continue;
 			}
@@ -57,13 +57,13 @@ void CollisionModifier::prepare(const Effect& effect, const RuntimeContext& runt
 			const PlaneCollider* planeCollider = dynamic_cast<const PlaneCollider*>(collider);
 
 			if(planeCollider) {
-				Transform transform = effect.sceneGraph().globalTransform(collider->id(), runtimeContext);
+				Transform transform = effect->sceneGraph().globalTransform(collider->id(), runtimeContext);
 				plane3dColliders.emplace_back(*planeCollider, transform);
 			}
 		}
 	}
 	else {
-		for(const Collider* collider : effect.sceneGraph().nodesWithType<Collider>()) {
+		for(const Collider* collider : effect->sceneGraph().nodesWithType<Collider>()) {
 			if(!collider->active(runtimeContext)) {
 				continue;
 			}
@@ -71,7 +71,7 @@ void CollisionModifier::prepare(const Effect& effect, const RuntimeContext& runt
 			const LineCollider* lineCollider = dynamic_cast<const LineCollider*>(collider);
 			const PlaneCollider* planeCollider = dynamic_cast<const PlaneCollider*>(collider);
 
-			Transform transform = effect.sceneGraph().globalTransform(collider->id(), runtimeContext);
+			Transform transform = effect->sceneGraph().globalTransform(collider->id(), runtimeContext);
 
 			if(lineCollider) {
 				for(std::size_t segmentIndex = 0; segmentIndex + 1 < lineCollider->points().size(); segmentIndex++) {

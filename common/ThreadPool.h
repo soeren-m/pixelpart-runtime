@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef PIXELPART_RUNTIME_MULTITHREADING
+#if defined(PIXELPART_RUNTIME_MULTITHREADING) || defined(__INTELLISENSE__)
 
 #include <cstdint>
 #include <functional>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnimatedProperty.h"
-#include "RuntimeContext.h"
+#include "EffectRuntimeContext.h"
 #include "ComputeGraph.h"
 #include "../common/Types.h"
 #include "../common/Math.h"
@@ -47,10 +47,10 @@ public:
 	void stopTrigger(id_t triggerId);
 	id_t stopTrigger() const;
 
-	float_t timeSinceStart(const RuntimeContext& runtimeContext, bool useTriggers = true) const;
-	float_t life(const RuntimeContext& runtimeContext, bool useTriggers = true) const;
-	bool active(const RuntimeContext& runtimeContext, bool useTriggers = true) const;
-	bool activatedByTrigger(const RuntimeContext& runtimeContext) const;
+	float_t timeSinceStart(const EffectRuntimeContext& runtimeContext, bool useTriggers = true) const;
+	float_t life(const EffectRuntimeContext& runtimeContext, bool useTriggers = true) const;
+	bool active(const EffectRuntimeContext& runtimeContext, bool useTriggers = true) const;
+	bool activatedByTrigger(const EffectRuntimeContext& runtimeContext) const;
 
 	AnimatedProperty<float3_t>& position();
 	const AnimatedProperty<float3_t>& position() const;
@@ -61,8 +61,8 @@ public:
 	AnimatedProperty<float3_t>& scale();
 	const AnimatedProperty<float3_t>& scale() const;
 
-	Transform transform(const RuntimeContext& runtimeContext, bool useTriggers = true) const;
-	Transform baseTransform(const RuntimeContext& runtimeContext) const;
+	Transform transform(const EffectRuntimeContext& runtimeContext, bool useTriggers = true) const;
+	Transform baseTransform(const EffectRuntimeContext& runtimeContext) const;
 
 protected:
 	virtual Node* cloneImpl() const;

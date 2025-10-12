@@ -3,10 +3,10 @@
 #include "../effect/ParticleType.h"
 
 namespace pixelpart {
-void AccelerationModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
-	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
-	float3_t globalEmitterPosition = effect->sceneGraph().globalTransform(runtimeId.emitterId, runtimeContext).position();
+void AccelerationModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
+	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
+	float3_t globalEmitterPosition = effect->sceneGraph().globalTransform(particleEmitterId, runtimeContext).position();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		float3_t forwardDirection = (particles.velocity[p] != float3_t(0.0))
@@ -21,7 +21,7 @@ void AccelerationModifier::run(const Effect* effect, RuntimeContext runtimeConte
 	}
 }
 
-void AccelerationModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
+void AccelerationModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
 
 }
 }

@@ -1,8 +1,8 @@
 #include "LifeModifier.h"
 
 namespace pixelpart {
-void LifeModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
+void LifeModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
 	float_t dt = runtimeContext.deltaTime();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
@@ -10,7 +10,7 @@ void LifeModifier::run(const Effect* effect, RuntimeContext runtimeContext, Part
 	}
 }
 
-void LifeModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
+void LifeModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
 
 }
 }

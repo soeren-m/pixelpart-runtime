@@ -15,11 +15,11 @@ public:
 
 	virtual VertexDataBufferDimensions buildGeometry(
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) override;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) override;
 
 	virtual void generateVertexData(const VertexDataBufferCollection& dataBuffers,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const override;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const override;
 
 private:
 	void validateVertexFormat() const;
@@ -110,13 +110,13 @@ private:
 
 	void generatePosition2d(std::uint8_t* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
 	void generatePosition3d(std::uint8_t* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
 	void generateNormal(std::uint8_t* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-		const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
+		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
 	void generateTextureCoord(std::uint8_t* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
 	void generateColor(std::uint8_t* buffer, const VertexAttribute& attribute,

@@ -1,48 +1,52 @@
 #pragma once
 
 #include "EffectEngine.h"
-#include "ParticleRuntimeInstance.h"
-#include "ParticleRuntimeInstanceCollection.h"
 #include "ParticleGenerator.h"
-#include "ParticleModifierPipeline.h"
+#include "ParticleModifier.h"
+#include "EffectRuntimeState.h"
+#include "../effect/EffectRuntimeContext.h"
+#include "../effect/Effect.h"
+#include <cstdint>
+#include <memory>
 
 namespace pixelpart {
 class SingleThreadedEffectEngine : public EffectEngine {
 public:
-	SingleThreadedEffectEngine(const Effect& effect, std::uint32_t particleCapacity);
+	SingleThreadedEffectEngine(const Effect& effect,
+		std::shared_ptr<ParticleGenerator> particleGenerator,
+		std::shared_ptr<ParticleModifier> particleModifier,
+		std::uint32_t particleCapacity);
+	SingleThreadedEffectEngine(const Effect& effect,
+		std::shared_ptr<ParticleGenerator> particleGenerator,
+		std::shared_ptr<ParticleModifier> particleModifier,
+		std::uint32_t particleCapacity,
+		const EffectRuntimeState& initialState,
+		const EffectRuntimeContext& initialContext);
 
 	virtual void advance(float_t dt) override;
-	virtual void restart(bool reset) override;
+	virtual void restart() override;
+	virtual void reseed(std::uint32_t seed) override;
 
-	virtual void seed(std::uint32_t seed) override;
+	virtual void generateParticles(std::uint32_t count, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext = EffectRuntimeContext()) override;
+	virtual void clearParticles() override;
 
 	virtual void activateTrigger(id_t triggerId) override;
 
-	virtual void spawnParticles(id_t particleEmitterId, std::uint32_t count, float_t time = 0.0) override;
-	virtual void spawnParticles(id_t particleEmitterId, id_t particleTypeId, std::uint32_t count, float_t time = 0.0) override;
-
-	virtual const ParticleCollection* particles(id_t particleEmitterId, id_t particleTypeId) const override;
-
-	virtual std::uint32_t particleCount(id_t particleEmitterId, id_t particleTypeId) const override;
-	virtual std::uint32_t particleCount() const override;
-
-	virtual RuntimeContext runtimeContext() const override;
-
 	virtual const Effect& effect() const override;
+
+	virtual const EffectRuntimeState& state() const override;
+	virtual const EffectRuntimeContext& context() const override;
 
 	std::uint32_t particleCapacity() const;
 
 private:
 	const Effect& engineEffect;
+	std::shared_ptr<ParticleGenerator> engineParticleGenerator;
+	std::shared_ptr<ParticleModifier> engineParticleModifier;
 
-	ParticleRuntimeInstanceCollection particleRuntimeInstances;
+	EffectRuntimeState engineState;
+	EffectRuntimeContext engineContext;
+
 	std::uint32_t engineParticleCapacity = 0;
-
-	float_t engineTime = 0.0;
-	float_t engineDeltaTime = 0.0;
-	RuntimeContext::TriggerActivationTimeMap triggerActivationTimes;
-
-	ParticleGenerator particleGenerator;
-	ParticleModifierPipeline particleModifierPipeline;
 };
 }

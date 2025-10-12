@@ -16,10 +16,10 @@ class CollisionModifier : public ParticleModifier {
 public:
 	CollisionModifier() = default;
 
-	virtual void run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-		ParticleCollection::WritePtr particles, std::uint32_t particleCount) const override;
+	virtual void apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+		const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const override;
 
-	virtual void prepare(const Effect& effect, const RuntimeContext& runtimeContext) override;
+	virtual void reset(const Effect* effect, EffectRuntimeContext runtimeContext) override;
 
 private:
 	struct ColliderObject {

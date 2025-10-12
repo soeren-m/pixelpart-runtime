@@ -93,8 +93,8 @@ public:
 	std::uint32_t capacity() const;
 
 private:
-	std::uint32_t particleCount = 0;
-	std::uint32_t particleCapacity = 1024;
+	std::uint32_t collectionCount = 0;
+	std::uint32_t collectionCapacity = 1024;
 
 	std::vector<std::uint32_t> id;
 	std::vector<std::uint32_t> parentId;

@@ -21,7 +21,7 @@ MeshVertexGenerator::MeshVertexGenerator(const Effect& effect, id_t particleEmit
 
 VertexDataBufferDimensions MeshVertexGenerator::buildGeometry(
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 	ParticleSortCriterion sortCriterion = particleType.spriteRendererSettings().sortCriterion;
 
@@ -53,7 +53,7 @@ VertexDataBufferDimensions MeshVertexGenerator::buildGeometry(
 
 void MeshVertexGenerator::generateVertexData(const VertexDataBufferCollection& dataBuffers,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 	ParticleSortCriterion sortCriterion = particleType.spriteRendererSettings().sortCriterion;
 
@@ -227,7 +227,7 @@ void MeshVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const VertexA
 }
 void MeshVertexGenerator::generateMatrix4x4ColumnMajor(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 	AlignmentMode alignmentMode = particleType.alignmentMode();
 	float3_t pivot = particleType.pivot().value();
@@ -252,7 +252,7 @@ void MeshVertexGenerator::generateMatrix4x4ColumnMajor(std::uint8_t* buffer, con
 }
 void MeshVertexGenerator::generateMatrix4x3ColumnMajor(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 	AlignmentMode alignmentMode = particleType.alignmentMode();
 	float3_t pivot = particleType.pivot().value();
@@ -277,7 +277,7 @@ void MeshVertexGenerator::generateMatrix4x3ColumnMajor(std::uint8_t* buffer, con
 }
 void MeshVertexGenerator::generateMatrix4x4RowMajor(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 	AlignmentMode alignmentMode = particleType.alignmentMode();
 	float3_t pivot = particleType.pivot().value();
@@ -302,7 +302,7 @@ void MeshVertexGenerator::generateMatrix4x4RowMajor(std::uint8_t* buffer, const 
 }
 void MeshVertexGenerator::generateMatrix4x3RowMajor(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
-	const RuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
+	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 	AlignmentMode alignmentMode = particleType.alignmentMode();
 	float3_t pivot = particleType.pivot().value();

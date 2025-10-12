@@ -1,36 +1,65 @@
-#ifdef PIXELPART_RUNTIME_MULTITHREADING
+#if defined(PIXELPART_RUNTIME_MULTITHREADING) || defined(__INTELLISENSE__)
 
 #include "MultiThreadedEffectEngine.h"
-#include "../effect/ParticleRuntimeId.h"
+#include "ParticleCollection.h"
+#include "ParticleEmissionState.h"
+#include "../common/MapSync.h"
+#include "../effect/ParticleEmissionPair.h"
 #include <algorithm>
 
 namespace pixelpart {
-MultiThreadedEffectEngine::MultiThreadedEffectEngine(const Effect& effect, std::uint32_t particleCapacity, std::shared_ptr<ThreadPool> threadPl) :
-	EffectEngine(), engineEffect(effect), engineParticleCapacity(particleCapacity), particleGenerator(effect, particleRuntimeInstances),
-	threadPool(threadPl) {
+MultiThreadedEffectEngine::MultiThreadedEffectEngine(const Effect& effect,
+	std::shared_ptr<ParticleGenerator> particleGenerator,
+	std::shared_ptr<ParticleModifier> particleModifier,
+	std::shared_ptr<ThreadPool> threadPool,
+	std::uint32_t particleCapacity) : EffectEngine(),
+	engineEffect(effect),
+	engineParticleGenerator(particleGenerator),
+	engineParticleModifier(particleModifier),
+	engineThreadPool(threadPool),
+	engineParticleCapacity(particleCapacity) {
+
+}
+MultiThreadedEffectEngine::MultiThreadedEffectEngine(const Effect& effect,
+	std::shared_ptr<ParticleGenerator> particleGenerator,
+	std::shared_ptr<ParticleModifier> particleModifier,
+	std::shared_ptr<ThreadPool> threadPool,
+	std::uint32_t particleCapacity,
+	const EffectRuntimeState& initialState,
+	const EffectRuntimeContext& initialContext) : EffectEngine(),
+	engineEffect(effect),
+	engineParticleGenerator(particleGenerator),
+	engineParticleModifier(particleModifier),
+	engineThreadPool(threadPool),
+	engineParticleCapacity(particleCapacity),
+	engineState(initialState),
+	engineContext(initialContext) {
 
 }
 
 void MultiThreadedEffectEngine::advance(float_t dt) {
-	engineDeltaTime = dt;
-	RuntimeContext rtContext = runtimeContext();
+	dt = std::max(dt, 0.0);
+	engineContext.deltaTime() = dt;
 
-	particleRuntimeInstances.match(engineEffect, engineParticleCapacity);
+	syncMapToKeys(engineState.particleCollections(), engineEffect.particleEmissionPairs(), engineParticleCapacity);
+	syncMapToKeys(engineState.particleEmissionStates(), engineEffect.particleEmissionPairs());
 
-	particleGenerator.generate(rtContext);
-	particleModifierPipeline.prepare(engineEffect, rtContext);
+	engineParticleGenerator->generate(engineState, &engineEffect, engineContext);
 
-	totalActiveThreadCount = 1;
+	engineParticleModifier->reset(&engineEffect, engineContext);
 
-	for(ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
-		runtimeInstance.particles().removeDead();
+	engineActiveThreadCount = 1;
 
-		std::uint32_t availableThreadCount = threadPool ? static_cast<std::uint32_t>(threadPool->threadCount()) : 1;
-		std::uint32_t activeThreadCount = std::min(std::max(runtimeInstance.particles().count() / workPerThread, 1u), availableThreadCount);
+	for(auto& collectionEntry : engineState.particleCollections()) {
+		ParticleEmissionPair emissionPair = collectionEntry.first;
+		ParticleCollection& particleCollection = collectionEntry.second;
+
+		std::uint32_t availableThreadCount = engineThreadPool ? static_cast<std::uint32_t>(engineThreadPool->threadCount()) : 1;
+		std::uint32_t activeThreadCount = std::min(std::max(particleCollection.count() / engineParticleCountPerThread, 1u), availableThreadCount);
 
 		if(activeThreadCount > 1) {
-			std::uint32_t particleCountInThisThread = runtimeInstance.particles().count() / activeThreadCount;
-			std::uint32_t threadsWithLargerLoadCount = runtimeInstance.particles().count() % activeThreadCount;
+			std::uint32_t particleCountInThisThread = particleCollection.count() / activeThreadCount;
+			std::uint32_t threadsWithLargerLoadCount = particleCollection.count() % activeThreadCount;
 			std::uint32_t workgroupIndex = 0;
 
 			for(std::uint32_t threadIndex = 0; threadIndex < activeThreadCount; threadIndex++) {
@@ -38,114 +67,69 @@ void MultiThreadedEffectEngine::advance(float_t dt) {
 					? particleCountInThisThread
 					: particleCountInThisThread + 1;
 
-				threadPool->enqueue(threadIndex, &ParticleModifierPipeline::run, &particleModifierPipeline,
+				engineThreadPool->enqueue(threadIndex, &ParticleModifier::apply, engineParticleModifier.get(),
+					particleCollection.writePtr(workgroupIndex),
+					workgroupSize,
 					&engineEffect,
-					rtContext, runtimeInstance.id(),
-					runtimeInstance.particles().writePtr(workgroupIndex),
-					workgroupSize);
+					emissionPair.emitterId, emissionPair.typeId,
+					engineContext);
 
 				workgroupIndex += workgroupSize;
 			}
 
 			for(std::uint32_t threadIndex = 0; threadIndex < activeThreadCount; threadIndex++) {
-				threadPool->wait(threadIndex);
+				engineThreadPool->wait(threadIndex);
 			}
 		}
 		else {
-			particleModifierPipeline.run(&engineEffect,
-				rtContext, runtimeInstance.id(),
-				runtimeInstance.particles().writePtr(),
-				runtimeInstance.particles().count());
+			engineParticleModifier->apply(
+				particleCollection.writePtr(),
+				particleCollection.count(),
+				&engineEffect,
+				emissionPair.emitterId, emissionPair.typeId,
+				engineContext);
 		}
 
-		totalActiveThreadCount = std::max(totalActiveThreadCount, activeThreadCount);
+		engineActiveThreadCount = std::max(engineActiveThreadCount, activeThreadCount);
 	}
 
-	engineTime += dt;
+	engineContext.time() += dt;
 }
-void MultiThreadedEffectEngine::restart(bool reset) {
-	engineTime = 0.0;
-	engineDeltaTime = 0.0;
-	triggerActivationTimes.clear();
-
-	if(reset) {
-		particleGenerator.reset();
-	}
+void MultiThreadedEffectEngine::restart() {
+	engineContext.time() = 0.0;
+	engineContext.deltaTime() = 0.0;
+	engineContext.triggerActivationTimes().clear();
+}
+void MultiThreadedEffectEngine::reseed(std::uint32_t seed) {
+	engineState.rng() = std::mt19937(seed);
 }
 
-void MultiThreadedEffectEngine::seed(std::uint32_t seed) {
-	particleGenerator.seed(seed);
+void MultiThreadedEffectEngine::generateParticles(std::uint32_t count, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) {
+	engineParticleGenerator->generate(engineState,
+		count, &engineEffect, particleEmitterId, particleTypeId, runtimeContext);
+}
+void MultiThreadedEffectEngine::clearParticles() {
+	engineParticleGenerator->clear(engineState);
 }
 
 void MultiThreadedEffectEngine::activateTrigger(id_t triggerId) {
 	if(engineEffect.triggers().count(triggerId) == 0 ||
-		triggerActivationTimes.count(triggerId) != 0) {
+		engineContext.triggerActivationTimes().count(triggerId) != 0) {
 		return;
 	}
 
-	triggerActivationTimes[triggerId] = engineTime + engineDeltaTime * 0.5;
-}
-
-void MultiThreadedEffectEngine::spawnParticles(id_t particleEmitterId, std::uint32_t count, float_t time) {
-	for(ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
-		if(runtimeInstance.emitterId() != particleEmitterId) {
-			continue;
-		}
-
-		const ParticleEmitter& particleEmitter = engineEffect.sceneGraph().at<ParticleEmitter>(runtimeInstance.emitterId());
-		if(!particleEmitter.primary()) {
-			continue;
-		}
-
-		particleGenerator.generate(particleEmitterId, runtimeInstance.typeId(), count, time);
-	}
-}
-void MultiThreadedEffectEngine::spawnParticles(id_t particleEmitterId, id_t particleTypeId, std::uint32_t count, float_t time) {
-	ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
-	if(!runtimeInstance) {
-		return;
-	}
-
-	const ParticleEmitter& particleEmitter = engineEffect.sceneGraph().at<ParticleEmitter>(runtimeInstance->emitterId());
-	if(!particleEmitter.primary()) {
-		return;
-	}
-
-	particleGenerator.generate(particleEmitterId, particleTypeId, count, time);
-}
-
-const ParticleCollection* MultiThreadedEffectEngine::particles(id_t particleEmitterId, id_t particleTypeId) const {
-	const ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
-	if(!runtimeInstance) {
-		return nullptr;
-	}
-
-	return &runtimeInstance->particles();
-}
-
-std::uint32_t MultiThreadedEffectEngine::particleCount(id_t particleEmitterId, id_t particleTypeId) const {
-	const ParticleRuntimeInstance* runtimeInstance = particleRuntimeInstances.find(particleEmitterId, particleTypeId);
-	if(!runtimeInstance) {
-		return 0;
-	}
-
-	return runtimeInstance->particles().count();
-}
-std::uint32_t MultiThreadedEffectEngine::particleCount() const {
-	std::uint32_t count = 0;
-	for(const ParticleRuntimeInstance& runtimeInstance : particleRuntimeInstances) {
-		count += runtimeInstance.particles().count();
-	}
-
-	return count;
-}
-
-RuntimeContext MultiThreadedEffectEngine::runtimeContext() const {
-	return RuntimeContext(engineTime, engineDeltaTime, triggerActivationTimes);
+	engineContext.triggerActivationTimes()[triggerId] = engineContext.time() + engineContext.deltaTime() * 0.5;
 }
 
 const Effect& MultiThreadedEffectEngine::effect() const {
 	return engineEffect;
+}
+
+const EffectRuntimeState& MultiThreadedEffectEngine::state() const {
+	return engineState;
+}
+const EffectRuntimeContext& MultiThreadedEffectEngine::context() const {
+	return engineContext;
 }
 
 std::uint32_t MultiThreadedEffectEngine::particleCapacity() const {
@@ -153,14 +137,13 @@ std::uint32_t MultiThreadedEffectEngine::particleCapacity() const {
 }
 
 void MultiThreadedEffectEngine::particleCountPerThread(std::uint32_t count) {
-	workPerThread = std::max(count, 1u);
+	engineParticleCountPerThread = std::max(count, 1u);
 }
 std::uint32_t MultiThreadedEffectEngine::particleCountPerThread() const {
-	return workPerThread;
+	return engineParticleCountPerThread;
 }
-
 std::uint32_t MultiThreadedEffectEngine::activeThreadCount() const {
-	return totalActiveThreadCount;
+	return engineActiveThreadCount;
 }
 }
 

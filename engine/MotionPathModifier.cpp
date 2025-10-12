@@ -3,12 +3,12 @@
 #include "../effect/ParticleType.h"
 
 namespace pixelpart {
-void MotionPathModifier::run(const Effect* effect, RuntimeContext runtimeContext, ParticleRuntimeId runtimeId,
-	ParticleCollection::WritePtr particles, std::uint32_t particleCount) const {
+void MotionPathModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
 	const float_t positionLookahead = 0.1;
 	const float_t targetLookahead = 0.01;
 
-	const ParticleType& particleType = effect->particleTypes().at(runtimeId.typeId);
+	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
 	if(particleType.motionPathForce().value() < 0.1) {
 		return;
 	}
@@ -26,7 +26,7 @@ void MotionPathModifier::run(const Effect* effect, RuntimeContext runtimeContext
 	}
 }
 
-void MotionPathModifier::prepare(const Effect& effect, const RuntimeContext& runtimeContext) {
+void MotionPathModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
 
 }
 }
