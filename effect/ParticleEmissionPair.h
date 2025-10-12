@@ -2,6 +2,7 @@
 
 #include "../common/Types.h"
 #include "../common/Id.h"
+#include "../common/HashCombine.h"
 
 namespace pixelpart {
 struct ParticleEmissionPair {
@@ -18,8 +19,10 @@ bool operator==(const ParticleEmissionPair& lhs, const ParticleEmissionPair& rhs
 template <>
 struct std::hash<pixelpart::ParticleEmissionPair> {
 	std::size_t operator()(const pixelpart::ParticleEmissionPair& pair) const {
-		return
-			std::hash<pixelpart::id_t>()(pair.emitterId) ^
-			std::hash<pixelpart::id_t>()(pair.typeId);
+		std::size_t seed = 0;
+		pixelpart::combineHash(seed, pair.emitterId);
+		pixelpart::combineHash(seed, pair.typeId);
+
+		return seed;
 	}
 };
