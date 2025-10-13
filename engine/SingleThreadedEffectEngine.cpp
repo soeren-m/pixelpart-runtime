@@ -60,6 +60,10 @@ void SingleThreadedEffectEngine::restart() {
 	engineContext.deltaTime() = 0.0;
 	engineContext.triggerActivationTimes().clear();
 }
+void SingleThreadedEffectEngine::reset(const EffectRuntimeState& initialState, EffectRuntimeContext initialContext) {
+	engineState = initialState;
+	engineContext = initialContext;
+}
 void SingleThreadedEffectEngine::reseed(std::uint32_t seed) {
 	engineState.rng() = std::mt19937(seed);
 }

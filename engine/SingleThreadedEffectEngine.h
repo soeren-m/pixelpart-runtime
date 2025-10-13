@@ -25,6 +25,7 @@ public:
 
 	virtual void advance(float_t dt) override;
 	virtual void restart() override;
+	virtual void reset(const EffectRuntimeState& initialState, EffectRuntimeContext initialContext) override;
 	virtual void reseed(std::uint32_t seed) override;
 
 	virtual void generateParticles(std::uint32_t count, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext = EffectRuntimeContext()) override;

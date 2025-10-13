@@ -100,6 +100,10 @@ void MultiThreadedEffectEngine::restart() {
 	engineContext.deltaTime() = 0.0;
 	engineContext.triggerActivationTimes().clear();
 }
+void MultiThreadedEffectEngine::reset(const EffectRuntimeState& initialState, EffectRuntimeContext initialContext) {
+	engineState = initialState;
+	engineContext = initialContext;
+}
 void MultiThreadedEffectEngine::reseed(std::uint32_t seed) {
 	engineState.rng() = std::mt19937(seed);
 }

@@ -14,6 +14,7 @@ public:
 
 	virtual void advance(float_t dt) = 0;
 	virtual void restart() = 0;
+	virtual void reset(const EffectRuntimeState& initialState, EffectRuntimeContext initialContext) = 0;
 	virtual void reseed(std::uint32_t seed) = 0;
 
 	virtual void generateParticles(std::uint32_t count, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) = 0;
