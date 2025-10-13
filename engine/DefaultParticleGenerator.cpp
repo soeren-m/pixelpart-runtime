@@ -18,8 +18,6 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 		ParticleEmissionPair emissionPair = collectionEntry.first;
 		ParticleCollection& particleCollection = collectionEntry.second;
 
-		particleCollection.removeDead();
-
 		const ParticleType& particleType = effect->particleTypes().at(emissionPair.typeId);
 
 		std::uint32_t particleEmitterIndex = effect->sceneGraph().indexOf(emissionPair.emitterId);
@@ -93,9 +91,9 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 		}
 	}
 
-	for(auto& collectionEntry : state.particleCollections()) {
+	for(const auto& collectionEntry : state.particleCollections()) {
 		ParticleEmissionPair emissionPair = collectionEntry.first;
-		ParticleCollection& particleCollection = collectionEntry.second;
+		const ParticleCollection& particleCollection = collectionEntry.second;
 
 		const std::vector<ParticleEmissionPair>& subEmissionPairs = subEmissionPairCollection.at(emissionPair);
 		if(subEmissionPairs.empty()) {
@@ -149,6 +147,13 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 				}
 			}
 		}
+	}
+
+	for(auto& collectionEntry : state.particleCollections()) {
+		ParticleEmissionPair emissionPair = collectionEntry.first;
+		ParticleCollection& particleCollection = collectionEntry.second;
+
+		particleCollection.removeDead();
 	}
 }
 void DefaultParticleGenerator::clear(EffectRuntimeState& state) const {
