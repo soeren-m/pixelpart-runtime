@@ -17,6 +17,7 @@ public:
 
 	Node() = default;
 	Node(id_t ownId, id_t parentId = id_t());
+	virtual ~Node() = default;
 
 	std::unique_ptr<Node> clone() const;
 

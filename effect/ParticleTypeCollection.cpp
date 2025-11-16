@@ -16,8 +16,8 @@ ParticleTypeCollection::ParticleTypeCollection(const std::vector<ParticleType>& 
 			newId++;
 			used = false;
 
-			for(const ParticleType& particleType : particleTypes) {
-				if(particleType.particleTypeId == newId) {
+			for(const ParticleType& otherParticleType : particleTypes) {
+				if(otherParticleType.particleTypeId == newId) {
 					used = true;
 					break;
 				}

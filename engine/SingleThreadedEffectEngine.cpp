@@ -24,9 +24,9 @@ SingleThreadedEffectEngine::SingleThreadedEffectEngine(const Effect& effect,
 	engineEffect(effect),
 	engineParticleGenerator(particleGenerator),
 	engineParticleModifier(particleModifier),
-	engineParticleCapacity(particleCapacity),
 	engineState(initialState),
-	engineContext(initialContext) {
+	engineContext(initialContext),
+	engineParticleCapacity(particleCapacity) {
 
 }
 
