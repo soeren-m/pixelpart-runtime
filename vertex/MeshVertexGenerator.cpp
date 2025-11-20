@@ -76,7 +76,16 @@ void MeshVertexGenerator::generateVertexData(const VertexDataBufferCollection& d
 				generatePosition3d(buffer, attribute, particles, particleCount);
 				break;
 			case VertexAttributeUsage::color:
-				generateColor(buffer, attribute, particles, particleCount);
+				switch(attribute.componentType) {
+					case VertexDataType::type_uint8:
+						generateColorByte(buffer, attribute, particles, particleCount);
+						break;
+					case VertexDataType::type_float:
+						generateColorFloat(buffer, attribute, particles, particleCount);
+						break;
+					default:
+						break;
+				}
 				break;
 			case VertexAttributeUsage::life:
 				generateLife(buffer, attribute, particles, particleCount);
@@ -143,7 +152,6 @@ void MeshVertexGenerator::validateVertexFormat() const {
 		switch(attribute.usage) {
 			case VertexAttributeUsage::position2d:
 			case VertexAttributeUsage::position3d:
-			case VertexAttributeUsage::color:
 			case VertexAttributeUsage::life:
 			case VertexAttributeUsage::velocity2d:
 			case VertexAttributeUsage::velocity3d:
@@ -152,6 +160,11 @@ void MeshVertexGenerator::validateVertexFormat() const {
 			case VertexAttributeUsage::matrix4x4_row_major:
 			case VertexAttributeUsage::matrix4x3_row_major:
 				if(attribute.componentType != VertexDataType::type_float) {
+					throw VertexFormatException("Unsupported component type", attributeIndex);
+				}
+				break;
+			case VertexAttributeUsage::color:
+				if(attribute.componentType != VertexDataType::type_uint8 && attribute.componentType != VertexDataType::type_float) {
 					throw VertexFormatException("Unsupported component type", attributeIndex);
 				}
 				break;
@@ -185,13 +198,26 @@ void MeshVertexGenerator::generatePosition3d(std::uint8_t* buffer, const VertexA
 		buffer += stride;
 	}
 }
-void MeshVertexGenerator::generateColor(std::uint8_t* buffer, const VertexAttribute& attribute,
+void MeshVertexGenerator::generateColorFloat(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		*reinterpret_cast<glm::vec4*>(buffer) = glm::vec4(particles.color[p]);
+		buffer += stride;
+	}
+}
+void MeshVertexGenerator::generateColorByte(std::uint8_t* buffer, const VertexAttribute& attribute,
+	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
+	std::size_t stride = attribute.byteStride;
+	buffer += attribute.byteOffset;
+
+	for(std::uint32_t p = 0; p < particleCount; p++) {
+		*(buffer + 0) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].r * 255.0, 0.0, 255.0));
+		*(buffer + 1) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].g * 255.0, 0.0, 255.0));
+		*(buffer + 2) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].b * 255.0, 0.0, 255.0));
+		*(buffer + 3) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].a * 255.0, 0.0, 255.0));
 		buffer += stride;
 	}
 }

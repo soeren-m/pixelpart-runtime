@@ -112,7 +112,16 @@ void SpriteVertexGenerator::generateVertexData(const VertexDataBufferCollection&
 				generateTextureCoord(buffer, attribute, particles, particleCount);
 				break;
 			case VertexAttributeUsage::color:
-				generateColor(buffer, attribute, particles, particleCount);
+				switch(attribute.componentType) {
+					case VertexDataType::type_uint8:
+						generateColorByte(buffer, attribute, particles, particleCount);
+						break;
+					case VertexDataType::type_float:
+						generateColorFloat(buffer, attribute, particles, particleCount);
+						break;
+					default:
+						break;
+				}
 				break;
 			case VertexAttributeUsage::life:
 				generateLife(buffer, attribute, particles, particleCount);
@@ -172,7 +181,6 @@ void SpriteVertexGenerator::validateVertexFormat() const {
 			case VertexAttributeUsage::position2d:
 			case VertexAttributeUsage::position3d:
 			case VertexAttributeUsage::normal:
-			case VertexAttributeUsage::color:
 			case VertexAttributeUsage::life:
 			case VertexAttributeUsage::velocity2d:
 			case VertexAttributeUsage::velocity3d:
@@ -186,6 +194,11 @@ void SpriteVertexGenerator::validateVertexFormat() const {
 				}
 				if(attribute.dataGenerationMode == VertexDataGenerationMode::instance) {
 					throw VertexFormatException("Unsupported data generation mode", attributeIndex);
+				}
+				break;
+			case VertexAttributeUsage::color:
+				if(attribute.componentType != VertexDataType::type_uint8 && attribute.componentType != VertexDataType::type_float) {
+					throw VertexFormatException("Unsupported component type", attributeIndex);
 				}
 				break;
 			case VertexAttributeUsage::id:
@@ -534,7 +547,7 @@ void SpriteVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const Ver
 		}
 	}
 }
-void SpriteVertexGenerator::generateColor(std::uint8_t* buffer, const VertexAttribute& attribute,
+void SpriteVertexGenerator::generateColorFloat(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -573,6 +586,67 @@ void SpriteVertexGenerator::generateColor(std::uint8_t* buffer, const VertexAttr
 		case VertexDataGenerationMode::instance: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
 				*reinterpret_cast<glm::vec4*>(buffer) = glm::vec4(particles.color[p]);
+				buffer += stride;
+			}
+
+			break;
+		}
+
+		default: {
+			break;
+		}
+	}
+}
+void SpriteVertexGenerator::generateColorByte(std::uint8_t* buffer, const VertexAttribute& attribute,
+	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
+	std::size_t stride = attribute.byteStride;
+	buffer += attribute.byteOffset;
+
+	switch(attribute.dataGenerationMode) {
+		case VertexDataGenerationMode::vertex: {
+			for(std::uint32_t p = 0; p < particleCount; p++) {
+				std::uint8_t r = static_cast<std::uint8_t>(glm::clamp(particles.color[p].r * 255.0, 0.0, 255.0));
+				std::uint8_t g = static_cast<std::uint8_t>(glm::clamp(particles.color[p].g * 255.0, 0.0, 255.0));
+				std::uint8_t b = static_cast<std::uint8_t>(glm::clamp(particles.color[p].b * 255.0, 0.0, 255.0));
+				std::uint8_t a = static_cast<std::uint8_t>(glm::clamp(particles.color[p].a * 255.0, 0.0, 255.0));
+
+				for(std::uint32_t v = 0; v < 6; v++) {
+					*(buffer + 0) = r;
+					*(buffer + 1) = g;
+					*(buffer + 2) = b;
+					*(buffer + 3) = a;
+					buffer += stride;
+				}
+			}
+
+			break;
+		}
+
+		case VertexDataGenerationMode::element: {
+			for(std::uint32_t p = 0; p < particleCount; p++) {
+				std::uint8_t r = static_cast<std::uint8_t>(glm::clamp(particles.color[p].r * 255.0, 0.0, 255.0));
+				std::uint8_t g = static_cast<std::uint8_t>(glm::clamp(particles.color[p].g * 255.0, 0.0, 255.0));
+				std::uint8_t b = static_cast<std::uint8_t>(glm::clamp(particles.color[p].b * 255.0, 0.0, 255.0));
+				std::uint8_t a = static_cast<std::uint8_t>(glm::clamp(particles.color[p].a * 255.0, 0.0, 255.0));
+
+				for(std::uint32_t v = 0; v < 4; v++) {
+					*(buffer + 0) = r;
+					*(buffer + 1) = g;
+					*(buffer + 2) = b;
+					*(buffer + 3) = a;
+					buffer += stride;
+				}
+			}
+
+			break;
+		}
+
+		case VertexDataGenerationMode::instance: {
+			for(std::uint32_t p = 0; p < particleCount; p++) {
+				*(buffer + 0) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].r * 255.0, 0.0, 255.0));
+				*(buffer + 1) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].g * 255.0, 0.0, 255.0));
+				*(buffer + 2) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].b * 255.0, 0.0, 255.0));
+				*(buffer + 3) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].a * 255.0, 0.0, 255.0));
 				buffer += stride;
 			}
 

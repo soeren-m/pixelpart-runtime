@@ -276,7 +276,16 @@ void TrailVertexGenerator::generateVertexData(const VertexDataBufferCollection& 
 				generateTextureCoord(buffer, attribute, particles, particleCount);
 				break;
 			case VertexAttributeUsage::color:
-				generateColor(buffer, attribute, particles, particleCount);
+				switch(attribute.componentType) {
+					case VertexDataType::type_uint8:
+						generateColorByte(buffer, attribute, particles, particleCount);
+						break;
+					case VertexDataType::type_float:
+						generateColorFloat(buffer, attribute, particles, particleCount);
+						break;
+					default:
+						break;
+				}
 				break;
 			case VertexAttributeUsage::life:
 				generateLife(buffer, attribute, particles, particleCount);
@@ -340,7 +349,6 @@ void TrailVertexGenerator::validateVertexFormat() const {
 			case VertexAttributeUsage::position2d:
 			case VertexAttributeUsage::position3d:
 			case VertexAttributeUsage::normal:
-			case VertexAttributeUsage::color:
 			case VertexAttributeUsage::life:
 			case VertexAttributeUsage::velocity2d:
 			case VertexAttributeUsage::velocity3d:
@@ -350,6 +358,11 @@ void TrailVertexGenerator::validateVertexFormat() const {
 				break;
 			case VertexAttributeUsage::texture_coord:
 				if(attribute.componentType != VertexDataType::type_float) {
+					throw VertexFormatException("Unsupported component type", attributeIndex);
+				}
+				break;
+			case VertexAttributeUsage::color:
+				if(attribute.componentType != VertexDataType::type_uint8 && attribute.componentType != VertexDataType::type_float) {
 					throw VertexFormatException("Unsupported component type", attributeIndex);
 				}
 				break;
@@ -727,7 +740,7 @@ void TrailVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const Vert
 		}
 	}
 }
-void TrailVertexGenerator::generateColor(std::uint8_t* buffer, const VertexAttribute& attribute,
+void TrailVertexGenerator::generateColorFloat(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -743,22 +756,22 @@ void TrailVertexGenerator::generateColor(std::uint8_t* buffer, const VertexAttri
 				switch(generatorVertexFormat.windingOrder()) {
 					case VertexWindingOrder::cw:
 						for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-							glm::vec2 velocity = trail.velocity[p];
-							glm::vec2 nextVelocity = trail.velocity[p + 1];
-							glm::vec2 centerVelocity = (velocity + nextVelocity) * 0.5f;
+							glm::vec4 color = trail.color[p];
+							glm::vec4 nextColor = trail.color[p + 1];
+							glm::vec4 centerColor = (color + nextColor) * 0.5f;
 
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = velocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = centerVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = velocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = nextVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = centerVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 5) = velocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 6) = velocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 7) = centerVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 8) = nextVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 9) = nextVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 10) = centerVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 11) = nextVelocity;
+							*reinterpret_cast<glm::vec4*>(buffer + stride * 0) = color;
+							*reinterpret_cast<glm::vec4*>(buffer + stride * 1) = centerColor;
+							*reinterpret_cast<glm::vec4*>(buffer + stride * 2) = color;
+							*reinterpret_cast<glm::vec4*>(buffer + stride * 3) = nextColor;
+							*reinterpret_cast<glm::vec4*>(buffer + stride * 4) = centerColor;
+							*reinterpret_cast<glm::vec4*>(buffer + stride * 5) = color;
+							*reinterpret_cast<glm::vec4*>(buffer + stride * 6) = color;
+							*reinterpret_cast<glm::vec4*>(buffer + stride * 7) = centerColor;
+							*reinterpret_cast<glm::vec4*>(buffer + stride * 8) = nextColor;
+							*reinterpret_cast<glm::vec4*>(buffer + stride * 9) = nextColor;
+							*reinterpret_cast<glm::vec4*>(buffer + stride * 10) = centerColor;
+							*reinterpret_cast<glm::vec4*>(buffer + stride * 11) = nextColor;
 							buffer += stride * 12;
 						}
 						break;
@@ -798,6 +811,90 @@ void TrailVertexGenerator::generateColor(std::uint8_t* buffer, const VertexAttri
 					*reinterpret_cast<glm::vec4*>(buffer + stride * 2) = nextColor;
 					*reinterpret_cast<glm::vec4*>(buffer + stride * 3) = nextColor;
 					*reinterpret_cast<glm::vec4*>(buffer + stride * 4) = (color + nextColor) * 0.5f;
+					buffer += stride * 5;
+				}
+
+				break;
+			}
+
+			default: {
+				break;
+			}
+		}
+	}
+}
+void TrailVertexGenerator::generateColorByte(std::uint8_t* buffer, const VertexAttribute& attribute,
+	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
+	std::size_t stride = attribute.byteStride;
+	buffer += attribute.byteOffset;
+
+	for(const auto& trailEntry : generatorTrails) {
+		const Trail& trail = trailEntry.second;
+		if(trail.color.size() < 2) {
+			continue;
+		}
+
+		switch(attribute.dataGenerationMode) {
+			case VertexDataGenerationMode::vertex: {
+				switch(generatorVertexFormat.windingOrder()) {
+					case VertexWindingOrder::cw:
+						for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
+							glm::u8vec4 color = glm::clamp(trail.color[p] * 255.0, 0.0, 255.0);
+							glm::u8vec4 nextColor = glm::clamp(trail.color[p + 1] * 255.0, 0.0, 255.0);
+							glm::u8vec4 centerColor = glm::clamp((trail.color[p] + trail.color[p + 1]) * 0.5 * 255.0, 0.0, 255.0);
+
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 0) = color;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 1) = centerColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 2) = color;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 3) = nextColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 4) = centerColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 5) = color;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 6) = color;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 7) = centerColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 8) = nextColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 9) = nextColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 10) = centerColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 11) = nextColor;
+							buffer += stride * 12;
+						}
+						break;
+					default:
+						for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
+							glm::u8vec4 color = glm::clamp(trail.color[p] * 255.0, 0.0, 255.0);
+							glm::u8vec4 nextColor = glm::clamp(trail.color[p + 1] * 255.0, 0.0, 255.0);
+							glm::u8vec4 centerColor = glm::clamp((trail.color[p] + trail.color[p + 1]) * 0.5 * 255.0, 0.0, 255.0);
+
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 0) = color;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 1) = color;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 2) = centerColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 3) = nextColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 4) = color;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 5) = centerColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 6) = color;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 7) = nextColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 8) = centerColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 9) = nextColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 10) = nextColor;
+							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 11) = centerColor;
+							buffer += stride * 12;
+						}
+						break;
+				}
+
+				break;
+			}
+
+			case VertexDataGenerationMode::element: {
+				for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
+					glm::u8vec4 color = glm::clamp(trail.color[p] * 255.0, 0.0, 255.0);
+					glm::u8vec4 nextColor = glm::clamp(trail.color[p + 1] * 255.0, 0.0, 255.0);
+					glm::u8vec4 centerColor = glm::clamp((trail.color[p] + trail.color[p + 1]) * 0.5 * 255.0, 0.0, 255.0);
+
+					*reinterpret_cast<glm::u8vec4*>(buffer + stride * 0) = color;
+					*reinterpret_cast<glm::u8vec4*>(buffer + stride * 1) = color;
+					*reinterpret_cast<glm::u8vec4*>(buffer + stride * 2) = nextColor;
+					*reinterpret_cast<glm::u8vec4*>(buffer + stride * 3) = nextColor;
+					*reinterpret_cast<glm::u8vec4*>(buffer + stride * 4) = centerColor;
 					buffer += stride * 5;
 				}
 

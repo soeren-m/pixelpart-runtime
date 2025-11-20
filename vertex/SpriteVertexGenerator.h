@@ -119,7 +119,9 @@ private:
 		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
 	void generateTextureCoord(std::uint8_t* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
-	void generateColor(std::uint8_t* buffer, const VertexAttribute& attribute,
+	void generateColorFloat(std::uint8_t* buffer, const VertexAttribute& attribute,
+		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
+	void generateColorByte(std::uint8_t* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
 	void generateLife(std::uint8_t* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
