@@ -2,7 +2,7 @@
 
 [Pixelpart](https://pixelpart.net/) is a tool for designing visual effects for games. This library provides methods to load and simulate effects created with *Pixelpart*. Rendering, however, is not part of the library.
 
-The library is written in C++11 and used as a basis for various game engine plugins.
+The library is written in C++17 and used as a basis for various game engine plugins.
 
 ## Building
 

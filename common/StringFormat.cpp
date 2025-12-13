@@ -1,4 +1,4 @@
-#include "StringUtil.h"
+#include "StringFormat.h"
 #include <cstddef>
 
 namespace pixelpart {

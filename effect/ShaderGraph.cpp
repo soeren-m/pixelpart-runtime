@@ -1,6 +1,7 @@
 #include "ShaderGraph.h"
 #include "../common/VariantValue.h"
-#include "../common/StringUtil.h"
+#include "../common/Serialization.h"
+#include "../common/StringFormat.h"
 #include "../common/SortedJson.h"
 #include <algorithm>
 
@@ -81,8 +82,8 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 				std::string nodeIdentifier = replaceString(shaderNodeType.name, "_", " ");
 				std::string parameterVariableName = graphLanguage.parameterPrefix
 					+ nodeIdentifier
-					+ "_" + std::to_string(nodeId.value())
-					+ "_" + std::to_string(parameterIndex);
+					+ "_" + serializeInt(nodeId.value())
+					+ "_" + serializeInt(parameterIndex);
 
 				result.parameterNames[nodeId] = parameterVariableName;
 
@@ -100,34 +101,34 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 				case VariantParameter::Value::type_int:
 				case VariantParameter::Value::type_enum: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_int];
-					valueString = replaceString(valueString, std::to_string(parameterValue.valueInt()), "{0}");
+					valueString = replaceString(valueString, serializeInt(parameterValue.valueInt()), "{0}");
 					break;
 				}
 				case VariantParameter::Value::type_float: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float];
-					valueString = replaceString(valueString, std::to_string(parameterValue.valueFloat()), "{0}");
+					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat(), 6), "{0}");
 					break;
 				}
 				case VariantParameter::Value::type_float2: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float2];
-					valueString = replaceString(valueString, std::to_string(parameterValue.valueFloat2().x), "{0}");
-					valueString = replaceString(valueString, std::to_string(parameterValue.valueFloat2().y), "{1}");
+					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat2().x, 6), "{0}");
+					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat2().y, 6), "{1}");
 					break;
 				}
 				case VariantParameter::Value::type_float3: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float3];
-					valueString = replaceString(valueString, std::to_string(parameterValue.valueFloat3().x), "{0}");
-					valueString = replaceString(valueString, std::to_string(parameterValue.valueFloat3().y), "{1}");
-					valueString = replaceString(valueString, std::to_string(parameterValue.valueFloat3().z), "{2}");
+					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().x, 6), "{0}");
+					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().y, 6), "{1}");
+					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().z, 6), "{2}");
 					break;
 				}
 				case VariantParameter::Value::type_float4:
 				case VariantParameter::Value::type_color: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float4];
-					valueString = replaceString(valueString, std::to_string(parameterValue.valueFloat4().x), "{0}");
-					valueString = replaceString(valueString, std::to_string(parameterValue.valueFloat4().y), "{1}");
-					valueString = replaceString(valueString, std::to_string(parameterValue.valueFloat4().z), "{2}");
-					valueString = replaceString(valueString, std::to_string(parameterValue.valueFloat4().w), "{3}");
+					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().x, 6), "{0}");
+					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().y, 6), "{1}");
+					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().z, 6), "{2}");
+					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().w, 6), "{3}");
 					break;
 				}
 				case VariantParameter::Value::type_bool: {
@@ -141,7 +142,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 					for(std::uint32_t pointIndex = 0; pointIndex < curveInterpolationPointCount; pointIndex++) {
 						float_t pointValue = curve.at(static_cast<float_t>(pointIndex) / static_cast<float_t>(curveInterpolationPointCount - 1));
 						std::string pointValueString = graphLanguage.typeConstructors[VariantValue::type_float];
-						pointValueString = replaceString(pointValueString, std::to_string(pointValue), "{0}");
+						pointValueString = replaceString(pointValueString, serializeFloat(pointValue, 6), "{0}");
 
 						valueString += pointValueString;
 						if(pointIndex + 1 < curveInterpolationPointCount) {
@@ -157,9 +158,9 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 					for(std::uint32_t pointIndex = 0; pointIndex < curveInterpolationPointCount; pointIndex++) {
 						float3_t pointValue = gradient.at(static_cast<float_t>(pointIndex) / static_cast<float_t>(curveInterpolationPointCount - 1));
 						std::string pointValueString = graphLanguage.typeConstructors[VariantValue::type_float3];
-						pointValueString = replaceString(pointValueString, std::to_string(pointValue.x), "{0}");
-						pointValueString = replaceString(pointValueString, std::to_string(pointValue.y), "{1}");
-						pointValueString = replaceString(pointValueString, std::to_string(pointValue.z), "{2}");
+						pointValueString = replaceString(pointValueString, serializeFloat(pointValue.x, 6), "{0}");
+						pointValueString = replaceString(pointValueString, serializeFloat(pointValue.y, 6), "{1}");
+						pointValueString = replaceString(pointValueString, serializeFloat(pointValue.z, 6), "{2}");
 
 						valueString += pointValueString;
 						if(pointIndex + 1 < curveInterpolationPointCount) {
@@ -187,7 +188,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 			}
 		}
 
-		code = replaceString(code, valueString, "{param" + std::to_string(parameterIndex) + "}");
+		code = replaceString(code, valueString, "{param" + serializeInt(parameterIndex) + "}");
 	}
 
 	std::string inputCode;
@@ -212,33 +213,33 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 				}
 				case VariantValue::type_int: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_int];
-					valueString = replaceString(valueString, std::to_string(shaderNodeType.defaultInputs[inputSlot].valueInt()), "{0}");
+					valueString = replaceString(valueString, serializeInt(shaderNodeType.defaultInputs[inputSlot].valueInt()), "{0}");
 					break;
 				}
 				case VariantValue::type_float: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float];
-					valueString = replaceString(valueString, std::to_string(shaderNodeType.defaultInputs[inputSlot].valueFloat()), "{0}");
+					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat(), 6), "{0}");
 					break;
 				}
 				case VariantValue::type_float2: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float2];
-					valueString = replaceString(valueString, std::to_string(shaderNodeType.defaultInputs[inputSlot].valueFloat2().x), "{0}");
-					valueString = replaceString(valueString, std::to_string(shaderNodeType.defaultInputs[inputSlot].valueFloat2().y), "{1}");
+					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat2().x, 6), "{0}");
+					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat2().y, 6), "{1}");
 					break;
 				}
 				case VariantValue::type_float3: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float3];
-					valueString = replaceString(valueString, std::to_string(shaderNodeType.defaultInputs[inputSlot].valueFloat3().x), "{0}");
-					valueString = replaceString(valueString, std::to_string(shaderNodeType.defaultInputs[inputSlot].valueFloat3().y), "{1}");
-					valueString = replaceString(valueString, std::to_string(shaderNodeType.defaultInputs[inputSlot].valueFloat3().z), "{2}");
+					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat3().x, 6), "{0}");
+					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat3().y, 6), "{1}");
+					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat3().z, 6), "{2}");
 					break;
 				}
 				case VariantValue::type_float4: {
 					valueString = graphLanguage.typeConstructors[VariantValue::type_float4];
-					valueString = replaceString(valueString, std::to_string(shaderNodeType.defaultInputs[inputSlot].valueFloat4().x), "{0}");
-					valueString = replaceString(valueString, std::to_string(shaderNodeType.defaultInputs[inputSlot].valueFloat4().y), "{1}");
-					valueString = replaceString(valueString, std::to_string(shaderNodeType.defaultInputs[inputSlot].valueFloat4().z), "{2}");
-					valueString = replaceString(valueString, std::to_string(shaderNodeType.defaultInputs[inputSlot].valueFloat4().w), "{3}");
+					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat4().x, 6), "{0}");
+					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat4().y, 6), "{1}");
+					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat4().z, 6), "{2}");
+					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat4().w, 6), "{3}");
 					break;
 				}
 				default: {
@@ -246,7 +247,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 				}
 			}
 
-			code = replaceString(code, valueString, "{in" + std::to_string(inputSlot) + "}");
+			code = replaceString(code, valueString, "{in" + serializeInt(inputSlot) + "}");
 		}
 		else {
 			throw BuildException("Input node not found", nodeId, static_cast<std::uint32_t>(inputSlot));
@@ -263,12 +264,12 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 
 	result.nodeOutputVariables[nodeId] = std::vector<std::string>();
 	for(std::size_t outputSlot = 0; outputSlot < shaderNodeType.outputs.size(); outputSlot++) {
-		std::string outputVariableName = graphLanguage.variablePrefix + std::to_string(result.variableCount++);
+		std::string outputVariableName = graphLanguage.variablePrefix + serializeInt(result.variableCount++);
 		std::string outputVariableDefinition = graphLanguage.typeNames[static_cast<std::size_t>(signature.outputTypes[outputSlot])] + " " + outputVariableName;
 		result.nodeOutputVariables[nodeId].push_back(outputVariableName);
 
-		code = replaceString(code, outputVariableName, "{out" + std::to_string(outputSlot) + "}");
-		code = replaceString(code, outputVariableDefinition, "{outdef" + std::to_string(outputSlot) + "}");
+		code = replaceString(code, outputVariableName, "{out" + serializeInt(outputSlot) + "}");
+		code = replaceString(code, outputVariableDefinition, "{outdef" + serializeInt(outputSlot) + "}");
 		result.variableCount++;
 	}
 
@@ -290,7 +291,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 			sourceValueType = shaderNodeType.defaultInputs[inputSlot].type();
 		}
 
-		std::string inputVariableTemplate = "{in" + std::to_string(inputSlot) + "}";
+		std::string inputVariableTemplate = "{in" + serializeInt(inputSlot) + "}";
 
 		if(typeMatch[inputSlot] != typematch_exact) {
 			std::string codeTypeCast = graphLanguage.typeCasts[signature.inputTypes[inputSlot]][sourceValueType];

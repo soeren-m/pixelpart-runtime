@@ -1,4 +1,5 @@
 #include "MeshResource.h"
+#include "../common/Serialization.h"
 #include "../common/Compression.h"
 #include <cstddef>
 #include <string>
@@ -41,7 +42,7 @@ const std::vector<glm::vec2>& MeshResource::textureCoords() const {
 std::pair<std::string, std::size_t> serializeIntegerData(const std::vector<std::uint32_t>& data) {
 	std::string stringData;
 	for(std::size_t dataIndex = 0; dataIndex < data.size(); dataIndex++) {
-		stringData += std::to_string(data[dataIndex]);
+		stringData += serializeInt(data[dataIndex]);
 
 		if(dataIndex + 1 < data.size()) {
 			stringData += ' ';
@@ -55,10 +56,10 @@ std::pair<std::string, std::size_t> serializeIntegerData(const std::vector<std::
 std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::vec2>& data) {
 	std::string stringData;
 	for(std::size_t dataIndex = 0; dataIndex < data.size(); dataIndex++) {
-		stringData += std::to_string(data[dataIndex].x);
+		stringData += serializeFloat(data[dataIndex].x, 6);
 		stringData += ' ';
 
-		stringData += std::to_string(data[dataIndex].y);
+		stringData += serializeFloat(data[dataIndex].y, 6);
 		if(dataIndex + 1 < data.size()) {
 			stringData += ' ';
 		}
@@ -71,13 +72,13 @@ std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::v
 std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::vec3>& data) {
 	std::string stringData;
 	for(std::size_t dataIndex = 0; dataIndex < data.size(); dataIndex++) {
-		stringData += std::to_string(data[dataIndex].x);
+		stringData += serializeFloat(data[dataIndex].x, 6);
 		stringData += ' ';
 
-		stringData += std::to_string(data[dataIndex].y);
+		stringData += serializeFloat(data[dataIndex].y, 6);
 		stringData += ' ';
 
-		stringData += std::to_string(data[dataIndex].z);
+		stringData += serializeFloat(data[dataIndex].z, 6);
 		if(dataIndex + 1 < data.size()) {
 			stringData += ' ';
 		}
@@ -96,7 +97,7 @@ void deserializeIntegerData(std::vector<std::uint32_t>& integerData, const std::
 		std::string token;
 		std::getline(dataStream, token, ' ');
 
-		integerData.push_back(static_cast<std::uint32_t>(std::stoul(token)));
+		integerData.push_back(deserializeInt<std::uint32_t>(token));
 	}
 }
 void deserializeVectorData(std::vector<glm::vec2>& vectorData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
@@ -108,10 +109,10 @@ void deserializeVectorData(std::vector<glm::vec2>& vectorData, const std::string
 		std::string token;
 
 		std::getline(dataStream, token, ' ');
-		vector.x = std::stof(token);
+		vector.x = deserializeFloat<float>(token);
 
 		std::getline(dataStream, token, ' ');
-		vector.y = std::stof(token);
+		vector.y = deserializeFloat<float>(token);
 
 		vectorData.push_back(vector);
 	}
@@ -125,13 +126,13 @@ void deserializeVectorData(std::vector<glm::vec3>& vectorData, const std::string
 		std::string token;
 
 		std::getline(dataStream, token, ' ');
-		vector.x = std::stof(token);
+		vector.x = deserializeFloat<float>(token);
 
 		std::getline(dataStream, token, ' ');
-		vector.y = std::stof(token);
+		vector.y = deserializeFloat<float>(token);
 
 		std::getline(dataStream, token, ' ');
-		vector.z = std::stof(token);
+		vector.z = deserializeFloat<float>(token);
 
 		vectorData.push_back(vector);
 	}

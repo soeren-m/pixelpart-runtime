@@ -1,4 +1,5 @@
 #include "VectorFieldResource.h"
+#include "../common/Serialization.h"
 #include "../common/Compression.h"
 #include <cstddef>
 #include <string>
@@ -25,17 +26,18 @@ void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
 			for(std::size_t x = 0; x < resource.field().width(); x++) {
 				const float3_t& vector = resource.field()(x, y, z);
 
-				dataString += std::to_string(vector.x);
+				dataString += serializeFloat(vector.x, 8);
 				dataString += ' ';
-				dataString += std::to_string(vector.y);
+				dataString += serializeFloat(vector.y, 8);
 				dataString += ' ';
-				dataString += std::to_string(vector.z);
+				dataString += serializeFloat(vector.z, 8);
 				dataString += ' ';
 			}
 		}
 	}
 
-	std::string compressedData = compressBase64(reinterpret_cast<const std::uint8_t*>(dataString.data()), dataString.size(), CompressionMethod::zlib);
+	std::string compressedData = compressBase64(
+		reinterpret_cast<const std::uint8_t*>(dataString.data()), dataString.size(), CompressionMethod::zlib);
 
 	j = nlohmann::ordered_json{
 		{ "name", resource.name() },
@@ -75,13 +77,13 @@ void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
 				std::string token;
 
 				std::getline(dataStream, token, ' ');
-				vector.x = std::stod(token);
+				vector.x = deserializeFloat<float_t>(token);
 
 				std::getline(dataStream, token, ' ');
-				vector.y = std::stod(token);
+				vector.y = deserializeFloat<float_t>(token);
 
 				std::getline(dataStream, token, ' ');
-				vector.z = std::stod(token);
+				vector.z = deserializeFloat<float_t>(token);
 
 				field(x, y, z) = vector;
 			}
