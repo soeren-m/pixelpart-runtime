@@ -1,5 +1,3 @@
-#if defined(PIXELPART_RUNTIME_MULTITHREADING) || defined(__INTELLISENSE__)
-
 #include "MultiThreadedEffectEngine.h"
 #include "ParticleCollection.h"
 #include "ParticleEmissionState.h"
@@ -150,5 +148,3 @@ std::uint32_t MultiThreadedEffectEngine::activeThreadCount() const {
 	return engineActiveThreadCount;
 }
 }
-
-#endif

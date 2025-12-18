@@ -1,7 +1,5 @@
 #pragma once
 
-#if defined(PIXELPART_RUNTIME_MULTITHREADING) || defined(__INTELLISENSE__)
-
 #include "EffectEngine.h"
 #include "ParticleGenerator.h"
 #include "ParticleModifier.h"
@@ -64,5 +62,3 @@ private:
 	std::uint32_t engineActiveThreadCount = 0;
 };
 }
-
-#endif

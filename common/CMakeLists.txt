@@ -9,6 +9,7 @@ target_sources(pixelpart-runtime PRIVATE
 	Id.cpp
 	Math.cpp
 	SerializationException.cpp
+	StdThreadPool.cpp
 	StringFormat.cpp
 	Transform.cpp
 	Types.cpp
