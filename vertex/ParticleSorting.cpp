@@ -8,18 +8,6 @@
 #include <algorithm>
 
 namespace pixelpart {
-template <typename It, typename Comp = std::less<typename std::iterator_traits<It>::value_type>>
-void insertionSort(It begin, It end, Comp comp = Comp()) {
-	std::iter_swap(begin, std::min_element(begin, end, comp));
-
-	for(It i = begin; ++i < end; begin = i) {
-		for(It j = i; comp(*j, *begin); --j, --begin) {
-			std::iter_swap(begin, j);
-		}
-	}
-}
-
-#if defined(PIXELPART_RUNTIME_MULTITHREADING) || defined(__INTELLISENSE__)
 template<typename It, typename Comp>
 std::vector<typename It::value_type> merge(It begin, It mid, It end, Comp comp) {
 	std::vector<typename It::value_type> result;
@@ -38,6 +26,17 @@ std::vector<typename It::value_type> merge(It begin, It mid, It end, Comp comp) 
 	result.insert(result.end(), right, end);
 
 	return result;
+}
+
+template <typename It, typename Comp = std::less<typename std::iterator_traits<It>::value_type>>
+void insertionSort(It begin, It end, Comp comp = Comp()) {
+	std::iter_swap(begin, std::min_element(begin, end, comp));
+
+	for(It i = begin; ++i < end; begin = i) {
+		for(It j = i; comp(*j, *begin); --j, --begin) {
+			std::iter_swap(begin, j);
+		}
+	}
 }
 
 template <typename It, typename Comp = std::less<typename std::iterator_traits<It>::value_type>>
@@ -86,7 +85,6 @@ void parallelInsertionSort(ThreadPool& threadPool, std::size_t minWorkSize, It b
 		std::move(result.cbegin(), result.cend(), begin);
 	}
 }
-#endif
 
 void applySortKeys(ParticleCollection& resultCollection,
 	const ParticleCollection::ReadPtr& particles, std::uint32_t particleCount,
@@ -144,11 +142,11 @@ void sortParticles(ParticleCollection& resultCollection,
 	applySortKeys(resultCollection, particles, particleCount, sortKeys);
 }
 
-#if defined(PIXELPART_RUNTIME_MULTITHREADING) || defined(__INTELLISENSE__)
 void sortParticles(ParticleCollection& resultCollection,
 	const ParticleCollection::ReadPtr& particles, std::uint32_t particleCount,
 	const SceneContext& sceneContext,
-	ParticleSortCriterion sortCriterion, ThreadPool& threadPool) {
+	ParticleSortCriterion sortCriterion,
+	ThreadPool& threadPool) {
 	std::vector<std::uint32_t> sortKeys(particleCount);
 	std::iota(sortKeys.begin(), sortKeys.begin() + particleCount, 0);
 
@@ -176,5 +174,4 @@ void sortParticles(ParticleCollection& resultCollection,
 
 	applySortKeys(resultCollection, particles, particleCount, sortKeys);
 }
-#endif
 }
