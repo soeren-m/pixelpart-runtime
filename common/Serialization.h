@@ -4,6 +4,10 @@
 #include <string>
 #include <charconv>
 
+#ifdef __clang__
+#include <sstream>
+#endif
+
 namespace pixelpart {
 template <typename T>
 std::string serializeInt(T value) {
@@ -43,8 +47,18 @@ std::string serializeFloat(T value, int precision) {
 template <typename T>
 T deserializeFloat(const std::string& str, T defaultValue = T(0)) {
 	T value = defaultValue;
+
+#ifdef __clang__
+	std::stringstream stream;
+	stream.imbue(std::locale::classic());
+	stream << str;
+	stream >> value;
+
+#else
 	std::from_chars_result result =
 		std::from_chars(str.data(), str.data() + str.size(), value, std::chars_format::general);
+
+#endif
 
 	return value;
 }
