@@ -15,6 +15,7 @@ target_sources(pixelpart-runtime PRIVATE
 	Effect.cpp
 	EffectInput.cpp
 	EffectRuntimeContext.cpp
+	Event.cpp
 	ForceField.cpp
 	GroupNode.cpp
 	ImageResource.cpp

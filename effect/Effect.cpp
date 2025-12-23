@@ -43,6 +43,13 @@ const TriggerCollection& Effect::triggers() const {
 	return effectTriggers;
 }
 
+EventCollection& Effect::events() {
+	return effectEvents;
+}
+const EventCollection& Effect::events() const {
+	return effectEvents;
+}
+
 ResourceCollection& Effect::resources() {
 	return effectResources;
 }
@@ -97,6 +104,7 @@ void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 		{ "particles", effect.particleTypes() },
 		{ "inputs", toSortedJson(effect.inputs()) },
 		{ "triggers", toSortedJson(effect.triggers()) },
+		{ "events", toSortedJson(effect.events()) },
 		{ "resources", effect.resources() }
 	};
 }
@@ -106,6 +114,7 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 	effect.particleTypes() = j.value("particles", ParticleTypeCollection());
 	effect.inputs() = j.value("inputs", EffectInputCollection());
 	effect.triggers() = j.value("triggers", TriggerCollection());
+	effect.events() = j.value("events", EventCollection());
 	effect.resources() = j.value("resources", ResourceCollection());
 }
 }

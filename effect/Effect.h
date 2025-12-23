@@ -16,6 +16,7 @@
 #include "ParticleTypeCollection.h"
 #include "EffectInputCollection.h"
 #include "TriggerCollection.h"
+#include "EventCollection.h"
 #include "ResourceCollection.h"
 #include "ParticleEmissionPair.h"
 #include "../json/json.hpp"
@@ -42,6 +43,9 @@ public:
 	TriggerCollection& triggers();
 	const TriggerCollection& triggers() const;
 
+	EventCollection& events();
+	const EventCollection& events() const;
+
 	ResourceCollection& resources();
 	const ResourceCollection& resources() const;
 
@@ -57,6 +61,7 @@ private:
 	ParticleTypeCollection effectParticleTypes;
 	EffectInputCollection effectInputs;
 	TriggerCollection effectTriggers;
+	EventCollection effectEvents;
 	ResourceCollection effectResources;
 };
 
