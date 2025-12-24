@@ -33,6 +33,9 @@ public:
 
 	virtual void activateTrigger(id_t triggerId) override;
 
+	virtual id_t subscribeToEvent(EventCallback func) override;
+	virtual void unsubscribeFromEvent(id_t subscriptionId) override;
+
 	virtual const Effect& effect() const override;
 
 	virtual const EffectRuntimeState& state() const override;
@@ -47,6 +50,9 @@ private:
 
 	EffectRuntimeState engineState;
 	EffectRuntimeContext engineContext;
+
+	std::unordered_map<id_t, EventCallback> engineEventListeners;
+	id_t engineNextEventListenerId = id_t(0);
 
 	std::uint32_t engineParticleCapacity = 0;
 };

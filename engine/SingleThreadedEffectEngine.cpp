@@ -85,6 +85,16 @@ void SingleThreadedEffectEngine::activateTrigger(id_t triggerId) {
 	engineContext.triggerActivationTimes()[triggerId] = engineContext.time() + engineContext.deltaTime() * 0.5;
 }
 
+id_t SingleThreadedEffectEngine::subscribeToEvent(EventCallback func) {
+	id_t subscriptionId = engineNextEventListenerId++;
+	engineEventListeners[subscriptionId] = func;
+
+	return subscriptionId;
+}
+void SingleThreadedEffectEngine::unsubscribeFromEvent(id_t subscriptionId) {
+	engineEventListeners.erase(subscriptionId);
+}
+
 const Effect& SingleThreadedEffectEngine::effect() const {
 	return engineEffect;
 }

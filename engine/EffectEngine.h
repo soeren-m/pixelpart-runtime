@@ -2,14 +2,18 @@
 
 #include "../common/Types.h"
 #include "../common/Id.h"
+#include "../effect/Event.h"
 #include "../effect/Effect.h"
 #include "../effect/EffectRuntimeContext.h"
 #include "EffectRuntimeState.h"
 #include <cstdint>
+#include <functional>
 
 namespace pixelpart {
 class EffectEngine {
 public:
+	using EventCallback = std::function<void(const Event&)>;
+
 	virtual ~EffectEngine() = default;
 
 	virtual void advance(float_t dt) = 0;
@@ -21,6 +25,9 @@ public:
 	virtual void clearParticles() = 0;
 
 	virtual void activateTrigger(id_t triggerId) = 0;
+
+	virtual id_t subscribeToEvent(EventCallback func) = 0;
+	virtual void unsubscribeFromEvent(id_t subscriptionId) = 0;
 
 	virtual const Effect& effect() const = 0;
 
