@@ -16,7 +16,7 @@ public:
 
 	template <typename F, typename... Args>
 	void enqueue(std::uint32_t taskId, F&& f, Args&&... args) {
-		auto task = std::make_shared<std::packaged_task<typename std::result_of<F(Args...)>::type()>>(
+		auto task = std::make_shared<std::packaged_task<typename std::invoke_result<F, Args...>::type()>>(
 			std::bind(std::forward<F>(f), std::forward<Args>(args)...));
 
 		enqueueTask(taskId,
