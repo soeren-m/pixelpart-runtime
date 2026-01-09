@@ -11,9 +11,9 @@ std::unique_ptr<Node> Node::clone() const {
 }
 
 void Node::applyInputs(const ComputeGraph::InputSet& inputs) {
-	nodePosition.input(inputs);
-	nodeRotation.input(inputs);
-	nodeScale.input(inputs);
+	nodePosition.applyInputs(inputs);
+	nodeRotation.applyInputs(inputs);
+	nodeScale.applyInputs(inputs);
 }
 bool Node::usesResource(const std::string& resourceId) const {
 	return false;

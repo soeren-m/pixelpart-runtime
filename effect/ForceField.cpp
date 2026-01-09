@@ -9,7 +9,7 @@ ForceField::ForceField(id_t ownId, id_t parentId) : Node(ownId, parentId) {
 void ForceField::applyInputs(const ComputeGraph::InputSet& inputs) {
 	Node::applyInputs(inputs);
 
-	fieldStrength.input(inputs);
+	fieldStrength.applyInputs(inputs);
 }
 
 void ForceField::infinite(bool mode) {

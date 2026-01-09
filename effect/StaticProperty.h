@@ -6,6 +6,7 @@
 #include "../common/Types.h"
 #include "../common/VariantValue.h"
 #include "../json/json.hpp"
+#include <optional>
 
 namespace pixelpart {
 template <typename T>
@@ -15,14 +16,14 @@ public:
 		propertyComputeGraph.addNode<OutputComputeNode>();
 		recalculateResult();
 	}
-	StaticProperty(const T& initialValue) : propertyBaseValue(initialValue) {
+	StaticProperty(const T& baseValue) : propertyBaseValue(baseValue) {
 		propertyComputeGraph.addNode<OutputComputeNode>();
 		recalculateResult();
 	}
-	StaticProperty(const T& initialValue, const ComputeGraph& graph, ComputeOutputOperation outputOp) :
-		propertyBaseValue(initialValue),
+	StaticProperty(const T& baseValue, const ComputeGraph& graph, ComputeOutputOperation outputOp) :
+		propertyBaseValue(baseValue),
 		propertyComputeGraph(graph),
-		outputOperation(outputOp) {
+		propertyOutputOperation(outputOp) {
 		if(propertyComputeGraph.nodes().size() == 0) {
 			propertyComputeGraph.addNode<OutputComputeNode>();
 		}
@@ -31,16 +32,16 @@ public:
 	}
 
 	T operator()() const {
-		return computedValue;
+		return propertyComputedValue;
 	}
 
 	T value() const {
-		return computedValue;
+		return propertyComputedValue;
 	}
 
-	void input(const ComputeGraph::InputSet& inputs) {
+	void applyInputs(const ComputeGraph::InputSet& inputs) {
 		if(propertyComputeGraph.empty()) {
-			useGraphOutput = false;
+			propertyGraphOutputValue = std::nullopt;
 			recalculateResult();
 
 			return;
@@ -49,15 +50,13 @@ public:
 		propertyComputeGraph.unlinkRemovedInputs(inputs);
 
 		try {
-			graphOutputValue = propertyComputeGraph.evaluate(inputs).at(0).template value<T>();
-
-			useGraphOutput = true;
-			recalculateResult();
+			propertyGraphOutputValue = propertyComputeGraph.evaluate(inputs).at(0).template value<T>();
 		}
 		catch(const ComputeGraph::EvaluationException&) {
-			useGraphOutput = false;
-			recalculateResult();
+			propertyGraphOutputValue = std::nullopt;
 		}
+
+		recalculateResult();
 	}
 
 	void baseValue(T v) {
@@ -76,31 +75,30 @@ public:
 	}
 
 	void computeOutputOperation(ComputeOutputOperation operation) {
-		outputOperation = operation;
+		propertyOutputOperation = operation;
 		recalculateResult();
 	}
 	ComputeOutputOperation computeOutputOperation() const {
-		return outputOperation;
+		return propertyOutputOperation;
 	}
 
 private:
 	void recalculateResult() {
-		if(useGraphOutput) {
-			computedValue = applyComputeOutputOperation(propertyBaseValue, graphOutputValue, outputOperation);
+		if(propertyGraphOutputValue) {
+			propertyComputedValue = applyComputeOutputOperation(propertyBaseValue, propertyGraphOutputValue.value(), propertyOutputOperation);
 		}
 		else {
-			computedValue = propertyBaseValue;
+			propertyComputedValue = propertyBaseValue;
 		}
 	}
 
 	T propertyBaseValue = T();
 
 	ComputeGraph propertyComputeGraph;
-	ComputeOutputOperation outputOperation = ComputeOutputOperation::set;
+	ComputeOutputOperation propertyOutputOperation = ComputeOutputOperation::set;
 
-	T computedValue = T();
-	T graphOutputValue = T();
-	bool useGraphOutput = false;
+	T propertyComputedValue = T();
+	std::optional<T> propertyGraphOutputValue;
 };
 
 template <typename T>

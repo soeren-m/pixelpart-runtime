@@ -9,9 +9,9 @@ LightSource::LightSource(id_t ownId, id_t parentId) : Node(ownId, parentId) {
 void LightSource::applyInputs(const ComputeGraph::InputSet& inputs) {
 	Node::applyInputs(inputs);
 
-	lightAttenuation.input(inputs);
-	lightColor.input(inputs);
-	lightIntensity.input(inputs);
+	lightAttenuation.applyInputs(inputs);
+	lightColor.applyInputs(inputs);
+	lightIntensity.applyInputs(inputs);
 }
 
 AnimatedProperty<float_t>& LightSource::attenuation() {

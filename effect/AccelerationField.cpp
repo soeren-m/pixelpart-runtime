@@ -8,9 +8,9 @@ AccelerationField::AccelerationField(id_t ownId, id_t parentId) : ForceField(own
 void AccelerationField::applyInputs(const ComputeGraph::InputSet& inputs) {
 	ForceField::applyInputs(inputs);
 
-	fieldAccelerationDirection.input(inputs);
-	fieldAccelerationDirectionVariance.input(inputs);
-	fieldAccelerationStrengthVariance.input(inputs);
+	fieldAccelerationDirection.applyInputs(inputs);
+	fieldAccelerationDirectionVariance.applyInputs(inputs);
+	fieldAccelerationStrengthVariance.applyInputs(inputs);
 }
 
 ForceFieldType AccelerationField::forceFieldType() const {

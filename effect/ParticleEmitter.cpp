@@ -10,8 +10,8 @@ ParticleEmitter::ParticleEmitter(id_t ownId, id_t parentId) : Node(ownId, parent
 void ParticleEmitter::applyInputs(const ComputeGraph::InputSet& inputs) {
 	Node::applyInputs(inputs);
 
-	emitterDirection.input(inputs);
-	emitterSpread.input(inputs);
+	emitterDirection.applyInputs(inputs);
+	emitterSpread.applyInputs(inputs);
 }
 
 void ParticleEmitter::primary(bool mode) {

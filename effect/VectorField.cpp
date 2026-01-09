@@ -8,7 +8,7 @@ VectorField::VectorField(id_t ownId, id_t parentId) : ForceField(ownId, parentId
 void VectorField::applyInputs(const ComputeGraph::InputSet& inputs) {
 	ForceField::applyInputs(inputs);
 
-	fieldTightness.input(inputs);
+	fieldTightness.applyInputs(inputs);
 }
 bool VectorField::usesResource(const std::string& resourceId) const {
 	return resourceId == fieldVectorFieldResourceId;

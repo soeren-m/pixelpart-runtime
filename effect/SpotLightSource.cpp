@@ -8,8 +8,8 @@ SpotLightSource::SpotLightSource(id_t ownId, id_t parentId) : LightSource(ownId,
 void SpotLightSource::applyInputs(const ComputeGraph::InputSet& inputs) {
 	LightSource::applyInputs(inputs);
 
-	lightSpotAngle.input(inputs);
-	lightSpotAngleAttenuation.input(inputs);
+	lightSpotAngle.applyInputs(inputs);
+	lightSpotAngleAttenuation.applyInputs(inputs);
 }
 
 LightSourceType SpotLightSource::lightSourceType() const {

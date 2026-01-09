@@ -8,12 +8,12 @@ NoiseField::NoiseField(id_t ownId, id_t parentId) : ForceField(ownId, parentId) 
 void NoiseField::applyInputs(const ComputeGraph::InputSet& inputs) {
 	ForceField::applyInputs(inputs);
 
-	fieldNoiseOctaves.input(inputs);
-	fieldNoiseFrequency.input(inputs);
-	fieldNoisePersistence.input(inputs);
-	fieldNoiseLacunarity.input(inputs);
-	fieldNoiseAnimationTimeScale.input(inputs);
-	fieldNoiseAnimationTimeBase.input(inputs);
+	fieldNoiseOctaves.applyInputs(inputs);
+	fieldNoiseFrequency.applyInputs(inputs);
+	fieldNoisePersistence.applyInputs(inputs);
+	fieldNoiseLacunarity.applyInputs(inputs);
+	fieldNoiseAnimationTimeScale.applyInputs(inputs);
+	fieldNoiseAnimationTimeBase.applyInputs(inputs);
 }
 
 ForceFieldType NoiseField::forceFieldType() const {

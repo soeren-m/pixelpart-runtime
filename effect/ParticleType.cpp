@@ -6,38 +6,38 @@ ParticleType::ParticleType(id_t ownId) : particleTypeId(ownId) {
 }
 
 void ParticleType::applyInputs(const ComputeGraph::InputSet& inputs) {
-	particlePivot.input(inputs);
-	particleMotionPathForce.input(inputs);
+	particlePivot.applyInputs(inputs);
+	particleMotionPathForce.applyInputs(inputs);
 
-	particleCount.input(inputs);
-	particleLifespan.input(inputs);
-	particleInitialSize.input(inputs);
-	particleInitialRotation.input(inputs);
-	particleInitialVelocity.input(inputs);
-	particleInheritedVelocity.input(inputs);
-	particleInitialOpacity.input(inputs);
+	particleCount.applyInputs(inputs);
+	particleLifespan.applyInputs(inputs);
+	particleInitialSize.applyInputs(inputs);
+	particleInitialRotation.applyInputs(inputs);
+	particleInitialVelocity.applyInputs(inputs);
+	particleInheritedVelocity.applyInputs(inputs);
+	particleInitialOpacity.applyInputs(inputs);
 
-	particleLifetimeMotionPath.input(inputs);
-	particleLifetimeSize.input(inputs);
-	particleLifetimeStretch.input(inputs);
-	particleLifetimePhysicalSize.input(inputs);
-	particleLifetimeRotation.input(inputs);
-	particleLifetimeRotationBySpeed.input(inputs);
-	particleLifetimeAcceleration.input(inputs);
-	particleLifetimeRadialAcceleration.input(inputs);
-	particleLifetimeWeight.input(inputs);
-	particleLifetimeBounce.input(inputs);
-	particleLifetimeFriction.input(inputs);
-	particleLifetimeColor.input(inputs);
-	particleLifetimeOpacity.input(inputs);
+	particleLifetimeMotionPath.applyInputs(inputs);
+	particleLifetimeSize.applyInputs(inputs);
+	particleLifetimeStretch.applyInputs(inputs);
+	particleLifetimePhysicalSize.applyInputs(inputs);
+	particleLifetimeRotation.applyInputs(inputs);
+	particleLifetimeRotationBySpeed.applyInputs(inputs);
+	particleLifetimeAcceleration.applyInputs(inputs);
+	particleLifetimeRadialAcceleration.applyInputs(inputs);
+	particleLifetimeWeight.applyInputs(inputs);
+	particleLifetimeBounce.applyInputs(inputs);
+	particleLifetimeFriction.applyInputs(inputs);
+	particleLifetimeColor.applyInputs(inputs);
+	particleLifetimeOpacity.applyInputs(inputs);
 
-	particleLifespanVariance.input(inputs);
-	particleSizeVariance.input(inputs);
-	particleRotationVariance.input(inputs);
-	particleAngularVelocityVariance.input(inputs);
-	particleVelocityVariance.input(inputs);
-	particleColorVariance.input(inputs);
-	particleOpacityVariance.input(inputs);
+	particleLifespanVariance.applyInputs(inputs);
+	particleSizeVariance.applyInputs(inputs);
+	particleRotationVariance.applyInputs(inputs);
+	particleAngularVelocityVariance.applyInputs(inputs);
+	particleVelocityVariance.applyInputs(inputs);
+	particleColorVariance.applyInputs(inputs);
+	particleOpacityVariance.applyInputs(inputs);
 }
 bool ParticleType::usesResource(const std::string& resourceId) const {
 	if(resourceId == particleMaterialInstance.materialId()) {

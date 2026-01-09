@@ -8,8 +8,8 @@ DragField::DragField(id_t ownId, id_t parentId) : ForceField(ownId, parentId) {
 void DragField::applyInputs(const ComputeGraph::InputSet& inputs) {
 	ForceField::applyInputs(inputs);
 
-	fieldVelocityInfluence.input(inputs);
-	fieldSizeInfluence.input(inputs);
+	fieldVelocityInfluence.applyInputs(inputs);
+	fieldSizeInfluence.applyInputs(inputs);
 }
 
 ForceFieldType DragField::forceFieldType() const {

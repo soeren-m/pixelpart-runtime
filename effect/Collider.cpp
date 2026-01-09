@@ -9,9 +9,9 @@ Collider::Collider(id_t ownId, id_t parentId) : Node(ownId, parentId) {
 void Collider::applyInputs(const ComputeGraph::InputSet& inputs) {
 	Node::applyInputs(inputs);
 
-	colliderKillOnContact.input(inputs);
-	colliderBounce.input(inputs);
-	colliderFriction.input(inputs);
+	colliderKillOnContact.applyInputs(inputs);
+	colliderBounce.applyInputs(inputs);
+	colliderFriction.applyInputs(inputs);
 }
 
 std::set<id_t>& Collider::exclusionSet() {
