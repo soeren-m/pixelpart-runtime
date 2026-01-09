@@ -3,7 +3,7 @@
 
 namespace pixelpart {
 LineQueryGrid::QueryResult LineQueryGrid::queryPoint(const float2_t& position, const float2_t& size) const {
-	GridIndex<std::int32_t> index = gridIndex(position);
+	GridIndex index = gridIndex(position);
 
 	QueryResult result;
 	findMatches(result, index.x, index.y, size);
@@ -11,8 +11,8 @@ LineQueryGrid::QueryResult LineQueryGrid::queryPoint(const float2_t& position, c
 	return result;
 }
 LineQueryGrid::QueryResult LineQueryGrid::queryLine(const float2_t& start, const float2_t& end, const float2_t& size) const {
-	GridIndex<std::int32_t> startIndex = gridIndex(start);
-	GridIndex<std::int32_t> endIndex = gridIndex(end);
+	GridIndex startIndex = gridIndex(start);
+	GridIndex endIndex = gridIndex(end);
 
 	if(startIndex.x > endIndex.x) {
 		std::swap(startIndex.x, endIndex.x);
@@ -22,8 +22,8 @@ LineQueryGrid::QueryResult LineQueryGrid::queryLine(const float2_t& start, const
 	}
 
 	QueryResult result;
-	for(std::int32_t cy = startIndex.y; cy <= endIndex.y; cy++) {
-		for(std::int32_t cx = startIndex.x; cx <= endIndex.x; cx++) {
+	for(std::size_t cy = startIndex.y; cy <= endIndex.y; cy++) {
+		for(std::size_t cx = startIndex.x; cx <= endIndex.x; cx++) {
 			findMatches(result, cx, cy, size);
 		}
 	}
@@ -48,8 +48,7 @@ void LineQueryGrid::build(const std::vector<Line>& lines, std::uint32_t cellCoun
 	std::uint32_t gridNumRows = std::max(cellCountFactor * static_cast<std::uint32_t>(
 		(gridTop.y - gridBottom.y) * glm::sqrt(static_cast<float_t>(lines.size()) / ((gridTop.x - gridBottom.x) * (gridTop.y - gridBottom.y)))),
 			1u);
-	grid.resize(gridNumColumns, gridNumRows);
-	grid.clear();
+	grid.assign(gridNumColumns, gridNumRows, std::vector<std::uint32_t>());
 
 	gridCellDimension = (gridTop - gridBottom) / float2_t(gridNumColumns, gridNumRows);
 
@@ -79,10 +78,10 @@ void LineQueryGrid::build(const std::vector<Line>& lines, std::uint32_t cellCoun
 			tY = ((glm::floor(p1Grid.y / gridCellDimension.y) + 1) * gridCellDimension.y - p1Grid.y) / direction.y;
 		}
 
-		std::int32_t cX = std::min(std::max(static_cast<std::int32_t>(glm::floor(p1Grid.x / gridCellDimension.x)), 0), static_cast<std::int32_t>(gridNumColumns) - 1);
-		std::int32_t cY = std::min(std::max(static_cast<std::int32_t>(glm::floor(p1Grid.y / gridCellDimension.y)), 0), static_cast<std::int32_t>(gridNumRows) - 1);
-		std::int32_t exitCX = std::min(std::max(static_cast<std::int32_t>(glm::floor(p2Grid.x / gridCellDimension.x)), 0), static_cast<std::int32_t>(gridNumColumns) - 1);
-		std::int32_t exitCY = std::min(std::max(static_cast<std::int32_t>(glm::floor(p2Grid.y / gridCellDimension.y)), 0), static_cast<std::int32_t>(gridNumRows) - 1);
+		std::int32_t cX = std::clamp(static_cast<std::int32_t>(glm::floor(p1Grid.x / gridCellDimension.x)), 0, static_cast<std::int32_t>(gridNumColumns) - 1);
+		std::int32_t cY = std::clamp(static_cast<std::int32_t>(glm::floor(p1Grid.y / gridCellDimension.y)), 0, static_cast<std::int32_t>(gridNumRows) - 1);
+		std::int32_t exitCX = std::clamp(static_cast<std::int32_t>(glm::floor(p2Grid.x / gridCellDimension.x)), 0, static_cast<std::int32_t>(gridNumColumns) - 1);
+		std::int32_t exitCY = std::clamp(static_cast<std::int32_t>(glm::floor(p2Grid.y / gridCellDimension.y)), 0, static_cast<std::int32_t>(gridNumRows) - 1);
 
 		while(grid.contains(cX, cY)) {
 			grid(cX, cY).push_back(lineIndex);
@@ -109,12 +108,12 @@ void LineQueryGrid::clear() {
 	gridCellDimension = float2_t(1.0);
 }
 
-void LineQueryGrid::findMatches(QueryResult& results, std::int32_t cx, std::int32_t cy, const float2_t& size) const {
+void LineQueryGrid::findMatches(QueryResult& results, std::size_t cx, std::size_t cy, const float2_t& size) const {
 	std::int32_t radiusX = 1 + static_cast<std::int32_t>(size.x / gridCellDimension.x);
 	std::int32_t radiusY = 1 + static_cast<std::int32_t>(size.y / gridCellDimension.y);
 
-	for(std::int32_t y = cy - radiusY; y <= cy + radiusY && y < static_cast<std::int32_t>(grid.height()); y++) {
-		for(std::int32_t x = cx - radiusX; x <= cx + radiusX && x < static_cast<std::int32_t>(grid.width()); x++) {
+	for(std::int32_t y = static_cast<std::int32_t>(cy) - radiusY; y <= static_cast<std::int32_t>(cy) + radiusY && y < static_cast<std::int32_t>(grid.height()); y++) {
+		for(std::int32_t x = static_cast<std::int32_t>(cx) - radiusX; x <= static_cast<std::int32_t>(cx) + radiusX && x < static_cast<std::int32_t>(grid.width()); x++) {
 			if(x < 0 || y < 0) {
 				continue;
 			}
@@ -126,10 +125,13 @@ void LineQueryGrid::findMatches(QueryResult& results, std::int32_t cx, std::int3
 	}
 }
 
-GridIndex<std::int32_t> LineQueryGrid::gridIndex(const float2_t& position) const {
-	std::int32_t x = std::min(std::max(static_cast<std::int32_t>(glm::floor((position.x - gridBottom.x) / gridCellDimension.x)), 0), static_cast<std::int32_t>(grid.width()) - 1);
-	std::int32_t y = std::min(std::max(static_cast<std::int32_t>(glm::floor((position.y - gridBottom.y) / gridCellDimension.y)), 0), static_cast<std::int32_t>(grid.height()) - 1);
+GridIndex LineQueryGrid::gridIndex(const float2_t& position) const {
+	std::int32_t x = std::clamp(static_cast<std::int32_t>(glm::floor((position.x - gridBottom.x) / gridCellDimension.x)), 0, static_cast<std::int32_t>(grid.width()) - 1);
+	std::int32_t y = std::clamp(static_cast<std::int32_t>(glm::floor((position.y - gridBottom.y) / gridCellDimension.y)), 0, static_cast<std::int32_t>(grid.height()) - 1);
 
-	return GridIndex<std::int32_t>{ x, y };
+	return GridIndex{
+		static_cast<std::size_t>(x),
+		static_cast<std::size_t>(y)
+	};
 }
 }

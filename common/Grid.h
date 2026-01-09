@@ -5,14 +5,12 @@
 #include <algorithm>
 
 namespace pixelpart {
-template <typename IntT = std::size_t>
 struct GridIndex {
-	IntT x;
-	IntT y;
+	std::size_t x;
+	std::size_t y;
 };
 
-template <typename IntT>
-bool operator==(const GridIndex<IntT>& i1, const GridIndex<IntT>& i2) {
+inline bool operator==(const GridIndex& i1, const GridIndex& i2) {
 	return i1.x == i2.x && i1.y == i2.y;
 }
 
@@ -22,146 +20,132 @@ public:
 	Grid() {
 
 	}
-	Grid(std::size_t w, std::size_t h) : sizeX(w), sizeY(h) {
-		data.resize(sizeX * sizeY);
+	Grid(std::size_t w, std::size_t h) :
+		gridSizeX(w), gridSizeY(h) {
+		gridData.resize(gridSizeX * gridSizeY);
 	}
-	Grid(std::size_t w, std::size_t h, const T& value) : sizeX(w), sizeY(h) {
-		data.resize(sizeX * sizeY, value);
+	Grid(std::size_t w, std::size_t h, const T& value) :
+		gridSizeX(w), gridSizeY(h) {
+		gridData.resize(gridSizeX * gridSizeY, value);
 	}
 
 	T& operator()(std::size_t i) {
-		return data[i];
+		return gridData[i];
 	}
-	template <typename IntT>
-	T& operator()(IntT x, IntT y) {
-		return data[
-			static_cast<std::size_t>(y) * sizeX +
-			static_cast<std::size_t>(x)];
+	T& operator()(std::size_t x, std::size_t y) {
+		return gridData[y * gridSizeX + x];
 	}
-	template <typename IntT>
-	T& operator()(const GridIndex<IntT>& index) {
-		return data[
-			static_cast<std::size_t>(index.y) * sizeX +
-			static_cast<std::size_t>(index.x)];
+	T& operator()(const GridIndex& index) {
+		return gridData[index.y * gridSizeX + index.x];
 	}
 
 	const T& operator()(std::size_t i) const {
-		return data[i];
+		return gridData[i];
 	}
-	template <typename IntT>
-	const T& operator()(IntT x, IntT y) const {
-		return data[
-			static_cast<std::size_t>(y) * sizeX +
-			static_cast<std::size_t>(x)];
+	const T& operator()(std::size_t x, std::size_t y) const {
+		return gridData[y * gridSizeX + x];
 	}
-	template <typename IntT>
-	const T& operator()(const GridIndex<IntT>& index) const {
-		return data[
-			static_cast<std::size_t>(index.y) * sizeX +
-			static_cast<std::size_t>(index.x)];
+	const T& operator()(const GridIndex& index) const {
+		return gridData[index.y * gridSizeX + index.x];
 	}
 
-	template <typename IntT>
-	T& value(IntT x, IntT y, const T& defaultValue) {
+	T& value(std::size_t x, std::size_t y, const T& defaultValue) {
 		if(contains(x, y)) {
-			return operator()<IntT>(x, y);
+			return operator()(x, y);
 		}
 
 		return defaultValue;
 	}
-	template <typename IntT>
-	T& value(const GridIndex<IntT>& index, const T& defaultValue) {
+	T& value(const GridIndex& index, const T& defaultValue) {
 		if(contains(index.x, index.y)) {
-			return operator()<IntT>(index);
+			return operator()(index);
 		}
 
 		return defaultValue;
 	}
-	template <typename IntT>
-	const T& value(IntT x, IntT y, const T& defaultValue) const {
+	const T& value(std::size_t x, std::size_t y, const T& defaultValue) const {
 		if(contains(x, y)) {
-			return operator()<IntT>(x, y);
+			return operator()(x, y);
 		}
 
 		return defaultValue;
 	}
-	template <typename IntT>
-	const T& value(const GridIndex<IntT>& index, const T& defaultValue) const {
+	const T& value(const GridIndex& index, const T& defaultValue) const {
 		if(contains(index.x, index.y)) {
-			return operator()<IntT>(index);
+			return operator()(index);
 		}
 
 		return defaultValue;
 	}
 
 	void assign(const T& value) {
-		data.assign(data.size(), value);
+		gridData.assign(gridData.size(), value);
+	}
+	void assign(std::size_t w, std::size_t h, const T& value) {
+		gridSizeX = w;
+		gridSizeY = h;
+		gridData.assign(gridSizeX * gridSizeY, value);
 	}
 	void resize(std::size_t w, std::size_t h) {
-		sizeX = w;
-		sizeY = h;
-		data.resize(sizeX * sizeY);
-	}
-	void clear() {
-		for(T& cell : data) {
-			cell = T();
-		}
+		gridSizeX = w;
+		gridSizeY = h;
+		gridData.resize(gridSizeX * gridSizeY);
 	}
 
-	template <typename IntT>
-	bool contains(IntT x, IntT y) const {
+	bool contains(std::size_t x, std::size_t y) const {
 		return
-			x >= 0 && static_cast<std::size_t>(x) < sizeX &&
-			y >= 0 && static_cast<std::size_t>(y) < sizeY;
+			x >= 0 && x < gridSizeX &&
+			y >= 0 && y < gridSizeY;
 	}
 
 	const std::vector<T>& cells() const {
-		return data;
+		return gridData;
 	}
+
 	std::size_t width() const {
-		return sizeX;
+		return gridSizeX;
 	}
 	std::size_t height() const {
-		return sizeY;
+		return gridSizeY;
 	}
 	std::size_t size() const {
-		return sizeX * sizeY;
+		return gridSizeX * gridSizeY;
 	}
 
 	template <typename Fn>
 	void forEach1d(Fn&& func) const {
-		for(std::size_t i = 0; i < sizeX * sizeY; i++) {
+		for(std::size_t i = 0; i < gridSizeX * gridSizeY; i++) {
 			func(i);
 		}
 	}
 	template <typename Fn>
 	void forEach1d(Fn&& func, std::size_t from, std::size_t to) const {
-		for(std::size_t i = from; i < std::min(to, sizeX * sizeY); i++) {
+		for(std::size_t i = from; i < std::min(to, gridSizeX * gridSizeY); i++) {
 			func(i);
 		}
 	}
 
 	template <typename Fn>
 	void forEach2d(Fn&& func) const {
-		for(std::size_t y = 0; y < sizeY; y++) {
-			for(std::size_t x = 0; x < sizeX; x++) {
+		for(std::size_t y = 0; y < gridSizeY; y++) {
+			for(std::size_t x = 0; x < gridSizeX; x++) {
 				func(x, y);
 			}
 		}
 	}
 	template <typename Fn>
 	void forEach2d(Fn&& func, std::size_t fromX, std::size_t toX, std::size_t fromY, std::size_t toY) const {
-		for(std::size_t y = fromY; y < std::min(toY, sizeY); y++) {
-			for(std::size_t x = fromX; x < std::min(toX, sizeX); x++) {
+		for(std::size_t y = fromY; y < std::min(toY, gridSizeY); y++) {
+			for(std::size_t x = fromX; x < std::min(toX, gridSizeX); x++) {
 				func(x, y);
 			}
 		}
 	}
 
 private:
-	std::size_t sizeX = 0;
-	std::size_t sizeY = 0;
+	std::size_t gridSizeX = 0;
+	std::size_t gridSizeY = 0;
 
-	std::vector<T> data;
+	std::vector<T> gridData;
 };
 }

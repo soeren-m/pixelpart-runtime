@@ -22,9 +22,9 @@ public:
 	void clear();
 
 private:
-	void findMatches(QueryResult& results, std::int32_t cx, std::int32_t cy, const float2_t& size) const;
+	void findMatches(QueryResult& results, std::size_t cx, std::size_t cy, const float2_t& size) const;
 
-	GridIndex<std::int32_t> gridIndex(const float2_t& position) const;
+	GridIndex gridIndex(const float2_t& position) const;
 
 	Grid<std::vector<std::uint32_t>> grid = Grid<std::vector<std::uint32_t>>(1, 1);
 	float2_t gridBottom = float2_t(0.0);
