@@ -8,6 +8,7 @@
 #include "../common/Curve.h"
 #include "../common/VariantValue.h"
 #include "../json/json.hpp"
+#include <optional>
 #include <vector>
 
 namespace pixelpart {
@@ -120,7 +121,7 @@ public:
 		return propertyCurve.points();
 	}
 
-	std::ptrdiff_t keyframeIndex(float_t position, float_t epsilon = 0.001) const {
+	std::optional<std::size_t> keyframeIndex(float_t position, float_t epsilon = 0.001) const {
 		return propertyCurve.pointIndex(position, epsilon);
 	}
 
@@ -136,15 +137,6 @@ public:
 	}
 	CurveInterpolation keyframeInterpolation() const {
 		return propertyCurve.interpolation();
-	}
-
-	void enableAdaptiveCache() {
-		propertyCurve.enableAdaptiveCache();
-		recalculateResult();
-	}
-	void enableFixedCache(std::size_t size) {
-		propertyCurve.enableFixedCache(size);
-		recalculateResult();
 	}
 
 	void computeGraph(const ComputeGraph& graph) {

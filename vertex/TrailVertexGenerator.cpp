@@ -92,24 +92,19 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 						relativeParticlePosition[q] /= currentTrail->length;
 					}
 
-					Curve<float3_t> positionCurve(CurveInterpolation::spline);
-					positionCurve.enableFixedCache(particleType.trailRendererSettings().smoothingSegmentCount);
+					Curve<float3_t> positionCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
 					positionCurve.points(orderedPoints(relativeParticlePosition.data(), particles.globalPosition, sortKeys.data() + p, currentTrail->particleCount));
 
-					Curve<float3_t> sizeCurve(CurveInterpolation::spline);
-					sizeCurve.enableFixedCache(particleType.trailRendererSettings().smoothingSegmentCount);
+					Curve<float3_t> sizeCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
 					sizeCurve.points(orderedPoints(relativeParticlePosition.data(), particles.size, sortKeys.data() + p, currentTrail->particleCount));
 
-					Curve<float4_t> colorCurve(CurveInterpolation::spline);
-					colorCurve.enableFixedCache(particleType.trailRendererSettings().smoothingSegmentCount);
+					Curve<float4_t> colorCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
 					colorCurve.points(orderedPoints(relativeParticlePosition.data(), particles.color, sortKeys.data() + p, currentTrail->particleCount));
 
-					Curve<float3_t> velocityCurve(CurveInterpolation::spline);
-					velocityCurve.enableFixedCache(particleType.trailRendererSettings().smoothingSegmentCount);
+					Curve<float3_t> velocityCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
 					velocityCurve.points(orderedPoints(relativeParticlePosition.data(), particles.velocity, sortKeys.data() + p, currentTrail->particleCount));
 
-					Curve<float_t> lifeCurve(CurveInterpolation::spline);
-					lifeCurve.enableFixedCache(particleType.trailRendererSettings().smoothingSegmentCount);
+					Curve<float_t> lifeCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
 					lifeCurve.points(orderedPoints(relativeParticlePosition.data(), particles.life, sortKeys.data() + p, currentTrail->particleCount));
 
 					currentTrail->position = positionCurve.cache();
