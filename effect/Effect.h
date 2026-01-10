@@ -15,7 +15,7 @@
 #include "SpotLightSource.h"
 #include "ParticleTypeCollection.h"
 #include "EffectInputCollection.h"
-#include "TriggerCollection.h"
+#include "EffectTriggerCollection.h"
 #include "ResourceCollection.h"
 #include "ParticleEmissionPair.h"
 #include "../json/json.hpp"
@@ -39,8 +39,8 @@ public:
 	EffectInputCollection& inputs();
 	const EffectInputCollection& inputs() const;
 
-	TriggerCollection& triggers();
-	const TriggerCollection& triggers() const;
+	EffectTriggerCollection& triggers();
+	const EffectTriggerCollection& triggers() const;
 
 	ResourceCollection& resources();
 	const ResourceCollection& resources() const;
@@ -56,7 +56,7 @@ private:
 	SceneGraph effectSceneGraph;
 	ParticleTypeCollection effectParticleTypes;
 	EffectInputCollection effectInputs;
-	TriggerCollection effectTriggers;
+	EffectTriggerCollection effectTriggers;
 	ResourceCollection effectResources;
 };
 

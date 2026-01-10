@@ -36,10 +36,10 @@ const EffectInputCollection& Effect::inputs() const {
 	return effectInputs;
 }
 
-TriggerCollection& Effect::triggers() {
+EffectTriggerCollection& Effect::triggers() {
 	return effectTriggers;
 }
-const TriggerCollection& Effect::triggers() const {
+const EffectTriggerCollection& Effect::triggers() const {
 	return effectTriggers;
 }
 
@@ -105,7 +105,7 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 	effect.sceneGraph() = j.value("scene", SceneGraph());
 	effect.particleTypes() = j.value("particles", ParticleTypeCollection());
 	effect.inputs() = j.value("inputs", EffectInputCollection());
-	effect.triggers() = j.value("triggers", TriggerCollection());
+	effect.triggers() = j.value("triggers", EffectTriggerCollection());
 	effect.resources() = j.value("resources", ResourceCollection());
 }
 }

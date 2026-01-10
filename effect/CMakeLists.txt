@@ -15,6 +15,7 @@ target_sources(pixelpart-runtime PRIVATE
 	Effect.cpp
 	EffectInput.cpp
 	EffectRuntimeContext.cpp
+	EffectTrigger.cpp
 	ForceField.cpp
 	GroupNode.cpp
 	ImageResource.cpp
@@ -43,7 +44,6 @@ target_sources(pixelpart-runtime PRIVATE
 	ShaderNode.cpp
 	ShaderNodeType.cpp
 	SpotLightSource.cpp
-	Trigger.cpp
 	UtilComputeNodes.cpp
 	VectorField.cpp
 	VectorFieldResource.cpp)
