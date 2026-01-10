@@ -5,8 +5,8 @@
 #include "../zlib/zlib.h"
 
 namespace pixelpart {
-std::string compressBase64(const std::uint8_t* data, std::size_t size, CompressionMethod method) {
-	if(size == 0) {
+std::string compressToString(const std::uint8_t* data, std::size_t size, CompressionMethod method) {
+	if(!data || size == 0) {
 		throw CompressionException("No data available");
 	}
 
@@ -30,7 +30,7 @@ std::string compressBase64(const std::uint8_t* data, std::size_t size, Compressi
 	return encodeBase64(data, size);
 }
 
-std::vector<std::uint8_t> decompressBase64(const std::string& data, std::size_t uncompressedSize, CompressionMethod method) {
+std::vector<std::uint8_t> decompressFromString(const std::string& data, std::size_t uncompressedSize, CompressionMethod method) {
 	std::string compressedData = decodeBase64(data);
 	if(compressedData.empty()) {
 		throw DecompressionException("Compressed data is empty");

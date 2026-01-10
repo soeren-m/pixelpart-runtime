@@ -36,7 +36,7 @@ void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
 		}
 	}
 
-	std::string compressedData = compressBase64(
+	std::string compressedData = compressToString(
 		reinterpret_cast<const std::uint8_t*>(dataString.data()), dataString.size(), CompressionMethod::zlib);
 
 	j = nlohmann::ordered_json{
@@ -58,7 +58,7 @@ void from_json(const nlohmann::ordered_json& j, VectorFieldResource& resource) {
 	CompressionMethod compressionMethod = j.value("compression", CompressionMethod::none);
 	std::size_t uncompressedSize = j.value("uncompressed_size", 0u);
 
-	std::vector<std::uint8_t> uncompressedData = decompressBase64(j.at("field").get<std::string>(), uncompressedSize, compressionMethod);
+	std::vector<std::uint8_t> uncompressedData = decompressFromString(j.at("field").get<std::string>(), uncompressedSize, compressionMethod);
 	std::istringstream dataStream(
 		std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
