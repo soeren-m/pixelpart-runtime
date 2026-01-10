@@ -1,13 +1,17 @@
 #include "ComputeNode.h"
 
 namespace pixelpart {
-ComputeNode::InputException::InputException(const std::string& msg, std::uint32_t index) :
-	std::runtime_error(msg), inputIndex(index) {
+ComputeNode::InputException::InputException(const char* msg, std::optional<std::uint32_t> index) :
+	std::runtime_error(msg), exceptionIndex(index) {
+
+}
+ComputeNode::InputException::InputException(const std::string& msg, std::optional<std::uint32_t> index) :
+	std::runtime_error(msg), exceptionIndex(index) {
 
 }
 
-std::uint32_t ComputeNode::InputException::index() const {
-	return inputIndex;
+std::optional<std::uint32_t> ComputeNode::InputException::index() const {
+	return exceptionIndex;
 }
 
 ComputeNode::Link::Link(id_t linkId, id_t linkNodeId, std::uint32_t linkSlot) :
@@ -126,12 +130,16 @@ std::vector<VariantParameter::Value>& ComputeNode::parameterValues() {
 const std::vector<VariantParameter::Value>& ComputeNode::parameterValues() const {
 	return nodeParameterValues;
 }
+
+VariantParameter::Value& ComputeNode::parameterValue(std::size_t index) {
+	return nodeParameterValues.at(index);
+}
 const VariantParameter::Value& ComputeNode::parameterValue(std::size_t index) const {
 	return nodeParameterValues.at(index);
 }
 
-std::uint32_t ComputeNode::findInputSlot(const std::string& slotName) const {
-	std::uint32_t slot = id_t::nullValue;
+std::optional<std::uint32_t> ComputeNode::findInputSlot(const std::string& slotName) const {
+	std::optional<std::uint32_t> slot;
 	for(std::uint32_t inputSlot = 0; inputSlot < nodeInputSlots.size(); inputSlot++) {
 		if(nodeInputSlots[inputSlot] == slotName) {
 			slot = inputSlot;
@@ -141,8 +149,8 @@ std::uint32_t ComputeNode::findInputSlot(const std::string& slotName) const {
 
 	return slot;
 }
-std::uint32_t ComputeNode::findOutputSlot(const std::string& slotName) const {
-	std::uint32_t slot = id_t::nullValue;
+std::optional<std::uint32_t> ComputeNode::findOutputSlot(const std::string& slotName) const {
+	std::optional<std::uint32_t> slot;
 	for(std::uint32_t outputSlot = 0; outputSlot < nodeOutputSlots.size(); outputSlot++) {
 		if(nodeOutputSlots[outputSlot] == slotName) {
 			slot = outputSlot;
@@ -152,8 +160,8 @@ std::uint32_t ComputeNode::findOutputSlot(const std::string& slotName) const {
 
 	return slot;
 }
-std::uint32_t ComputeNode::findParameter(const std::string& parameterName) const {
-	std::uint32_t index = id_t::nullValue;
+std::optional<std::uint32_t> ComputeNode::findParameter(const std::string& parameterName) const {
+	std::optional<std::uint32_t> index;
 	for(std::uint32_t parameterIndex = 0; parameterIndex < nodeParameters.size(); parameterIndex++) {
 		if(nodeParameters[parameterIndex].name() == parameterName) {
 			index = parameterIndex;
@@ -202,7 +210,7 @@ void from_json(const nlohmann::ordered_json& j, ComputeNode::Link& link) {
 	link = ComputeNode::Link(
 		j.value("id", id_t()),
 		j.value("node", id_t()),
-		j.value("slot", id_t::nullValue));
+		j.value("slot", 0));
 }
 void from_json(const nlohmann::ordered_json& j, ComputeNode& node) {
 	node.name(j.value("name", ""));

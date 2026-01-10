@@ -10,30 +10,28 @@
 namespace pixelpart {
 class ComputeNodeFactory {
 public:
-	ComputeNodeFactory() = default;
+	ComputeNodeFactory();
 
-	std::unique_ptr<ComputeNode> create(const std::string& name) const;
+	std::unique_ptr<ComputeNode> createNode(const std::string& name) const;
 
-	template <typename T>
-	void registerNode() {
-		if(nodeTypeFunctions.count(T::typeName) != 0) {
-			return;
-		}
-
-		insertionOrder.push_back(T::typeName);
-		nodeTypeFunctions[T::typeName] = []() -> ComputeNode* {
-			return static_cast<ComputeNode*>(new T());
-		};
-	}
-
-	void registerBuiltInNodes();
-
-	std::vector<std::string> registeredTypes() const;
+	std::vector<std::string> nodeTypeNames() const;
 
 private:
 	using CreateNodeFunction = std::function<ComputeNode*()>;
 
-	std::unordered_map<std::string, CreateNodeFunction> nodeTypeFunctions;
-	std::vector<std::string> insertionOrder;
+	template <typename T>
+	void registerNode() {
+		if(factoryNodeFunctions.count(T::typeName) != 0) {
+			return;
+		}
+
+		factoryNodeTypeNames.push_back(T::typeName);
+		factoryNodeFunctions[T::typeName] = []() -> ComputeNode* {
+			return static_cast<ComputeNode*>(new T());
+		};
+	}
+
+	std::unordered_map<std::string, CreateNodeFunction> factoryNodeFunctions;
+	std::vector<std::string> factoryNodeTypeNames;
 };
 }

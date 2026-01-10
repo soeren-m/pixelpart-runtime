@@ -20,21 +20,15 @@ public:
 
 	class EvaluationException : public std::runtime_error {
 	public:
-		EvaluationException(const std::string& msg, id_t node = id_t(), std::uint32_t slot = id_t::nullValue);
+		EvaluationException(const char* msg, id_t node = id_t(), std::optional<std::uint32_t> slot = std::nullopt);
+		EvaluationException(const std::string& msg, id_t node = id_t(), std::optional<std::uint32_t> slot = std::nullopt);
 
 		id_t nodeId() const;
-		std::uint32_t slotIndex() const;
+		std::optional<std::uint32_t> slotIndex() const;
 
 	private:
-		id_t computeNodeId;
-		std::uint32_t computeSlotIndex;
-	};
-
-	enum TypeMatch : std::uint32_t {
-		typematch_exact,
-		typematch_upcast,
-		typematch_downcast,
-		typematch_none
+		id_t exceptionNodeId;
+		std::optional<std::uint32_t> exceptionSlotIndex;
 	};
 
 	struct BuildResult {
@@ -55,9 +49,9 @@ public:
 
 	template <typename TNode>
 	id_t addNode() {
-		id_t nodeId = nextNodeId;
-		computeNodes[nodeId] = std::unique_ptr<TNode>(new TNode());
-		nextNodeId++;
+		id_t nodeId = graphNextNodeId;
+		graphNodes[nodeId] = std::make_unique<TNode>();
+		graphNextNodeId++;
 
 		return nodeId;
 	}
@@ -84,12 +78,18 @@ public:
 	bool empty() const;
 
 private:
-	std::uint32_t findNodeType(const std::string& typeName) const;
-	std::uint32_t findNodeSignature(const InputSet& graphInputs, const BuildResult& result, const ComputeNode& activeNode, std::vector<TypeMatch>& typeMatch) const;
+	enum class TypeMatch : std::uint32_t {
+		exact,
+		upcast,
+		downcast,
+		none
+	};
 
-	ComputeNodeCollection computeNodes;
-	id_t nextNodeId = id_t(0);
-	id_t nextLinkId = id_t(0);
+	std::optional<std::uint32_t> findNodeSignature(const InputSet& graphInputs, const BuildResult& result, const ComputeNode& activeNode, std::vector<TypeMatch>& typeMatch) const;
+
+	ComputeNodeCollection graphNodes;
+	id_t graphNextNodeId = id_t(0);
+	id_t graphNextLinkId = id_t(0);
 };
 
 void to_json(nlohmann::ordered_json& j, const ComputeGraph& computeGraph);

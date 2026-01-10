@@ -6,6 +6,7 @@
 #include "../common/VariantValue.h"
 #include "../common/VariantParameter.h"
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -18,12 +19,13 @@ class ComputeNode {
 public:
 	class InputException : public std::runtime_error {
 	public:
-		InputException(const std::string& msg, std::uint32_t index = id_t::nullValue);
+		InputException(const char* msg, std::optional<std::uint32_t> index = std::nullopt);
+		InputException(const std::string& msg, std::optional<std::uint32_t> index = std::nullopt);
 
-		std::uint32_t index() const;
+		std::optional<std::uint32_t> index() const;
 
 	private:
-		std::uint32_t inputIndex = id_t::nullValue;
+		std::optional<std::uint32_t> exceptionIndex;
 	};
 
 	struct Signature {
@@ -36,7 +38,7 @@ public:
 
 		id_t id;
 		id_t nodeId;
-		std::uint32_t slot = id_t::nullValue;
+		std::uint32_t slot = 0;
 	};
 
 	ComputeNode(
@@ -82,11 +84,13 @@ public:
 
 	std::vector<VariantParameter::Value>& parameterValues();
 	const std::vector<VariantParameter::Value>& parameterValues() const;
+
+	VariantParameter::Value& parameterValue(std::size_t index);
 	const VariantParameter::Value& parameterValue(std::size_t index) const;
 
-	std::uint32_t findInputSlot(const std::string& slotName) const;
-	std::uint32_t findOutputSlot(const std::string& slotName) const;
-	std::uint32_t findParameter(const std::string& parameterName) const;
+	std::optional<std::uint32_t> findInputSlot(const std::string& slotName) const;
+	std::optional<std::uint32_t> findOutputSlot(const std::string& slotName) const;
+	std::optional<std::uint32_t> findParameter(const std::string& parameterName) const;
 
 	void move(const float2_t& pos);
 	float2_t position() const;
