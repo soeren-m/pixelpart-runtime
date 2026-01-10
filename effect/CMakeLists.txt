@@ -39,7 +39,7 @@ target_sources(pixelpart-runtime PRIVATE
 	ResourceCollection.cpp
 	SceneGraph.cpp
 	ShaderGraph.cpp
-	ShaderGraphLanguage.cpp
+	ShaderGraphSpecification.cpp
 	ShaderNode.cpp
 	ShaderNodeType.cpp
 	SpotLightSource.cpp

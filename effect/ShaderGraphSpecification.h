@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace pixelpart {
-struct ShaderGraphLanguage {
+struct ShaderGraphSpecification {
 	std::vector<ShaderNodeType> nodes;
 	std::string variablePrefix;
 	std::vector<std::string> typeNames;
@@ -18,6 +18,6 @@ struct ShaderGraphLanguage {
 	std::vector<std::string> textureSamplers;
 };
 
-void to_json(nlohmann::ordered_json& j, const ShaderGraphLanguage& graphLanguage);
-void from_json(const nlohmann::ordered_json& j, ShaderGraphLanguage& graphLanguage);
+void to_json(nlohmann::ordered_json& j, const ShaderGraphSpecification& specification);
+void from_json(const nlohmann::ordered_json& j, ShaderGraphSpecification& specification);
 }

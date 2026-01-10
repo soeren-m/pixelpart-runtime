@@ -6,8 +6,9 @@
 #include "../common/VariantParameter.h"
 #include "ShaderNode.h"
 #include "ShaderNodeType.h"
-#include "ShaderGraphLanguage.h"
+#include "ShaderGraphSpecification.h"
 #include "../json/json.hpp"
+#include <optional>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -21,21 +22,15 @@ public:
 
 	class BuildException : public std::runtime_error {
 	public:
-		BuildException(const std::string& msg, id_t node = id_t(), std::uint32_t slot = id_t::nullValue);
+		BuildException(const char* msg, id_t node = id_t(), std::optional<std::uint32_t> slot = std::nullopt);
+		BuildException(const std::string& msg, id_t node = id_t(), std::optional<std::uint32_t> slot = std::nullopt);
 
-		id_t node() const;
-		std::uint32_t slot() const;
+		id_t nodeId() const;
+		std::optional<std::uint32_t> slotIndex() const;
 
 	private:
-		id_t nodeId;
-		std::uint32_t slotIndex = id_t::nullValue;
-	};
-
-	enum TypeMatch : std::uint32_t {
-		typematch_exact,
-		typematch_upcast,
-		typematch_downcast,
-		typematch_none
+		id_t exceptionNodeId;
+		std::optional<std::uint32_t> exceptionSlotIndex;
 	};
 
 	struct BuildResult {
@@ -49,8 +44,7 @@ public:
 		std::uint32_t variableCount = 0;
 	};
 
-	static ShaderGraphLanguage graphLanguage;
-	static std::uint32_t curveInterpolationPointCount;
+	static ShaderGraphSpecification specification;
 
 	ShaderGraph() = default;
 	ShaderGraph(const ShaderNodeCollection& nodes);
@@ -82,12 +76,25 @@ public:
 	const ShaderNodeType& nodeType(id_t nodeId) const;
 
 private:
-	std::uint32_t findNodeType(const std::string& typeName) const;
-	std::uint32_t findNodeSignature(const BuildResult& result, const ShaderNode& node, std::vector<TypeMatch>& typeMatch) const;
+	enum class TypeMatch : std::uint32_t {
+		exact,
+		upcast,
+		downcast,
+		none
+	};
 
-	ShaderNodeCollection shaderNodes;
-	id_t nextNodeId = id_t(0);
-	id_t nextLinkId = id_t(0);
+	static constexpr std::int32_t floatPrecision = 6;
+	static constexpr std::uint32_t curveInterpolationPointCount = 100;
+
+	std::string buildValueString(const VariantValue& value, id_t nodeId, BuildResult& buildResult) const;
+	std::string buildParameterValueString(const VariantParameter::Value& parameterValue, id_t nodeId, BuildResult& buildResult) const;
+
+	std::optional<std::uint32_t> findNodeType(const std::string& typeName) const;
+	std::optional<std::uint32_t> findNodeSignature(const ShaderNode& node, const BuildResult& buildResult, std::vector<TypeMatch>& typeMatch) const;
+
+	ShaderNodeCollection graphNodes;
+	id_t graphNextNodeId = id_t(0);
+	id_t graphNextLinkId = id_t(0);
 };
 
 void to_json(nlohmann::ordered_json& j, const ShaderGraph& shader);

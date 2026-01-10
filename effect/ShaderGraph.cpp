@@ -6,28 +6,32 @@
 #include <algorithm>
 
 namespace pixelpart {
-ShaderGraph::BuildException::BuildException(const std::string& msg, id_t node, std::uint32_t slot) :
-	std::runtime_error(msg), nodeId(node), slotIndex(slot) {
+ShaderGraph::BuildException::BuildException(const char* msg, id_t node, std::optional<std::uint32_t> slot) :
+	std::runtime_error(msg), exceptionNodeId(node), exceptionSlotIndex(slot) {
+
+}
+ShaderGraph::BuildException::BuildException(const std::string& msg, id_t node, std::optional<std::uint32_t> slot) :
+	std::runtime_error(msg), exceptionNodeId(node), exceptionSlotIndex(slot) {
 
 }
 
-id_t ShaderGraph::BuildException::node() const {
-	return nodeId;
+id_t ShaderGraph::BuildException::nodeId() const {
+	return exceptionNodeId;
 }
-std::uint32_t ShaderGraph::BuildException::slot() const {
-	return slotIndex;
+std::optional<std::uint32_t> ShaderGraph::BuildException::slotIndex() const {
+	return exceptionSlotIndex;
 }
 
-ShaderGraphLanguage ShaderGraph::graphLanguage = ShaderGraphLanguage();
-std::uint32_t ShaderGraph::curveInterpolationPointCount = 100;
+ShaderGraphSpecification ShaderGraph::specification = ShaderGraphSpecification();
 
-ShaderGraph::ShaderGraph(const ShaderNodeCollection& nodes) : shaderNodes(nodes) {
+ShaderGraph::ShaderGraph(const ShaderNodeCollection& nodes) : graphNodes(nodes) {
 	id_t maxNodeId = 0;
 	id_t maxLinkId = 0;
-	for(const auto& nodeEntry : shaderNodes) {
-		maxNodeId = std::max(maxNodeId, nodeEntry.first);
 
-		for(const auto& link : nodeEntry.second.inputs()) {
+	for(const auto& [nodeId, node] : graphNodes) {
+		maxNodeId = std::max(maxNodeId, nodeId);
+
+		for(const auto& link : node.inputs()) {
 			if(!link.id) {
 				continue;
 			}
@@ -36,8 +40,8 @@ ShaderGraph::ShaderGraph(const ShaderNodeCollection& nodes) : shaderNodes(nodes)
 		}
 	}
 
-	nextNodeId = maxNodeId.value() + 1;
-	nextLinkId = maxLinkId.value() + 1;
+	graphNextNodeId = maxNodeId.value() + 1;
+	graphNextLinkId = maxLinkId.value() + 1;
 }
 
 std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
@@ -45,19 +49,19 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 		result = BuildResult();
 	}
 
-	auto nodeEntry = shaderNodes.find(nodeId);
-	if(nodeEntry == shaderNodes.end()) {
+	auto nodeIt = graphNodes.find(nodeId);
+	if(nodeIt == graphNodes.end()) {
 		return std::string();
 	}
 
-	const ShaderNode& node = nodeEntry->second;
+	const ShaderNode& node = nodeIt->second;
 
-	std::uint32_t nodeTypeIndex = findNodeType(node.type());
-	if(nodeTypeIndex == id_t::nullValue) {
+	std::optional<std::uint32_t> nodeTypeIndex = findNodeType(node.type());
+	if(!nodeTypeIndex) {
 		throw BuildException("Unknown node type \"" + node.type() + "\"", nodeId);
 	}
 
-	const ShaderNodeType& shaderNodeType = graphLanguage.nodes.at(nodeTypeIndex);
+	const ShaderNodeType& shaderNodeType = specification.nodes.at(nodeTypeIndex.value());
 
 	std::string code = shaderNodeType.code;
 
@@ -68,11 +72,11 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 		if(node.parameterNode()) {
 			if(parameterValue.type() == VariantParameter::Value::type_resource_image) {
 				std::size_t samplerIndex = result.textureResourceIds.size();
-				if(samplerIndex < graphLanguage.textureSamplers.size()) {
+				if(samplerIndex < specification.textureSamplers.size()) {
 					result.textureResourceIds.push_back(parameterValue.valueResourceId());
-					result.parameterNames[nodeId] = graphLanguage.textureSamplers[samplerIndex];
+					result.parameterNames[nodeId] = specification.textureSamplers[samplerIndex];
 
-					valueString = graphLanguage.textureSamplers[samplerIndex];
+					valueString = specification.textureSamplers[samplerIndex];
 				}
 				else {
 					throw BuildException("No more texture samplers available", nodeId);
@@ -80,15 +84,15 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 			}
 			else {
 				std::string nodeIdentifier = replaceString(shaderNodeType.name, "_", " ");
-				std::string parameterVariableName = graphLanguage.parameterPrefix
+				std::string parameterVariableName = specification.parameterPrefix
 					+ nodeIdentifier
 					+ "_" + serializeInt(nodeId.value())
 					+ "_" + serializeInt(parameterIndex);
 
 				result.parameterNames[nodeId] = parameterVariableName;
 
-				std::string parameterCode = graphLanguage.parameterDefinition;
-				parameterCode = replaceString(parameterCode, graphLanguage.parameterTypeNames.at(parameterValue.type()), "{type}");
+				std::string parameterCode = specification.parameterDefinition;
+				parameterCode = replaceString(parameterCode, specification.parameterTypeNames.at(parameterValue.type()), "{type}");
 				parameterCode = replaceString(parameterCode, parameterVariableName, "{name}");
 				result.parameterCode += parameterCode;
 				result.parameterCode += "\n";
@@ -97,95 +101,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 			}
 		}
 		else {
-			switch(parameterValue.type()) {
-				case VariantParameter::Value::type_int:
-				case VariantParameter::Value::type_enum: {
-					valueString = graphLanguage.typeConstructors[VariantValue::type_int];
-					valueString = replaceString(valueString, serializeInt(parameterValue.valueInt()), "{0}");
-					break;
-				}
-				case VariantParameter::Value::type_float: {
-					valueString = graphLanguage.typeConstructors[VariantValue::type_float];
-					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat(), 6), "{0}");
-					break;
-				}
-				case VariantParameter::Value::type_float2: {
-					valueString = graphLanguage.typeConstructors[VariantValue::type_float2];
-					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat2().x, 6), "{0}");
-					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat2().y, 6), "{1}");
-					break;
-				}
-				case VariantParameter::Value::type_float3: {
-					valueString = graphLanguage.typeConstructors[VariantValue::type_float3];
-					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().x, 6), "{0}");
-					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().y, 6), "{1}");
-					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().z, 6), "{2}");
-					break;
-				}
-				case VariantParameter::Value::type_float4:
-				case VariantParameter::Value::type_color: {
-					valueString = graphLanguage.typeConstructors[VariantValue::type_float4];
-					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().x, 6), "{0}");
-					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().y, 6), "{1}");
-					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().z, 6), "{2}");
-					valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().w, 6), "{3}");
-					break;
-				}
-				case VariantParameter::Value::type_bool: {
-					valueString = graphLanguage.typeConstructors[VariantValue::type_bool];
-					valueString = replaceString(valueString, parameterValue.valueBool() ? "true" : "false", "{0}");
-					break;
-				}
-				case VariantParameter::Value::type_curve: {
-					Curve<float_t> curve = parameterValue.valueCurve();
-
-					for(std::uint32_t pointIndex = 0; pointIndex < curveInterpolationPointCount; pointIndex++) {
-						float_t pointValue = curve.at(static_cast<float_t>(pointIndex) / static_cast<float_t>(curveInterpolationPointCount - 1));
-						std::string pointValueString = graphLanguage.typeConstructors[VariantValue::type_float];
-						pointValueString = replaceString(pointValueString, serializeFloat(pointValue, 6), "{0}");
-
-						valueString += pointValueString;
-						if(pointIndex + 1 < curveInterpolationPointCount) {
-							valueString += ", ";
-						}
-					}
-
-					break;
-				}
-				case VariantParameter::Value::type_gradient: {
-					Curve<float3_t> gradient = parameterValue.valueGradient();
-
-					for(std::uint32_t pointIndex = 0; pointIndex < curveInterpolationPointCount; pointIndex++) {
-						float3_t pointValue = gradient.at(static_cast<float_t>(pointIndex) / static_cast<float_t>(curveInterpolationPointCount - 1));
-						std::string pointValueString = graphLanguage.typeConstructors[VariantValue::type_float3];
-						pointValueString = replaceString(pointValueString, serializeFloat(pointValue.x, 6), "{0}");
-						pointValueString = replaceString(pointValueString, serializeFloat(pointValue.y, 6), "{1}");
-						pointValueString = replaceString(pointValueString, serializeFloat(pointValue.z, 6), "{2}");
-
-						valueString += pointValueString;
-						if(pointIndex + 1 < curveInterpolationPointCount) {
-							valueString += ", ";
-						}
-					}
-
-					break;
-				}
-				case VariantParameter::Value::type_resource_image: {
-					std::size_t samplerIndex = result.textureResourceIds.size();
-					if(samplerIndex < graphLanguage.textureSamplers.size()) {
-						result.textureResourceIds.push_back(parameterValue.valueResourceId());
-						valueString = graphLanguage.textureSamplers[samplerIndex];
-					}
-					else {
-						throw BuildException("No more texture samplers available", nodeId);
-					}
-
-					break;
-				}
-				default: {
-					break;
-				}
-			}
+			valueString = buildParameterValueString(parameterValue, nodeId, result);
 		}
 
 		code = replaceString(code, valueString, "{param" + serializeInt(parameterIndex) + "}");
@@ -193,61 +109,21 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 
 	std::string inputCode;
 	for(std::size_t inputSlot = 0; inputSlot < shaderNodeType.inputs.size(); inputSlot++) {
-		ShaderNode::Link link;
-		if(inputSlot < node.inputs().size()) {
-			link = node.inputs()[inputSlot];
-		}
+		ShaderNode::Link link = inputSlot < node.inputs().size()
+			? node.inputs()[inputSlot]
+			: ShaderNode::Link();
 
-		if(shaderNodes.count(link.nodeId) != 0) {
+		if(link.id && graphNodes.count(link.nodeId) != 0) {
 			if(result.resolvedNodes.count(link.nodeId) == 0) {
 				inputCode += build(result, link.nodeId);
 			}
 		}
 		else if(shaderNodeType.defaultInputs[inputSlot].type() != VariantValue::type_null) {
-			std::string valueString;
-			switch(shaderNodeType.defaultInputs[inputSlot].type()) {
-				case VariantValue::type_bool: {
-					valueString = graphLanguage.typeConstructors[VariantValue::type_bool];
-					valueString = replaceString(valueString, shaderNodeType.defaultInputs[inputSlot].valueBool() ? "true" : "false", "{0}");
-					break;
-				}
-				case VariantValue::type_int: {
-					valueString = graphLanguage.typeConstructors[VariantValue::type_int];
-					valueString = replaceString(valueString, serializeInt(shaderNodeType.defaultInputs[inputSlot].valueInt()), "{0}");
-					break;
-				}
-				case VariantValue::type_float: {
-					valueString = graphLanguage.typeConstructors[VariantValue::type_float];
-					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat(), 6), "{0}");
-					break;
-				}
-				case VariantValue::type_float2: {
-					valueString = graphLanguage.typeConstructors[VariantValue::type_float2];
-					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat2().x, 6), "{0}");
-					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat2().y, 6), "{1}");
-					break;
-				}
-				case VariantValue::type_float3: {
-					valueString = graphLanguage.typeConstructors[VariantValue::type_float3];
-					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat3().x, 6), "{0}");
-					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat3().y, 6), "{1}");
-					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat3().z, 6), "{2}");
-					break;
-				}
-				case VariantValue::type_float4: {
-					valueString = graphLanguage.typeConstructors[VariantValue::type_float4];
-					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat4().x, 6), "{0}");
-					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat4().y, 6), "{1}");
-					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat4().z, 6), "{2}");
-					valueString = replaceString(valueString, serializeFloat(shaderNodeType.defaultInputs[inputSlot].valueFloat4().w, 6), "{3}");
-					break;
-				}
-				default: {
-					break;
-				}
-			}
+			std::string defaultValueString = buildValueString(shaderNodeType.defaultInputs[inputSlot], nodeId, result);
 
-			code = replaceString(code, valueString, "{in" + serializeInt(inputSlot) + "}");
+			code = replaceString(code,
+				defaultValueString,
+				"{in" + serializeInt(inputSlot) + "}");
 		}
 		else {
 			throw BuildException("Input node not found", nodeId, static_cast<std::uint32_t>(inputSlot));
@@ -255,17 +131,19 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 	}
 
 	std::vector<TypeMatch> typeMatch;
-	result.nodeSignatures[nodeId] = findNodeSignature(result, node, typeMatch);
-	if(result.nodeSignatures[nodeId] == id_t::nullValue) {
+	std::optional<std::uint32_t> signatureIndex = findNodeSignature(node, result, typeMatch);
+	if(!signatureIndex) {
 		throw BuildException("No matching node signature found", nodeId);
 	}
+
+	result.nodeSignatures[nodeId] = signatureIndex.value();
 
 	const ShaderNodeType::Signature& signature = shaderNodeType.signatures[result.nodeSignatures[nodeId]];
 
 	result.nodeOutputVariables[nodeId] = std::vector<std::string>();
 	for(std::size_t outputSlot = 0; outputSlot < shaderNodeType.outputs.size(); outputSlot++) {
-		std::string outputVariableName = graphLanguage.variablePrefix + serializeInt(result.variableCount++);
-		std::string outputVariableDefinition = graphLanguage.typeNames[static_cast<std::size_t>(signature.outputTypes[outputSlot])] + " " + outputVariableName;
+		std::string outputVariableName = specification.variablePrefix + serializeInt(result.variableCount);
+		std::string outputVariableDefinition = specification.typeNames[static_cast<std::size_t>(signature.outputTypes[outputSlot])] + " " + outputVariableName;
 		result.nodeOutputVariables[nodeId].push_back(outputVariableName);
 
 		code = replaceString(code, outputVariableName, "{out" + serializeInt(outputSlot) + "}");
@@ -275,13 +153,13 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 
 	for(std::size_t inputSlot = 0; inputSlot < node.inputs().size(); inputSlot++) {
 		const ShaderNode::Link& link = node.inputs()[inputSlot];
-		if(typeMatch[inputSlot] == typematch_none) {
-			throw BuildException("Types do not match", nodeId, inputSlot);
+		if(typeMatch[inputSlot] == TypeMatch::none) {
+			throw BuildException("Types do not match", nodeId, static_cast<std::uint32_t>(inputSlot));
 		}
 
 		VariantValue::Type sourceValueType = VariantValue::type_null;
 
-		if(shaderNodes.count(link.nodeId) != 0) {
+		if(graphNodes.count(link.nodeId) != 0) {
 			const ShaderNodeType& sourceNodeType = nodeType(link.nodeId);
 			const ShaderNodeType::Signature& sourceNodeSignature = sourceNodeType.signatures[result.nodeSignatures[link.nodeId]];
 
@@ -293,8 +171,8 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 
 		std::string inputVariableTemplate = "{in" + serializeInt(inputSlot) + "}";
 
-		if(typeMatch[inputSlot] != typematch_exact) {
-			std::string codeTypeCast = graphLanguage.typeCasts[signature.inputTypes[inputSlot]][sourceValueType];
+		if(typeMatch[inputSlot] != TypeMatch::exact) {
+			std::string codeTypeCast = specification.typeCasts[signature.inputTypes[inputSlot]][sourceValueType];
 			codeTypeCast = replaceString(codeTypeCast, inputVariableTemplate, "{0}");
 			code = replaceString(code, codeTypeCast, inputVariableTemplate);
 		}
@@ -314,26 +192,26 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 }
 
 id_t ShaderGraph::addNode(const std::string& typeName) {
-	std::uint32_t typeIndex = findNodeType(typeName);
-	if(typeIndex == id_t::nullValue) {
+	std::optional<std::uint32_t> typeIndex = findNodeType(typeName);
+	if(!typeIndex) {
 		return id_t();
 	}
 
-	id_t nodeId = nextNodeId++;
-	shaderNodes[nodeId] = ShaderNode(graphLanguage.nodes[typeIndex]);
+	id_t nodeId = graphNextNodeId++;
+	graphNodes[nodeId] = ShaderNode(specification.nodes[typeIndex.value()]);
 
 	return nodeId;
 }
 void ShaderGraph::removeNode(id_t nodeId) {
-	for(auto& nodeEntry : shaderNodes) {
-		for(auto& link : nodeEntry.second.inputs()) {
+	for(auto& [otherNodeId, otherNode] : graphNodes) {
+		for(auto& link : otherNode.inputs()) {
 			if(link.nodeId == nodeId) {
 				link = ShaderNode::Link();
 			}
 		}
 	}
 
-	shaderNodes.erase(nodeId);
+	graphNodes.erase(nodeId);
 }
 
 void ShaderGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, std::uint32_t sourceSlot, std::uint32_t targetSlot) {
@@ -341,14 +219,14 @@ void ShaderGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, std::uint32_t 
 		return;
 	}
 
-	ShaderNode& sourceNode = shaderNodes[sourceNodeId];
-	ShaderNode& targetNode = shaderNodes[targetNodeId];
+	ShaderNode& sourceNode = graphNodes[sourceNodeId];
+	ShaderNode& targetNode = graphNodes[targetNodeId];
 	if(targetSlot >= targetNode.inputs().size() || sourceSlot >= nodeType(sourceNode.type()).outputs.size()) {
 		return;
 	}
 
 	targetNode.inputs()[targetSlot] = ShaderNode::Link(
-		nextLinkId++,
+		graphNextLinkId++,
 		sourceNodeId,
 		sourceSlot);
 }
@@ -357,30 +235,30 @@ void ShaderGraph::linkNodes(id_t sourceNodeId, id_t targetNodeId, const std::str
 		return;
 	}
 
-	ShaderNode& sourceNode = shaderNodes[sourceNodeId];
-	ShaderNode& targetNode = shaderNodes[targetNodeId];
+	ShaderNode& sourceNode = graphNodes[sourceNodeId];
+	ShaderNode& targetNode = graphNodes[targetNodeId];
 	const ShaderNodeType& sourceNodeType = nodeType(sourceNode.type());
 	const ShaderNodeType& targetNodeType = nodeType(targetNode.type());
 
-	std::uint32_t sourceSlot = id_t::nullValue;
+	std::optional<std::uint32_t> sourceSlot;
 	for(std::size_t outputSlot = 0; outputSlot < sourceNodeType.outputs.size(); outputSlot++) {
 		if(sourceNodeType.outputs[outputSlot] == sourceSlotName) {
 			sourceSlot = static_cast<std::uint32_t>(outputSlot);
 		}
 	}
 
-	std::uint32_t targetSlot = id_t::nullValue;
+	std::optional<std::uint32_t> targetSlot;
 	for(std::size_t inputSlot = 0; inputSlot < targetNodeType.inputs.size(); inputSlot++) {
 		if(targetNodeType.inputs[inputSlot] == targetSlotName) {
 			targetSlot = static_cast<std::uint32_t>(inputSlot);
 		}
 	}
 
-	if(sourceSlot != id_t::nullValue && targetSlot != id_t::nullValue) {
-		targetNode.inputs()[targetSlot] = ShaderNode::Link(
-			nextLinkId++,
+	if(sourceSlot && targetSlot) {
+		targetNode.inputs()[targetSlot.value()] = ShaderNode::Link(
+			graphNextLinkId++,
 			sourceNodeId,
-			sourceSlot);
+			sourceSlot.value());
 	}
 }
 void ShaderGraph::unlinkNodes(id_t sourceNodeId, id_t targetNodeId, std::uint32_t targetSlot) {
@@ -388,7 +266,7 @@ void ShaderGraph::unlinkNodes(id_t sourceNodeId, id_t targetNodeId, std::uint32_
 		return;
 	}
 
-	ShaderNode& targetNode = shaderNodes[targetNodeId];
+	ShaderNode& targetNode = graphNodes[targetNodeId];
 	if(targetSlot >= targetNode.inputs().size()) {
 		return;
 	}
@@ -396,8 +274,8 @@ void ShaderGraph::unlinkNodes(id_t sourceNodeId, id_t targetNodeId, std::uint32_
 	targetNode.inputs()[targetSlot] = ShaderNode::Link();
 }
 void ShaderGraph::unlinkNodes(id_t linkId) {
-	for(auto& nodeEntry : shaderNodes) {
-		for(ShaderNode::Link& link : nodeEntry.second.inputs()) {
+	for(auto& [nodeId, node] : graphNodes) {
+		for(auto& link : node.inputs()) {
 			if(link.id == linkId) {
 				link = ShaderNode::Link();
 				return;
@@ -411,22 +289,22 @@ void ShaderGraph::nodeName(id_t nodeId, const std::string& name) {
 		return;
 	}
 
-	shaderNodes[nodeId].name(name);
+	graphNodes[nodeId].name(name);
 }
 void ShaderGraph::nodeParameter(id_t nodeId, std::uint32_t parameterIndex, VariantParameter::Value value) {
-	if(!containsNode(nodeId) || parameterIndex >= shaderNodes[nodeId].parameters().size()) {
+	if(!containsNode(nodeId) || parameterIndex >= graphNodes[nodeId].parameters().size()) {
 		return;
 	}
 
-	shaderNodes[nodeId].parameters()[parameterIndex] = value;
+	graphNodes[nodeId].parameters()[parameterIndex] = value;
 }
 void ShaderGraph::nodeParameter(id_t nodeId, const std::string& parameterName, VariantParameter::Value value) {
 	if(!containsNode(nodeId)) {
 		return;
 	}
 
-	ShaderNode& node = shaderNodes[nodeId];
-	for(std::size_t parameterIndex = 0; parameterIndex < shaderNodes[nodeId].parameters().size(); parameterIndex++) {
+	ShaderNode& node = graphNodes[nodeId];
+	for(std::size_t parameterIndex = 0; parameterIndex < graphNodes[nodeId].parameters().size(); parameterIndex++) {
 		if(nodeType(node.type()).parameters[parameterIndex].name() == parameterName) {
 			node.parameters()[parameterIndex] = value;
 		}
@@ -437,35 +315,34 @@ void ShaderGraph::nodeParameterNode(id_t nodeId, bool enable) {
 		return;
 	}
 
-	shaderNodes[nodeId].parameterNode(enable);
+	graphNodes[nodeId].parameterNode(enable);
 }
 void ShaderGraph::nodePosition(id_t nodeId, const float2_t& position) {
 	if(!containsNode(nodeId)) {
 		return;
 	}
 
-	shaderNodes[nodeId].position(position);
+	graphNodes[nodeId].move(position);
 }
 
 bool ShaderGraph::containsNode(id_t nodeId) const {
-	return shaderNodes.count(nodeId) != 0;
+	return graphNodes.count(nodeId) != 0;
 }
 const ShaderNode& ShaderGraph::node(id_t nodeId) const {
-	return shaderNodes.at(nodeId);
+	return graphNodes.at(nodeId);
 }
 const ShaderGraph::ShaderNodeCollection& ShaderGraph::nodes() const {
-	return shaderNodes;
+	return graphNodes;
 }
 
 std::unordered_map<id_t, VariantParameter> ShaderGraph::shaderParameters() const {
 	std::unordered_map<id_t, VariantParameter> parameters;
 
-	for(const auto& nodeEntry : shaderNodes) {
-		const ShaderNode& node = nodeEntry.second;
+	for(const auto& [nodeId, node] : graphNodes) {
 		const ShaderNodeType& shaderNodeType = nodeType(node.type());
 
 		if(node.parameterNode() && !shaderNodeType.parameters.empty()) {
-			parameters[nodeEntry.first] = shaderNodeType.parameters[0];
+			parameters[nodeId] = shaderNodeType.parameters[0];
 		}
 	}
 
@@ -473,58 +350,199 @@ std::unordered_map<id_t, VariantParameter> ShaderGraph::shaderParameters() const
 }
 
 bool ShaderGraph::containsNodeType(const std::string& typeName) const{
-	return findNodeType(typeName) != id_t::nullValue;
+	return findNodeType(typeName).has_value();
 }
 const ShaderNodeType& ShaderGraph::nodeType(const std::string& typeName) const {
-	return graphLanguage.nodes.at(findNodeType(typeName));
+	return specification.nodes.at(findNodeType(typeName).value());
 }
 const ShaderNodeType& ShaderGraph::nodeType(id_t nodeId) const {
-	return graphLanguage.nodes.at(findNodeType(shaderNodes.at(nodeId).type()));
+	return specification.nodes.at(findNodeType(graphNodes.at(nodeId).type()).value());
 }
 
-std::uint32_t ShaderGraph::findNodeType(const std::string& typeName) const {
-	for(std::size_t nodeIndex = 0; nodeIndex < graphLanguage.nodes.size(); nodeIndex++) {
-		if(graphLanguage.nodes[nodeIndex].name == typeName) {
+std::string ShaderGraph::buildValueString(const VariantValue& value, id_t nodeId, BuildResult& buildResult) const {
+	std::string valueString;
+	switch(value.type()) {
+		case VariantValue::type_bool: {
+			valueString = specification.typeConstructors[VariantValue::type_bool];
+			valueString = replaceString(valueString, value.valueBool() ? "true" : "false", "{0}");
+			break;
+		}
+		case VariantValue::type_int: {
+			valueString = specification.typeConstructors[VariantValue::type_int];
+			valueString = replaceString(valueString, serializeInt(value.valueInt()), "{0}");
+			break;
+		}
+		case VariantValue::type_float: {
+			valueString = specification.typeConstructors[VariantValue::type_float];
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat(), floatPrecision), "{0}");
+			break;
+		}
+		case VariantValue::type_float2: {
+			valueString = specification.typeConstructors[VariantValue::type_float2];
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat2().x, floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat2().y, floatPrecision), "{1}");
+			break;
+		}
+		case VariantValue::type_float3: {
+			valueString = specification.typeConstructors[VariantValue::type_float3];
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat3().x, floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat3().y, floatPrecision), "{1}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat3().z, floatPrecision), "{2}");
+			break;
+		}
+		case VariantValue::type_float4: {
+			valueString = specification.typeConstructors[VariantValue::type_float4];
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat4().x, floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat4().y, floatPrecision), "{1}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat4().z, floatPrecision), "{2}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat4().w, floatPrecision), "{3}");
+			break;
+		}
+		default: {
+			break;
+		}
+	}
+
+	return valueString;
+}
+std::string ShaderGraph::buildParameterValueString(const VariantParameter::Value& parameterValue, id_t nodeId, BuildResult& buildResult) const {
+	std::string valueString;
+	switch(parameterValue.type()) {
+		case VariantParameter::Value::type_int:
+		case VariantParameter::Value::type_enum: {
+			valueString = specification.typeConstructors[VariantValue::type_int];
+			valueString = replaceString(valueString, serializeInt(parameterValue.valueInt()), "{0}");
+			break;
+		}
+		case VariantParameter::Value::type_float: {
+			valueString = specification.typeConstructors[VariantValue::type_float];
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat(), floatPrecision), "{0}");
+			break;
+		}
+		case VariantParameter::Value::type_float2: {
+			valueString = specification.typeConstructors[VariantValue::type_float2];
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat2().x, floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat2().y, floatPrecision), "{1}");
+			break;
+		}
+		case VariantParameter::Value::type_float3: {
+			valueString = specification.typeConstructors[VariantValue::type_float3];
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().x, floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().y, floatPrecision), "{1}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().z, floatPrecision), "{2}");
+			break;
+		}
+		case VariantParameter::Value::type_float4:
+		case VariantParameter::Value::type_color: {
+			valueString = specification.typeConstructors[VariantValue::type_float4];
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().x, floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().y, floatPrecision), "{1}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().z, floatPrecision), "{2}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().w, floatPrecision), "{3}");
+			break;
+		}
+		case VariantParameter::Value::type_bool: {
+			valueString = specification.typeConstructors[VariantValue::type_bool];
+			valueString = replaceString(valueString, parameterValue.valueBool() ? "true" : "false", "{0}");
+			break;
+		}
+		case VariantParameter::Value::type_curve: {
+			Curve<float_t> curve = parameterValue.valueCurve();
+
+			for(std::uint32_t pointIndex = 0; pointIndex < curveInterpolationPointCount; pointIndex++) {
+				float_t pointValue = curve.at(static_cast<float_t>(pointIndex) / static_cast<float_t>(curveInterpolationPointCount - 1));
+				std::string pointValueString = specification.typeConstructors[VariantValue::type_float];
+				pointValueString = replaceString(pointValueString, serializeFloat(pointValue, floatPrecision), "{0}");
+
+				valueString += pointValueString;
+				if(pointIndex + 1 < curveInterpolationPointCount) {
+					valueString += ", ";
+				}
+			}
+
+			break;
+		}
+		case VariantParameter::Value::type_gradient: {
+			Curve<float3_t> gradient = parameterValue.valueGradient();
+
+			for(std::uint32_t pointIndex = 0; pointIndex < curveInterpolationPointCount; pointIndex++) {
+				float3_t pointValue = gradient.at(static_cast<float_t>(pointIndex) / static_cast<float_t>(curveInterpolationPointCount - 1));
+				std::string pointValueString = specification.typeConstructors[VariantValue::type_float3];
+				pointValueString = replaceString(pointValueString, serializeFloat(pointValue.x, floatPrecision), "{0}");
+				pointValueString = replaceString(pointValueString, serializeFloat(pointValue.y, floatPrecision), "{1}");
+				pointValueString = replaceString(pointValueString, serializeFloat(pointValue.z, floatPrecision), "{2}");
+
+				valueString += pointValueString;
+				if(pointIndex + 1 < curveInterpolationPointCount) {
+					valueString += ", ";
+				}
+			}
+
+			break;
+		}
+		case VariantParameter::Value::type_resource_image: {
+			std::size_t samplerIndex = buildResult.textureResourceIds.size();
+			if(samplerIndex < specification.textureSamplers.size()) {
+				buildResult.textureResourceIds.push_back(parameterValue.valueResourceId());
+				valueString = specification.textureSamplers[samplerIndex];
+			}
+			else {
+				throw BuildException("No more texture samplers available", nodeId);
+			}
+
+			break;
+		}
+		default: {
+			break;
+		}
+	}
+
+	return valueString;
+}
+
+std::optional<std::uint32_t> ShaderGraph::findNodeType(const std::string& typeName) const {
+	for(std::size_t nodeIndex = 0; nodeIndex < specification.nodes.size(); nodeIndex++) {
+		if(specification.nodes[nodeIndex].name == typeName) {
 			return static_cast<std::uint32_t>(nodeIndex);
 		}
 	}
 
-	return id_t::nullValue;
+	return std::nullopt;
 }
-std::uint32_t ShaderGraph::findNodeSignature(const BuildResult& result, const ShaderNode& node, std::vector<TypeMatch>& typeMatch) const {
+std::optional<std::uint32_t> ShaderGraph::findNodeSignature(const ShaderNode& node, const BuildResult& buildResult, std::vector<TypeMatch>& typeMatch) const {
 	const auto matchTypes = [](VariantValue::Type type1, VariantValue::Type type2) {
 		if(type1 == VariantValue::type_null || type2 == VariantValue::type_null) {
-			return ShaderGraph::typematch_none;
+			return ShaderGraph::TypeMatch::none;
 		}
 		else if(type1 == type2) {
-			return ShaderGraph::typematch_exact;
+			return ShaderGraph::TypeMatch::exact;
 		}
 		else if(type1 > type2) {
-			return ShaderGraph::typematch_downcast;
+			return ShaderGraph::TypeMatch::downcast;
 		}
 		else if(type1 < type2 && (type1 == VariantValue::type_bool || type1 == VariantValue::type_int || type1 == VariantValue::type_float)) {
-			return ShaderGraph::typematch_upcast;
+			return ShaderGraph::TypeMatch::upcast;
 		}
 
-		return ShaderGraph::typematch_none;
+		return ShaderGraph::TypeMatch::none;
 	};
 
 	const ShaderNodeType& shaderNodeType = nodeType(node.type());
 
-	std::uint32_t bestSignature = id_t::nullValue;
-	typeMatch = std::vector<TypeMatch>(shaderNodeType.inputs.size(), typematch_none);
+	std::optional<std::uint32_t> bestSignature;
+	typeMatch = std::vector<TypeMatch>(shaderNodeType.inputs.size(), TypeMatch::none);
 
 	for(std::size_t signatureIndex = 0; signatureIndex < shaderNodeType.signatures.size(); signatureIndex++) {
 		const ShaderNodeType::Signature& signature = shaderNodeType.signatures[signatureIndex];
 
-		std::vector<TypeMatch> currentMatch(node.inputs().size(), typematch_none);
+		std::vector<TypeMatch> currentMatch(node.inputs().size(), TypeMatch::none);
 		for(std::size_t inputIndex = 0; inputIndex < node.inputs().size(); inputIndex++) {
 			VariantValue::Type inputType = VariantValue::type_null;
 			id_t sourceNodeId = node.inputs()[inputIndex].nodeId;
 
-			if(shaderNodes.count(sourceNodeId) != 0) {
+			if(graphNodes.count(sourceNodeId) != 0) {
 				std::uint32_t sourceSlot = node.inputs()[inputIndex].slot;
-				std::uint32_t sourceSignature = result.nodeSignatures.at(sourceNodeId);
+				std::uint32_t sourceSignature = buildResult.nodeSignatures.at(sourceNodeId);
 				const ShaderNodeType& sourceNodeType = nodeType(sourceNodeId);
 
 				inputType = sourceNodeType.signatures[sourceSignature].outputTypes[sourceSlot];
@@ -539,7 +557,7 @@ std::uint32_t ShaderGraph::findNodeSignature(const BuildResult& result, const Sh
 		bool matchNotWorse = true;
 		bool matchBetterForAnyInput = node.inputs().empty();
 		for(std::size_t inputIndex = 0; inputIndex < node.inputs().size(); inputIndex++) {
-			if(currentMatch[inputIndex] == typematch_none || currentMatch[inputIndex] > typeMatch[inputIndex]) {
+			if(currentMatch[inputIndex] == TypeMatch::none || currentMatch[inputIndex] > typeMatch[inputIndex]) {
 				matchNotWorse = false;
 				break;
 			}

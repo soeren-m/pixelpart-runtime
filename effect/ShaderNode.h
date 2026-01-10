@@ -14,7 +14,7 @@ class ShaderNode {
 public:
 	struct Link {
 		Link() = default;
-		Link(id_t linkId, id_t linkNodeId, std::uint32_t slotIndex);
+		Link(id_t linkId, id_t linkNodeId, std::uint32_t linkSlot);
 
 		id_t id;
 		id_t nodeId;
@@ -42,7 +42,7 @@ public:
 	void parameterNode(bool parameterNode);
 	bool parameterNode() const;
 
-	void position(const float2_t& position);
+	void move(const float2_t& pos);
 	const float2_t& position() const;
 
 private:
@@ -51,7 +51,7 @@ private:
 	std::vector<Link> nodeInputs;
 	std::vector<VariantParameter::Value> nodeParameters;
 
-	bool nodeIsParameterNode = false;
+	bool nodeParameterNode = false;
 
 	float2_t nodePosition = float2_t(0.0);
 };
