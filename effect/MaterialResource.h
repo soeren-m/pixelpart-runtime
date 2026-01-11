@@ -22,7 +22,7 @@ public:
 	const ShaderGraph& shaderGraph() const;
 
 private:
-	BlendMode materialBlendMode = BlendMode::normal;
+	BlendMode materialBlendMode = BlendMode::alpha;
 	LightingMode materialLightingMode = LightingMode::unlit;
 	ShaderGraph materialShaderGraph;
 };

@@ -38,7 +38,7 @@ void to_json(nlohmann::ordered_json& j, const MaterialResource& resource) {
 void from_json(const nlohmann::ordered_json& j, MaterialResource& resource) {
 	resource = MaterialResource(
 		j.value("name", "unknown"),
-		j.value("blend_mode", BlendMode::normal),
+		j.value("blend_mode", BlendMode::alpha),
 		j.value("lighting_mode", LightingMode::unlit),
 		j.value("shader_graph", ShaderGraph()));
 }
