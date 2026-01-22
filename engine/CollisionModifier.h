@@ -8,6 +8,7 @@
 #include "../common/Curve.h"
 #include "../common/Transform.h"
 #include <bitset>
+#include <optional>
 #include <array>
 #include <vector>
 
@@ -51,28 +52,20 @@ private:
 		std::array<float3_t, 4> vertices;
 	};
 
-	struct Intersection {
-		Intersection();
-		Intersection(const float3_t& p);
-
-		bool hit = false;
-		float3_t point = float3_t(0.0);
-	};
-
 	static bool isPointOnLineSegment(const float2_t& p, const float2_t& l1, const float2_t& l2);
 	static bool isPointOnLineSegment(const float3_t& p, const float3_t& l1, const float3_t& l2);
 	static bool isPointOnCollider(const float3_t& p, const Plane3dColliderObject& collider);
-	static float2_t calculateClosestPointOnLine(const float2_t& p, const Line2dColliderObject& collider);
-	static float3_t calculateClosestPointOnPlane(const float3_t& p, const Plane3dColliderObject& collider);
-	static Intersection calculateRayColliderIntersection(const Line2dColliderObject& collider, const float2_t& rayOrigin, const float2_t& rayEnd);
-	static Intersection calculateRayColliderIntersection(const Plane3dColliderObject& collider, const float3_t& rayOrigin, const float3_t& rayEnd);
+	static float2_t closestPointOnLine(const float2_t& p, const Line2dColliderObject& collider);
+	static float3_t closestPointOnPlane(const float3_t& p, const Plane3dColliderObject& collider);
+	static std::optional<float3_t> rayColliderIntersection(const Line2dColliderObject& collider, const float2_t& rayOrigin, const float2_t& rayEnd);
+	static std::optional<float3_t> rayColliderIntersection(const Plane3dColliderObject& collider, const float3_t& rayOrigin, const float3_t& rayEnd);
 
 	void collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, std::uint32_t p, float_t t, float_t dt, const Line2dColliderObject& collider) const;
 	void collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, std::uint32_t p, float_t t, float_t dt, const Plane3dColliderObject& collider) const;
 
-	std::vector<Line2dColliderObject> line2dColliders;
-	std::vector<Plane3dColliderObject> plane3dColliders;
+	std::vector<Line2dColliderObject> modifierLine2dColliders;
+	std::vector<Plane3dColliderObject> modifierPlane3dColliders;
 
-	LineQueryGrid line2dColliderGrid;
+	LineQueryGrid modifierLine2dColliderGrid;
 };
 }

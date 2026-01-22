@@ -14,7 +14,7 @@ void ForceModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t 
 	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
 	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
 
-	for(const AttractionField& field : attractionFields) {
+	for(const AttractionField& field : modifierAttractionFields) {
 		if(field.exclusionSet().count(particleType.id()) != 0) {
 			continue;
 		}
@@ -22,7 +22,7 @@ void ForceModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t 
 		applyForce(particles, particleCount, runtimeContext, particleType, field, effect->sceneGraph());
 	}
 
-	for(const AccelerationField& field : accelerationFields) {
+	for(const AccelerationField& field : modifierAccelerationFields) {
 		if(field.exclusionSet().count(particleType.id()) != 0) {
 			continue;
 		}
@@ -30,7 +30,7 @@ void ForceModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t 
 		applyForce(particles, particleCount, runtimeContext, particleType, field, effect->sceneGraph());
 	}
 
-	for(const VectorField& field : vectorFields) {
+	for(const VectorField& field : modifierVectorFields) {
 		if(field.exclusionSet().count(particleType.id()) != 0) {
 			continue;
 		}
@@ -38,7 +38,7 @@ void ForceModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t 
 		applyForce(particles, particleCount, runtimeContext, particleType, field, effect->sceneGraph());
 	}
 
-	for(const NoiseField& field : noiseFields) {
+	for(const NoiseField& field : modifierNoiseFields) {
 		if(field.exclusionSet().count(particleType.id()) != 0) {
 			continue;
 		}
@@ -46,7 +46,7 @@ void ForceModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t 
 		applyForce(particles, particleCount, runtimeContext, particleType, field, effect->sceneGraph());
 	}
 
-	for(const DragField& field : dragFields) {
+	for(const DragField& field : modifierDragFields) {
 		if(field.exclusionSet().count(particleType.id()) != 0) {
 			continue;
 		}
@@ -56,14 +56,14 @@ void ForceModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t 
 }
 
 void ForceModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
-	effectResources = &effect->resources();
-	is3d = effect->is3d();
+	modifierEffectResources = &effect->resources();
+	modifierEffect3d = effect->is3d();
 
-	attractionFields.clear();
-	accelerationFields.clear();
-	vectorFields.clear();
-	noiseFields.clear();
-	dragFields.clear();
+	modifierAttractionFields.clear();
+	modifierAccelerationFields.clear();
+	modifierVectorFields.clear();
+	modifierNoiseFields.clear();
+	modifierDragFields.clear();
 
 	for(const ForceField* forceField : effect->sceneGraph().nodesWithType<ForceField>()) {
 		if(!forceField->active(runtimeContext)) {
@@ -77,19 +77,19 @@ void ForceModifier::reset(const Effect* effect, EffectRuntimeContext runtimeCont
 		const DragField* dragField = dynamic_cast<const DragField*>(forceField);
 
 		if(attractionField) {
-			attractionFields.emplace_back(*attractionField);
+			modifierAttractionFields.emplace_back(*attractionField);
 		}
 		else if(accelerationField) {
-			accelerationFields.emplace_back(*accelerationField);
+			modifierAccelerationFields.emplace_back(*accelerationField);
 		}
 		else if(vectorField) {
-			vectorFields.emplace_back(*vectorField);
+			modifierVectorFields.emplace_back(*vectorField);
 		}
 		else if(noiseField) {
-			noiseFields.emplace_back(*noiseField);
+			modifierNoiseFields.emplace_back(*noiseField);
 		}
 		else if(dragField) {
-			dragFields.emplace_back(*dragField);
+			modifierDragFields.emplace_back(*dragField);
 		}
 	}
 }
@@ -134,7 +134,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 }
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 	const ParticleType& particleType, const VectorField& vectorField, const SceneGraph& sceneGraph) const {
-	if(effectResources == nullptr || effectResources->vectorFields().count(vectorField.vectorFieldResourceId()) == 0) {
+	if(modifierEffectResources == nullptr || modifierEffectResources->vectorFields().count(vectorField.vectorFieldResourceId()) == 0) {
 		return;
 	}
 
@@ -147,7 +147,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	mat4_t inverseRotationMatrix = glm::yawPitchRoll(-rotation.y, -rotation.z, -rotation.x);
 	float_t strength = vectorField.strength().at(alpha);
 
-	const VectorFieldResource& vectorFieldResource = effectResources->vectorFields().at(vectorField.vectorFieldResourceId());
+	const VectorFieldResource& vectorFieldResource = modifierEffectResources->vectorFields().at(vectorField.vectorFieldResourceId());
 	float_t tightness = glm::clamp(vectorField.tightness().at(alpha), 0.0, 1.0);
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
@@ -265,7 +265,7 @@ float3_t ForceModifier::sampleVectorField(const VectorField& vectorField, const 
 	float3_t result = float3_t(0.0);
 	float3_t samplePosition = (rotatedParticlePosition - position + size) / (size * 2.0);
 
-	if(is3d) {
+	if(modifierEffect3d) {
 		switch(vectorField.vectorFieldFilter()) {
 			case VectorField::Filter::none: {
 				float3_t normalizedSamplePosition = float3_t(
@@ -441,12 +441,12 @@ float3_t ForceModifier::sampleNoiseField(const NoiseField& noiseField,
 	if(noiseField.noiseAnimated()) {
 		float_t animationTime = noiseField.noiseAnimationTimeBase().value() + noiseField.noiseAnimationTimeScale().value() * t;
 
-		return is3d
+		return modifierEffect3d
 			? computeAnimatedCurlNoise3d(samplePosition, animationTime, octaves, frequency, persistence, lacunarity)
 			: computeAnimatedCurlNoise2d(samplePosition, animationTime, octaves, frequency, persistence, lacunarity);
 	}
 	else {
-		return is3d
+		return modifierEffect3d
 			? computeStaticCurlNoise3d(samplePosition, octaves, frequency, persistence, lacunarity)
 			: computeStaticCurlNoise2d(samplePosition, octaves, frequency, persistence, lacunarity);
 	}

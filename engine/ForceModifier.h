@@ -56,13 +56,13 @@ private:
 	float3_t computeAnimatedCurlNoise2d(const float2_t& samplePosition, float_t animationTime, std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
 	float3_t computeAnimatedCurlNoise3d(const float3_t& samplePosition, float_t animationTime, std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
 
-	const ResourceCollection* effectResources = nullptr;
-	bool is3d = false;
+	const ResourceCollection* modifierEffectResources = nullptr;
+	bool modifierEffect3d = false;
 
-	std::vector<AttractionField> attractionFields;
-	std::vector<AccelerationField> accelerationFields;
-	std::vector<VectorField> vectorFields;
-	std::vector<NoiseField> noiseFields;
-	std::vector<DragField> dragFields;
+	std::vector<AttractionField> modifierAttractionFields;
+	std::vector<AccelerationField> modifierAccelerationFields;
+	std::vector<VectorField> modifierVectorFields;
+	std::vector<NoiseField> modifierNoiseFields;
+	std::vector<DragField> modifierDragFields;
 };
 }
