@@ -7,6 +7,7 @@
 #include "../common/Id.h"
 #include "../json/json.hpp"
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -33,7 +34,7 @@ public:
 			nodeId++;
 		}
 
-		std::unique_ptr<Node>& node = sceneNodes.emplace_back(new T(nodeId, parentId));
+		std::unique_ptr<Node>& node = sceneNodes.emplace_back(std::make_unique<T>(nodeId, parentId));
 		rebuildIndex();
 
 		return *static_cast<T*>(node.get());
@@ -52,8 +53,7 @@ public:
 	id_t parentId(id_t nodeId) const;
 	std::vector<id_t> childIds(id_t nodeId) const;
 
-	std::uint32_t indexOf(id_t nodeId) const;
-	std::uint32_t indexOfName(const std::string& name) const;
+	std::optional<std::uint32_t> indexOf(id_t nodeId) const;
 
 	bool contains(id_t nodeId) const;
 	bool containsIndex(std::uint32_t index) const;

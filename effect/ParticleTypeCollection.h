@@ -3,6 +3,7 @@
 #include "ParticleType.h"
 #include "../common/Types.h"
 #include "../common/Id.h"
+#include <optional>
 #include <vector>
 
 namespace pixelpart {
@@ -32,7 +33,7 @@ public:
 
 	std::uint32_t count() const;
 
-	std::uint32_t indexOf(id_t id) const;
+	std::optional<std::uint32_t> indexOf(id_t id) const;
 
 	bool contains(id_t id) const;
 	bool containsIndex(std::uint32_t index) const;

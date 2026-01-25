@@ -5,6 +5,7 @@
 #include "../glm/gtx/rotate_vector.hpp"
 #include "../glm/gtx/euler_angles.hpp"
 #include <cmath>
+#include <optional>
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
@@ -20,12 +21,12 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 
 		const ParticleType& particleType = effect->particleTypes().at(emissionPair.typeId);
 
-		std::uint32_t particleEmitterIndex = effect->sceneGraph().indexOf(emissionPair.emitterId);
-		if(particleEmitterIndex == id_t::nullValue) {
+		std::optional<std::uint32_t> particleEmitterIndex = effect->sceneGraph().indexOf(emissionPair.emitterId);
+		if(!particleEmitterIndex) {
 			continue;
 		}
 
-		const ParticleEmitter& particleEmitter = effect->sceneGraph().atIndex<ParticleEmitter>(particleEmitterIndex);
+		const ParticleEmitter& particleEmitter = effect->sceneGraph().atIndex<ParticleEmitter>(particleEmitterIndex.value());
 		if(!particleEmitter.primary() || !particleEmitter.active(runtimeContext)) {
 			continue;
 		}

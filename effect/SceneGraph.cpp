@@ -106,7 +106,12 @@ void SceneGraph::set(std::vector<std::unique_ptr<Node>>&& nodeList) {
 }
 
 void SceneGraph::remove(id_t nodeId) {
-	removeIndex(indexOf(nodeId));
+	std::optional<std::uint32_t> index = indexOf(nodeId);
+	if(!index) {
+		return;
+	}
+
+	removeIndex(index.value());
 }
 void SceneGraph::removeIndex(std::uint32_t index) {
 	if(index >= sceneNodes.size()) {
@@ -152,36 +157,29 @@ std::vector<id_t> SceneGraph::childIds(id_t nodeId) const {
 	return result;
 }
 
-std::uint32_t SceneGraph::indexOf(id_t nodeId) const {
-	return nodeId.value() < indexMap.size()
-		? indexMap[nodeId.value()]
-		: id_t::nullValue;
-}
-std::uint32_t SceneGraph::indexOfName(const std::string& name) const {
-	for(std::uint32_t index = 0; index < sceneNodes.size(); index++) {
-		if(sceneNodes[index]->nodeName == name) {
-			return index;
-		}
+std::optional<std::uint32_t> SceneGraph::indexOf(id_t nodeId) const {
+	if(nodeId.value() < indexMap.size() && indexMap[nodeId.value()] != id_t::nullValue) {
+		return indexMap[nodeId.value()];
 	}
 
-	return id_t::nullValue;
+	return std::nullopt;
 }
 
 bool SceneGraph::contains(id_t nodeId) const {
-	return indexOf(nodeId) != id_t::nullValue;
+	return indexOf(nodeId).has_value();
 }
 bool SceneGraph::containsIndex(std::uint32_t index) const {
 	return index < sceneNodes.size();
 }
 
 Node& SceneGraph::at(id_t nodeId) {
-	return *sceneNodes.at(indexOf(nodeId));
+	return *sceneNodes.at(indexOf(nodeId).value());
 }
 Node& SceneGraph::atIndex(std::uint32_t index) {
 	return *sceneNodes.at(index);
 }
 const Node& SceneGraph::at(id_t nodeId) const {
-	return *sceneNodes.at(indexOf(nodeId));
+	return *sceneNodes.at(indexOf(nodeId).value());
 }
 const Node& SceneGraph::atIndex(std::uint32_t index) const {
 	return *sceneNodes.at(index);
@@ -319,12 +317,12 @@ void from_json(const nlohmann::ordered_json& j, SceneGraph& sceneGraph) {
 
 		switch(nodeType) {
 			case NodeType::group: {
-				nodes.emplace_back(new GroupNode(jNode.get<GroupNode>()));
+				nodes.emplace_back(std::make_unique<GroupNode>(jNode.get<GroupNode>()));
 				break;
 			}
 
 			case NodeType::particle_emitter: {
-				nodes.emplace_back(new ParticleEmitter(jNode.get<ParticleEmitter>()));
+				nodes.emplace_back(std::make_unique<ParticleEmitter>(jNode.get<ParticleEmitter>()));
 				break;
 			}
 
@@ -332,19 +330,19 @@ void from_json(const nlohmann::ordered_json& j, SceneGraph& sceneGraph) {
 				ForceFieldType forceFieldType = jNode.at("force_field_type");
 				switch(forceFieldType) {
 					case ForceFieldType::attraction:
-						nodes.emplace_back(new AttractionField(jNode.get<AttractionField>()));
+						nodes.emplace_back(std::make_unique<AttractionField>(jNode.get<AttractionField>()));
 						break;
 					case ForceFieldType::acceleration:
-						nodes.emplace_back(new AccelerationField(jNode.get<AccelerationField>()));
+						nodes.emplace_back(std::make_unique<AccelerationField>(jNode.get<AccelerationField>()));
 						break;
 					case ForceFieldType::vector:
-						nodes.emplace_back(new VectorField(jNode.get<VectorField>()));
+						nodes.emplace_back(std::make_unique<VectorField>(jNode.get<VectorField>()));
 						break;
 					case ForceFieldType::noise:
-						nodes.emplace_back(new NoiseField(jNode.get<NoiseField>()));
+						nodes.emplace_back(std::make_unique<NoiseField>(jNode.get<NoiseField>()));
 						break;
 					case ForceFieldType::drag:
-						nodes.emplace_back(new DragField(jNode.get<DragField>()));
+						nodes.emplace_back(std::make_unique<DragField>(jNode.get<DragField>()));
 						break;
 					default:
 						break;
@@ -357,10 +355,10 @@ void from_json(const nlohmann::ordered_json& j, SceneGraph& sceneGraph) {
 				ColliderType colliderType = jNode.at("collider_type");
 				switch(colliderType) {
 					case ColliderType::line:
-						nodes.emplace_back(new LineCollider(jNode.get<LineCollider>()));
+						nodes.emplace_back(std::make_unique<LineCollider>(jNode.get<LineCollider>()));
 						break;
 					case ColliderType::plane:
-						nodes.emplace_back(new PlaneCollider(jNode.get<PlaneCollider>()));
+						nodes.emplace_back(std::make_unique<PlaneCollider>(jNode.get<PlaneCollider>()));
 						break;
 					default:
 						break;
@@ -373,13 +371,13 @@ void from_json(const nlohmann::ordered_json& j, SceneGraph& sceneGraph) {
 				LightSourceType lightSourceType = jNode.at("light_source_type");
 				switch(lightSourceType) {
 					case LightSourceType::directional:
-						nodes.emplace_back(new DirectionalLightSource(jNode.get<DirectionalLightSource>()));
+						nodes.emplace_back(std::make_unique<DirectionalLightSource>(jNode.get<DirectionalLightSource>()));
 						break;
 					case LightSourceType::point:
-						nodes.emplace_back(new PointLightSource(jNode.get<PointLightSource>()));
+						nodes.emplace_back(std::make_unique<PointLightSource>(jNode.get<PointLightSource>()));
 						break;
 					case LightSourceType::spot:
-						nodes.emplace_back(new SpotLightSource(jNode.get<SpotLightSource>()));
+						nodes.emplace_back(std::make_unique<SpotLightSource>(jNode.get<SpotLightSource>()));
 						break;
 					default:
 						break;

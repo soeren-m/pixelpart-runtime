@@ -81,7 +81,12 @@ ParticleType& ParticleTypeCollection::duplicate(id_t id) {
 	return add(particleType);
 }
 void ParticleTypeCollection::remove(id_t id) {
-	removeIndex(indexOf(id));
+	std::optional<std::uint32_t> index = indexOf(id);
+	if(!index) {
+		return;
+	}
+
+	removeIndex(index.value());
 }
 void ParticleTypeCollection::removeIndex(std::uint32_t index) {
 	if(index >= particleTypes.size()) {
@@ -131,22 +136,26 @@ std::uint32_t ParticleTypeCollection::count() const {
 	return static_cast<std::uint32_t>(particleTypes.size());
 }
 
-std::uint32_t ParticleTypeCollection::indexOf(id_t id) const {
-	return id.value() < indexMap.size() ? indexMap[id.value()] : id_t::nullValue;
+std::optional<std::uint32_t> ParticleTypeCollection::indexOf(id_t id) const {
+	if(id.value() < indexMap.size() && indexMap[id.value()] != id_t::nullValue) {
+		return indexMap[id.value()];
+	}
+
+	return std::nullopt;
 }
 
 bool ParticleTypeCollection::contains(id_t id) const {
-	return indexOf(id) != id_t::nullValue;
+	return indexOf(id).has_value();
 }
 bool ParticleTypeCollection::containsIndex(std::uint32_t index) const {
 	return index < particleTypes.size();
 }
 
 ParticleType& ParticleTypeCollection::at(id_t id) {
-	return particleTypes.at(indexOf(id));
+	return particleTypes.at(indexOf(id).value());
 }
 const ParticleType& ParticleTypeCollection::at(id_t id) const {
-	return particleTypes.at(indexOf(id));
+	return particleTypes.at(indexOf(id).value());
 }
 
 ParticleType& ParticleTypeCollection::atIndex(std::uint32_t index) {
