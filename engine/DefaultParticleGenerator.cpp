@@ -15,10 +15,7 @@ const float_t pi = 3.14159265358979323846;
 
 void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 	const Effect* effect, EffectRuntimeContext runtimeContext) const {
-	for(auto& collectionEntry : state.particleCollections()) {
-		ParticleEmissionPair emissionPair = collectionEntry.first;
-		ParticleCollection& particleCollection = collectionEntry.second;
-
+	for(auto& [emissionPair, particleCollection] : state.particleCollections()) {
 		const ParticleType& particleType = effect->particleTypes().at(emissionPair.typeId);
 
 		std::optional<std::uint32_t> particleEmitterIndex = effect->sceneGraph().indexOf(emissionPair.emitterId);
@@ -68,14 +65,11 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 
 	std::unordered_map<ParticleEmissionPair, std::vector<ParticleEmissionPair>> subEmissionPairCollection;
 
-	for(const auto& collectionEntry : state.particleCollections()) {
-		ParticleEmissionPair emissionPair = collectionEntry.first;
-
+	for(const auto& [emissionPair, particleCollection] : state.particleCollections()) {
 		std::vector<ParticleEmissionPair>& subEmissionPairs = subEmissionPairCollection[emissionPair];
 		const ParticleType& particleType = effect->particleTypes().at(emissionPair.typeId);
 
-		for(const auto& otherCollectionEntry : state.particleCollections()) {
-			ParticleEmissionPair otherEmissionPair = otherCollectionEntry.first;
+		for(const auto& [otherEmissionPair, otherParticleCollection] : state.particleCollections()) {
 			if(emissionPair == otherEmissionPair) {
 				continue;
 			}
@@ -92,10 +86,7 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 		}
 	}
 
-	for(const auto& collectionEntry : state.particleCollections()) {
-		ParticleEmissionPair emissionPair = collectionEntry.first;
-		const ParticleCollection& particleCollection = collectionEntry.second;
-
+	for(const auto& [emissionPair, particleCollection] : state.particleCollections()) {
 		const std::vector<ParticleEmissionPair>& subEmissionPairs = subEmissionPairCollection.at(emissionPair);
 		if(subEmissionPairs.empty()) {
 			continue;
@@ -150,21 +141,16 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 		}
 	}
 
-	for(auto& collectionEntry : state.particleCollections()) {
-		ParticleEmissionPair emissionPair = collectionEntry.first;
-		ParticleCollection& particleCollection = collectionEntry.second;
-
+	for(auto& [emissionPair, particleCollection] : state.particleCollections()) {
 		particleCollection.removeDead();
 	}
 }
 void DefaultParticleGenerator::clear(EffectRuntimeState& state) const {
-	for(auto& collectionEntry : state.particleCollections()) {
-		ParticleCollection& particleCollection = collectionEntry.second;
+	for(auto& [emissionPair, particleCollection] : state.particleCollections()) {
 		particleCollection.clear();
 	}
 
-	for(auto& emissionStateEntry : state.particleEmissionStates()) {
-		ParticleEmissionState& particleEmissionState = emissionStateEntry.second;
+	for(auto& [emissionPair, particleEmissionState] : state.particleEmissionStates()) {
 		particleEmissionState.emissionCount = 0;
 		particleEmissionState.emitterGridIndex = 0;
 	}
