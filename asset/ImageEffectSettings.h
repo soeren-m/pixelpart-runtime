@@ -1,14 +1,11 @@
 #pragma once
 
 #include "ImageEffect.h"
-#include "ImageEffectCollection.h"
 #include "../json/json.hpp"
 #include <vector>
 
 namespace pixelpart {
 struct ImageEffectSettings {
-	static ImageEffectCollection effectCollection;
-
 	std::vector<ImageEffect> effects;
 };
 
