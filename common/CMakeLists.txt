@@ -1,14 +1,10 @@
 target_sources(pixelpart-runtime PRIVATE
-	Base64.cpp
 	Color.cpp
 	Compression.cpp
-	CompressionException.cpp
-	DecodingException.cpp
-	DecompressionException.cpp
-	DeserializationException.cpp
+	Encoding.cpp
 	Id.cpp
 	Math.cpp
-	SerializationException.cpp
+	Serialization.cpp
 	StdThreadPool.cpp
 	StringFormat.cpp
 	Transform.cpp

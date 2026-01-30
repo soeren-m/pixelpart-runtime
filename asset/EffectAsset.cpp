@@ -1,6 +1,5 @@
 #include "EffectAsset.h"
-#include "../common/SerializationException.h"
-#include "../common/DeserializationException.h"
+#include "../common/Serialization.h"
 #include "../effect/Node.h"
 #include "../effect/ParticleType.h"
 #include <memory>

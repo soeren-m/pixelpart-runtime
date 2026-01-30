@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <string>
 #include <charconv>
+#include <stdexcept>
 
 #ifdef __clang__
 #include <sstream>
@@ -10,6 +11,18 @@
 #endif
 
 namespace pixelpart {
+class SerializationException : public std::runtime_error {
+public:
+	SerializationException(const char* msg);
+	SerializationException(const std::string& msg);
+};
+
+class DeserializationException : public std::runtime_error {
+public:
+	DeserializationException(const char* msg);
+	DeserializationException(const std::string& msg);
+};
+
 template <typename T>
 std::string serializeInt(T value) {
 	static const std::size_t bufferSize = 128;

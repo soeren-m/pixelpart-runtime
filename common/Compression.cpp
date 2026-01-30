@@ -1,10 +1,22 @@
 #include "Compression.h"
-#include "CompressionException.h"
-#include "DecompressionException.h"
-#include "Base64.h"
+#include "Encoding.h"
 #include "../zlib/zlib.h"
 
 namespace pixelpart {
+CompressionException::CompressionException(const char* msg) : std::runtime_error(msg) {
+
+}
+CompressionException::CompressionException(const std::string& msg) : std::runtime_error(msg) {
+
+}
+
+DecompressionException::DecompressionException(const char* msg) : std::runtime_error(msg) {
+
+}
+DecompressionException::DecompressionException(const std::string& msg) : std::runtime_error(msg) {
+
+}
+
 std::string compressToString(const std::uint8_t* data, std::size_t size, CompressionMethod method) {
 	if(!data || size == 0) {
 		throw CompressionException("No data available");

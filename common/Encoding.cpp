@@ -1,7 +1,13 @@
-#include "Base64.h"
-#include "DecodingException.h"
+#include "Encoding.h"
 
 namespace pixelpart {
+DecodingException::DecodingException(const char* msg) : std::runtime_error(msg) {
+
+}
+DecodingException::DecodingException(const std::string& msg) : std::runtime_error(msg) {
+
+}
+
 std::string encodeBase64(const std::uint8_t* data, std::size_t size) {
 	static const char* base64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
