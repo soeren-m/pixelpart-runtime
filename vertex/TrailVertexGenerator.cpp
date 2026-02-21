@@ -11,10 +11,12 @@
 
 namespace pixelpart {
 TrailVertexGenerator::TrailVertexGenerator(const Effect& effect, id_t particleEmitterId, id_t particleTypeId,
-	const VertexFormat& vertexFormat) : VertexGenerator(),
+	const VertexFormat& vertexFormat,
+	std::shared_ptr<ThreadPool> threadPool) : VertexGenerator(),
 	generatorEffect(effect),
 	generatorParticleEmitterId(particleEmitterId), generatorParticleTypeId(particleTypeId),
-	generatorVertexFormat(vertexFormat) {
+	generatorVertexFormat(vertexFormat),
+	generatorThreadPool(threadPool) {
 	validateVertexFormat();
 }
 

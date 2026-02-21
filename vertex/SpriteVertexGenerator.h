@@ -4,14 +4,17 @@
 #include "VertexAttribute.h"
 #include "VertexWindingOrder.h"
 #include "../common/Types.h"
+#include "../common/ThreadPool.h"
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 namespace pixelpart {
 class SpriteVertexGenerator : public VertexGenerator {
 public:
 	SpriteVertexGenerator(const Effect& effect, id_t particleEmitterId, id_t particleTypeId,
-		const VertexFormat& vertexFormat);
+		const VertexFormat& vertexFormat,
+		std::shared_ptr<ThreadPool> threadPool);
 
 	virtual VertexDataBufferDimensions buildGeometry(
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
@@ -137,6 +140,8 @@ private:
 	id_t generatorParticleTypeId;
 
 	VertexFormat generatorVertexFormat;
+
+	std::shared_ptr<ThreadPool> generatorThreadPool;
 
 	ParticleCollection generatorSortedParticleCollection;
 };

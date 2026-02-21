@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VertexGenerator.h"
+#include "../common/ThreadPool.h"
 #include "../effect/ParticleRendererType.h"
 #include <memory>
 
@@ -8,7 +9,8 @@ namespace pixelpart {
 class ParticleVertexGenerator : public VertexGenerator {
 public:
 	ParticleVertexGenerator(const Effect& effect, id_t particleEmitterId, id_t particleTypeId,
-		const VertexFormat& vertexFormat);
+		const VertexFormat& vertexFormat,
+		std::shared_ptr<ThreadPool> threadPool);
 
 	virtual VertexDataBufferDimensions buildGeometry(
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
@@ -26,6 +28,8 @@ private:
 	id_t generatorParticleTypeId;
 
 	VertexFormat generatorVertexFormat;
+
+	std::shared_ptr<ThreadPool> generatorThreadPool;
 
 	std::unique_ptr<VertexGenerator> generatorBaseGenerator;
 	ParticleRendererType generatorCurrentRendererType = ParticleRendererType::sprite;

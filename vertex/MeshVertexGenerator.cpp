@@ -15,10 +15,12 @@
 
 namespace pixelpart {
 MeshVertexGenerator::MeshVertexGenerator(const Effect& effect, id_t particleEmitterId, id_t particleTypeId,
-	const VertexFormat& vertexFormat) : VertexGenerator(),
+	const VertexFormat& vertexFormat,
+	std::shared_ptr<ThreadPool> threadPool) : VertexGenerator(),
 	generatorEffect(effect),
 	generatorParticleEmitterId(particleEmitterId), generatorParticleTypeId(particleTypeId),
-	generatorVertexFormat(vertexFormat) {
+	generatorVertexFormat(vertexFormat),
+	generatorThreadPool(threadPool) {
 	validateVertexFormat();
 }
 
@@ -29,7 +31,14 @@ VertexDataBufferDimensions MeshVertexGenerator::buildGeometry(
 	ParticleSortCriterion sortCriterion = particleType.spriteRendererSettings().sortCriterion;
 
 	if(generatorEffect.is3d() && sortCriterion != ParticleSortCriterion::none) {
-		sortParticles(generatorSortedParticleCollection, particles, particleCount, sceneContext, sortCriterion);
+		if(generatorThreadPool) {
+			sortParticles(generatorSortedParticleCollection, particles, particleCount,
+				sceneContext, sortCriterion, *generatorThreadPool);
+		}
+		else {
+			sortParticles(generatorSortedParticleCollection, particles, particleCount,
+				sceneContext, sortCriterion);
+		}
 	}
 
 	VertexDataBufferDimensions result;

@@ -6,10 +6,12 @@
 
 namespace pixelpart {
 ParticleVertexGenerator::ParticleVertexGenerator(const Effect& effect, id_t particleEmitterId, id_t particleTypeId,
-	const VertexFormat& vertexFormat) : VertexGenerator(),
+	const VertexFormat& vertexFormat,
+	std::shared_ptr<ThreadPool> threadPool) : VertexGenerator(),
 	generatorEffect(effect),
 	generatorParticleEmitterId(particleEmitterId), generatorParticleTypeId(particleTypeId),
-	generatorVertexFormat(vertexFormat) {
+	generatorVertexFormat(vertexFormat),
+	generatorThreadPool(threadPool) {
 
 }
 
@@ -44,21 +46,24 @@ void ParticleVertexGenerator::updateBaseGenerator() {
 
 	switch(particleType.renderer()) {
 		case ParticleRendererType::sprite:
-			generatorBaseGenerator = std::unique_ptr<VertexGenerator>(new SpriteVertexGenerator(
+			generatorBaseGenerator = std::make_unique<SpriteVertexGenerator>(
 				generatorEffect, generatorParticleEmitterId, generatorParticleTypeId,
-				generatorVertexFormat));
+				generatorVertexFormat,
+				generatorThreadPool);
 			generatorCurrentRendererType = ParticleRendererType::sprite;
 			break;
 		case ParticleRendererType::trail:
-			generatorBaseGenerator = std::unique_ptr<VertexGenerator>(new TrailVertexGenerator(
+			generatorBaseGenerator = std::make_unique<TrailVertexGenerator>(
 				generatorEffect, generatorParticleEmitterId, generatorParticleTypeId,
-				generatorVertexFormat));
+				generatorVertexFormat,
+				generatorThreadPool);
 			generatorCurrentRendererType = ParticleRendererType::trail;
 			break;
 		case ParticleRendererType::mesh:
-			generatorBaseGenerator = std::unique_ptr<VertexGenerator>(new MeshVertexGenerator(
+			generatorBaseGenerator = std::make_unique<MeshVertexGenerator>(
 				generatorEffect, generatorParticleEmitterId, generatorParticleTypeId,
-				generatorVertexFormat));
+				generatorVertexFormat,
+				generatorThreadPool);
 			generatorCurrentRendererType = ParticleRendererType::mesh;
 			break;
 		default:

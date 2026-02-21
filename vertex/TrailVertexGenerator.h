@@ -5,8 +5,10 @@
 #include "VertexWindingOrder.h"
 #include "../common/Types.h"
 #include "../common/Curve.h"
+#include "../common/ThreadPool.h"
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <vector>
 #include <unordered_map>
 
@@ -14,7 +16,8 @@ namespace pixelpart {
 class TrailVertexGenerator : public VertexGenerator {
 public:
 	TrailVertexGenerator(const Effect& effect, id_t particleEmitterId, id_t particleTypeId,
-		const VertexFormat& vertexFormat);
+		const VertexFormat& vertexFormat,
+		std::shared_ptr<ThreadPool> threadPool);
 
 	virtual VertexDataBufferDimensions buildGeometry(
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
@@ -190,6 +193,8 @@ private:
 	id_t generatorParticleTypeId;
 
 	VertexFormat generatorVertexFormat;
+
+	std::shared_ptr<ThreadPool> generatorThreadPool;
 
 	std::unordered_map<std::uint32_t, Trail> generatorTrails;
 };
