@@ -140,7 +140,9 @@ std::vector<VariantValue> ComputeGraph::evaluate(const InputSet& graphInputs, Bu
 id_t ComputeGraph::addNode(const std::string& typeName) {
 	id_t nodeId = graphNextNodeId;
 
+	ComputeGraph::nodeFactory.registerNodes();
 	std::unique_ptr<ComputeNode> node = nodeFactory.createNode(typeName);
+
 	if(node) {
 		graphNodes[nodeId] = std::move(node);
 		graphNextNodeId++;
@@ -392,6 +394,8 @@ void from_json(const nlohmann::ordered_json& j, ComputeGraph& computeGraph) {
 		computeGraph = ComputeGraph();
 		return;
 	}
+
+	ComputeGraph::nodeFactory.registerNodes();
 
 	ComputeGraph::ComputeNodeCollection nodes;
 	for(const nlohmann::ordered_json& jNodeEntry : j.at("nodes")) {

@@ -8,7 +8,11 @@
 #include "UtilComputeNodes.h"
 
 namespace pixelpart {
-ComputeNodeFactory::ComputeNodeFactory() {
+void ComputeNodeFactory::registerNodes() {
+	if(!factoryNodeFunctions.empty()) {
+		return;
+	}
+
 	registerNode<OutputComputeNode>();
 	registerNode<BooleanConstantComputeNode>();
 	registerNode<IntegerConstantComputeNode>();

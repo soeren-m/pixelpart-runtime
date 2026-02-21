@@ -10,7 +10,9 @@
 namespace pixelpart {
 class ComputeNodeFactory {
 public:
-	ComputeNodeFactory();
+	ComputeNodeFactory() = default;
+
+	void registerNodes();
 
 	std::unique_ptr<ComputeNode> createNode(const std::string& name) const;
 
