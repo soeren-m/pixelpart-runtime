@@ -2,7 +2,6 @@
 
 #include "ParticleGenerator.h"
 #include "../common/Types.h"
-#include "../common/Math.h"
 #include "../effect/ParticleEmitter.h"
 #include "../effect/ParticleType.h"
 #include "../effect/ParticleEmissionPair.h"

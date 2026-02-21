@@ -3,10 +3,13 @@
 #include "VertexDataGenerationMode.h"
 #include "VertexFormatException.h"
 #include "../common/Transform.h"
+#include "../common/Coordinates.h"
+#include "../math/Common.h"
+#include "../math/MatrixCommon.h"
+#include "../math/Geometry.h"
+#include "../math/Trigonometry.h"
+#include "../math/Transformation.h"
 #include "../effect/ParticleSortCriterion.h"
-#define GLM_ENABLE_EXPERIMENTAL
-#include "../glm/gtx/transform.hpp"
-#include "../glm/gtx/matrix_major_storage.hpp"
 #include <cmath>
 #include <algorithm>
 
@@ -184,7 +187,7 @@ void MeshVertexGenerator::generatePosition2d(std::uint8_t* buffer, const VertexA
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		*reinterpret_cast<glm::vec2*>(buffer) = glm::vec2(particles.globalPosition[p]);
+		*reinterpret_cast<math::vector2<float>*>(buffer) = math::vector2<float>(particles.globalPosition[p]);
 		buffer += stride;
 	}
 }
@@ -194,7 +197,7 @@ void MeshVertexGenerator::generatePosition3d(std::uint8_t* buffer, const VertexA
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		*reinterpret_cast<glm::vec3*>(buffer) = glm::vec3(particles.globalPosition[p]);
+		*reinterpret_cast<math::vector3<float>*>(buffer) = math::vector3<float>(particles.globalPosition[p]);
 		buffer += stride;
 	}
 }
@@ -204,7 +207,7 @@ void MeshVertexGenerator::generateColorFloat(std::uint8_t* buffer, const VertexA
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		*reinterpret_cast<glm::vec4*>(buffer) = glm::vec4(particles.color[p]);
+		*reinterpret_cast<math::vector4<float>*>(buffer) = math::vector4<float>(particles.color[p]);
 		buffer += stride;
 	}
 }
@@ -214,10 +217,12 @@ void MeshVertexGenerator::generateColorByte(std::uint8_t* buffer, const VertexAt
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		*(buffer + 0) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].r * 255.0, 0.0, 255.0));
-		*(buffer + 1) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].g * 255.0, 0.0, 255.0));
-		*(buffer + 2) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].b * 255.0, 0.0, 255.0));
-		*(buffer + 3) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].a * 255.0, 0.0, 255.0));
+		ColorUByte color(particles.color[p]);
+
+		*(buffer + 0) = color.r;
+		*(buffer + 1) = color.g;
+		*(buffer + 2) = color.b;
+		*(buffer + 3) = color.a;
 		buffer += stride;
 	}
 }
@@ -237,7 +242,7 @@ void MeshVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const VertexA
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		*reinterpret_cast<glm::vec2*>(buffer) = glm::vec2(particles.velocity[p]);
+		*reinterpret_cast<math::vector2<float>*>(buffer) = math::vector2<float>(particles.velocity[p]);
 		buffer += stride;
 	}
 }
@@ -247,7 +252,7 @@ void MeshVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const VertexA
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		*reinterpret_cast<glm::vec3*>(buffer) = glm::vec3(particles.velocity[p]);
+		*reinterpret_cast<math::vector3<float>*>(buffer) = math::vector3<float>(particles.velocity[p]);
 		buffer += stride;
 	}
 }
@@ -260,19 +265,19 @@ void MeshVertexGenerator::generateMatrix4x4ColumnMajor(std::uint8_t* buffer, con
 
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
 	float3_t emitterPosition = emitterTransform.position();
-	mat3_t emitterRotation = rotationMatrix3d(emitterTransform.rotation());
+	matrix3_t emitterRotation = rotationMatrix3d(emitterTransform.rotation());
 
-	mat4_t globalScaleMatrix = glm::scale(sceneContext.effectScale);
+	matrix4_t globalScaleMatrix = math::scalingMatrix(sceneContext.effectScale);
 
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		glm::mat4 transformMatix = globalScaleMatrix * generateTransformationMatrix(
+		math::matrix4x4<float> transformMatix(globalScaleMatrix * particleTransformationMatrix(
 			alignmentMode, pivot, emitterPosition, emitterRotation,
-			particles, p);
+			particles, p));
 
-		*reinterpret_cast<glm::mat4*>(buffer) = transformMatix;
+		*reinterpret_cast<math::matrix4x4<float>*>(buffer) = transformMatix;
 		buffer += stride;
 	}
 }
@@ -285,19 +290,24 @@ void MeshVertexGenerator::generateMatrix4x3ColumnMajor(std::uint8_t* buffer, con
 
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
 	float3_t emitterPosition = emitterTransform.position();
-	mat3_t emitterRotation = rotationMatrix3d(emitterTransform.rotation());
+	matrix3_t emitterRotation = rotationMatrix3d(emitterTransform.rotation());
 
-	mat4_t globalScaleMatrix = glm::scale(sceneContext.effectScale);
+	matrix4_t globalScaleMatrix = math::scalingMatrix(sceneContext.effectScale);
 
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
+	std::size_t vectorStride = sizeof(math::vector3<float>);
+
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		glm::mat4x3 transformMatix = glm::mat4(globalScaleMatrix * generateTransformationMatrix(
+		math::matrix4x4<float> transformMatix(globalScaleMatrix * particleTransformationMatrix(
 			alignmentMode, pivot, emitterPosition, emitterRotation,
 			particles, p));
 
-		*reinterpret_cast<glm::mat4x3*>(buffer) = transformMatix;
+		*reinterpret_cast<math::vector3<float>*>(buffer + vectorStride * 0) = math::vector3<float>(transformMatix[0]);
+		*reinterpret_cast<math::vector3<float>*>(buffer + vectorStride * 1) = math::vector3<float>(transformMatix[1]);
+		*reinterpret_cast<math::vector3<float>*>(buffer + vectorStride * 2) = math::vector3<float>(transformMatix[2]);
+		*reinterpret_cast<math::vector3<float>*>(buffer + vectorStride * 3) = math::vector3<float>(transformMatix[3]);
 		buffer += stride;
 	}
 }
@@ -310,19 +320,19 @@ void MeshVertexGenerator::generateMatrix4x4RowMajor(std::uint8_t* buffer, const 
 
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
 	float3_t emitterPosition = emitterTransform.position();
-	mat3_t emitterRotation = rotationMatrix3d(emitterTransform.rotation());
+	matrix3_t emitterRotation = rotationMatrix3d(emitterTransform.rotation());
 
-	mat4_t globalScaleMatrix = glm::scale(sceneContext.effectScale);
+	matrix4_t globalScaleMatrix = math::scalingMatrix(sceneContext.effectScale);
 
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		glm::mat4 transformMatix = glm::rowMajor4(globalScaleMatrix * generateTransformationMatrix(
+		math::matrix4x4<float> transformMatix(math::transpose(globalScaleMatrix * particleTransformationMatrix(
 			alignmentMode, pivot, emitterPosition, emitterRotation,
-			particles, p));
+			particles, p)));
 
-		*reinterpret_cast<glm::mat4*>(buffer) = transformMatix;
+		*reinterpret_cast<math::matrix4x4<float>*>(buffer) = transformMatix;
 		buffer += stride;
 	}
 }
@@ -335,73 +345,60 @@ void MeshVertexGenerator::generateMatrix4x3RowMajor(std::uint8_t* buffer, const 
 
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
 	float3_t emitterPosition = emitterTransform.position();
-	mat3_t emitterRotation = rotationMatrix3d(emitterTransform.rotation());
+	matrix3_t emitterRotation = rotationMatrix3d(emitterTransform.rotation());
 
-	mat4_t globalScaleMatrix = glm::scale(sceneContext.effectScale);
+	matrix4_t globalScaleMatrix = math::scalingMatrix(sceneContext.effectScale);
 
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
+	std::size_t vectorStride = sizeof(math::vector4<float>);
+
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		glm::mat3x4 transformMatix = glm::mat4(glm::rowMajor4(globalScaleMatrix * generateTransformationMatrix(
+		math::matrix4x4<float> transformMatix(math::transpose(globalScaleMatrix * particleTransformationMatrix(
 			alignmentMode, pivot, emitterPosition, emitterRotation,
 			particles, p)));
 
-		*reinterpret_cast<glm::mat3x4*>(buffer) = transformMatix;
+		*reinterpret_cast<math::vector4<float>*>(buffer + vectorStride * 0) = transformMatix[0];
+		*reinterpret_cast<math::vector4<float>*>(buffer + vectorStride * 1) = transformMatix[1];
+		*reinterpret_cast<math::vector4<float>*>(buffer + vectorStride * 2) = transformMatix[2];
 		buffer += stride;
 	}
 }
 
-mat4_t MeshVertexGenerator::generateTransformationMatrix(AlignmentMode alignmentMode, const float3_t& pivot,
-	const float3_t& emitterPosition, const mat3_t& emitterRotation,
+matrix4_t MeshVertexGenerator::particleTransformationMatrix(AlignmentMode alignmentMode, const float3_t& pivot,
+	const float3_t& emitterPosition, const matrix3_t& emitterRotation,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleIndex) {
-	mat4_t alignmentMatrix = mat4_t(1.0);
+	matrix4_t alignmentMatrix = matrix4_t(1.0);
 	switch(alignmentMode) {
 		case AlignmentMode::motion:
-			alignmentMatrix = mat4_t(lookAtMatrix3d(particles.velocity[particleIndex]));
+			alignmentMatrix = matrix4_t(math::transpose(math::lookAtMatrix(particles.velocity[particleIndex], worldUpVector3)));
 			break;
 		case AlignmentMode::emission:
-			alignmentMatrix = mat4_t(lookAtMatrix3d(emitterPosition - particles.globalPosition[particleIndex]));
+			alignmentMatrix = matrix4_t(math::transpose(math::lookAtMatrix(emitterPosition - particles.globalPosition[particleIndex], worldUpVector3)));
 			break;
 		case AlignmentMode::emitter:
-			alignmentMatrix = mat4_t(emitterRotation);
+			alignmentMatrix = matrix4_t(emitterRotation);
 			break;
 		default:
 			break;
 	}
 
 	float3_t particlePivot = pivot * particles.size[particleIndex];
-	mat4_t rotationMatrix =
-		glm::translate(particlePivot) *
-		mat4_t(rotationMatrix3d(particles.rotation[particleIndex])) *
-		glm::translate(-particlePivot);
+	matrix4_t rotationMatrix =
+		math::translationMatrix(particlePivot) *
+		matrix4_t(rotationMatrix3d(particles.rotation[particleIndex])) *
+		math::translationMatrix(-particlePivot);
 
-	mat4_t translationMatrix = glm::translate(particles.globalPosition[particleIndex]);
-	mat4_t scaleMatrix = glm::scale(particles.size[particleIndex]);
+	matrix4_t translationMatrix = math::translationMatrix(particles.globalPosition[particleIndex]);
+	matrix4_t scalingMatrix = math::scalingMatrix(particles.size[particleIndex]);
 
-	return translationMatrix * alignmentMatrix * rotationMatrix * scaleMatrix;
+	return translationMatrix * alignmentMatrix * rotationMatrix * scalingMatrix;
 }
 
-mat3_t MeshVertexGenerator::rotationMatrix3d(const float3_t& rollYawPitch) {
-	float3_t rollYawPitchRad = glm::radians(rollYawPitch);
-	float_t cy = std::cos(rollYawPitchRad.y);
-	float_t sy = std::sin(rollYawPitchRad.y);
-	float_t cp = std::cos(rollYawPitchRad.z);
-	float_t sp = std::sin(rollYawPitchRad.z);
-	float_t cr = std::cos(rollYawPitchRad.x);
-	float_t sr = std::sin(rollYawPitchRad.x);
+matrix3_t MeshVertexGenerator::rotationMatrix3d(const float3_t& rollYawPitch) {
+	float3_t rollYawPitchRad = math::radians(rollYawPitch);
 
-	return mat3_t(
-		float3_t(cy * cr + sy * sp * sr, sr * cp, -sy * cr + cy * sp * sr),
-		float3_t(-cy * sr + sy * sp * cr, cr * cp, sr * sy + cy * sp * cr),
-		float3_t(sy * cp, -sp, cy * cp));
-}
-mat3_t MeshVertexGenerator::lookAtMatrix3d(const float3_t& direction) {
-	float3_t up = worldUpVector3;
-	float3_t forward = glm::normalize(direction);
-	float3_t right = glm::normalize(glm::cross(forward, up));
-	up = glm::normalize(glm::cross(right, forward));
-
-	return mat3_t(right, up, -forward);
+	return matrix3_t(math::yawPitchRollRotationMatrix(rollYawPitchRad.y, rollYawPitchRad.z, rollYawPitchRad.x));
 }
 }

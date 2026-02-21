@@ -12,7 +12,6 @@ target_sources(pixelpart-runtime PRIVATE
 	LineQueryGrid.cpp
 	MotionPathModifier.cpp
 	MultiThreadedEffectEngine.cpp
-	Noise.cpp
 	ParticleCollection.cpp
 	RotationModifier.cpp
 	SingleThreadedEffectEngine.cpp

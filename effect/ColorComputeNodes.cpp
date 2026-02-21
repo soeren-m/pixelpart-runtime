@@ -1,4 +1,7 @@
 #include "ColorComputeNodes.h"
+#include "../math/Common.h"
+#include "../math/Geometry.h"
+#include "../math/Interpolation.h"
 
 namespace pixelpart {
 std::string BlendComputeNode::typeName = "compute_node_blend";
@@ -37,45 +40,45 @@ std::vector<VariantValue> BlendComputeNode::evaluate(const std::vector<VariantVa
 			break;
 		case 1:
 			result = VariantValue::Float4(float4_t(
-				glm::clamp(in[0].toFloat3() + in[1].toFloat3(), float3_t(0.0), float3_t(1.0)),
-				in[0].toFloat4().a * in[1].toFloat4().a));
+				math::clamp(in[0].toFloat3() + in[1].toFloat3(), float3_t(0.0), float3_t(1.0)),
+				in[0].toFloat4().w * in[1].toFloat4().w));
 			break;
 		case 2:
 			result = VariantValue::Float4(float4_t(
-				glm::clamp(in[0].toFloat3() - in[1].toFloat3(), float3_t(0.0), float3_t(1.0)),
-				in[0].toFloat4().a * in[1].toFloat4().a));
+				math::clamp(in[0].toFloat3() - in[1].toFloat3(), float3_t(0.0), float3_t(1.0)),
+				in[0].toFloat4().w * in[1].toFloat4().w));
 			break;
 		case 3:
 			result = VariantValue::Float4(float4_t(
-				glm::abs(in[0].toFloat3() - in[1].toFloat3()),
-				in[0].toFloat4().a * in[1].toFloat4().a));
+				math::abs(in[0].toFloat3() - in[1].toFloat3()),
+				in[0].toFloat4().w * in[1].toFloat4().w));
 			break;
 		case 4:
 			result = VariantValue::Float4(float4_t(
 				float3_t(1.0) - (float3_t(1.0) - in[0].toFloat3()) * (float3_t(1.0) - in[1].toFloat3()),
-				in[0].toFloat4().a * in[1].toFloat4().a));
+				in[0].toFloat4().w * in[1].toFloat4().w));
 			break;
 		case 5:
 			result = VariantValue::Float4(float4_t(
-				(in[0].toFloat4().r < 0.5) ? (2.0 * in[0].toFloat4().r * in[1].toFloat4().r) : (1.0 - 2.0 * (1.0 - in[0].toFloat4().r) * (1.0 - in[1].toFloat4().r)),
-				(in[0].toFloat4().g < 0.5) ? (2.0 * in[0].toFloat4().g * in[1].toFloat4().g) : (1.0 - 2.0 * (1.0 - in[0].toFloat4().g) * (1.0 - in[1].toFloat4().g)),
-				(in[0].toFloat4().b < 0.5) ? (2.0 * in[0].toFloat4().b * in[1].toFloat4().b) : (1.0 - 2.0 * (1.0 - in[0].toFloat4().b) * (1.0 - in[1].toFloat4().b)),
-				in[0].toFloat4().a * in[1].toFloat4().a));
+				(in[0].toFloat4().x < 0.5) ? (2.0 * in[0].toFloat4().x * in[1].toFloat4().x) : (1.0 - 2.0 * (1.0 - in[0].toFloat4().x) * (1.0 - in[1].toFloat4().x)),
+				(in[0].toFloat4().y < 0.5) ? (2.0 * in[0].toFloat4().y * in[1].toFloat4().y) : (1.0 - 2.0 * (1.0 - in[0].toFloat4().y) * (1.0 - in[1].toFloat4().y)),
+				(in[0].toFloat4().z < 0.5) ? (2.0 * in[0].toFloat4().z * in[1].toFloat4().z) : (1.0 - 2.0 * (1.0 - in[0].toFloat4().z) * (1.0 - in[1].toFloat4().z)),
+				in[0].toFloat4().w * in[1].toFloat4().w));
 			break;
 		case 6:
 			result = VariantValue::Float4(float4_t(
-				glm::max(in[0].toFloat3(), in[1].toFloat3()),
-				in[0].toFloat4().a * in[1].toFloat4().a));
+				math::max(in[0].toFloat3(), in[1].toFloat3()),
+				in[0].toFloat4().w * in[1].toFloat4().w));
 			break;
 		case 7:
 			result = VariantValue::Float4(float4_t(
-				glm::min(in[0].toFloat3(), in[1].toFloat3()),
-				in[0].toFloat4().a * in[1].toFloat4().a));
+				math::min(in[0].toFloat3(), in[1].toFloat3()),
+				in[0].toFloat4().w * in[1].toFloat4().w));
 			break;
 		case 8:
 			result = VariantValue::Float4(float4_t(
 				in[1].toFloat3(),
-				in[0].toFloat4().a * in[1].toFloat4().a));
+				in[0].toFloat4().w * in[1].toFloat4().w));
 			break;
 	}
 
@@ -110,7 +113,7 @@ std::vector<VariantValue> BrightnessComputeNode::evaluate(const std::vector<Vari
 	return std::vector<VariantValue>{
 		VariantValue::Float4(float4_t(
 			in[0].toFloat3() + float3_t(in[1].toFloat()),
-			in[0].toFloat4().a))
+			in[0].toFloat4().w))
 	};
 }
 
@@ -127,7 +130,7 @@ std::vector<VariantValue> ExposureComputeNode::evaluate(const std::vector<Varian
 	return std::vector<VariantValue>{
 		VariantValue::Float4(float4_t(
 			in[0].toFloat3() * float3_t(1.0 + in[1].toFloat()),
-			in[0].toFloat4().a))
+			in[0].toFloat4().w))
 	};
 }
 
@@ -144,7 +147,7 @@ std::vector<VariantValue> ContrastComputeNode::evaluate(const std::vector<Varian
 	return std::vector<VariantValue>{
 		VariantValue::Float4(float4_t(
 			float3_t(0.5) + (in[0].toFloat3() - float3_t(0.5)) * (1.0 + in[1].toFloat()),
-			in[0].toFloat4().a))
+			in[0].toFloat4().w))
 	};
 }
 
@@ -160,11 +163,11 @@ SaturationComputeNode::SaturationComputeNode() : ComputeNodeBase(typeName,
 std::vector<VariantValue> SaturationComputeNode::evaluate(const std::vector<VariantValue>& in) const {
 	return std::vector<VariantValue>{
 		VariantValue::Float4(float4_t(
-			glm::mix(
-				float3_t(glm::dot(in[0].toFloat3(), float3_t(0.2126, 0.7152, 0.0722))),
+			math::linearInterpolation(
+				float3_t(math::dot(in[0].toFloat3(), float3_t(0.2126, 0.7152, 0.0722))),
 				in[0].toFloat3(),
-				1.0 + in[1].toFloat()),
-			in[0].toFloat4().a))
+				0.0, 1.0, 1.0 + in[1].toFloat()),
+			in[0].toFloat4().w))
 	};
 }
 
@@ -179,7 +182,7 @@ PosterizeComputeNode::PosterizeComputeNode() : ComputeNodeBase(typeName,
 }
 std::vector<VariantValue> PosterizeComputeNode::evaluate(const std::vector<VariantValue>& in) const {
 	return std::vector<VariantValue>{
-		VariantValue::Float4(glm::round(in[0].toFloat4() * in[1].toFloat()) / in[1].toFloat())
+		VariantValue::Float4(math::round(in[0].toFloat4() * in[1].toFloat()) / in[1].toFloat())
 	};
 }
 }

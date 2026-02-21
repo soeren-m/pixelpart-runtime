@@ -3,7 +3,7 @@
 #include "VertexGenerator.h"
 #include "VertexAttribute.h"
 #include "VertexWindingOrder.h"
-#include "../common/Math.h"
+#include "../common/Types.h"
 #include "../common/Curve.h"
 #include <cstddef>
 #include <cstdint>

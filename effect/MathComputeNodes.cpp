@@ -1,4 +1,9 @@
 #include "MathComputeNodes.h"
+#include "../math/Common.h"
+#include "../math/Exponent.h"
+#include "../math/Trigonometry.h"
+#include "../math/Geometry.h"
+#include "../math/Interpolation.h"
 
 namespace pixelpart {
 std::string AddComputeNode::typeName = "compute_node_add";
@@ -128,16 +133,16 @@ std::vector<VariantValue> ModComputeNode::evaluate(const std::vector<VariantValu
 			result = VariantValue::Int(in[0].valueInt() % in[1].toInt());
 			break;
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::mod(in[0].valueFloat(), in[1].toFloat()));
+			result = VariantValue::Float(math::mod(in[0].valueFloat(), in[1].toFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::mod(in[0].valueFloat2(), in[1].toFloat2()));
+			result = VariantValue::Float2(math::mod(in[0].valueFloat2(), in[1].toFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::mod(in[0].valueFloat3(), in[1].toFloat3()));
+			result = VariantValue::Float3(math::mod(in[0].valueFloat3(), in[1].toFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::mod(in[0].valueFloat4(), in[1].toFloat4()));
+			result = VariantValue::Float4(math::mod(in[0].valueFloat4(), in[1].toFloat4()));
 			break;
 		default:
 			break;
@@ -165,19 +170,19 @@ std::vector<VariantValue> PowComputeNode::evaluate(const std::vector<VariantValu
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_int:
-			result = VariantValue::Int(glm::pow(in[0].valueInt(), in[1].toInt()));
+			result = VariantValue::Int(math::pow(in[0].valueInt(), in[1].toInt()));
 			break;
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::pow(in[0].valueFloat(), in[1].toFloat()));
+			result = VariantValue::Float(math::pow(in[0].valueFloat(), in[1].toFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::pow(in[0].valueFloat2(), in[1].toFloat2()));
+			result = VariantValue::Float2(math::pow(in[0].valueFloat2(), in[1].toFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::pow(in[0].valueFloat3(), in[1].toFloat3()));
+			result = VariantValue::Float3(math::pow(in[0].valueFloat3(), in[1].toFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::pow(in[0].valueFloat4(), in[1].toFloat4()));
+			result = VariantValue::Float4(math::pow(in[0].valueFloat4(), in[1].toFloat4()));
 			break;
 		default:
 			break;
@@ -204,16 +209,16 @@ std::vector<VariantValue> ExpComputeNode::evaluate(const std::vector<VariantValu
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::exp(in[0].valueFloat()));
+			result = VariantValue::Float(math::exp(in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::exp(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::exp(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::exp(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::exp(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::exp(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::exp(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -240,16 +245,16 @@ std::vector<VariantValue> LogComputeNode::evaluate(const std::vector<VariantValu
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::log(in[0].valueFloat()));
+			result = VariantValue::Float(math::log(in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::log(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::log(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::log(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::log(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::log(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::log(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -277,19 +282,19 @@ std::vector<VariantValue> SignComputeNode::evaluate(const std::vector<VariantVal
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_int:
-			result = VariantValue::Int(glm::sign(in[0].valueInt()));
+			result = VariantValue::Int(math::sign(in[0].valueInt()));
 			break;
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::sign(in[0].valueFloat()));
+			result = VariantValue::Float(math::sign(in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::sign(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::sign(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::sign(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::sign(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::sign(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::sign(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -317,19 +322,19 @@ std::vector<VariantValue> AbsComputeNode::evaluate(const std::vector<VariantValu
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_int:
-			result = VariantValue::Int(glm::abs(in[0].valueInt()));
+			result = VariantValue::Int(math::abs(in[0].valueInt()));
 			break;
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::abs(in[0].valueFloat()));
+			result = VariantValue::Float(math::abs(in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::abs(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::abs(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::abs(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::abs(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::abs(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::abs(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -357,19 +362,19 @@ std::vector<VariantValue> MinComputeNode::evaluate(const std::vector<VariantValu
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_int:
-			result = VariantValue::Int(glm::min(in[0].valueInt(), in[1].toInt()));
+			result = VariantValue::Int(math::min(in[0].valueInt(), in[1].toInt()));
 			break;
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::min(in[0].valueFloat(), in[1].toFloat()));
+			result = VariantValue::Float(math::min(in[0].valueFloat(), in[1].toFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::min(in[0].valueFloat2(), in[1].toFloat2()));
+			result = VariantValue::Float2(math::min(in[0].valueFloat2(), in[1].toFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::min(in[0].valueFloat3(), in[1].toFloat3()));
+			result = VariantValue::Float3(math::min(in[0].valueFloat3(), in[1].toFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::min(in[0].valueFloat4(), in[1].toFloat4()));
+			result = VariantValue::Float4(math::min(in[0].valueFloat4(), in[1].toFloat4()));
 			break;
 		default:
 			break;
@@ -397,19 +402,19 @@ std::vector<VariantValue> MaxComputeNode::evaluate(const std::vector<VariantValu
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_int:
-			result = VariantValue::Int(glm::max(in[0].valueInt(), in[1].toInt()));
+			result = VariantValue::Int(math::max(in[0].valueInt(), in[1].toInt()));
 			break;
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::max(in[0].valueFloat(), in[1].toFloat()));
+			result = VariantValue::Float(math::max(in[0].valueFloat(), in[1].toFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::max(in[0].valueFloat2(), in[1].toFloat2()));
+			result = VariantValue::Float2(math::max(in[0].valueFloat2(), in[1].toFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::max(in[0].valueFloat3(), in[1].toFloat3()));
+			result = VariantValue::Float3(math::max(in[0].valueFloat3(), in[1].toFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::max(in[0].valueFloat4(), in[1].toFloat4()));
+			result = VariantValue::Float4(math::max(in[0].valueFloat4(), in[1].toFloat4()));
 			break;
 		default:
 			break;
@@ -437,19 +442,19 @@ std::vector<VariantValue> ClampComputeNode::evaluate(const std::vector<VariantVa
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_int:
-			result = VariantValue::Int(glm::clamp(in[0].valueInt(), in[1].toInt(), in[2].toInt()));
+			result = VariantValue::Int(math::clamp(in[0].valueInt(), in[1].toInt(), in[2].toInt()));
 			break;
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::clamp(in[0].valueFloat(), in[1].toFloat(), in[2].toFloat()));
+			result = VariantValue::Float(math::clamp(in[0].valueFloat(), in[1].toFloat(), in[2].toFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::clamp(in[0].valueFloat2(), in[1].toFloat2(), in[2].toFloat2()));
+			result = VariantValue::Float2(math::clamp(in[0].valueFloat2(), in[1].toFloat2(), in[2].toFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::clamp(in[0].valueFloat3(), in[1].toFloat3(), in[2].toFloat3()));
+			result = VariantValue::Float3(math::clamp(in[0].valueFloat3(), in[1].toFloat3(), in[2].toFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::clamp(in[0].valueFloat4(), in[1].toFloat4(), in[2].toFloat4()));
+			result = VariantValue::Float4(math::clamp(in[0].valueFloat4(), in[1].toFloat4(), in[2].toFloat4()));
 			break;
 		default:
 			break;
@@ -476,16 +481,16 @@ std::vector<VariantValue> LerpComputeNode::evaluate(const std::vector<VariantVal
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::mix(in[0].valueFloat(), in[1].toFloat(), in[2].toFloat()));
+			result = VariantValue::Float(math::linearInterpolation(in[0].valueFloat(), in[1].toFloat(), in[2].toFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::mix(in[0].valueFloat2(), in[1].toFloat2(), in[2].toFloat()));
+			result = VariantValue::Float2(math::linearInterpolation(in[0].valueFloat2(), in[1].toFloat2(), in[2].toFloat()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::mix(in[0].valueFloat3(), in[1].toFloat3(), in[2].toFloat()));
+			result = VariantValue::Float3(math::linearInterpolation(in[0].valueFloat3(), in[1].toFloat3(), in[2].toFloat()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::mix(in[0].valueFloat4(), in[1].toFloat4(), in[2].toFloat()));
+			result = VariantValue::Float4(math::linearInterpolation(in[0].valueFloat4(), in[1].toFloat4(), in[2].toFloat()));
 			break;
 		default:
 			break;
@@ -512,16 +517,16 @@ std::vector<VariantValue> FloorComputeNode::evaluate(const std::vector<VariantVa
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::floor(in[0].valueFloat()));
+			result = VariantValue::Float(math::floor(in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::floor(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::floor(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::floor(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::floor(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::floor(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::floor(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -548,16 +553,16 @@ std::vector<VariantValue> CeilComputeNode::evaluate(const std::vector<VariantVal
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::ceil(in[0].valueFloat()));
+			result = VariantValue::Float(math::ceil(in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::ceil(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::ceil(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::ceil(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::ceil(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::ceil(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::ceil(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -584,16 +589,16 @@ std::vector<VariantValue> RoundComputeNode::evaluate(const std::vector<VariantVa
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::round(in[0].valueFloat()));
+			result = VariantValue::Float(math::round(in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::round(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::round(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::round(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::round(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::round(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::round(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -620,16 +625,16 @@ std::vector<VariantValue> SqrtComputeNode::evaluate(const std::vector<VariantVal
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::sqrt(in[0].valueFloat()));
+			result = VariantValue::Float(math::sqrt(in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::sqrt(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::sqrt(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::sqrt(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::sqrt(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::sqrt(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::sqrt(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -656,16 +661,16 @@ std::vector<VariantValue> SinComputeNode::evaluate(const std::vector<VariantValu
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::sin(in[0].valueFloat()));
+			result = VariantValue::Float(math::sin(in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::sin(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::sin(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::sin(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::sin(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::sin(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::sin(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -692,16 +697,16 @@ std::vector<VariantValue> CosComputeNode::evaluate(const std::vector<VariantValu
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::cos(in[0].valueFloat()));
+			result = VariantValue::Float(math::cos(in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::cos(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::cos(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::cos(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::cos(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::cos(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::cos(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -728,16 +733,16 @@ std::vector<VariantValue> AsinComputeNode::evaluate(const std::vector<VariantVal
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::asin(in[0].valueFloat()));
+			result = VariantValue::Float(math::asin(in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::asin(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::asin(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::asin(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::asin(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::asin(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::asin(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -764,16 +769,16 @@ std::vector<VariantValue> AcosComputeNode::evaluate(const std::vector<VariantVal
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::acos(in[0].valueFloat()));
+			result = VariantValue::Float(math::acos(in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::acos(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::acos(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::acos(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::acos(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::acos(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::acos(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -799,13 +804,13 @@ std::vector<VariantValue> DotComputeNode::evaluate(const std::vector<VariantValu
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float2:
-			result = VariantValue::Float(glm::dot(in[0].valueFloat2(), in[1].toFloat2()));
+			result = VariantValue::Float(math::dot(in[0].valueFloat2(), in[1].toFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float(glm::dot(in[0].valueFloat3(), in[1].toFloat3()));
+			result = VariantValue::Float(math::dot(in[0].valueFloat3(), in[1].toFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float(glm::dot(in[0].valueFloat4(), in[1].toFloat4()));
+			result = VariantValue::Float(math::dot(in[0].valueFloat4(), in[1].toFloat4()));
 			break;
 		default:
 			break;
@@ -826,7 +831,7 @@ CrossComputeNode::CrossComputeNode() : ComputeNodeBase(typeName,
 
 }
 std::vector<VariantValue> CrossComputeNode::evaluate(const std::vector<VariantValue>& in) const {
-	return std::vector<VariantValue>{ VariantValue::Float3(glm::cross(in[0].toFloat3(), in[1].toFloat3())) };
+	return std::vector<VariantValue>{ VariantValue::Float3(math::cross(in[0].toFloat3(), in[1].toFloat3())) };
 }
 
 NormalizeComputeNode::NormalizeComputeNode() : ComputeNodeBase(typeName,
@@ -846,13 +851,13 @@ std::vector<VariantValue> NormalizeComputeNode::evaluate(const std::vector<Varia
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::normalize(in[0].valueFloat2()));
+			result = VariantValue::Float2(math::normalize(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::normalize(in[0].valueFloat3()));
+			result = VariantValue::Float3(math::normalize(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::normalize(in[0].valueFloat4()));
+			result = VariantValue::Float4(math::normalize(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -878,13 +883,13 @@ std::vector<VariantValue> VectorLengthComputeNode::evaluate(const std::vector<Va
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float2:
-			result = VariantValue::Float(glm::length(in[0].valueFloat2()));
+			result = VariantValue::Float(math::length(in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float(glm::length(in[0].valueFloat3()));
+			result = VariantValue::Float(math::length(in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float(glm::length(in[0].valueFloat4()));
+			result = VariantValue::Float(math::length(in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -911,16 +916,16 @@ std::vector<VariantValue> StepComputeNode::evaluate(const std::vector<VariantVal
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::step(in[1].toFloat(), in[0].valueFloat()));
+			result = VariantValue::Float(math::stepInterpolation(0.0, 1.0, in[1].toFloat(), in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::step(in[1].toFloat2(), in[0].valueFloat2()));
+			result = VariantValue::Float2(math::stepInterpolation(float2_t(0.0), float2_t(1.0), in[1].toFloat2(), in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::step(in[1].toFloat3(), in[0].valueFloat3()));
+			result = VariantValue::Float3(math::stepInterpolation(float3_t(0.0), float3_t(1.0), in[1].toFloat3(), in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::step(in[1].toFloat4(), in[0].valueFloat4()));
+			result = VariantValue::Float4(math::stepInterpolation(float4_t(0.0), float4_t(1.0), in[1].toFloat4(), in[0].valueFloat4()));
 			break;
 		default:
 			break;
@@ -947,16 +952,16 @@ std::vector<VariantValue> SmoothstepComputeNode::evaluate(const std::vector<Vari
 	VariantValue result;
 	switch(in[0].type()) {
 		case VariantValue::type_float:
-			result = VariantValue::Float(glm::smoothstep(in[1].toFloat(), in[2].toFloat(), in[0].valueFloat()));
+			result = VariantValue::Float(math::smoothstepInterpolation(0.0, 1.0, in[1].toFloat(), in[2].toFloat(), in[0].valueFloat()));
 			break;
 		case VariantValue::type_float2:
-			result = VariantValue::Float2(glm::smoothstep(in[1].toFloat2(), in[2].toFloat2(), in[0].valueFloat2()));
+			result = VariantValue::Float2(math::smoothstepInterpolation(float2_t(0.0), float2_t(1.0), in[1].toFloat2(), in[2].toFloat2(), in[0].valueFloat2()));
 			break;
 		case VariantValue::type_float3:
-			result = VariantValue::Float3(glm::smoothstep(in[1].toFloat3(), in[2].toFloat3(), in[0].valueFloat3()));
+			result = VariantValue::Float3(math::smoothstepInterpolation(float3_t(0.0), float3_t(1.0), in[1].toFloat3(), in[2].toFloat3(), in[0].valueFloat3()));
 			break;
 		case VariantValue::type_float4:
-			result = VariantValue::Float4(glm::smoothstep(in[1].toFloat4(), in[2].toFloat4(), in[0].valueFloat4()));
+			result = VariantValue::Float4(math::smoothstepInterpolation(float4_t(0.0), float4_t(1.0), in[1].toFloat4(), in[2].toFloat4(), in[0].valueFloat4()));
 			break;
 		default:
 			break;

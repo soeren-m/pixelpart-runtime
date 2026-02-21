@@ -1,42 +1,43 @@
 #include "Transform.h"
-#define GLM_ENABLE_EXPERIMENTAL
-#include "../glm/gtx/transform.hpp"
-#include "../glm/gtx/euler_angles.hpp"
+#include "../math/Common.h"
+#include "../math/Geometry.h"
+#include "../math/Trigonometry.h"
+#include "../math/Transformation.h"
 
 namespace pixelpart {
-Transform::Transform(const mat4_t& matrix) : transformMatrix(matrix) {
+Transform::Transform(const matrix4_t& matrix) : transformMatrix(matrix) {
 
 }
 Transform::Transform(const float3_t& position, const float3_t& rotation, const float3_t& scale) {
-	mat4_t scaleMatrix = glm::scale(scale);
-	mat4_t rotationMatrix = glm::yawPitchRoll(glm::radians(rotation.y), glm::radians(rotation.z), glm::radians(rotation.x));
-	mat4_t translationMatrix = glm::translate(position);
+	matrix4_t scaleMatrix = math::scalingMatrix(scale);
+	matrix4_t rotationMatrix = math::yawPitchRollRotationMatrix(math::radians(rotation.y), math::radians(rotation.z), math::radians(rotation.x));
+	matrix4_t translationMatrix = math::translationMatrix(position);
 
 	transformMatrix = translationMatrix * rotationMatrix * scaleMatrix;
 }
 
 float3_t Transform::position() const {
-	return float3_t(transformMatrix[3]);
+	return float3_t(transformMatrix[3].x, transformMatrix[3].y, transformMatrix[3].z);
 }
 float3_t Transform::rotation() const {
-	mat4_t normalizedMatrix = transformMatrix;
-	normalizedMatrix[0] = glm::normalize(transformMatrix[0]);
-	normalizedMatrix[1] = glm::normalize(transformMatrix[1]);
-	normalizedMatrix[2] = glm::normalize(transformMatrix[2]);
+	matrix4_t normalizedMatrix = transformMatrix;
+	normalizedMatrix[0] = math::normalize(transformMatrix[0]);
+	normalizedMatrix[1] = math::normalize(transformMatrix[1]);
+	normalizedMatrix[2] = math::normalize(transformMatrix[2]);
 
-	float_t rx, ry, rz;
-	glm::extractEulerAngleYXZ(normalizedMatrix, ry, rz, rx);
+	float_t roll, yaw, pitch;
+	math::extractYawPitchRoll(normalizedMatrix, yaw, pitch, roll);
 
-	return glm::degrees(float3_t(rx, ry, rz));
+	return math::degrees(float3_t(roll, yaw, pitch));
 }
 float3_t Transform::scale() const {
 	return float3_t(
-		glm::length(float3_t(transformMatrix[0])),
-		glm::length(float3_t(transformMatrix[1])),
-		glm::length(float3_t(transformMatrix[2])));
+		math::length(float3_t(transformMatrix[0].x, transformMatrix[0].y, transformMatrix[0].z)),
+		math::length(float3_t(transformMatrix[1].x, transformMatrix[1].y, transformMatrix[1].z)),
+		math::length(float3_t(transformMatrix[2].x, transformMatrix[2].y, transformMatrix[2].z)));
 }
 
-const mat4_t& Transform::matrix() const {
+const matrix4_t& Transform::matrix() const {
 	return transformMatrix;
 }
 

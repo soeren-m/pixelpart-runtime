@@ -3,7 +3,6 @@
 #include "Node.h"
 #include "AnimatedProperty.h"
 #include "../common/Types.h"
-#include "../common/Math.h"
 #include "../common/Id.h"
 #include "../common/Curve.h"
 #include "../json/json.hpp"

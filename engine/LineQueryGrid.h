@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../common/Types.h"
-#include "../common/Math.h"
 #include "../common/Grid.h"
+#include <cstdint>
 #include <utility>
 #include <vector>
 #include <unordered_set>

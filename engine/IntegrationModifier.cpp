@@ -1,5 +1,5 @@
 #include "IntegrationModifier.h"
-#include "../common/Math.h"
+#include "../common/Types.h"
 #include "../effect/ParticleType.h"
 #include "../effect/ParticleEmitter.h"
 #include <algorithm>

@@ -1,5 +1,5 @@
 #include "RotationModifier.h"
-#include "../common/Math.h"
+#include "../math/Geometry.h"
 #include "../effect/ParticleType.h"
 
 namespace pixelpart {
@@ -12,7 +12,7 @@ void RotationModifier::apply(ParticleCollection::WritePtr particles, std::uint32
 		case RotationMode::angle: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
 				particles.rotation[p] = particles.initialRotation[p] + particleType.rotation().at(particles.life[p]);
-				particles.rotation[p] += particleType.rotationBySpeed().at(particles.life[p]) * glm::length(particles.velocity[p]);
+				particles.rotation[p] += particleType.rotationBySpeed().at(particles.life[p]) * math::length(particles.velocity[p]);
 			}
 
 			break;
@@ -21,7 +21,7 @@ void RotationModifier::apply(ParticleCollection::WritePtr particles, std::uint32
 		case RotationMode::velocity: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
 				particles.rotation[p] += (particles.initialAngularVelocity[p] + particleType.rotation().at(particles.life[p])) * dt;
-				particles.rotation[p] += particleType.rotationBySpeed().at(particles.life[p]) * glm::length(particles.velocity[p]) * dt;
+				particles.rotation[p] += particleType.rotationBySpeed().at(particles.life[p]) * math::length(particles.velocity[p]) * dt;
 			}
 
 			break;

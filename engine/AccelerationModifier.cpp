@@ -1,5 +1,5 @@
 #include "AccelerationModifier.h"
-#include "../common/Math.h"
+#include "../math/Geometry.h"
 #include "../effect/ParticleType.h"
 
 namespace pixelpart {
@@ -10,10 +10,10 @@ void AccelerationModifier::apply(ParticleCollection::WritePtr particles, std::ui
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		float3_t forwardDirection = (particles.velocity[p] != float3_t(0.0))
-			? glm::normalize(particles.velocity[p])
+			? math::normalize(particles.velocity[p])
 			: float3_t(0.0);
 		float3_t radialDirection = (globalEmitterPosition != particles.globalPosition[p])
-			? glm::normalize(globalEmitterPosition - particles.globalPosition[p])
+			? math::normalize(globalEmitterPosition - particles.globalPosition[p])
 			: float3_t(0.0);
 
 		particles.force[p] = forwardDirection * particleType.acceleration().at(particles.life[p]);

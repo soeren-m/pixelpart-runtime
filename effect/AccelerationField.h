@@ -3,7 +3,6 @@
 #include "ForceField.h"
 #include "AnimatedProperty.h"
 #include "../common/Types.h"
-#include "../common/Math.h"
 #include "../json/json.hpp"
 #include <vector>
 #include <random>

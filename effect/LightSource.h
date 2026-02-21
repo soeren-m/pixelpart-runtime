@@ -4,7 +4,6 @@
 #include "LightSourceType.h"
 #include "AnimatedProperty.h"
 #include "../common/Types.h"
-#include "../common/Math.h"
 #include "../common/Id.h"
 #include "../json/json.hpp"
 

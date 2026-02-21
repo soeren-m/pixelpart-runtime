@@ -4,7 +4,7 @@
 #include "LineQueryGrid.h"
 #include "../effect/LineCollider.h"
 #include "../effect/PlaneCollider.h"
-#include "../common/Math.h"
+#include "../common/Types.h"
 #include "../common/Curve.h"
 #include "../common/Transform.h"
 #include <bitset>

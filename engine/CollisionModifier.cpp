@@ -1,9 +1,8 @@
 #include "CollisionModifier.h"
 #include "../common/Id.h"
+#include "../math/Common.h"
+#include "../math/Geometry.h"
 #include "../effect/ParticleType.h"
-#define GLM_ENABLE_EXPERIMENTAL
-#include "../glm/gtx/norm.hpp"
-#include "../glm/gtx/rotate_vector.hpp"
 #include <cmath>
 #include <algorithm>
 
@@ -17,9 +16,9 @@ void CollisionModifier::apply(ParticleCollection::WritePtr particles, std::uint3
 	if(!modifierLine2dColliders.empty()) {
 		for(std::uint32_t p = 0; p < particleCount; p++) {
 			LineQueryGrid::QueryResult potentialColliderIndices = modifierLine2dColliderGrid.queryLine(
-				particles.globalPosition[p],
-				particles.globalPosition[p] + particles.velocity[p] * dt + particles.force[p] * dt * dt,
-				particles.size[p] * particleType.physicalSize().at(particles.life[p]));
+				float2_t(particles.globalPosition[p]),
+				float2_t(particles.globalPosition[p] + particles.velocity[p] * dt + particles.force[p] * dt * dt),
+				float2_t(particles.size[p] * particleType.physicalSize().at(particles.life[p])));
 
 			for(std::uint32_t colliderIndex : potentialColliderIndices) {
 				const Line2dColliderObject& collider = modifierLine2dColliders[colliderIndex];
@@ -126,14 +125,14 @@ CollisionModifier::Plane3dColliderObject::Plane3dColliderObject(const PlaneColli
 }
 
 bool CollisionModifier::isPointOnLineSegment(const float2_t& p, const float2_t& l1, const float2_t& l2) {
-	float_t a = glm::dot(l2 - l1, p - l1);
-	float_t b = glm::dot(l2 - l1, l2 - l1);
+	float_t a = math::dot(l2 - l1, p - l1);
+	float_t b = math::dot(l2 - l1, l2 - l1);
 
 	return a >= 0.0 && a < b;
 }
 bool CollisionModifier::isPointOnLineSegment(const float3_t& p, const float3_t& l1, const float3_t& l2) {
-	float_t a = glm::dot(l2 - l1, p - l1);
-	float_t b = glm::dot(l2 - l1, l2 - l1);
+	float_t a = math::dot(l2 - l1, p - l1);
+	float_t b = math::dot(l2 - l1, l2 - l1);
 
 	return a >= 0.0 && a < b;
 }
@@ -146,10 +145,10 @@ bool CollisionModifier::isPointOnCollider(const float3_t& p, const Plane3dCollid
 	float3_t v2ToP = p - collider.vertices[2];
 
 	return
-		glm::dot(v1ToP, v1ToV0) > 0.0 &&
-		glm::dot(v1ToP, v1ToV3) > 0.0 &&
-		glm::dot(v2ToP, v2ToV0) > 0.0 &&
-		glm::dot(v2ToP, v2ToV3) > 0.0;
+		math::dot(v1ToP, v1ToV0) > 0.0 &&
+		math::dot(v1ToP, v1ToV3) > 0.0 &&
+		math::dot(v2ToP, v2ToV0) > 0.0 &&
+		math::dot(v2ToP, v2ToV3) > 0.0;
 }
 
 float2_t CollisionModifier::closestPointOnLine(const float2_t& p, const Line2dColliderObject& collider) {
@@ -166,7 +165,7 @@ float2_t CollisionModifier::closestPointOnLine(const float2_t& p, const Line2dCo
 		: p;
 }
 float3_t CollisionModifier::closestPointOnPlane(const float3_t& p, const Plane3dColliderObject& collider) {
-	float_t signedDistance = glm::dot(collider.normal, p - collider.center);
+	float_t signedDistance = math::dot(collider.normal, p - collider.center);
 
 	return p - collider.normal * signedDistance;
 }
@@ -194,14 +193,14 @@ std::optional<float3_t> CollisionModifier::rayColliderIntersection(const Line2dC
 	return float3_t(point, 0.0);
 }
 std::optional<float3_t> CollisionModifier::rayColliderIntersection(const Plane3dColliderObject& collider, const float3_t& rayOrigin, const float3_t& rayEnd) {
-	float3_t rayDirection = glm::normalize(rayEnd - rayOrigin);
+	float3_t rayDirection = math::normalize(rayEnd - rayOrigin);
 
-	float_t det = glm::dot(collider.normal, rayDirection);
+	float_t det = math::dot(collider.normal, rayDirection);
 	if(std::abs(det) < 0.00001) {
 		return std::nullopt;
 	}
 
-	float_t t = -glm::dot(collider.normal, rayOrigin - collider.center) / det;
+	float_t t = -math::dot(collider.normal, rayOrigin - collider.center) / det;
 	float3_t point = rayOrigin + rayDirection * t;
 
 	if(!isPointOnCollider(point, collider) || !isPointOnLineSegment(point, rayOrigin, rayEnd)) {
@@ -212,7 +211,7 @@ std::optional<float3_t> CollisionModifier::rayColliderIntersection(const Plane3d
 }
 
 void CollisionModifier::collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, std::uint32_t p, float_t t, float_t dt, const Line2dColliderObject& collider) const {
-	float2_t closestPoint = closestPointOnLine(particles.globalPosition[p], collider);
+	float2_t closestPoint = closestPointOnLine(float2_t(particles.globalPosition[p]), collider);
 	if(!isPointOnLineSegment(closestPoint, collider.start, collider.end)) {
 		return;
 	}
@@ -223,7 +222,7 @@ void CollisionModifier::collide(const ParticleType& particleType, ParticleCollec
 	float2_t globalParticleVelocity = float2_t(particles.velocity[p]);
 	float2_t globalParticleForce = float2_t(particles.force[p]);
 	float2_t colliderToParticle = globalParticlePosition - closestPoint;
-	float_t distanceSqr = glm::length2(colliderToParticle);
+	float_t distanceSqr = math::lengthSquared(colliderToParticle);
 	float_t particleRadius = std::min(particles.size[p].x, particles.size[p].y) * 0.5;
 	particleRadius = std::max(particleRadius * particleType.physicalSize().at(particles.life[p]), 0.01);
 
@@ -233,10 +232,10 @@ void CollisionModifier::collide(const ParticleType& particleType, ParticleCollec
 		}
 		else {
 			float_t distance = std::sqrt(distanceSqr);
-			float2_t normal = glm::normalize(colliderToParticle);
-			float2_t reflectedVelocity = glm::reflect(globalParticleVelocity, normal);
-			float2_t segmentVector = glm::normalize(collider.end - collider.start);
-			float_t slideFactor = glm::dot((globalParticleForce != float2_t(0.0)) ? glm::normalize(globalParticleForce) : float2_t(0.0, 1.0), segmentVector) * glm::length(globalParticleForce) * distance / particleRadius;
+			float2_t normal = math::normalize(colliderToParticle);
+			float2_t reflectedVelocity = math::reflect(globalParticleVelocity, normal);
+			float2_t segmentVector = math::normalize(collider.end - collider.start);
+			float_t slideFactor = math::dot((globalParticleForce != float2_t(0.0)) ? math::normalize(globalParticleForce) : float2_t(0.0, 1.0), segmentVector) * math::length(globalParticleForce) * distance / particleRadius;
 			float_t bounce = collider.bounce.at(colliderLife) * particleType.bounce().at(particles.life[p]);
 			float_t friction = std::min(collider.friction.at(colliderLife) * particleType.friction().at(particles.life[p]), 1.0);
 
@@ -253,8 +252,8 @@ void CollisionModifier::collide(const ParticleType& particleType, ParticleCollec
 				particles.life[p] = 1.0;
 			}
 			else {
-				float2_t normal = glm::normalize(colliderToParticle);
-				float2_t reflectedVelocity = glm::reflect(globalParticleVelocity, normal);
+				float2_t normal = math::normalize(colliderToParticle);
+				float2_t reflectedVelocity = math::reflect(globalParticleVelocity, normal);
 				float_t bounce = collider.bounce.at(colliderLife) * particleType.bounce().at(particles.life[p]);
 
 				particles.velocity[p] = float3_t(reflectedVelocity * bounce, particles.velocity[p].z);
@@ -273,11 +272,11 @@ void CollisionModifier::collide(const ParticleType& particleType, ParticleCollec
 	float3_t globalParticleVelocity = particles.velocity[p];
 	float3_t globalParticleForce = particles.force[p];
 	float3_t normalizedParticleForce = (globalParticleForce != float3_t(0.0))
-		? glm::normalize(globalParticleForce)
+		? math::normalize(globalParticleForce)
 		: float3_t(0.0, 1.0, 0.0);
 	float3_t colliderToParticle = globalParticlePosition - closestPoint;
-	float3_t colliderNormal = glm::normalize(colliderToParticle);
-	float_t distanceSqr = glm::length2(colliderToParticle);
+	float3_t colliderNormal = math::normalize(colliderToParticle);
+	float_t distanceSqr = math::lengthSquared(colliderToParticle);
 	float_t particleRadius = std::min(particles.size[p].x, std::min(particles.size[p].y, particles.size[p].z)) * 0.5;
 	particleRadius = std::max(particleRadius * particleType.physicalSize().at(particles.life[p]), 0.01);
 
@@ -287,14 +286,14 @@ void CollisionModifier::collide(const ParticleType& particleType, ParticleCollec
 		}
 		else {
 			float_t distance = std::sqrt(distanceSqr);
-			float3_t reflectedVelocity = glm::reflect(globalParticleVelocity, colliderNormal);
+			float3_t reflectedVelocity = math::reflect(globalParticleVelocity, colliderNormal);
 
 			float3_t slideVector = closestPointOnPlane(closestPoint + normalizedParticleForce, collider) - closestPoint;
 			if(slideVector != float3_t(0.0)) {
-				slideVector = glm::normalize(slideVector);
+				slideVector = math::normalize(slideVector);
 			}
 
-			float_t slideFactor = glm::dot(normalizedParticleForce, slideVector) * glm::length(globalParticleForce) * distance / particleRadius;
+			float_t slideFactor = math::dot(normalizedParticleForce, slideVector) * math::length(globalParticleForce) * distance / particleRadius;
 			float_t bounce = collider.bounce.at(colliderLife) * particleType.bounce().at(particles.life[p]);
 			float_t friction = std::min(collider.friction.at(colliderLife) * particleType.friction().at(particles.life[p]), 1.0);
 
@@ -311,7 +310,7 @@ void CollisionModifier::collide(const ParticleType& particleType, ParticleCollec
 				particles.life[p] = 1.0;
 			}
 			else {
-				float3_t reflectedVelocity = glm::reflect(globalParticleVelocity, colliderNormal);
+				float3_t reflectedVelocity = math::reflect(globalParticleVelocity, colliderNormal);
 				float_t bounce = collider.bounce.at(colliderLife) * particleType.bounce().at(particles.life[p]);
 
 				particles.velocity[p] = reflectedVelocity * bounce;

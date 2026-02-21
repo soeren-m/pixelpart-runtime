@@ -1,9 +1,13 @@
 #include "DefaultParticleGenerator.h"
-#include "Random.h"
+#include "../common/Coordinates.h"
 #include "../common/Transform.h"
-#define GLM_ENABLE_EXPERIMENTAL
-#include "../glm/gtx/rotate_vector.hpp"
-#include "../glm/gtx/euler_angles.hpp"
+#include "../math/Common.h"
+#include "../math/Constants.h"
+#include "../math/Geometry.h"
+#include "../math/Trigonometry.h"
+#include "../math/Transformation.h"
+#include "../math/Interpolation.h"
+#include "../math/Random.h"
 #include <cmath>
 #include <optional>
 #include <vector>
@@ -11,8 +15,6 @@
 #include <algorithm>
 
 namespace pixelpart {
-const float_t pi = 3.14159265358979323846;
-
 void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 	const Effect* effect, EffectRuntimeContext runtimeContext) const {
 	for(auto& [emissionPair, particleCollection] : state.particleCollections()) {
@@ -254,7 +256,7 @@ void DefaultParticleGenerator::initializeParticle(ParticleEmissionState& emissio
 	particles.parentId[p] = parentId;
 	particles.life[p] = 0.0;
 	particles.lifespan[p] = std::max(particleType.lifespan().at(alpha) +
-		random::uniform(rng, -particleType.lifespanVariance().value(), +particleType.lifespanVariance().value()), 0.000001);
+		math::randomUniform(rng, -particleType.lifespanVariance().value(), +particleType.lifespanVariance().value()), 0.000001);
 
 	float3_t particleSpawnPosition = float3_t(0.0);
 	switch(particleEmitter.shape()) {
@@ -269,7 +271,7 @@ void DefaultParticleGenerator::initializeParticle(ParticleEmissionState& emissio
 			break;
 		case ParticleEmitter::Shape::ellipse:
 			particleSpawnPosition = emitInEllipse(
-				globalEmitterSize,
+				float2_t(globalEmitterSize),
 				particleEmitter.distribution(),
 				particleEmitter.gridOrder(),
 				particleEmitter.gridSizeX(), particleEmitter.gridSizeY(),
@@ -278,7 +280,7 @@ void DefaultParticleGenerator::initializeParticle(ParticleEmissionState& emissio
 			break;
 		case ParticleEmitter::Shape::rectangle:
 			particleSpawnPosition = emitInRectangle(
-				globalEmitterSize,
+				float2_t(globalEmitterSize),
 				particleEmitter.distribution(),
 				particleEmitter.gridOrder(),
 				particleEmitter.gridSizeX(), particleEmitter.gridSizeY(),
@@ -336,31 +338,31 @@ void DefaultParticleGenerator::initializeParticle(ParticleEmissionState& emissio
 		: particles.position[p];
 
 	if(effect3d) {
-		mat3_t rotationMatrix = mat3_t(glm::yawPitchRoll(
-			glm::radians(globalEmitterRotation.y),
-			glm::radians(globalEmitterRotation.z),
-			glm::radians(globalEmitterRotation.x)));
-		mat3_t directionMatrix = mat3_t(glm::yawPitchRoll(
-			glm::radians(particleEmitter.direction().at(alpha).y + particleEmitter.spread().at(alpha) * random::uniform(rng, -0.5, +0.5)),
-			glm::radians(particleEmitter.direction().at(alpha).z + particleEmitter.spread().at(alpha) * random::uniform(rng, -0.5, +0.5)),
-			glm::radians(particleEmitter.direction().at(alpha).x + particleEmitter.spread().at(alpha) * random::uniform(rng, -0.5, +0.5))));
+		matrix3_t rotationMatrix = matrix3_t(math::yawPitchRollRotationMatrix(
+			math::radians(globalEmitterRotation.y),
+			math::radians(globalEmitterRotation.z),
+			math::radians(globalEmitterRotation.x)));
+		matrix3_t directionMatrix = matrix3_t(math::yawPitchRollRotationMatrix(
+			math::radians(particleEmitter.direction().at(alpha).y + particleEmitter.spread().at(alpha) * math::randomUniform(rng, -0.5, +0.5)),
+			math::radians(particleEmitter.direction().at(alpha).z + particleEmitter.spread().at(alpha) * math::randomUniform(rng, -0.5, +0.5)),
+			math::radians(particleEmitter.direction().at(alpha).x + particleEmitter.spread().at(alpha) * math::randomUniform(rng, -0.5, +0.5))));
 
 		switch(particleEmitter.directionMode()) {
 			case ParticleEmitter::DirectionMode::outwards:
 				particles.velocity[p] = directionMatrix *
-					((particleSpawnPosition != float3_t(0.0)) ? glm::normalize(+particleSpawnPosition) : worldUpVector3);
+					((particleSpawnPosition != float3_t(0.0)) ? math::normalize(+particleSpawnPosition) : worldUpVector3);
 				break;
 			case ParticleEmitter::DirectionMode::inwards:
 				particles.velocity[p] = directionMatrix *
-					((particleSpawnPosition != float3_t(0.0)) ? glm::normalize(-particleSpawnPosition) : worldUpVector3);
+					((particleSpawnPosition != float3_t(0.0)) ? math::normalize(-particleSpawnPosition) : worldUpVector3);
 				break;
 			case ParticleEmitter::DirectionMode::inherit:
 				particles.velocity[p] = directionMatrix *
-					glm::normalize(parentVelocity != float3_t(0.0) ? +parentVelocity : worldUpVector3);
+					math::normalize(parentVelocity != float3_t(0.0) ? +parentVelocity : worldUpVector3);
 				break;
 			case ParticleEmitter::DirectionMode::inherit_inverse:
 				particles.velocity[p] = directionMatrix *
-					glm::normalize(parentVelocity != float3_t(0.0) ? -parentVelocity : worldUpVector3);
+					math::normalize(parentVelocity != float3_t(0.0) ? -parentVelocity : worldUpVector3);
 				break;
 			default:
 				particles.velocity[p] = rotationMatrix * directionMatrix * worldUpVector3;
@@ -368,59 +370,59 @@ void DefaultParticleGenerator::initializeParticle(ParticleEmissionState& emissio
 		}
 	}
 	else {
-		float_t direction = glm::radians(
+		float_t direction = math::radians(
 			particleEmitter.direction().at(alpha).x +
-			particleEmitter.spread().at(alpha) * random::uniform(rng,-0.5, +0.5));
+			particleEmitter.spread().at(alpha) * math::randomUniform(rng, -0.5, +0.5));
 
 		switch(particleEmitter.directionMode()) {
 			case ParticleEmitter::DirectionMode::outwards:
-				particles.velocity[p] = float3_t(glm::rotate(
-					(particleSpawnPosition != float3_t(0.0)) ? float2_t(glm::normalize(+particleSpawnPosition)) : worldUpVector2,
+				particles.velocity[p] = float3_t(math::rotateVector(
+					(particleSpawnPosition != float3_t(0.0)) ? float2_t(math::normalize(+particleSpawnPosition)) : worldUpVector2,
 					direction), 0.0);
 				break;
 			case ParticleEmitter::DirectionMode::inwards:
-				particles.velocity[p] = float3_t(glm::rotate(
-					(particleSpawnPosition != float3_t(0.0)) ? float2_t(glm::normalize(-particleSpawnPosition)) : worldUpVector2,
+				particles.velocity[p] = float3_t(math::rotateVector(
+					(particleSpawnPosition != float3_t(0.0)) ? float2_t(math::normalize(-particleSpawnPosition)) : worldUpVector2,
 					direction), 0.0);
 				break;
 			case ParticleEmitter::DirectionMode::inherit:
-				particles.velocity[p] = float3_t(glm::rotate(
-					float2_t(glm::normalize(parentVelocity != float3_t(0.0) ? +parentVelocity : worldUpVector3)), direction), 0.0);
+				particles.velocity[p] = float3_t(math::rotateVector(
+					float2_t(math::normalize(parentVelocity != float3_t(0.0) ? +parentVelocity : worldUpVector3)), direction), 0.0);
 				break;
 			case ParticleEmitter::DirectionMode::inherit_inverse:
-				particles.velocity[p] = float3_t(glm::rotate(
-					float2_t(glm::normalize(parentVelocity != float3_t(0.0) ? -parentVelocity : worldUpVector3)), direction), 0.0);
+				particles.velocity[p] = float3_t(math::rotateVector(
+					float2_t(math::normalize(parentVelocity != float3_t(0.0) ? -parentVelocity : worldUpVector3)), direction), 0.0);
 				break;
 			default:
-				particles.velocity[p] = float3_t(glm::rotate(worldUpVector2, glm::radians(globalEmitterRotation.x) + direction), 0.0);
+				particles.velocity[p] = float3_t(math::rotateVector(worldUpVector2, math::radians(globalEmitterRotation.x) + direction), 0.0);
 				break;
 		}
 	}
 
-	particles.velocity[p] *= glm::mix(
-			particleType.initialVelocity().at(alpha),
-			glm::length(parentVelocity),
-			particleType.inheritedVelocity().at(alpha)) + random::uniform(rng, -particleType.velocityVariance().value(), +particleType.velocityVariance().value());
+	particles.velocity[p] *= math::linearInterpolation(
+		particleType.initialVelocity().at(alpha),
+		math::length(parentVelocity),
+		particleType.inheritedVelocity().at(alpha)) + math::randomUniform(rng, -particleType.velocityVariance().value(), +particleType.velocityVariance().value());
 	particles.force[p] = float3_t(0.0);
 
 	particles.initialRotation[p] = particleType.initialRotation().at(alpha) + float3_t(
-		random::uniform(rng, -particleType.rotationVariance().value().x, +particleType.rotationVariance().value().x),
-		random::uniform(rng, -particleType.rotationVariance().value().y, +particleType.rotationVariance().value().y),
-		random::uniform(rng, -particleType.rotationVariance().value().z, +particleType.rotationVariance().value().z));
+		math::randomUniform(rng, -particleType.rotationVariance().value().x, +particleType.rotationVariance().value().x),
+		math::randomUniform(rng, -particleType.rotationVariance().value().y, +particleType.rotationVariance().value().y),
+		math::randomUniform(rng, -particleType.rotationVariance().value().z, +particleType.rotationVariance().value().z));
 	particles.initialAngularVelocity[p] = float3_t(
-		random::uniform(rng, -particleType.angularVelocityVariance().value().x, +particleType.angularVelocityVariance().value().x),
-		random::uniform(rng, -particleType.angularVelocityVariance().value().y, +particleType.angularVelocityVariance().value().y),
-		random::uniform(rng, -particleType.angularVelocityVariance().value().z, +particleType.angularVelocityVariance().value().z));
+		math::randomUniform(rng, -particleType.angularVelocityVariance().value().x, +particleType.angularVelocityVariance().value().x),
+		math::randomUniform(rng, -particleType.angularVelocityVariance().value().y, +particleType.angularVelocityVariance().value().y),
+		math::randomUniform(rng, -particleType.angularVelocityVariance().value().z, +particleType.angularVelocityVariance().value().z));
 	particles.rotation[p] = particles.initialRotation[p];
 
-	particles.initialSize[p] = particleType.initialSize().at(alpha) + random::uniform(rng, -particleType.sizeVariance().value(), +particleType.sizeVariance().value());
+	particles.initialSize[p] = particleType.initialSize().at(alpha) + math::randomUniform(rng, -particleType.sizeVariance().value(), +particleType.sizeVariance().value());
 	particles.size[p] = particleType.size().at() * particles.initialSize[p];
 
 	particles.initialColor[p] = float4_t(
-		random::uniform(rng, -particleType.colorVariance().value().x, +particleType.colorVariance().value().x),
-		random::uniform(rng, -particleType.colorVariance().value().y, +particleType.colorVariance().value().y),
-		random::uniform(rng, -particleType.colorVariance().value().z, +particleType.colorVariance().value().z),
-		particleType.initialOpacity().at(alpha) + random::uniform(rng, -particleType.opacityVariance().value(), +particleType.opacityVariance().value()));
+		math::randomUniform(rng, -particleType.colorVariance().value().x, +particleType.colorVariance().value().x),
+		math::randomUniform(rng, -particleType.colorVariance().value().y, +particleType.colorVariance().value().y),
+		math::randomUniform(rng, -particleType.colorVariance().value().z, +particleType.colorVariance().value().z),
+		particleType.initialOpacity().at(alpha) + math::randomUniform(rng, -particleType.opacityVariance().value(), +particleType.opacityVariance().value()));
 	particles.color[p] = float4_t(float3_t(particleType.color().at()), particleType.opacity().at());
 }
 
@@ -432,16 +434,16 @@ float3_t DefaultParticleGenerator::emitOnSegment(float_t length,
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform:
 		case ParticleEmitter::Distribution::boundary: {
-			return float3_t(0.0, random::uniform(rng, -length, +length) * 0.5, 0.0);
+			return float3_t(0.0, math::randomUniform(rng, -length, +length) * 0.5, 0.0);
 		}
 		case ParticleEmitter::Distribution::center: {
-			return float3_t(0.0, random::normal(rng, -length, +length) * 0.5, 0.0);
+			return float3_t(0.0, math::randomTruncatedNormal(rng, -length, +length) * 0.5, 0.0);
 		}
 		case ParticleEmitter::Distribution::hole: {
-			return float3_t(0.0, random::normalReverse(rng, -length, +length) * 0.5, 0.0);
+			return float3_t(0.0, math::randomTruncatedInverseNormal(rng, -length, +length) * 0.5, 0.0);
 		}
 		case ParticleEmitter::Distribution::grid_random: {
-			return float3_t(0.0, random::uniformGrid(rng, gridSize, -length, +length) * 0.5, 0.0);
+			return float3_t(0.0, math::randomUniformGrid(rng, gridSize, -length, +length) * 0.5, 0.0);
 		}
 		case ParticleEmitter::Distribution::grid_ordered: {
 			float_t y = sampleGrid1d(gridIndex, gridSize, -length, +length) * 0.5;
@@ -465,8 +467,8 @@ float3_t DefaultParticleGenerator::emitInEllipse(const float2_t& size,
 
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform: {
-			r = std::sqrt(random::uniform(rng, 0.0, 1.0));
-			phi = random::uniform(rng, 0.0, 2.0 * pi);
+			r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
+			phi = math::randomUniform(rng, 0.0, math::twoPi);
 			point = float3_t(
 				std::cos(phi),
 				std::sin(phi),
@@ -476,32 +478,32 @@ float3_t DefaultParticleGenerator::emitInEllipse(const float2_t& size,
 		}
 		case ParticleEmitter::Distribution::center: {
 			do {
-				r = std::sqrt(random::uniform(rng, 0.0, 1.0));
-				phi = random::uniform(rng, 0.0, 2.0 * pi);
+				r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
+				phi = math::randomUniform(rng, 0.0, math::twoPi);
 				point = float3_t(
 					std::cos(phi),
 					std::sin(phi),
 					0.0) * r;
 			}
-			while(std::pow(random::uniform(rng, 0.0, 1.0), 2) < point.x * point.x + point.y * point.y);
+			while(std::pow(math::randomUniform(rng, 0.0, 1.0), 2) < point.x * point.x + point.y * point.y);
 
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
 			do {
-				r = std::sqrt(random::uniform(rng, 0.0, 1.0));
-				phi = random::uniform(rng, 0.0, 2.0 * pi);
+				r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
+				phi = math::randomUniform(rng, 0.0, math::twoPi);
 				point = float3_t(
 					std::cos(phi),
 					std::sin(phi),
 					0.0) * r;
 			}
-			while(std::pow(random::uniform(rng, 0.0, 1.0), 2) > point.x * point.x + point.y * point.y);
+			while(std::pow(math::randomUniform(rng, 0.0, 1.0), 2) > point.x * point.x + point.y * point.y);
 
 			break;
 		}
 		case ParticleEmitter::Distribution::boundary: {
-			phi = random::uniform(rng, 0.0, 2.0 * pi);
+			phi = math::randomUniform(rng, 0.0, math::twoPi);
 			point = float3_t(
 				std::cos(phi),
 				std::sin(phi),
@@ -510,8 +512,8 @@ float3_t DefaultParticleGenerator::emitInEllipse(const float2_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::grid_random: {
-			r = random::uniformGrid(rng, gridSizeX);
-			phi = random::uniformGrid(rng, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+			r = math::randomUniformGrid(rng, gridSizeX, 0.0, 1.0);
+			phi = math::randomUniformGrid(rng, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
 			point = float3_t(
 				std::cos(phi),
 				std::sin(phi),
@@ -525,13 +527,13 @@ float3_t DefaultParticleGenerator::emitInEllipse(const float2_t& size,
 				case ParticleEmitter::GridOrder::x_z_y:
 				case ParticleEmitter::GridOrder::z_x_y:
 					r = sampleGrid1d(gridIndex, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid2d(gridIndex, gridSizeX, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					phi = sampleGrid2d(gridIndex, gridSizeX, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
 					break;
 				case ParticleEmitter::GridOrder::y_x_z:
 				case ParticleEmitter::GridOrder::y_z_x:
 				case ParticleEmitter::GridOrder::z_y_x:
 					r = sampleGrid2d(gridIndex, gridSizeY, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid1d(gridIndex, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					phi = sampleGrid1d(gridIndex, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
 					break;
 				default:
 					break;
@@ -566,16 +568,16 @@ float3_t DefaultParticleGenerator::emitInRectangle(const float2_t& size,
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform: {
 			point = float3_t(
-				random::uniform(rng, -size.x, +size.x),
-				random::uniform(rng, -size.y, +size.y),
+				math::randomUniform(rng, -size.x, +size.x),
+				math::randomUniform(rng, -size.y, +size.y),
 				0.0) * 0.5;
 
 			break;
 		}
 		case ParticleEmitter::Distribution::center: {
 			point = float3_t(
-				random::normal(rng, -size.x, +size.x),
-				random::normal(rng, -size.y, +size.y),
+				math::randomTruncatedNormal(rng, -size.x, +size.x),
+				math::randomTruncatedNormal(rng, -size.y, +size.y),
 				0.0) * 0.5;
 
 			break;
@@ -583,11 +585,11 @@ float3_t DefaultParticleGenerator::emitInRectangle(const float2_t& size,
 		case ParticleEmitter::Distribution::hole: {
 			do {
 				point = float3_t(
-					random::uniform(rng, -1.0, +1.0),
-					random::uniform(rng, -1.0, +1.0),
+					math::randomUniform(rng, -1.0, +1.0),
+					math::randomUniform(rng, -1.0, +1.0),
 					0.0);
 			}
-			while(random::uniform(rng, 0.0, 1.0) > (point.x * point.x + point.y * point.y) * 0.5);
+			while(math::randomUniform(rng, 0.0, 1.0) > (point.x * point.x + point.y * point.y) * 0.5);
 
 			point.x *= size.x * 0.5;
 			point.y *= size.y * 0.5;
@@ -595,7 +597,7 @@ float3_t DefaultParticleGenerator::emitInRectangle(const float2_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::boundary: {
-			float_t r = random::uniform(rng, 0.0, (size.x + size.y) * 2.0);
+			float_t r = math::randomUniform(rng, 0.0, (size.x + size.y) * 2.0);
 			point = float3_t(-size * 0.5, 0.0);
 
 			if(r < size.y) {
@@ -615,8 +617,8 @@ float3_t DefaultParticleGenerator::emitInRectangle(const float2_t& size,
 		}
 		case ParticleEmitter::Distribution::grid_random: {
 			point = float3_t(
-				random::uniformGrid(rng, gridSizeX, -size.x, +size.x),
-				random::uniformGrid(rng, gridSizeY, -size.y, +size.y),
+				math::randomUniformGrid(rng, gridSizeX, -size.x, +size.x),
+				math::randomUniformGrid(rng, gridSizeY, -size.y, +size.y),
 				0.0) * 0.5;
 
 			break;
@@ -666,19 +668,19 @@ float3_t DefaultParticleGenerator::emitOnPath(const float3_t& size,
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform:
 		case ParticleEmitter::Distribution::boundary: {
-			x = random::uniform(rng, 0.0, 1.0);
+			x = math::randomUniform(rng, 0.0, 1.0);
 			break;
 		}
 		case ParticleEmitter::Distribution::center: {
-			x = random::normal(rng, 0.0, 1.0);
+			x = math::randomTruncatedNormal(rng, 0.0, 1.0);
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
-			x = random::normalReverse(rng, 0.0, 1.0);
+			x = math::randomTruncatedInverseNormal(rng, 0.0, 1.0);
 			break;
 		}
 		case ParticleEmitter::Distribution::grid_random: {
-			x = random::uniformGrid(rng, gridSize);
+			x = math::randomUniformGrid(rng, gridSize, 0.0, 1.0);
 			break;
 		}
 		case ParticleEmitter::Distribution::grid_ordered: {
@@ -706,9 +708,9 @@ float3_t DefaultParticleGenerator::emitInEllipsoid(const float3_t& size,
 
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform: {
-			r = std::sqrt(random::uniform(rng, 0.0, 1.0));
-			phi = random::uniform(rng, 0.0, 2.0 * pi);
-			theta = std::acos(random::uniform(rng, -1.0, +1.0));
+			r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
+			phi = math::randomUniform(rng, 0.0, math::twoPi);
+			theta = std::acos(math::randomUniform(rng, -1.0, +1.0));
 			point = float3_t(
 				std::sin(theta) * std::cos(phi),
 				std::sin(theta) * std::sin(phi),
@@ -718,35 +720,35 @@ float3_t DefaultParticleGenerator::emitInEllipsoid(const float3_t& size,
 		}
 		case ParticleEmitter::Distribution::center: {
 			do {
-				r = std::sqrt(random::uniform(rng, 0.0, 1.0));
-				phi = random::uniform(rng, 0.0, 2.0 * pi);
-				theta = std::acos(random::uniform(rng, -1.0, +1.0));
+				r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
+				phi = math::randomUniform(rng, 0.0, math::twoPi);
+				theta = std::acos(math::randomUniform(rng, -1.0, +1.0));
 				point = float3_t(
 					std::sin(theta) * std::cos(phi),
 					std::sin(theta) * std::sin(phi),
 					std::cos(theta)) * r;
 			}
-			while(std::pow(random::uniform(rng, 0.0, 1.0), 3) < point.x * point.x + point.y * point.y + point.z * point.z);
+			while(std::pow(math::randomUniform(rng, 0.0, 1.0), 3) < point.x * point.x + point.y * point.y + point.z * point.z);
 
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
 			do {
-				r = std::sqrt(random::uniform(rng, 0.0, 1.0));
-				phi = random::uniform(rng, 0.0, 2.0 * pi);
-				theta = std::acos(random::uniform(rng, -1.0, +1.0));
+				r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
+				phi = math::randomUniform(rng, 0.0, math::twoPi);
+				theta = std::acos(math::randomUniform(rng, -1.0, +1.0));
 				point = float3_t(
 					std::sin(theta) * std::cos(phi),
 					std::sin(theta) * std::sin(phi),
 					std::cos(theta)) * r;
 			}
-			while(std::pow(random::uniform(rng, 0.0, 1.0), 3) > point.x * point.x + point.y * point.y + point.z * point.z);
+			while(std::pow(math::randomUniform(rng, 0.0, 1.0), 3) > point.x * point.x + point.y * point.y + point.z * point.z);
 
 			break;
 		}
 		case ParticleEmitter::Distribution::boundary: {
-			phi = random::uniform(rng, 0.0, 2.0 * pi);
-			theta = std::acos(random::uniform(rng, -1.0, +1.0));
+			phi = math::randomUniform(rng, 0.0, math::twoPi);
+			theta = std::acos(math::randomUniform(rng, -1.0, +1.0));
 			point = float3_t(
 				std::sin(theta) * std::cos(phi),
 				std::sin(theta) * std::sin(phi),
@@ -755,9 +757,9 @@ float3_t DefaultParticleGenerator::emitInEllipsoid(const float3_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::grid_random: {
-			r = random::uniformGrid(rng, gridSizeX);
-			phi = random::uniformGrid(rng, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
-			theta = random::uniformGrid(rng, gridSizeZ, 0.0, pi);
+			r = math::randomUniformGrid(rng, gridSizeX, 0.0, 1.0);
+			phi = math::randomUniformGrid(rng, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+			theta = math::randomUniformGrid(rng, gridSizeZ, 0.0, math::pi);
 			point = float3_t(
 				std::sin(theta) * std::cos(phi),
 				std::sin(theta) * std::sin(phi),
@@ -769,33 +771,33 @@ float3_t DefaultParticleGenerator::emitInEllipsoid(const float3_t& size,
 			switch(gridOrder) {
 				case ParticleEmitter::GridOrder::x_y_z:
 					r = sampleGrid1d(gridIndex, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid2d(gridIndex, gridSizeX, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
-					theta = sampleGrid3d(gridIndex, gridSizeX, gridSizeY, gridSizeZ, 0.0, pi);
+					phi = sampleGrid2d(gridIndex, gridSizeX, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					theta = sampleGrid3d(gridIndex, gridSizeX, gridSizeY, gridSizeZ, 0.0, math::pi);
 					break;
 				case ParticleEmitter::GridOrder::x_z_y:
 					r = sampleGrid1d(gridIndex, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid3d(gridIndex, gridSizeX, gridSizeZ, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
-					theta = sampleGrid2d(gridIndex, gridSizeX, gridSizeZ, 0.0, pi);
+					phi = sampleGrid3d(gridIndex, gridSizeX, gridSizeZ, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					theta = sampleGrid2d(gridIndex, gridSizeX, gridSizeZ, 0.0, math::pi);
 					break;
 				case ParticleEmitter::GridOrder::y_x_z:
 					r = sampleGrid2d(gridIndex, gridSizeY, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid1d(gridIndex, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
-					theta = sampleGrid3d(gridIndex, gridSizeY, gridSizeX, gridSizeZ, 0.0, pi);
+					phi = sampleGrid1d(gridIndex, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					theta = sampleGrid3d(gridIndex, gridSizeY, gridSizeX, gridSizeZ, 0.0, math::pi);
 					break;
 				case ParticleEmitter::GridOrder::y_z_x:
 					r = sampleGrid3d(gridIndex, gridSizeY, gridSizeZ, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid1d(gridIndex, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
-					theta = sampleGrid2d(gridIndex, gridSizeY, gridSizeZ, 0.0, pi);
+					phi = sampleGrid1d(gridIndex, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					theta = sampleGrid2d(gridIndex, gridSizeY, gridSizeZ, 0.0, math::pi);
 					break;
 				case ParticleEmitter::GridOrder::z_x_y:
 					r = sampleGrid2d(gridIndex, gridSizeZ, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid3d(gridIndex, gridSizeZ, gridSizeX, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
-					theta = sampleGrid1d(gridIndex, gridSizeZ, 0.0, pi);
+					phi = sampleGrid3d(gridIndex, gridSizeZ, gridSizeX, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					theta = sampleGrid1d(gridIndex, gridSizeZ, 0.0, math::pi);
 					break;
 				case ParticleEmitter::GridOrder::z_y_x:
 					r = sampleGrid3d(gridIndex, gridSizeZ, gridSizeY, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid2d(gridIndex, gridSizeZ, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
-					theta = sampleGrid1d(gridIndex, gridSizeZ, 0.0, pi);
+					phi = sampleGrid2d(gridIndex, gridSizeZ, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					theta = sampleGrid1d(gridIndex, gridSizeZ, 0.0, math::pi);
 					break;
 				default:
 					break;
@@ -829,53 +831,53 @@ float3_t DefaultParticleGenerator::emitInCuboid(const float3_t& size,
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform: {
 			point = float3_t(
-				random::uniform(rng, -size.x, +size.x),
-				random::uniform(rng, -size.y, +size.y),
-				random::uniform(rng, -size.z, +size.z)) * 0.5;
+				math::randomUniform(rng, -size.x, +size.x),
+				math::randomUniform(rng, -size.y, +size.y),
+				math::randomUniform(rng, -size.z, +size.z)) * 0.5;
 
 			break;
 		}
 		case ParticleEmitter::Distribution::center: {
 			point = float3_t(
-				random::normal(rng, -size.x, +size.x),
-				random::normal(rng, -size.y, +size.y),
-				random::normal(rng, -size.z, +size.z)) * 0.5;
+				math::randomTruncatedNormal(rng, -size.x, +size.x),
+				math::randomTruncatedNormal(rng, -size.y, +size.y),
+				math::randomTruncatedNormal(rng, -size.z, +size.z)) * 0.5;
 
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
 			do {
 				point = float3_t(
-					random::uniform(rng, -1.0, +1.0),
-					random::uniform(rng, -1.0, +1.0),
-					random::uniform(rng, -1.0, +1.0));
+					math::randomUniform(rng, -1.0, +1.0),
+					math::randomUniform(rng, -1.0, +1.0),
+					math::randomUniform(rng, -1.0, +1.0));
 			}
-			while(random::uniform(rng, 0.0, 1.0) > (point.x * point.x + point.y * point.y + point.z * point.z) * 0.5);
+			while(math::randomUniform(rng, 0.0, 1.0) > (point.x * point.x + point.y * point.y + point.z * point.z) * 0.5);
 
 			point *= size * 0.5;
 
 			break;
 		}
 		case ParticleEmitter::Distribution::boundary: {
-			std::int32_t side = random::uniformInt(rng, 0, 5);
+			std::int32_t side = math::randomDiscreteUniform(rng, 0, 5);
 			switch(side) {
 				case 0:
-					point = float3_t(-size.x, random::uniform(rng, -size.y, +size.y), random::uniform(rng, -size.z, +size.z)) * 0.5;
+					point = float3_t(-size.x, math::randomUniform(rng, -size.y, +size.y), math::randomUniform(rng, -size.z, +size.z)) * 0.5;
 					break;
 				case 1:
-					point = float3_t(+size.x, random::uniform(rng, -size.y, +size.y), random::uniform(rng, -size.z, +size.z)) * 0.5;
+					point = float3_t(+size.x, math::randomUniform(rng, -size.y, +size.y), math::randomUniform(rng, -size.z, +size.z)) * 0.5;
 					break;
 				case 2:
-					point = float3_t(random::uniform(rng, -size.x, +size.x), -size.y, random::uniform(rng, -size.z, +size.z)) * 0.5;
+					point = float3_t(math::randomUniform(rng, -size.x, +size.x), -size.y, math::randomUniform(rng, -size.z, +size.z)) * 0.5;
 					break;
 				case 3:
-					point = float3_t(random::uniform(rng, -size.x, +size.x), +size.y, random::uniform(rng, -size.z, +size.z)) * 0.5;
+					point = float3_t(math::randomUniform(rng, -size.x, +size.x), +size.y, math::randomUniform(rng, -size.z, +size.z)) * 0.5;
 					break;
 				case 4:
-					point = float3_t(random::uniform(rng, -size.x, +size.x), random::uniform(rng, -size.y, +size.y), -size.z) * 0.5;
+					point = float3_t(math::randomUniform(rng, -size.x, +size.x), math::randomUniform(rng, -size.y, +size.y), -size.z) * 0.5;
 					break;
 				case 5:
-					point = float3_t(random::uniform(rng, -size.x, +size.x), random::uniform(rng, -size.y, +size.y), +size.z) * 0.5;
+					point = float3_t(math::randomUniform(rng, -size.x, +size.x), math::randomUniform(rng, -size.y, +size.y), +size.z) * 0.5;
 					break;
 				default:
 					point = float3_t(0.0);
@@ -886,9 +888,9 @@ float3_t DefaultParticleGenerator::emitInCuboid(const float3_t& size,
 		}
 		case ParticleEmitter::Distribution::grid_random: {
 			point = float3_t(
-				random::uniformGrid(rng, gridSizeX, -size.x, +size.x),
-				random::uniformGrid(rng, gridSizeY, -size.y, +size.y),
-				random::uniformGrid(rng, gridSizeZ, -size.z, +size.z)) * 0.5;
+				math::randomUniformGrid(rng, gridSizeX, -size.x, +size.x),
+				math::randomUniformGrid(rng, gridSizeY, -size.y, +size.y),
+				math::randomUniformGrid(rng, gridSizeZ, -size.z, +size.z)) * 0.5;
 
 			break;
 		}
@@ -958,9 +960,9 @@ float3_t DefaultParticleGenerator::emitInCylinder(const float3_t& size,
 
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform: {
-			h = random::uniform(rng, -1.0, +1.0);
-			phi = random::uniform(rng, 0.0, 2.0 * pi);
-			r = std::sqrt(random::uniform(rng, 0.0, 1.0));
+			h = math::randomUniform(rng, -1.0, +1.0);
+			phi = math::randomUniform(rng, 0.0, math::twoPi);
+			r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
 
 			point = float3_t(
 				std::cos(phi) * r,
@@ -970,51 +972,51 @@ float3_t DefaultParticleGenerator::emitInCylinder(const float3_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::center: {
-			h = random::uniform(rng, -1.0, +1.0);
+			h = math::randomUniform(rng, -1.0, +1.0);
 			do {
-				r = std::sqrt(random::uniform(rng, 0.0, 1.0));
-				phi = random::uniform(rng, 0.0, 2.0 * pi);
+				r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
+				phi = math::randomUniform(rng, 0.0, math::twoPi);
 				point = float3_t(
 					std::cos(phi) * r,
 					std::sin(phi) * r,
 					h);
 			}
-			while(std::pow(random::uniform(rng, 0.0, 1.0), 2) < point.x * point.x + point.y * point.y);
+			while(std::pow(math::randomUniform(rng, 0.0, 1.0), 2) < point.x * point.x + point.y * point.y);
 
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
-			h = random::uniform(rng, -1.0, +1.0);
+			h = math::randomUniform(rng, -1.0, +1.0);
 			do {
-				r = std::sqrt(random::uniform(rng, 0.0, 1.0));
-				phi = random::uniform(rng, 0.0, 2.0 * pi);
+				r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
+				phi = math::randomUniform(rng, 0.0, math::twoPi);
 				point = float3_t(
 					std::cos(phi) * r,
 					std::sin(phi) * r,
 					h);
 			}
-			while(std::pow(random::uniform(rng, 0.0, 1.0), 2) > point.x * point.x + point.y * point.y);
+			while(std::pow(math::randomUniform(rng, 0.0, 1.0), 2) > point.x * point.x + point.y * point.y);
 
 			break;
 		}
 		case ParticleEmitter::Distribution::boundary: {
-			float_t baseArea = size.x * size.y * pi;
-			float_t lateralArea = pi * (size.x + size.y) * size.z;
-			float_t side = random::uniform(rng, 0.0, baseArea * 2.0 + lateralArea);
+			float_t baseArea = size.x * size.y * math::pi;
+			float_t lateralArea = math::pi * (size.x + size.y) * size.z;
+			float_t side = math::randomUniform(rng, 0.0, baseArea * 2.0 + lateralArea);
 			if(side < baseArea) {
 				h = -1.0;
-				r = std::sqrt(random::uniform(rng, 0.0, 1.0));
+				r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
 			}
 			else if(side < baseArea * 2.0) {
 				h = +1.0;
-				r = std::sqrt(random::uniform(rng, 0.0, 1.0));
+				r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
 			}
 			else {
-				h = random::uniform(rng, -1.0, +1.0);
+				h = math::randomUniform(rng, -1.0, +1.0);
 				r = 1.0;
 			}
 
-			phi = random::uniform(rng, 0.0, 2.0 * pi);
+			phi = math::randomUniform(rng, 0.0, math::twoPi);
 			point = float3_t(
 				std::cos(phi) * r,
 				std::sin(phi) * r,
@@ -1023,9 +1025,9 @@ float3_t DefaultParticleGenerator::emitInCylinder(const float3_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::grid_random: {
-			r = random::uniformGrid(rng, gridSizeX);
-			phi = random::uniformGrid(rng, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
-			h = random::uniformGrid(rng, gridSizeZ, -1.0, +1.0);
+			r = math::randomUniformGrid(rng, gridSizeX, 0.0, 1.0);
+			phi = math::randomUniformGrid(rng, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+			h = math::randomUniformGrid(rng, gridSizeZ, -1.0, +1.0);
 			point = float3_t(
 				std::cos(phi) * r,
 				std::sin(phi) * r,
@@ -1037,32 +1039,32 @@ float3_t DefaultParticleGenerator::emitInCylinder(const float3_t& size,
 			switch(gridOrder) {
 				case ParticleEmitter::GridOrder::x_y_z:
 					r = sampleGrid1d(gridIndex, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid2d(gridIndex, gridSizeX, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					phi = sampleGrid2d(gridIndex, gridSizeX, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
 					h = sampleGrid3d(gridIndex, gridSizeX, gridSizeY, gridSizeZ, -1.0, +1.0);
 					break;
 				case ParticleEmitter::GridOrder::x_z_y:
 					r = sampleGrid1d(gridIndex, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid3d(gridIndex, gridSizeX, gridSizeZ, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					phi = sampleGrid3d(gridIndex, gridSizeX, gridSizeZ, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
 					h = sampleGrid2d(gridIndex, gridSizeX, gridSizeZ, -1.0, +1.0);
 					break;
 				case ParticleEmitter::GridOrder::y_x_z:
 					r = sampleGrid2d(gridIndex, gridSizeY, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid1d(gridIndex, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					phi = sampleGrid1d(gridIndex, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
 					h = sampleGrid3d(gridIndex, gridSizeY, gridSizeX, gridSizeZ, -1.0, +1.0);
 					break;
 				case ParticleEmitter::GridOrder::y_z_x:
 					r = sampleGrid3d(gridIndex, gridSizeY, gridSizeZ, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid1d(gridIndex, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					phi = sampleGrid1d(gridIndex, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
 					h = sampleGrid2d(gridIndex, gridSizeY, gridSizeZ, -1.0, +1.0);
 					break;
 				case ParticleEmitter::GridOrder::z_x_y:
 					r = sampleGrid2d(gridIndex, gridSizeZ, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid3d(gridIndex, gridSizeZ, gridSizeX, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					phi = sampleGrid3d(gridIndex, gridSizeZ, gridSizeX, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
 					h = sampleGrid1d(gridIndex, gridSizeZ, -1.0, +1.0);
 					break;
 				case ParticleEmitter::GridOrder::z_y_x:
 					r = sampleGrid3d(gridIndex, gridSizeZ, gridSizeY, gridSizeX, 0.0, 1.0);
-					phi = sampleGrid2d(gridIndex, gridSizeZ, gridSizeY, 0.0, 2.0 * pi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+					phi = sampleGrid2d(gridIndex, gridSizeZ, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
 					h = sampleGrid1d(gridIndex, gridSizeZ, -1.0, +1.0);
 					break;
 				default:
@@ -1098,9 +1100,9 @@ float_t DefaultParticleGenerator::sampleGrid3d(std::uint32_t gridIndex, std::uin
 }
 
 float3_t DefaultParticleGenerator::rotate2d(const float3_t& v, float_t a) {
-	return float3_t(glm::rotate(float2_t(v), glm::radians(a)), 0.0);
+	return float3_t(math::rotateVector(float2_t(v), math::radians(a)), 0.0);
 }
 float3_t DefaultParticleGenerator::rotate3d(const float3_t& v, const float3_t& a) {
-	return float3_t(glm::yawPitchRoll(glm::radians(a.y), glm::radians(a.z), glm::radians(a.x)) * float4_t(v, 0.0));
+	return float3_t(math::yawPitchRollRotationMatrix(math::radians(a.y), math::radians(a.z), math::radians(a.x)) * float4_t(v, 0.0));
 }
 }

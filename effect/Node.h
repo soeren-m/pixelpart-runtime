@@ -4,7 +4,6 @@
 #include "EffectRuntimeContext.h"
 #include "ComputeGraph.h"
 #include "../common/Types.h"
-#include "../common/Math.h"
 #include "../common/Transform.h"
 #include "../common/Id.h"
 #include <memory>

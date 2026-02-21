@@ -1,5 +1,5 @@
 #include "MotionPathModifier.h"
-#include "../common/Math.h"
+#include "../common/Types.h"
 #include "../effect/ParticleType.h"
 
 namespace pixelpart {

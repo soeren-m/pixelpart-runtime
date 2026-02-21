@@ -3,7 +3,6 @@ target_sources(pixelpart-runtime PRIVATE
 	Compression.cpp
 	Encoding.cpp
 	Id.cpp
-	Math.cpp
 	Serialization.cpp
 	StdThreadPool.cpp
 	StringFormat.cpp

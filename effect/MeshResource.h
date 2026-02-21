@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Resource.h"
-#include "../glm/glm.hpp"
+#include "../math/Vector2.h"
+#include "../math/Vector3.h"
 #include "../json/json.hpp"
 #include <cstdint>
 #include <vector>
@@ -15,20 +16,20 @@ public:
 	std::vector<std::uint32_t>& faces();
 	const std::vector<std::uint32_t>& faces() const;
 
-	std::vector<glm::vec3>& positions();
-	const std::vector<glm::vec3>& positions() const;
+	std::vector<math::vector3<float>>& positions();
+	const std::vector<math::vector3<float>>& positions() const;
 
-	std::vector<glm::vec3>& normals();
-	const std::vector<glm::vec3>& normals() const;
+	std::vector<math::vector3<float>>& normals();
+	const std::vector<math::vector3<float>>& normals() const;
 
-	std::vector<glm::vec2>& textureCoords();
-	const std::vector<glm::vec2>& textureCoords() const;
+	std::vector<math::vector2<float>>& textureCoords();
+	const std::vector<math::vector2<float>>& textureCoords() const;
 
 private:
 	std::vector<std::uint32_t> meshFaces;
-	std::vector<glm::vec3> meshPositions;
-	std::vector<glm::vec3> meshNormals;
-	std::vector<glm::vec2> meshTextureCoords;
+	std::vector<math::vector3<float>> meshPositions;
+	std::vector<math::vector3<float>> meshNormals;
+	std::vector<math::vector2<float>> meshTextureCoords;
 };
 
 void to_json(nlohmann::ordered_json& j, const MeshResource& resource);

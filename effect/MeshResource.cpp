@@ -18,24 +18,24 @@ const std::vector<std::uint32_t>& MeshResource::faces() const {
 	return meshFaces;
 }
 
-std::vector<glm::vec3>& MeshResource::positions() {
+std::vector<math::vector3<float>>& MeshResource::positions() {
 	return meshPositions;
 }
-const std::vector<glm::vec3>& MeshResource::positions() const {
+const std::vector<math::vector3<float>>& MeshResource::positions() const {
 	return meshPositions;
 }
 
-std::vector<glm::vec3>& MeshResource::normals() {
+std::vector<math::vector3<float>>& MeshResource::normals() {
 	return meshNormals;
 }
-const std::vector<glm::vec3>& MeshResource::normals() const {
+const std::vector<math::vector3<float>>& MeshResource::normals() const {
 	return meshNormals;
 }
 
-std::vector<glm::vec2>& MeshResource::textureCoords() {
+std::vector<math::vector2<float>>& MeshResource::textureCoords() {
 	return meshTextureCoords;
 }
-const std::vector<glm::vec2>& MeshResource::textureCoords() const {
+const std::vector<math::vector2<float>>& MeshResource::textureCoords() const {
 	return meshTextureCoords;
 }
 
@@ -53,7 +53,7 @@ std::pair<std::string, std::size_t> serializeIntegerData(const std::vector<std::
 		compressToString(reinterpret_cast<const std::uint8_t*>(stringData.data()), stringData.size(), CompressionMethod::zlib),
 		stringData.size());
 }
-std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::vec2>& data) {
+std::pair<std::string, std::size_t> serializeVectorData(const std::vector<math::vector2<float>>& data) {
 	std::string stringData;
 	for(std::size_t dataIndex = 0; dataIndex < data.size(); dataIndex++) {
 		stringData += serializeFloat(data[dataIndex].x, 6);
@@ -69,7 +69,7 @@ std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::v
 		compressToString(reinterpret_cast<const std::uint8_t*>(stringData.data()), stringData.size(), CompressionMethod::zlib),
 		stringData.size());
 }
-std::pair<std::string, std::size_t> serializeVectorData(const std::vector<glm::vec3>& data) {
+std::pair<std::string, std::size_t> serializeVectorData(const std::vector<math::vector3<float>>& data) {
 	std::string stringData;
 	for(std::size_t dataIndex = 0; dataIndex < data.size(); dataIndex++) {
 		stringData += serializeFloat(data[dataIndex].x, 6);
@@ -100,12 +100,12 @@ void deserializeIntegerData(std::vector<std::uint32_t>& integerData, const std::
 		integerData.push_back(deserializeInt<std::uint32_t>(token));
 	}
 }
-void deserializeVectorData(std::vector<glm::vec2>& vectorData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
+void deserializeVectorData(std::vector<math::vector2<float>>& vectorData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
 	std::vector<std::uint8_t> uncompressedData = decompressFromString(compressedData, uncompressedSize, compressionMethod);
 	std::istringstream dataStream(std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
 	while(!dataStream.eof()) {
-		glm::vec2 vector = glm::vec2(0.0);
+		math::vector2<float> vector = math::vector2<float>(0.0f);
 		std::string token;
 
 		std::getline(dataStream, token, ' ');
@@ -117,12 +117,12 @@ void deserializeVectorData(std::vector<glm::vec2>& vectorData, const std::string
 		vectorData.push_back(vector);
 	}
 }
-void deserializeVectorData(std::vector<glm::vec3>& vectorData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
+void deserializeVectorData(std::vector<math::vector3<float>>& vectorData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
 	std::vector<std::uint8_t> uncompressedData = decompressFromString(compressedData, uncompressedSize, compressionMethod);
 	std::istringstream dataStream(std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
 	while(!dataStream.eof()) {
-		glm::vec3 vector = glm::vec3(0.0);
+		math::vector3<float> vector = math::vector3<float>(0.0f);
 		std::string token;
 
 		std::getline(dataStream, token, ' ');

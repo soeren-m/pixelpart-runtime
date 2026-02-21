@@ -1,4 +1,6 @@
 #include "ComparisonComputeNodes.h"
+#include <cmath>
+#include <limits>
 
 namespace pixelpart {
 std::string EqualComputeNode::typeName = "compute_node_equal";
@@ -58,12 +60,12 @@ ApproxEqualComputeNode::ApproxEqualComputeNode() : ComputeNodeBase(typeName,
 		Signature{ { VariantValue::type_float, VariantValue::type_float }, { VariantValue::type_bool } }
 	},
 	{ VariantValue(), VariantValue() },
-	{ VariantParameter::FloatParameter("compute_param_epsilon", 0.001, 0.0, FLT_MAX) }) {
+	{ VariantParameter::FloatParameter("compute_param_epsilon", 0.001, 0.0, std::numeric_limits<float>::max()) }) {
 
 }
 std::vector<VariantValue> ApproxEqualComputeNode::evaluate(const std::vector<VariantValue>& in) const {
 	return std::vector<VariantValue>{
-		VariantValue::Bool(glm::abs(in[0].toFloat() - in[1].toFloat()) <= parameterValue(0).valueFloat())
+		VariantValue::Bool(std::abs(in[0].toFloat() - in[1].toFloat()) <= parameterValue(0).valueFloat())
 	};
 }
 

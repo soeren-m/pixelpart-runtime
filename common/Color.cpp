@@ -2,14 +2,14 @@
 #include <cstdint>
 
 namespace pixelpart {
-float4_t rgb2hsv(const float4_t& colorRGB) {
-	float4_t result(0.0, 0.0, 0.0, colorRGB.a);
+float4_t rgb2hsv(const float4_t& rgba) {
+	float4_t result(0.0, 0.0, 0.0, rgba.w);
 
-	float_t min = colorRGB.r < colorRGB.g ? colorRGB.r : colorRGB.g;
-	min = min < colorRGB.b ? min : colorRGB.b;
+	float_t min = rgba.x < rgba.y ? rgba.x : rgba.y;
+	min = min < rgba.z ? min : rgba.z;
 
-	float_t max = colorRGB.r > colorRGB.g ? colorRGB.r : colorRGB.g;
-	max = max > colorRGB.b ? max : colorRGB.b;
+	float_t max = rgba.x > rgba.y ? rgba.x : rgba.y;
+	max = max > rgba.z ? max : rgba.z;
 	result.z = max;
 
 	float_t delta = max - min;
@@ -30,15 +30,15 @@ float4_t rgb2hsv(const float4_t& colorRGB) {
 		return result;
 	}
 
-	if(colorRGB.r >= max) {
-		result.x = (colorRGB.g - colorRGB.b) / delta;
+	if(rgba.x >= max) {
+		result.x = (rgba.y - rgba.z) / delta;
 	}
 	else {
-		if(colorRGB.g >= max) {
-			result.x = 2.0 + (colorRGB.b - colorRGB.r) / delta;
+		if(rgba.y >= max) {
+			result.x = 2.0 + (rgba.z - rgba.x) / delta;
 		}
 		else {
-			result.x = 4.0 + (colorRGB.r - colorRGB.g) / delta;
+			result.x = 4.0 + (rgba.x - rgba.y) / delta;
 		}
 	}
 
@@ -51,12 +51,12 @@ float4_t rgb2hsv(const float4_t& colorRGB) {
 	return result;
 }
 
-float4_t hsv2rgb(const float4_t& colorHSV) {
-	if(colorHSV.y <= 0.0) {
-		return float4_t(colorHSV.z, colorHSV.z, colorHSV.z, colorHSV.a);
+float4_t hsv2rgb(const float4_t& hsva) {
+	if(hsva.y <= 0.0) {
+		return float4_t(hsva.z, hsva.z, hsva.z, hsva.w);
 	}
 
-	float_t hh = colorHSV.x;
+	float_t hh = hsva.x;
 	if(hh >= 360.0) {
 		hh = 0.0;
 	}
@@ -65,25 +65,25 @@ float4_t hsv2rgb(const float4_t& colorHSV) {
 
 	std::uint32_t phase = static_cast<std::uint32_t>(hh);
 	float_t ff = hh - phase;
-	float_t p = colorHSV.z * (1.0 - colorHSV.y);
-	float_t q = colorHSV.z * (1.0 - (colorHSV.y * ff));
-	float_t t = colorHSV.z * (1.0 - (colorHSV.y * (1.0 - ff)));
+	float_t p = hsva.z * (1.0 - hsva.y);
+	float_t q = hsva.z * (1.0 - (hsva.y * ff));
+	float_t t = hsva.z * (1.0 - (hsva.y * (1.0 - ff)));
 
 	switch(phase) {
 		case 0:
-			return float4_t(colorHSV.z, t, p, colorHSV.a);
+			return float4_t(hsva.z, t, p, hsva.w);
 		case 1:
-			return float4_t(q, colorHSV.z, p, colorHSV.a);
+			return float4_t(q, hsva.z, p, hsva.w);
 		case 2:
-			return float4_t(p, colorHSV.z, t, colorHSV.a);
+			return float4_t(p, hsva.z, t, hsva.w);
 		case 3:
-			return float4_t(p, q, colorHSV.z, colorHSV.a);
+			return float4_t(p, q, hsva.z, hsva.w);
 		case 4:
-			return float4_t(t, p, colorHSV.z, colorHSV.a);
+			return float4_t(t, p, hsva.z, hsva.w);
 		default:
-			return float4_t(colorHSV.z, p, q, colorHSV.a);
+			return float4_t(hsva.z, p, q, hsva.w);
 	}
 
-	return float4_t(colorHSV.z, p, q, colorHSV.a);
+	return float4_t(hsva.z, p, q, hsva.w);
 }
 }

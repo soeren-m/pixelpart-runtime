@@ -1,7 +1,6 @@
 #pragma once
 
 #include "SceneContext.h"
-#include "../common/Math.h"
 #include "../common/ThreadPool.h"
 #include "../effect/ParticleSortCriterion.h"
 #include "../engine/ParticleCollection.h"

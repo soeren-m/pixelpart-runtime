@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../common/Types.h"
-#include "../common/Math.h"
 #include "../json/json.hpp"
+#include <cstdint>
 
 namespace pixelpart {
 struct RenderSettings {

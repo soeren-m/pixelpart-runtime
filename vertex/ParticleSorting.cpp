@@ -1,6 +1,5 @@
 #include "ParticleSorting.h"
-#define GLM_ENABLE_EXPERIMENTAL
-#include "../glm/gtx/norm.hpp"
+#include "../math/Geometry.h"
 #include <numeric>
 #include <functional>
 #include <utility>
@@ -131,8 +130,8 @@ void sortParticles(ParticleCollection& resultCollection,
 		case ParticleSortCriterion::distance:
 			insertionSort(sortKeys.begin(), sortKeys.begin() + particleCount,
 				[particles, sceneContext](std::uint32_t i, std::uint32_t j) {
-					return glm::distance2(particles.globalPosition[i], sceneContext.cameraPosition) >
-						glm::distance2(particles.globalPosition[j], sceneContext.cameraPosition);
+					return math::distanceSquared(particles.globalPosition[i], sceneContext.cameraPosition) >
+						math::distanceSquared(particles.globalPosition[j], sceneContext.cameraPosition);
 				});
 			break;
 		default:
@@ -164,8 +163,8 @@ void sortParticles(ParticleCollection& resultCollection,
 		case ParticleSortCriterion::distance:
 			parallelInsertionSort(threadPool, 64, sortKeys.begin(), sortKeys.begin() + particleCount,
 				[particles, sceneContext](std::uint32_t i, std::uint32_t j) {
-					return glm::distance2(particles.globalPosition[i], sceneContext.cameraPosition) >
-						glm::distance2(particles.globalPosition[j], sceneContext.cameraPosition);
+					return math::distanceSquared(particles.globalPosition[i], sceneContext.cameraPosition) >
+						math::distanceSquared(particles.globalPosition[j], sceneContext.cameraPosition);
 				});
 			break;
 		default:

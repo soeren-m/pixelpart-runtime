@@ -1,5 +1,5 @@
 #include "SizeModifier.h"
-#include "../common/Math.h"
+#include "../math/Geometry.h"
 #include "../effect/ParticleType.h"
 
 namespace pixelpart {
@@ -9,7 +9,7 @@ void SizeModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t p
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		particles.size[p] = particleType.size().at(particles.life[p]) * particles.initialSize[p];
-		particles.size[p] += particleType.stretch().at(particles.life[p]) * particles.size[p] * glm::length(particles.velocity[p]);
+		particles.size[p] += particleType.stretch().at(particles.life[p]) * particles.size[p] * math::length(particles.velocity[p]);
 	}
 }
 

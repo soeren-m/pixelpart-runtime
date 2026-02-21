@@ -2,7 +2,7 @@
 
 #include "VertexGenerator.h"
 #include "VertexAttribute.h"
-#include "../common/Math.h"
+#include "../common/Types.h"
 #include "../effect/AlignmentMode.h"
 #include <cstddef>
 #include <cstdint>
@@ -72,12 +72,11 @@ private:
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
 
-	static mat4_t generateTransformationMatrix(AlignmentMode alignmentMode, const float3_t& pivot,
-		const float3_t& emitterPosition, const mat3_t& emitterRotation,
+	static matrix4_t particleTransformationMatrix(AlignmentMode alignmentMode, const float3_t& pivot,
+		const float3_t& emitterPosition, const matrix3_t& emitterRotation,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleIndex);
 
-	static mat3_t rotationMatrix3d(const float3_t& rollYawPitch);
-	static mat3_t lookAtMatrix3d(const float3_t& direction);
+	static matrix3_t rotationMatrix3d(const float3_t& rollYawPitch);
 
 	const Effect& generatorEffect;
 	id_t generatorParticleEmitterId;

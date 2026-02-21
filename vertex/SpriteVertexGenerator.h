@@ -3,7 +3,7 @@
 #include "VertexGenerator.h"
 #include "VertexAttribute.h"
 #include "VertexWindingOrder.h"
-#include "../common/Math.h"
+#include "../common/Types.h"
 #include <cstddef>
 #include <cstdint>
 
@@ -130,9 +130,7 @@ private:
 	void generateVelocity3d(std::uint8_t* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
 
-	static float3_t rotatePoint2d(const float3_t& point, const float3_t& center, float_t angle);
-	static mat3_t rotationMatrix3d(const float3_t& rollYawPitch);
-	static mat3_t lookAtMatrix3d(const float3_t& direction);
+	static matrix3_t rotationMatrix3d(const float3_t& rollYawPitch);
 
 	const Effect& generatorEffect;
 	id_t generatorParticleEmitterId;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../common/Math.h"
+#include "../common/Types.h"
 
 namespace pixelpart {
 struct SceneContext {

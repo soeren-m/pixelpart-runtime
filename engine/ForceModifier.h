@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ParticleModifier.h"
-#include "../common/Math.h"
+#include "../common/Types.h"
 #include "../effect/AttractionField.h"
 #include "../effect/AccelerationField.h"
 #include "../effect/VectorField.h"
@@ -38,17 +38,17 @@ private:
 		const float3_t& particlePosition) const;
 	float3_t sampleAccelerationField(const AccelerationField& accelerationField,
 		const float3_t& position, const float3_t& size,
-		const mat4_t& rotationMatrix, const mat4_t& inverseRotationMatrix, const mat4_t& directionMatrix,
+		const matrix4_t& rotationMatrix, const matrix4_t& inverseRotationMatrix, const matrix4_t& directionMatrix,
 		const float3_t& particlePosition) const;
 	float3_t sampleVectorField(const VectorField& vectorField, const VectorFieldResource& resource,
 		const float3_t& position, const float3_t& size,
-		const mat4_t& rotationMatrix, const mat4_t& inverseRotationMatrix,
+		const matrix4_t& rotationMatrix, const matrix4_t& inverseRotationMatrix,
 		const float3_t& particlePosition, bool& inside) const;
 	float3_t sampleNoiseField(const NoiseField& noiseField,
-		const float3_t& position, const float3_t& size, const mat4_t& inverseRotationMatrix,
+		const float3_t& position, const float3_t& size, const matrix4_t& inverseRotationMatrix,
 		const float3_t& particlePosition, float_t life, float_t t) const;
 	float3_t sampleDragField(const DragField& dragField,
-		const float3_t& position, const float3_t& size, const mat4_t& inverseRotationMatrix,
+		const float3_t& position, const float3_t& size, const matrix4_t& inverseRotationMatrix,
 		const float3_t& particlePosition, const float3_t& particleVelocity, const float3_t& particleSize) const;
 
 	float3_t computeStaticCurlNoise2d(const float2_t& samplePosition, std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;

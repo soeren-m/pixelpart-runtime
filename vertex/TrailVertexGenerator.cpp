@@ -2,6 +2,8 @@
 #include "VertexDataGenerationMode.h"
 #include "VertexFormatException.h"
 #include "../common/Transform.h"
+#include "../math/Common.h"
+#include "../math/Geometry.h"
 #include "../effect/AlignmentMode.h"
 #include "../effect/ParticleRendererSettings.h"
 #include <cmath>
@@ -85,7 +87,7 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 
 					currentTrail->length = 0.0;
 					for(std::uint32_t q = 1; q < currentTrail->particleCount; q++) {
-						currentTrail->length += glm::length(particles.globalPosition[sortKeys[p + q]] - particles.globalPosition[sortKeys[p + q - 1]]);
+						currentTrail->length += math::length(particles.globalPosition[sortKeys[p + q]] - particles.globalPosition[sortKeys[p + q - 1]]);
 						relativeParticlePosition[q] = currentTrail->length;
 					}
 					for(std::uint32_t q = 1; q < currentTrail->particleCount; q++) {
@@ -163,7 +165,7 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 		std::size_t lastTrailIndex = trail.position.size() - 1;
 		for(std::size_t trailIndex = 0; trailIndex < lastTrailIndex; trailIndex++) {
 			float3_t toNext = trail.position[trailIndex + 1] - trail.position[trailIndex];
-			float_t distance = std::max(glm::length(toNext), epsilon);
+			float_t distance = std::max(math::length(toNext), epsilon);
 
 			trail.direction[trailIndex] = toNext / distance;
 			trail.index[trailIndex] = trail.length;
@@ -175,7 +177,7 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 
 		for(std::size_t trailIndex = lastTrailIndex; trailIndex > 0; trailIndex--) {
 			float3_t toEdge = trail.direction[trailIndex] - trail.direction[trailIndex - 1];
-			float_t toEdgeLength = glm::length(toEdge);
+			float_t toEdgeLength = math::length(toEdge);
 			if(toEdgeLength < epsilon) {
 				trail.directionToEdge[trailIndex] = float3_t(
 					-trail.direction[trailIndex].y,
@@ -183,7 +185,7 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 					trail.direction[trailIndex].z);
 			}
 			else {
-				trail.directionToEdge[trailIndex] = (glm::dot(glm::cross(trail.direction[trailIndex], float3_t(0.0, 0.0, 1.0)), toEdge / toEdgeLength) < 0.0)
+				trail.directionToEdge[trailIndex] = (math::dot(math::cross(trail.direction[trailIndex], float3_t(0.0, 0.0, 1.0)), toEdge / toEdgeLength) < 0.0)
 					? +toEdge / toEdgeLength
 					: -toEdge / toEdgeLength;
 			}
@@ -374,7 +376,7 @@ void TrailVertexGenerator::validateVertexFormat() const {
 void TrailVertexGenerator::generatePosition2d(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const SceneContext& sceneContext) const {
-	float3_t vertices[5];
+	math::vector2<float> vertices[5];
 
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -392,43 +394,43 @@ void TrailVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Vertex
 			float3_t startToEdge = startToEdgeDirection * std::max(trail.size[p].x, trail.size[p].y) * 0.5;
 			float3_t endToEdge = endToEdgeDirection * std::max(trail.size[p + 1].x, trail.size[p + 1].y) * 0.5;
 
-			vertices[0] = (trail.position[p] + startToEdge) * sceneContext.effectScale;
-			vertices[1] = (trail.position[p] - startToEdge) * sceneContext.effectScale;
-			vertices[2] = (trail.position[p + 1] + endToEdge) * sceneContext.effectScale;
-			vertices[3] = (trail.position[p + 1] - endToEdge) * sceneContext.effectScale;
-			vertices[4] = (trail.position[p] + trail.position[p + 1]) * 0.5 * sceneContext.effectScale;
+			vertices[0] = math::vector2<float>((trail.position[p] + startToEdge) * sceneContext.effectScale);
+			vertices[1] = math::vector2<float>((trail.position[p] - startToEdge) * sceneContext.effectScale);
+			vertices[2] = math::vector2<float>((trail.position[p + 1] + endToEdge) * sceneContext.effectScale);
+			vertices[3] = math::vector2<float>((trail.position[p + 1] - endToEdge) * sceneContext.effectScale);
+			vertices[4] = math::vector2<float>((trail.position[p] + trail.position[p + 1]) * 0.5 * sceneContext.effectScale);
 
 			switch(attribute.dataGenerationMode) {
 				case VertexDataGenerationMode::vertex: {
 					switch(generatorVertexFormat.windingOrder()) {
 						case VertexWindingOrder::cw:
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = vertices[0];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = vertices[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = vertices[1];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = vertices[2];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = vertices[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 5) = vertices[0];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 6) = vertices[1];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 7) = vertices[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 8) = vertices[3];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 9) = vertices[3];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 10) = vertices[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 11) = vertices[2];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = vertices[0];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = vertices[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = vertices[1];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = vertices[2];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = vertices[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = vertices[0];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = vertices[1];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = vertices[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = vertices[3];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = vertices[3];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = vertices[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = vertices[2];
 							buffer += stride * 12;
 							break;
 						default:
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = vertices[0];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = vertices[1];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = vertices[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = vertices[2];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = vertices[0];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 5) = vertices[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 6) = vertices[1];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 7) = vertices[3];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 8) = vertices[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 9) = vertices[3];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 10) = vertices[2];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 11) = vertices[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = vertices[0];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = vertices[1];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = vertices[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = vertices[2];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = vertices[0];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = vertices[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = vertices[1];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = vertices[3];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = vertices[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = vertices[3];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = vertices[2];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = vertices[4];
 							buffer += stride * 12;
 							break;
 					}
@@ -437,11 +439,11 @@ void TrailVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Vertex
 				}
 
 				case VertexDataGenerationMode::element: {
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = vertices[0];
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = vertices[1];
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = vertices[2];
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = vertices[3];
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = vertices[4];
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = vertices[0];
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = vertices[1];
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = vertices[2];
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = vertices[3];
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = vertices[4];
 					buffer += stride * 5;
 
 					break;
@@ -460,7 +462,7 @@ void TrailVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Vertex
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 	AlignmentMode alignmentMode = particleType.alignmentMode();
 
-	float3_t vertices[5];
+	math::vector3<float> vertices[5];
 
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -476,52 +478,52 @@ void TrailVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Vertex
 			float3_t endToEdgeDirection = trail.directionToEdge[p + 1];
 
 			if(alignmentMode == AlignmentMode::camera) {
-				float3_t cameraToStart = glm::normalize(sceneContext.cameraPosition - trail.position[p]);
-				float3_t cameraToEnd = glm::normalize(sceneContext.cameraPosition - trail.position[p + 1]);
-				startToEdgeDirection = glm::normalize(glm::cross(cameraToStart, trail.direction[p]));
-				endToEdgeDirection = glm::normalize(glm::cross(cameraToEnd, trail.direction[p + 1]));
+				float3_t cameraToStart = math::normalize(sceneContext.cameraPosition - trail.position[p]);
+				float3_t cameraToEnd = math::normalize(sceneContext.cameraPosition - trail.position[p + 1]);
+				startToEdgeDirection = math::normalize(math::cross(cameraToStart, trail.direction[p]));
+				endToEdgeDirection = math::normalize(math::cross(cameraToEnd, trail.direction[p + 1]));
 			}
 
 			float3_t startToEdge = startToEdgeDirection * std::max(trail.size[p].x, std::max(trail.size[p].y, trail.size[p].z)) * 0.5;
 			float3_t endToEdge = endToEdgeDirection * std::max(trail.size[p + 1].x, std::max(trail.size[p + 1].y, trail.size[p + 1].z)) * 0.5;
 
-			vertices[0] = (trail.position[p] + startToEdge) * sceneContext.effectScale;
-			vertices[1] = (trail.position[p] - startToEdge) * sceneContext.effectScale;
-			vertices[2] = (trail.position[p + 1] + endToEdge) * sceneContext.effectScale;
-			vertices[3] = (trail.position[p + 1] - endToEdge) * sceneContext.effectScale;
-			vertices[4] = (trail.position[p] + trail.position[p + 1]) * 0.5 * sceneContext.effectScale;
+			vertices[0] = math::vector3<float>((trail.position[p] + startToEdge) * sceneContext.effectScale);
+			vertices[1] = math::vector3<float>((trail.position[p] - startToEdge) * sceneContext.effectScale);
+			vertices[2] = math::vector3<float>((trail.position[p + 1] + endToEdge) * sceneContext.effectScale);
+			vertices[3] = math::vector3<float>((trail.position[p + 1] - endToEdge) * sceneContext.effectScale);
+			vertices[4] = math::vector3<float>((trail.position[p] + trail.position[p + 1]) * 0.5 * sceneContext.effectScale);
 
 			switch(attribute.dataGenerationMode) {
 				case VertexDataGenerationMode::vertex: {
 					switch(generatorVertexFormat.windingOrder()) {
 						case VertexWindingOrder::cw:
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = vertices[0];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = vertices[4];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = vertices[1];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = vertices[2];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = vertices[4];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 5) = vertices[0];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 6) = vertices[1];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 7) = vertices[4];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 8) = vertices[3];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 9) = vertices[3];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 10) = vertices[4];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 11) = vertices[2];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = vertices[0];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = vertices[4];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = vertices[1];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = vertices[2];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = vertices[4];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = vertices[0];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = vertices[1];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = vertices[4];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = vertices[3];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = vertices[3];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = vertices[4];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = vertices[2];
 							buffer += stride * 12;
 							break;
 						default:
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = vertices[0];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = vertices[1];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = vertices[4];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = vertices[2];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = vertices[0];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 5) = vertices[4];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 6) = vertices[1];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 7) = vertices[3];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 8) = vertices[4];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 9) = vertices[3];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 10) = vertices[2];
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 11) = vertices[4];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = vertices[0];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = vertices[1];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = vertices[4];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = vertices[2];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = vertices[0];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = vertices[4];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = vertices[1];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = vertices[3];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = vertices[4];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = vertices[3];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = vertices[2];
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = vertices[4];
 							buffer += stride * 12;
 							break;
 					}
@@ -530,11 +532,11 @@ void TrailVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Vertex
 				}
 
 				case VertexDataGenerationMode::element: {
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = vertices[0];
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = vertices[1];
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = vertices[2];
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = vertices[3];
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = vertices[4];
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = vertices[0];
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = vertices[1];
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = vertices[2];
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = vertices[3];
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = vertices[4];
 					buffer += stride * 5;
 
 					break;
@@ -567,57 +569,57 @@ void TrailVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAttr
 			float3_t endToEdgeDirection = trail.directionToEdge[p + 1];
 
 			if(alignmentMode == AlignmentMode::camera) {
-				float3_t cameraToStart = glm::normalize(sceneContext.cameraPosition - trail.position[p]);
-				float3_t cameraToEnd = glm::normalize(sceneContext.cameraPosition - trail.position[p + 1]);
-				startToEdgeDirection = glm::normalize(glm::cross(cameraToStart, trail.direction[p]));
-				endToEdgeDirection = glm::normalize(glm::cross(cameraToEnd, trail.direction[p + 1]));
+				float3_t cameraToStart = math::normalize(sceneContext.cameraPosition - trail.position[p]);
+				float3_t cameraToEnd = math::normalize(sceneContext.cameraPosition - trail.position[p + 1]);
+				startToEdgeDirection = math::normalize(math::cross(cameraToStart, trail.direction[p]));
+				endToEdgeDirection = math::normalize(math::cross(cameraToEnd, trail.direction[p + 1]));
 			}
 
-			glm::vec3 normal = glm::cross(trail.direction[p], startToEdgeDirection);
-			glm::vec3 nextNormal = glm::cross(trail.direction[p + 1], endToEdgeDirection);
-			glm::vec3 centerNormal = (normal + nextNormal) * 0.5f;
+			math::vector3<float> normal = math::vector3<float>(math::cross(trail.direction[p], startToEdgeDirection));
+			math::vector3<float> nextNormal = math::vector3<float>(math::cross(trail.direction[p + 1], endToEdgeDirection));
+			math::vector3<float> centerNormal = (normal + nextNormal) * 0.5f;
 
 			switch(attribute.dataGenerationMode) {
 				case VertexDataGenerationMode::vertex:
 					switch(generatorVertexFormat.windingOrder()) {
 						case VertexWindingOrder::cw:
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = normal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = centerNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = normal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = nextNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = centerNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 5) = normal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 6) = normal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 7) = centerNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 8) = nextNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 9) = nextNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 10) = centerNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 11) = nextNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = normal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = centerNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = normal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = centerNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = normal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = normal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = centerNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = nextNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = nextNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = centerNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = nextNormal;
 							buffer += stride * 12;
 							break;
 						default:
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = normal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = normal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = centerNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = nextNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = normal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 5) = centerNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 6) = normal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 7) = nextNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 8) = centerNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 9) = nextNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 10) = nextNormal;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 11) = centerNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = normal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = normal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = centerNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = normal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = centerNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = normal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = nextNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = centerNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = nextNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = nextNormal;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = centerNormal;
 							buffer += stride * 12;
 							break;
 					}
 					break;
 				case VertexDataGenerationMode::element:
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = normal;
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = normal;
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = nextNormal;
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = nextNormal;
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = centerNormal;
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = normal;
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = normal;
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = nextNormal;
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextNormal;
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = centerNormal;
 					buffer += stride * 5;
 					break;
 				default:
@@ -634,7 +636,7 @@ void TrailVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const Vert
 	float uvFactor =
 		static_cast<float>(particleType.trailRendererSettings().textureUVFactor);
 
-	glm::vec2 textureCoords[5];
+	math::vector2<float> textureCoords[5];
 
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -651,32 +653,32 @@ void TrailVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const Vert
 
 			switch(textureRotation) {
 				case ParticleTrailRendererSettings::TextureRotation::left:
-					textureCoords[0] = glm::vec2(index * uvFactor, 1.0f);
-					textureCoords[1] = glm::vec2(index * uvFactor, 0.0f);
-					textureCoords[2] = glm::vec2(nextIndex * uvFactor, 1.0f);
-					textureCoords[3] = glm::vec2(nextIndex * uvFactor, 0.0f);
-					textureCoords[4] = glm::vec2((index + nextIndex) * 0.5f * uvFactor, 0.5f);
+					textureCoords[0] = math::vector2<float>(index * uvFactor, 1.0f);
+					textureCoords[1] = math::vector2<float>(index * uvFactor, 0.0f);
+					textureCoords[2] = math::vector2<float>(nextIndex * uvFactor, 1.0f);
+					textureCoords[3] = math::vector2<float>(nextIndex * uvFactor, 0.0f);
+					textureCoords[4] = math::vector2<float>((index + nextIndex) * 0.5f * uvFactor, 0.5f);
 					break;
 				case ParticleTrailRendererSettings::TextureRotation::down:
-					textureCoords[0] = glm::vec2(1.0f, 1.0f - index * uvFactor);
-					textureCoords[1] = glm::vec2(0.0f, 1.0f - index * uvFactor);
-					textureCoords[2] = glm::vec2(1.0f, 1.0f - nextIndex * uvFactor);
-					textureCoords[3] = glm::vec2(0.0f, 1.0f - nextIndex * uvFactor);
-					textureCoords[4] = glm::vec2(0.5f, 1.0f - (index + nextIndex) * 0.5f * uvFactor);
+					textureCoords[0] = math::vector2<float>(1.0f, 1.0f - index * uvFactor);
+					textureCoords[1] = math::vector2<float>(0.0f, 1.0f - index * uvFactor);
+					textureCoords[2] = math::vector2<float>(1.0f, 1.0f - nextIndex * uvFactor);
+					textureCoords[3] = math::vector2<float>(0.0f, 1.0f - nextIndex * uvFactor);
+					textureCoords[4] = math::vector2<float>(0.5f, 1.0f - (index + nextIndex) * 0.5f * uvFactor);
 					break;
 				case ParticleTrailRendererSettings::TextureRotation::right:
-					textureCoords[0] = glm::vec2(1.0f - index * uvFactor, 0.0f);
-					textureCoords[1] = glm::vec2(1.0f - index * uvFactor, 1.0f);
-					textureCoords[2] = glm::vec2(1.0f - nextIndex * uvFactor, 0.0f);
-					textureCoords[3] = glm::vec2(1.0f - nextIndex * uvFactor, 1.0f);
-					textureCoords[4] = glm::vec2(1.0f - (index + nextIndex) * 0.5f * uvFactor, 0.5f);
+					textureCoords[0] = math::vector2<float>(1.0f - index * uvFactor, 0.0f);
+					textureCoords[1] = math::vector2<float>(1.0f - index * uvFactor, 1.0f);
+					textureCoords[2] = math::vector2<float>(1.0f - nextIndex * uvFactor, 0.0f);
+					textureCoords[3] = math::vector2<float>(1.0f - nextIndex * uvFactor, 1.0f);
+					textureCoords[4] = math::vector2<float>(1.0f - (index + nextIndex) * 0.5f * uvFactor, 0.5f);
 					break;
 				default:
-					textureCoords[0] = glm::vec2(0.0f, index * uvFactor);
-					textureCoords[1] = glm::vec2(1.0f, index * uvFactor);
-					textureCoords[2] = glm::vec2(0.0f, nextIndex * uvFactor);
-					textureCoords[3] = glm::vec2(1.0f, nextIndex * uvFactor);
-					textureCoords[4] = glm::vec2(0.5f, (index + nextIndex) * 0.5f * uvFactor);
+					textureCoords[0] = math::vector2<float>(0.0f, index * uvFactor);
+					textureCoords[1] = math::vector2<float>(1.0f, index * uvFactor);
+					textureCoords[2] = math::vector2<float>(0.0f, nextIndex * uvFactor);
+					textureCoords[3] = math::vector2<float>(1.0f, nextIndex * uvFactor);
+					textureCoords[4] = math::vector2<float>(0.5f, (index + nextIndex) * 0.5f * uvFactor);
 					break;
 			}
 
@@ -684,33 +686,33 @@ void TrailVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const Vert
 				case VertexDataGenerationMode::vertex: {
 					switch(generatorVertexFormat.windingOrder()) {
 						case VertexWindingOrder::cw:
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = textureCoords[0];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = textureCoords[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = textureCoords[1];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = textureCoords[2];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = textureCoords[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 5) = textureCoords[0];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 6) = textureCoords[1];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 7) = textureCoords[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 8) = textureCoords[3];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 9) = textureCoords[3];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 10) = textureCoords[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 11) = textureCoords[2];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = textureCoords[0];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = textureCoords[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = textureCoords[1];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = textureCoords[2];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = textureCoords[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = textureCoords[0];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = textureCoords[1];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = textureCoords[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = textureCoords[3];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = textureCoords[3];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = textureCoords[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = textureCoords[2];
 							buffer += stride * 12;
 							break;
 						default:
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = textureCoords[0];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = textureCoords[1];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = textureCoords[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = textureCoords[2];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = textureCoords[0];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 5) = textureCoords[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 6) = textureCoords[1];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 7) = textureCoords[3];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 8) = textureCoords[4];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 9) = textureCoords[3];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 10) = textureCoords[2];
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 11) = textureCoords[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = textureCoords[0];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = textureCoords[1];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = textureCoords[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = textureCoords[2];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = textureCoords[0];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = textureCoords[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = textureCoords[1];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = textureCoords[3];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = textureCoords[4];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = textureCoords[3];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = textureCoords[2];
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = textureCoords[4];
 							buffer += stride * 12;
 							break;
 					}
@@ -719,11 +721,11 @@ void TrailVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const Vert
 				}
 
 				case VertexDataGenerationMode::element: {
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = textureCoords[0];
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = textureCoords[1];
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = textureCoords[2];
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = textureCoords[3];
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = textureCoords[4];
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = textureCoords[0];
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = textureCoords[1];
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = textureCoords[2];
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = textureCoords[3];
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = textureCoords[4];
 					buffer += stride * 5;
 					break;
 				}
@@ -751,43 +753,43 @@ void TrailVertexGenerator::generateColorFloat(std::uint8_t* buffer, const Vertex
 				switch(generatorVertexFormat.windingOrder()) {
 					case VertexWindingOrder::cw:
 						for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-							glm::vec4 color = trail.color[p];
-							glm::vec4 nextColor = trail.color[p + 1];
-							glm::vec4 centerColor = (color + nextColor) * 0.5f;
+							math::vector4<float> color(trail.color[p]);
+							math::vector4<float> nextColor(trail.color[p + 1]);
+							math::vector4<float> centerColor = (color + nextColor) * 0.5f;
 
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 0) = color;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 1) = centerColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 2) = color;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 3) = nextColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 4) = centerColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 5) = color;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 6) = color;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 7) = centerColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 8) = nextColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 9) = nextColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 10) = centerColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 11) = nextColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 0) = color;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 1) = centerColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 2) = color;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 3) = nextColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 4) = centerColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 5) = color;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 6) = color;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 7) = centerColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 8) = nextColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 9) = nextColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 10) = centerColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 11) = nextColor;
 							buffer += stride * 12;
 						}
 						break;
 					default:
 						for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-							glm::vec4 color = trail.color[p];
-							glm::vec4 nextColor = trail.color[p + 1];
-							glm::vec4 centerColor = (color + nextColor) * 0.5f;
+							math::vector4<float> color(trail.color[p]);
+							math::vector4<float> nextColor(trail.color[p + 1]);
+							math::vector4<float> centerColor = (color + nextColor) * 0.5f;
 
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 0) = color;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 1) = color;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 2) = centerColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 3) = nextColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 4) = color;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 5) = centerColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 6) = color;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 7) = nextColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 8) = centerColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 9) = nextColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 10) = nextColor;
-							*reinterpret_cast<glm::vec4*>(buffer + stride * 11) = centerColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 0) = color;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 1) = color;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 2) = centerColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 3) = nextColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 4) = color;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 5) = centerColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 6) = color;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 7) = nextColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 8) = centerColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 9) = nextColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 10) = nextColor;
+							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 11) = centerColor;
 							buffer += stride * 12;
 						}
 						break;
@@ -798,14 +800,14 @@ void TrailVertexGenerator::generateColorFloat(std::uint8_t* buffer, const Vertex
 
 			case VertexDataGenerationMode::element: {
 				for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-					glm::vec4 color = trail.color[p];
-					glm::vec4 nextColor = trail.color[p + 1];
+					math::vector4<float> color(trail.color[p]);
+					math::vector4<float> nextColor(trail.color[p + 1]);
 
-					*reinterpret_cast<glm::vec4*>(buffer + stride * 0) = color;
-					*reinterpret_cast<glm::vec4*>(buffer + stride * 1) = color;
-					*reinterpret_cast<glm::vec4*>(buffer + stride * 2) = nextColor;
-					*reinterpret_cast<glm::vec4*>(buffer + stride * 3) = nextColor;
-					*reinterpret_cast<glm::vec4*>(buffer + stride * 4) = (color + nextColor) * 0.5f;
+					*reinterpret_cast<math::vector4<float>*>(buffer + stride * 0) = color;
+					*reinterpret_cast<math::vector4<float>*>(buffer + stride * 1) = color;
+					*reinterpret_cast<math::vector4<float>*>(buffer + stride * 2) = nextColor;
+					*reinterpret_cast<math::vector4<float>*>(buffer + stride * 3) = nextColor;
+					*reinterpret_cast<math::vector4<float>*>(buffer + stride * 4) = (color + nextColor) * 0.5f;
 					buffer += stride * 5;
 				}
 
@@ -834,43 +836,43 @@ void TrailVertexGenerator::generateColorByte(std::uint8_t* buffer, const VertexA
 				switch(generatorVertexFormat.windingOrder()) {
 					case VertexWindingOrder::cw:
 						for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-							glm::u8vec4 color = glm::clamp(trail.color[p] * 255.0, 0.0, 255.0);
-							glm::u8vec4 nextColor = glm::clamp(trail.color[p + 1] * 255.0, 0.0, 255.0);
-							glm::u8vec4 centerColor = glm::clamp((trail.color[p] + trail.color[p + 1]) * 0.5 * 255.0, 0.0, 255.0);
+							ColorUByte color(trail.color[p]);
+							ColorUByte nextColor(trail.color[p + 1]);
+							ColorUByte centerColor((trail.color[p] + trail.color[p + 1]) * 0.5);
 
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 0) = color;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 1) = centerColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 2) = color;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 3) = nextColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 4) = centerColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 5) = color;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 6) = color;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 7) = centerColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 8) = nextColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 9) = nextColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 10) = centerColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 11) = nextColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 0) = color;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 1) = centerColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 2) = color;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 3) = nextColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 4) = centerColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 5) = color;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 6) = color;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 7) = centerColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 8) = nextColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 9) = nextColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 10) = centerColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 11) = nextColor;
 							buffer += stride * 12;
 						}
 						break;
 					default:
 						for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-							glm::u8vec4 color = glm::clamp(trail.color[p] * 255.0, 0.0, 255.0);
-							glm::u8vec4 nextColor = glm::clamp(trail.color[p + 1] * 255.0, 0.0, 255.0);
-							glm::u8vec4 centerColor = glm::clamp((trail.color[p] + trail.color[p + 1]) * 0.5 * 255.0, 0.0, 255.0);
+							ColorUByte color(trail.color[p]);
+							ColorUByte nextColor(trail.color[p + 1]);
+							ColorUByte centerColor((trail.color[p] + trail.color[p + 1]) * 0.5);
 
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 0) = color;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 1) = color;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 2) = centerColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 3) = nextColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 4) = color;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 5) = centerColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 6) = color;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 7) = nextColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 8) = centerColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 9) = nextColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 10) = nextColor;
-							*reinterpret_cast<glm::u8vec4*>(buffer + stride * 11) = centerColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 0) = color;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 1) = color;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 2) = centerColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 3) = nextColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 4) = color;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 5) = centerColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 6) = color;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 7) = nextColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 8) = centerColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 9) = nextColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 10) = nextColor;
+							*reinterpret_cast<ColorUByte*>(buffer + stride * 11) = centerColor;
 							buffer += stride * 12;
 						}
 						break;
@@ -881,15 +883,15 @@ void TrailVertexGenerator::generateColorByte(std::uint8_t* buffer, const VertexA
 
 			case VertexDataGenerationMode::element: {
 				for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-					glm::u8vec4 color = glm::clamp(trail.color[p] * 255.0, 0.0, 255.0);
-					glm::u8vec4 nextColor = glm::clamp(trail.color[p + 1] * 255.0, 0.0, 255.0);
-					glm::u8vec4 centerColor = glm::clamp((trail.color[p] + trail.color[p + 1]) * 0.5 * 255.0, 0.0, 255.0);
+					ColorUByte color(trail.color[p]);
+					ColorUByte nextColor(trail.color[p + 1]);
+					ColorUByte centerColor((trail.color[p] + trail.color[p + 1]) * 0.5);
 
-					*reinterpret_cast<glm::u8vec4*>(buffer + stride * 0) = color;
-					*reinterpret_cast<glm::u8vec4*>(buffer + stride * 1) = color;
-					*reinterpret_cast<glm::u8vec4*>(buffer + stride * 2) = nextColor;
-					*reinterpret_cast<glm::u8vec4*>(buffer + stride * 3) = nextColor;
-					*reinterpret_cast<glm::u8vec4*>(buffer + stride * 4) = centerColor;
+					*reinterpret_cast<ColorUByte*>(buffer + stride * 0) = color;
+					*reinterpret_cast<ColorUByte*>(buffer + stride * 1) = color;
+					*reinterpret_cast<ColorUByte*>(buffer + stride * 2) = nextColor;
+					*reinterpret_cast<ColorUByte*>(buffer + stride * 3) = nextColor;
+					*reinterpret_cast<ColorUByte*>(buffer + stride * 4) = centerColor;
 					buffer += stride * 5;
 				}
 
@@ -1001,43 +1003,43 @@ void TrailVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const Vertex
 				switch(generatorVertexFormat.windingOrder()) {
 					case VertexWindingOrder::cw:
 						for(std::uint32_t p = 0; p < trail.velocity.size() - 1; p++) {
-							glm::vec2 velocity = trail.velocity[p];
-							glm::vec2 nextVelocity = trail.velocity[p + 1];
-							glm::vec2 centerVelocity = (velocity + nextVelocity) * 0.5f;
+							math::vector2<float> velocity(trail.velocity[p]);
+							math::vector2<float> nextVelocity(trail.velocity[p + 1]);
+							math::vector2<float> centerVelocity = (velocity + nextVelocity) * 0.5f;
 
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = velocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = centerVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = velocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = nextVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = centerVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 5) = velocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 6) = velocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 7) = centerVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 8) = nextVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 9) = nextVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 10) = centerVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 11) = nextVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = velocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = centerVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = velocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = nextVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = centerVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = velocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = velocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = centerVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = nextVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = nextVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = centerVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = nextVelocity;
 							buffer += stride * 12;
 						}
 						break;
 					default:
 						for(std::uint32_t p = 0; p < trail.velocity.size() - 1; p++) {
-							glm::vec2 velocity = trail.velocity[p];
-							glm::vec2 nextVelocity = trail.velocity[p + 1];
-							glm::vec2 centerVelocity = (velocity + nextVelocity) * 0.5f;
+							math::vector2<float> velocity(trail.velocity[p]);
+							math::vector2<float> nextVelocity(trail.velocity[p + 1]);
+							math::vector2<float> centerVelocity = (velocity + nextVelocity) * 0.5f;
 
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = velocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = velocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = centerVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = nextVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = velocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 5) = centerVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 6) = velocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 7) = nextVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 8) = centerVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 9) = nextVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 10) = nextVelocity;
-							*reinterpret_cast<glm::vec2*>(buffer + stride * 11) = centerVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = velocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = velocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = centerVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = nextVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = velocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = centerVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = velocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = nextVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = centerVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = nextVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = nextVelocity;
+							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = centerVelocity;
 							buffer += stride * 12;
 						}
 						break;
@@ -1048,14 +1050,14 @@ void TrailVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const Vertex
 
 			case VertexDataGenerationMode::element: {
 				for(std::uint32_t p = 0; p < trail.velocity.size() - 1; p++) {
-					glm::vec2 velocity = trail.velocity[p];
-					glm::vec2 nextVelocity = trail.velocity[p + 1];
+					math::vector2<float> velocity(trail.velocity[p]);
+					math::vector2<float> nextVelocity(trail.velocity[p + 1]);
 
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = velocity;
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = velocity;
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = nextVelocity;
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = nextVelocity;
-					*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = (velocity + nextVelocity) * 0.5f;
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = velocity;
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = velocity;
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = nextVelocity;
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = nextVelocity;
+					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = (velocity + nextVelocity) * 0.5f;
 					buffer += stride * 5;
 				}
 
@@ -1084,43 +1086,43 @@ void TrailVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const Vertex
 				switch(generatorVertexFormat.windingOrder()) {
 					case VertexWindingOrder::cw:
 						for(std::uint32_t p = 0; p < trail.velocity.size() - 1; p++) {
-							glm::vec3 velocity = trail.velocity[p];
-							glm::vec3 nextVelocity = trail.velocity[p + 1];
-							glm::vec3 centerVelocity = (velocity + nextVelocity) * 0.5f;
+							math::vector3<float> velocity(trail.velocity[p]);
+							math::vector3<float> nextVelocity(trail.velocity[p + 1]);
+							math::vector3<float> centerVelocity = (velocity + nextVelocity) * 0.5f;
 
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = velocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = centerVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = velocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = nextVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = centerVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 5) = velocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 6) = velocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 7) = centerVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 8) = nextVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 9) = nextVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 10) = centerVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 11) = nextVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = velocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = centerVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = velocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = centerVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = velocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = velocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = centerVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = nextVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = nextVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = centerVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = nextVelocity;
 							buffer += stride * 12;
 						}
 						break;
 					default:
 						for(std::uint32_t p = 0; p < trail.velocity.size() - 1; p++) {
-							glm::vec3 velocity = trail.velocity[p];
-							glm::vec3 nextVelocity = trail.velocity[p + 1];
-							glm::vec3 centerVelocity = (velocity + nextVelocity) * 0.5f;
+							math::vector3<float> velocity(trail.velocity[p]);
+							math::vector3<float> nextVelocity(trail.velocity[p + 1]);
+							math::vector3<float> centerVelocity = (velocity + nextVelocity) * 0.5f;
 
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = velocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = velocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = centerVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = nextVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = velocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 5) = centerVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 6) = velocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 7) = nextVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 8) = centerVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 9) = nextVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 10) = nextVelocity;
-							*reinterpret_cast<glm::vec3*>(buffer + stride * 11) = centerVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = velocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = velocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = centerVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = velocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = centerVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = velocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = nextVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = centerVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = nextVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = nextVelocity;
+							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = centerVelocity;
 							buffer += stride * 12;
 						}
 						break;
@@ -1131,14 +1133,14 @@ void TrailVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const Vertex
 
 			case VertexDataGenerationMode::element: {
 				for(std::uint32_t p = 0; p < trail.velocity.size() - 1; p++) {
-					glm::vec3 velocity = trail.velocity[p];
-					glm::vec3 nextVelocity = trail.velocity[p + 1];
+					math::vector3<float> velocity(trail.velocity[p]);
+					math::vector3<float> nextVelocity(trail.velocity[p + 1]);
 
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = velocity;
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = velocity;
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = nextVelocity;
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = nextVelocity;
-					*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = (velocity + nextVelocity) * 0.5f;
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = velocity;
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = velocity;
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = nextVelocity;
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextVelocity;
+					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = (velocity + nextVelocity) * 0.5f;
 					buffer += stride * 5;
 				}
 

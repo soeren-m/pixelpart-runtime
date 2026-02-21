@@ -3,10 +3,14 @@
 #include "VertexDataGenerationMode.h"
 #include "VertexFormatException.h"
 #include "../common/Transform.h"
+#include "../common/Coordinates.h"
+#include "../math/Common.h"
+#include "../math/MatrixCommon.h"
+#include "../math/Geometry.h"
+#include "../math/Trigonometry.h"
+#include "../math/Transformation.h"
 #include "../effect/ParticleSortCriterion.h"
 #include "../effect/AlignmentMode.h"
-#define GLM_ENABLE_EXPERIMENTAL
-#include "../glm/gtx/vector_angle.hpp"
 #include <cmath>
 #include <algorithm>
 
@@ -217,57 +221,67 @@ void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Verte
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
-	float3_t emitterPosition = emitterTransform.position();
-	mat3_t emitterRotationMatrix = rotationMatrix3d(emitterTransform.rotation());
+	math::vector2<float> emitterPosition(emitterTransform.position());
+	math::matrix3x3<float> emitterRotationMatrix(rotationMatrix3d(emitterTransform.rotation()));
 
 	AlignmentMode alignmentMode = particleType.alignmentMode();
-	float3_t pivot = particleType.pivot().value();
+	math::vector3<float> pivot(particleType.pivot().value());
 
-	glm::vec3 scale = glm::vec3(sceneContext.effectScale);
-	glm::vec3 vertexPositions[4];
+	math::vector2<float> scale(sceneContext.effectScale);
+	math::vector2<float> vertexPositions[4];
 
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		float3_t particlePosition = particles.globalPosition[p];
-		float3_t particleSize = particles.size[p];
-		float3_t particlePivot = pivot * particleSize;
-
 		switch(particleType.alignmentMode()) {
 			case AlignmentMode::motion: {
-				float_t angle = glm::degrees(glm::orientedAngle(float2_t(0.0, 1.0), (particles.velocity[p] != float3_t(0.0))
-					? float2_t(glm::normalize(particles.velocity[p])) : float2_t(0.0, 1.0)));
-				vertexPositions[0] = particlePosition + rotatePoint2d(float3_t(-0.5, -0.5, 0.0) * particleSize, particlePivot, particles.rotation[p].x + angle);
-				vertexPositions[1] = particlePosition + rotatePoint2d(float3_t(+0.5, -0.5, 0.0) * particleSize, particlePivot, particles.rotation[p].x + angle);
-				vertexPositions[2] = particlePosition + rotatePoint2d(float3_t(+0.5, +0.5, 0.0) * particleSize, particlePivot, particles.rotation[p].x + angle);
-				vertexPositions[3] = particlePosition + rotatePoint2d(float3_t(-0.5, +0.5, 0.0) * particleSize, particlePivot, particles.rotation[p].x + angle);
+				math::vector2<float> particlePosition(particles.globalPosition[p]);
+				math::vector2<float> particleSize(particles.size[p]);
+				math::vector2<float> particlePivot = math::vector2<float>(pivot) * particleSize;
+				float angle = math::radians(particles.rotation[p].x + math::degrees(math::orientedAngle(math::vector2<float>(worldUpVector2), particles.velocity[p] != float3_t(0.0)
+					? math::vector2<float>(math::normalize(particles.velocity[p]))
+					: math::vector2<float>(worldUpVector2))));
+				vertexPositions[0] = particlePosition + math::rotatePoint(math::vector2<float>(-0.5f, -0.5f) * particleSize, particlePivot, angle);
+				vertexPositions[1] = particlePosition + math::rotatePoint(math::vector2<float>(+0.5f, -0.5f) * particleSize, particlePivot, angle);
+				vertexPositions[2] = particlePosition + math::rotatePoint(math::vector2<float>(+0.5f, +0.5f) * particleSize, particlePivot, angle);
+				vertexPositions[3] = particlePosition + math::rotatePoint(math::vector2<float>(-0.5f, +0.5f) * particleSize, particlePivot, angle);
 				break;
 			}
 			case AlignmentMode::emission: {
-				float3_t emissionDirection = emitterPosition - particlePosition;
-				float_t angle = glm::degrees(glm::orientedAngle(float2_t(0.0, 1.0), (emissionDirection != float3_t(0.0))
-					? float2_t(glm::normalize(emissionDirection)) : float2_t(0.0, 1.0)));
-				vertexPositions[0] = particlePosition + rotatePoint2d(float3_t(-0.5, -0.5, 0.0) * particleSize, particlePivot, particles.rotation[p].x + angle);
-				vertexPositions[1] = particlePosition + rotatePoint2d(float3_t(+0.5, -0.5, 0.0) * particleSize, particlePivot, particles.rotation[p].x + angle);
-				vertexPositions[2] = particlePosition + rotatePoint2d(float3_t(+0.5, +0.5, 0.0) * particleSize, particlePivot, particles.rotation[p].x + angle);
-				vertexPositions[3] = particlePosition + rotatePoint2d(float3_t(-0.5, +0.5, 0.0) * particleSize, particlePivot, particles.rotation[p].x + angle);
+				math::vector2<float> particlePosition(particles.globalPosition[p]);
+				math::vector2<float> particleSize(particles.size[p]);
+				math::vector2<float> particlePivot = math::vector2<float>(pivot) * particleSize;
+				math::vector2<float> emissionDirection = emitterPosition - particlePosition;
+				float angle = math::radians(particles.rotation[p].x + math::degrees(math::orientedAngle(math::vector2<float>(worldUpVector2), emissionDirection != math::vector2<float>(0.0f)
+					? math::normalize(emissionDirection)
+					: math::vector2<float>(worldUpVector2))));
+				vertexPositions[0] = particlePosition + math::rotatePoint(math::vector2<float>(-0.5f, -0.5f) * particleSize, particlePivot, angle);
+				vertexPositions[1] = particlePosition + math::rotatePoint(math::vector2<float>(+0.5f, -0.5f) * particleSize, particlePivot, angle);
+				vertexPositions[2] = particlePosition + math::rotatePoint(math::vector2<float>(+0.5f, +0.5f) * particleSize, particlePivot, angle);
+				vertexPositions[3] = particlePosition + math::rotatePoint(math::vector2<float>(-0.5f, +0.5f) * particleSize, particlePivot, angle);
 				break;
 			}
 			case AlignmentMode::emitter: {
-				mat3_t particleRotationMatrix = rotationMatrix3d(particles.rotation[p]);
-				vertexPositions[0] = particlePosition + emitterRotationMatrix * (particleRotationMatrix * (float3_t(-0.5, -0.5, 0.0) * particleSize - particlePivot) + particlePivot);
-				vertexPositions[1] = particlePosition + emitterRotationMatrix * (particleRotationMatrix * (float3_t(+0.5, -0.5, 0.0) * particleSize - particlePivot) + particlePivot);
-				vertexPositions[2] = particlePosition + emitterRotationMatrix * (particleRotationMatrix * (float3_t(+0.5, +0.5, 0.0) * particleSize - particlePivot) + particlePivot);
-				vertexPositions[3] = particlePosition + emitterRotationMatrix * (particleRotationMatrix * (float3_t(-0.5, +0.5, 0.0) * particleSize - particlePivot) + particlePivot);
+				math::vector3<float> particlePosition(particles.globalPosition[p]);
+				math::vector3<float> particleSize(particles.size[p]);
+				math::vector3<float> particlePivot = pivot * particleSize;
+				math::matrix3x3<float> particleRotationMatrix = math::matrix3x3<float>(rotationMatrix3d(particles.rotation[p]));
+				vertexPositions[0] = math::vector2<float>(particlePosition + emitterRotationMatrix * (particleRotationMatrix * (math::vector3<float>(-0.5f, -0.5f, 0.0f) * particleSize - particlePivot) + particlePivot));
+				vertexPositions[1] = math::vector2<float>(particlePosition + emitterRotationMatrix * (particleRotationMatrix * (math::vector3<float>(+0.5f, -0.5f, 0.0f) * particleSize - particlePivot) + particlePivot));
+				vertexPositions[2] = math::vector2<float>(particlePosition + emitterRotationMatrix * (particleRotationMatrix * (math::vector3<float>(+0.5f, +0.5f, 0.0f) * particleSize - particlePivot) + particlePivot));
+				vertexPositions[3] = math::vector2<float>(particlePosition + emitterRotationMatrix * (particleRotationMatrix * (math::vector3<float>(-0.5f, +0.5f, 0.0f) * particleSize - particlePivot) + particlePivot));
 				break;
 			}
 			default: {
-				mat3_t particleRotationMatrix = rotationMatrix3d(particles.rotation[p]);
-				vertexPositions[0] = particlePosition + (particleRotationMatrix * (float3_t(-0.5, -0.5, 0.0) * particleSize - particlePivot) + particlePivot);
-				vertexPositions[1] = particlePosition + (particleRotationMatrix * (float3_t(+0.5, -0.5, 0.0) * particleSize - particlePivot) + particlePivot);
-				vertexPositions[2] = particlePosition + (particleRotationMatrix * (float3_t(+0.5, +0.5, 0.0) * particleSize - particlePivot) + particlePivot);
-				vertexPositions[3] = particlePosition + (particleRotationMatrix * (float3_t(-0.5, +0.5, 0.0) * particleSize - particlePivot) + particlePivot);
+				math::vector3<float> particlePosition(particles.globalPosition[p]);
+				math::vector3<float> particleSize(particles.size[p]);
+				math::vector3<float> particlePivot = pivot * particleSize;
+				math::matrix3x3<float> particleRotationMatrix = math::matrix3x3<float>(rotationMatrix3d(particles.rotation[p]));
+				vertexPositions[0] = math::vector2<float>(particlePosition + (particleRotationMatrix * (math::vector3<float>(-0.5f, -0.5f, 0.0f) * particleSize - particlePivot) + particlePivot));
+				vertexPositions[1] = math::vector2<float>(particlePosition + (particleRotationMatrix * (math::vector3<float>(+0.5f, -0.5f, 0.0f) * particleSize - particlePivot) + particlePivot));
+				vertexPositions[2] = math::vector2<float>(particlePosition + (particleRotationMatrix * (math::vector3<float>(+0.5f, +0.5f, 0.0f) * particleSize - particlePivot) + particlePivot));
+				vertexPositions[3] = math::vector2<float>(particlePosition + (particleRotationMatrix * (math::vector3<float>(-0.5f, +0.5f, 0.0f) * particleSize - particlePivot) + particlePivot));
 				break;
 			}
 		}
@@ -281,34 +295,34 @@ void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Verte
 			case VertexDataGenerationMode::vertex:
 				switch(generatorVertexFormat.windingOrder()) {
 					case VertexWindingOrder::cw:
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = vertexPositions[0];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = vertexPositions[3];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = vertexPositions[1];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = vertexPositions[1];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = vertexPositions[3];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 5) = vertexPositions[2];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = vertexPositions[0];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = vertexPositions[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = vertexPositions[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = vertexPositions[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = vertexPositions[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = vertexPositions[2];
 						buffer += stride * 6;
 						break;
 					default:
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = vertexPositions[0];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = vertexPositions[1];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = vertexPositions[3];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = vertexPositions[1];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = vertexPositions[2];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 5) = vertexPositions[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = vertexPositions[0];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = vertexPositions[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = vertexPositions[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = vertexPositions[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = vertexPositions[2];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = vertexPositions[3];
 						buffer += stride * 6;
 						break;
 				}
 				break;
 			case VertexDataGenerationMode::element:
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = vertexPositions[0];
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = vertexPositions[1];
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = vertexPositions[2];
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = vertexPositions[3];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = vertexPositions[0];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = vertexPositions[1];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = vertexPositions[2];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = vertexPositions[3];
 				buffer += stride * 4;
 				break;
 			case VertexDataGenerationMode::instance:
-				*reinterpret_cast<glm::vec2*>(buffer) = glm::vec3(particlePosition) * scale;
+				*reinterpret_cast<math::vector2<float>*>(buffer) = math::vector2<float>(particles.globalPosition[p]) * scale;
 				buffer += stride;
 				break;
 			default:
@@ -323,30 +337,30 @@ void SpriteVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Verte
 
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
 	float3_t emitterPosition = emitterTransform.position();
-	glm::mat3 emitterRotationMatrix = rotationMatrix3d(emitterTransform.rotation());
+	math::matrix3x3<float> emitterRotationMatrix(rotationMatrix3d(emitterTransform.rotation()));
 
 	AlignmentMode alignmentMode = particleType.alignmentMode();
-	glm::vec3 pivot = particleType.pivot().value();
+	math::vector3<float> pivot(particleType.pivot().value());
 
-	glm::vec3 cameraRight = glm::vec3(sceneContext.cameraRight);
-	glm::vec3 cameraUp = glm::vec3(sceneContext.cameraUp);
-	glm::vec3 scale = glm::vec3(sceneContext.effectScale);
+	math::vector3<float> cameraRight(sceneContext.cameraRight);
+	math::vector3<float> cameraUp(sceneContext.cameraUp);
+	math::vector3<float> scale(sceneContext.effectScale);
 
-	glm::vec3 vertexPositions[4];
+	math::vector3<float> vertexPositions[4];
 
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		glm::mat3 particleRotationMatrix = glm::mat3(rotationMatrix3d(particles.rotation[p]));
-		glm::vec3 particlePosition = particles.globalPosition[p];
-		glm::vec3 particleSize = particles.size[p];
-		glm::vec3 particlePivot = pivot * particleSize;
+		math::matrix3x3<float> particleRotationMatrix(rotationMatrix3d(particles.rotation[p]));
+		math::vector3<float> particlePosition(particles.globalPosition[p]);
+		math::vector3<float> particleSize(particles.size[p]);
+		math::vector3<float> particlePivot = pivot * particleSize;
 
-		vertexPositions[0] = (particleRotationMatrix * (glm::vec3(-0.5f, -0.5f, 0.0f) * particleSize - particlePivot) + particlePivot) * scale;
-		vertexPositions[1] = (particleRotationMatrix * (glm::vec3(+0.5f, -0.5f, 0.0f) * particleSize - particlePivot) + particlePivot) * scale;
-		vertexPositions[2] = (particleRotationMatrix * (glm::vec3(+0.5f, +0.5f, 0.0f) * particleSize - particlePivot) + particlePivot) * scale;
-		vertexPositions[3] = (particleRotationMatrix * (glm::vec3(-0.5f, +0.5f, 0.0f) * particleSize - particlePivot) + particlePivot) * scale;
+		vertexPositions[0] = (particleRotationMatrix * (math::vector3<float>(-0.5f, -0.5f, 0.0f) * particleSize - particlePivot) + particlePivot) * scale;
+		vertexPositions[1] = (particleRotationMatrix * (math::vector3<float>(+0.5f, -0.5f, 0.0f) * particleSize - particlePivot) + particlePivot) * scale;
+		vertexPositions[2] = (particleRotationMatrix * (math::vector3<float>(+0.5f, +0.5f, 0.0f) * particleSize - particlePivot) + particlePivot) * scale;
+		vertexPositions[3] = (particleRotationMatrix * (math::vector3<float>(-0.5f, +0.5f, 0.0f) * particleSize - particlePivot) + particlePivot) * scale;
 
 		switch(alignmentMode) {
 			case AlignmentMode::camera: {
@@ -357,7 +371,7 @@ void SpriteVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Verte
 				break;
 			}
 			case AlignmentMode::motion: {
-				glm::mat3 lookAtMatrix = lookAtMatrix3d(particles.velocity[p] * sceneContext.effectScale);
+				math::matrix3x3<float> lookAtMatrix(math::transpose(math::lookAtMatrix(particles.velocity[p] * sceneContext.effectScale, worldUpVector3)));
 				vertexPositions[0] = particlePosition * scale + lookAtMatrix * vertexPositions[0];
 				vertexPositions[1] = particlePosition * scale + lookAtMatrix * vertexPositions[1];
 				vertexPositions[2] = particlePosition * scale + lookAtMatrix * vertexPositions[2];
@@ -365,7 +379,7 @@ void SpriteVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Verte
 				break;
 			}
 			case AlignmentMode::emission: {
-				glm::mat3 lookAtMatrix = lookAtMatrix3d(emitterPosition - particles.globalPosition[p]);
+				math::matrix3x3<float> lookAtMatrix(math::transpose(math::lookAtMatrix(emitterPosition - particles.globalPosition[p], worldUpVector3)));
 				vertexPositions[0] = particlePosition * scale + lookAtMatrix * vertexPositions[0];
 				vertexPositions[1] = particlePosition * scale + lookAtMatrix * vertexPositions[1];
 				vertexPositions[2] = particlePosition * scale + lookAtMatrix * vertexPositions[2];
@@ -392,34 +406,34 @@ void SpriteVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Verte
 			case VertexDataGenerationMode::vertex:
 				switch(generatorVertexFormat.windingOrder()) {
 					case VertexWindingOrder::cw:
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = vertexPositions[0];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = vertexPositions[3];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = vertexPositions[1];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = vertexPositions[1];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = vertexPositions[3];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 5) = vertexPositions[2];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = vertexPositions[0];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = vertexPositions[3];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = vertexPositions[1];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = vertexPositions[1];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = vertexPositions[3];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = vertexPositions[2];
 						buffer += stride * 6;
 						break;
 					default:
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = vertexPositions[0];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = vertexPositions[1];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = vertexPositions[3];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = vertexPositions[1];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = vertexPositions[2];
-						*reinterpret_cast<glm::vec3*>(buffer + stride * 5) = vertexPositions[3];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = vertexPositions[0];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = vertexPositions[1];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = vertexPositions[3];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = vertexPositions[1];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = vertexPositions[2];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = vertexPositions[3];
 						buffer += stride * 6;
 						break;
 				}
 				break;
 			case VertexDataGenerationMode::element:
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = vertexPositions[0];
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = vertexPositions[1];
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = vertexPositions[2];
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = vertexPositions[3];
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = vertexPositions[0];
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = vertexPositions[1];
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = vertexPositions[2];
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = vertexPositions[3];
 				buffer += stride * 4;
 				break;
 			case VertexDataGenerationMode::instance:
-				*reinterpret_cast<glm::vec3*>(buffer) = particlePosition * scale;
+				*reinterpret_cast<math::vector3<float>*>(buffer) = particlePosition * scale;
 				buffer += stride;
 				break;
 			default:
@@ -432,9 +446,12 @@ void SpriteVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAtt
 	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 
+	math::vector3<float> upVector3(worldUpVector3);
+	math::vector3<float> cameraPosition(sceneContext.cameraPosition);
+
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
-	float3_t emitterPosition = emitterTransform.position();
-	glm::mat3 emitterRotationMatrix = rotationMatrix3d(emitterTransform.rotation());
+	math::vector3<float> emitterPosition(emitterTransform.position());
+	math::matrix3x3<float> emitterRotationMatrix(rotationMatrix3d(emitterTransform.rotation()));
 
 	AlignmentMode alignmentMode = particleType.alignmentMode();
 
@@ -442,18 +459,18 @@ void SpriteVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAtt
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		glm::mat3 particleRotationMatrix = glm::mat3(rotationMatrix3d(particles.rotation[p]));
-		glm::vec3 particleNormal = glm::vec3(particleRotationMatrix * float3_t(0.0, 0.0, 1.0));
+		math::matrix3x3<float> particleRotationMatrix(rotationMatrix3d(particles.rotation[p]));
+		math::vector3<float> particleNormal = particleRotationMatrix * math::vector3<float>(0.0f, 0.0f, 1.0f);
 
 		switch(alignmentMode) {
 			case AlignmentMode::camera:
-				particleNormal = sceneContext.cameraPosition - particles.globalPosition[p];
+				particleNormal = cameraPosition - math::vector3<float>(particles.globalPosition[p]);
 				break;
 			case AlignmentMode::motion:
-				particleNormal = glm::mat3(lookAtMatrix3d(particles.velocity[p])) * particleNormal;
+				particleNormal = math::transpose(math::lookAtMatrix(math::vector3<float>(particles.velocity[p]), upVector3)) * particleNormal;
 				break;
 			case AlignmentMode::emission:
-				particleNormal = glm::mat3(lookAtMatrix3d(emitterPosition - particles.globalPosition[p])) * particleNormal;
+				particleNormal = math::transpose(math::lookAtMatrix(emitterPosition - math::vector3<float>(particles.globalPosition[p]), upVector3)) * particleNormal;
 				break;
 			case AlignmentMode::emitter:
 				particleNormal = emitterRotationMatrix * particleNormal;
@@ -464,23 +481,23 @@ void SpriteVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAtt
 
 		switch(attribute.dataGenerationMode) {
 			case VertexDataGenerationMode::vertex:
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = particleNormal;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = particleNormal;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = particleNormal;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = particleNormal;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = particleNormal;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 5) = particleNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = particleNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = particleNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = particleNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = particleNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = particleNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = particleNormal;
 				buffer += stride * 6;
 				break;
 			case VertexDataGenerationMode::element:
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = particleNormal;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = particleNormal;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = particleNormal;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = particleNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = particleNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = particleNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = particleNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = particleNormal;
 				buffer += stride * 4;
 				break;
 			case VertexDataGenerationMode::instance:
-				*reinterpret_cast<glm::vec3*>(buffer) = particleNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer) = particleNormal;
 				buffer += stride;
 				break;
 			default:
@@ -490,11 +507,11 @@ void SpriteVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAtt
 }
 void SpriteVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
-	const glm::vec2 uv[] {
-		glm::vec2(0.0f, 0.0f),
-		glm::vec2(1.0f, 0.0f),
-		glm::vec2(1.0f, 1.0f),
-		glm::vec2(0.0f, 1.0f)
+	const math::vector2<float> uv[] {
+		math::vector2<float>(0.0f, 0.0f),
+		math::vector2<float>(1.0f, 0.0f),
+		math::vector2<float>(1.0f, 1.0f),
+		math::vector2<float>(0.0f, 1.0f)
 	};
 
 	std::size_t stride = attribute.byteStride;
@@ -505,23 +522,23 @@ void SpriteVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const Ver
 			switch(generatorVertexFormat.windingOrder()) {
 				case VertexWindingOrder::cw:
 					for(std::uint32_t p = 0; p < particleCount; p++) {
-						*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = uv[0];
-						*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = uv[3];
-						*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = uv[1];
-						*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = uv[1];
-						*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = uv[3];
-						*reinterpret_cast<glm::vec2*>(buffer + stride * 5) = uv[2];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = uv[0];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = uv[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = uv[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = uv[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = uv[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = uv[2];
 						buffer += stride * 6;
 					}
 					break;
 				default:
 					for(std::uint32_t p = 0; p < particleCount; p++) {
-						*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = uv[0];
-						*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = uv[1];
-						*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = uv[3];
-						*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = uv[1];
-						*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = uv[2];
-						*reinterpret_cast<glm::vec2*>(buffer + stride * 5) = uv[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = uv[0];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = uv[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = uv[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = uv[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = uv[2];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = uv[3];
 						buffer += stride * 6;
 					}
 					break;
@@ -532,10 +549,10 @@ void SpriteVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const Ver
 
 		case VertexDataGenerationMode::element: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = uv[0];
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = uv[1];
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = uv[2];
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = uv[3];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = uv[0];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = uv[1];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = uv[2];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = uv[3];
 				buffer += stride * 4;
 			}
 
@@ -555,14 +572,14 @@ void SpriteVertexGenerator::generateColorFloat(std::uint8_t* buffer, const Verte
 	switch(attribute.dataGenerationMode) {
 		case VertexDataGenerationMode::vertex: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				glm::vec4 particleColor = particles.color[p];
+				math::vector4<float> particleColor(particles.color[p]);
 
-				*reinterpret_cast<glm::vec4*>(buffer + stride * 0) = particleColor;
-				*reinterpret_cast<glm::vec4*>(buffer + stride * 1) = particleColor;
-				*reinterpret_cast<glm::vec4*>(buffer + stride * 2) = particleColor;
-				*reinterpret_cast<glm::vec4*>(buffer + stride * 3) = particleColor;
-				*reinterpret_cast<glm::vec4*>(buffer + stride * 4) = particleColor;
-				*reinterpret_cast<glm::vec4*>(buffer + stride * 5) = particleColor;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 0) = particleColor;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 1) = particleColor;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 2) = particleColor;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 3) = particleColor;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 4) = particleColor;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 5) = particleColor;
 				buffer += stride * 6;
 			}
 
@@ -571,12 +588,12 @@ void SpriteVertexGenerator::generateColorFloat(std::uint8_t* buffer, const Verte
 
 		case VertexDataGenerationMode::element: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				glm::vec4 particleColor = particles.color[p];
+				math::vector4<float> particleColor(particles.color[p]);
 
-				*reinterpret_cast<glm::vec4*>(buffer + stride * 0) = particleColor;
-				*reinterpret_cast<glm::vec4*>(buffer + stride * 1) = particleColor;
-				*reinterpret_cast<glm::vec4*>(buffer + stride * 2) = particleColor;
-				*reinterpret_cast<glm::vec4*>(buffer + stride * 3) = particleColor;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 0) = particleColor;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 1) = particleColor;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 2) = particleColor;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 3) = particleColor;
 				buffer += stride * 4;
 			}
 
@@ -585,7 +602,7 @@ void SpriteVertexGenerator::generateColorFloat(std::uint8_t* buffer, const Verte
 
 		case VertexDataGenerationMode::instance: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				*reinterpret_cast<glm::vec4*>(buffer) = glm::vec4(particles.color[p]);
+				*reinterpret_cast<math::vector4<float>*>(buffer) = math::vector4<float>(particles.color[p]);
 				buffer += stride;
 			}
 
@@ -605,16 +622,13 @@ void SpriteVertexGenerator::generateColorByte(std::uint8_t* buffer, const Vertex
 	switch(attribute.dataGenerationMode) {
 		case VertexDataGenerationMode::vertex: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				std::uint8_t r = static_cast<std::uint8_t>(glm::clamp(particles.color[p].r * 255.0, 0.0, 255.0));
-				std::uint8_t g = static_cast<std::uint8_t>(glm::clamp(particles.color[p].g * 255.0, 0.0, 255.0));
-				std::uint8_t b = static_cast<std::uint8_t>(glm::clamp(particles.color[p].b * 255.0, 0.0, 255.0));
-				std::uint8_t a = static_cast<std::uint8_t>(glm::clamp(particles.color[p].a * 255.0, 0.0, 255.0));
+				ColorUByte color(particles.color[p]);
 
 				for(std::uint32_t v = 0; v < 6; v++) {
-					*(buffer + 0) = r;
-					*(buffer + 1) = g;
-					*(buffer + 2) = b;
-					*(buffer + 3) = a;
+					*(buffer + 0) = color.r;
+					*(buffer + 1) = color.g;
+					*(buffer + 2) = color.b;
+					*(buffer + 3) = color.a;
 					buffer += stride;
 				}
 			}
@@ -624,16 +638,13 @@ void SpriteVertexGenerator::generateColorByte(std::uint8_t* buffer, const Vertex
 
 		case VertexDataGenerationMode::element: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				std::uint8_t r = static_cast<std::uint8_t>(glm::clamp(particles.color[p].r * 255.0, 0.0, 255.0));
-				std::uint8_t g = static_cast<std::uint8_t>(glm::clamp(particles.color[p].g * 255.0, 0.0, 255.0));
-				std::uint8_t b = static_cast<std::uint8_t>(glm::clamp(particles.color[p].b * 255.0, 0.0, 255.0));
-				std::uint8_t a = static_cast<std::uint8_t>(glm::clamp(particles.color[p].a * 255.0, 0.0, 255.0));
+				ColorUByte color(particles.color[p]);
 
 				for(std::uint32_t v = 0; v < 4; v++) {
-					*(buffer + 0) = r;
-					*(buffer + 1) = g;
-					*(buffer + 2) = b;
-					*(buffer + 3) = a;
+					*(buffer + 0) = color.r;
+					*(buffer + 1) = color.g;
+					*(buffer + 2) = color.b;
+					*(buffer + 3) = color.a;
 					buffer += stride;
 				}
 			}
@@ -643,10 +654,12 @@ void SpriteVertexGenerator::generateColorByte(std::uint8_t* buffer, const Vertex
 
 		case VertexDataGenerationMode::instance: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				*(buffer + 0) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].r * 255.0, 0.0, 255.0));
-				*(buffer + 1) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].g * 255.0, 0.0, 255.0));
-				*(buffer + 2) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].b * 255.0, 0.0, 255.0));
-				*(buffer + 3) = static_cast<std::uint8_t>(glm::clamp(particles.color[p].a * 255.0, 0.0, 255.0));
+				ColorUByte color(particles.color[p]);
+
+				*(buffer + 0) = color.r;
+				*(buffer + 1) = color.g;
+				*(buffer + 2) = color.b;
+				*(buffer + 3) = color.a;
 				buffer += stride;
 			}
 
@@ -716,14 +729,14 @@ void SpriteVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const Verte
 	switch(attribute.dataGenerationMode) {
 		case VertexDataGenerationMode::vertex: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				glm::vec2 particleVelocity = particles.velocity[p];
+				math::vector2<float> particleVelocity(particles.velocity[p]);
 
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = particleVelocity;
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = particleVelocity;
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = particleVelocity;
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = particleVelocity;
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 4) = particleVelocity;
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 5) = particleVelocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = particleVelocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = particleVelocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = particleVelocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = particleVelocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = particleVelocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = particleVelocity;
 				buffer += stride * 6;
 			}
 
@@ -732,12 +745,12 @@ void SpriteVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const Verte
 
 		case VertexDataGenerationMode::element: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				glm::vec2 particleVelocity = particles.velocity[p];
+				math::vector2<float> particleVelocity(particles.velocity[p]);
 
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 0) = particleVelocity;
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 1) = particleVelocity;
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 2) = particleVelocity;
-				*reinterpret_cast<glm::vec2*>(buffer + stride * 3) = particleVelocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = particleVelocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = particleVelocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = particleVelocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = particleVelocity;
 				buffer += stride * 4;
 			}
 
@@ -746,7 +759,7 @@ void SpriteVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const Verte
 
 		case VertexDataGenerationMode::instance: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				*reinterpret_cast<glm::vec2*>(buffer) = glm::vec2(particles.velocity[p]);
+				*reinterpret_cast<math::vector2<float>*>(buffer) = math::vector2<float>(particles.velocity[p]);
 				buffer += stride;
 			}
 
@@ -766,14 +779,14 @@ void SpriteVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const Verte
 	switch(attribute.dataGenerationMode) {
 		case VertexDataGenerationMode::vertex: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				glm::vec3 particleVelocity = particles.velocity[p];
+				math::vector3<float> particleVelocity(particles.velocity[p]);
 
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = particleVelocity;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = particleVelocity;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = particleVelocity;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = particleVelocity;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 4) = particleVelocity;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 5) = particleVelocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = particleVelocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = particleVelocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = particleVelocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = particleVelocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = particleVelocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = particleVelocity;
 				buffer += stride * 6;
 			}
 
@@ -782,12 +795,12 @@ void SpriteVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const Verte
 
 		case VertexDataGenerationMode::element: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				glm::vec3 particleVelocity = particles.velocity[p];
+				math::vector3<float> particleVelocity(particles.velocity[p]);
 
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 0) = particleVelocity;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 1) = particleVelocity;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 2) = particleVelocity;
-				*reinterpret_cast<glm::vec3*>(buffer + stride * 3) = particleVelocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = particleVelocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = particleVelocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = particleVelocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = particleVelocity;
 				buffer += stride * 4;
 			}
 
@@ -796,7 +809,7 @@ void SpriteVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const Verte
 
 		case VertexDataGenerationMode::instance: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				*reinterpret_cast<glm::vec3*>(buffer) = glm::vec3(particles.velocity[p]);
+				*reinterpret_cast<math::vector3<float>*>(buffer) = math::vector3<float>(particles.velocity[p]);
 				buffer += stride;
 			}
 
@@ -809,35 +822,9 @@ void SpriteVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const Verte
 	}
 }
 
-float3_t SpriteVertexGenerator::rotatePoint2d(const float3_t& point, const float3_t& center, float_t angle) {
-	float_t sa = std::sin(glm::radians(angle));
-	float_t ca = std::cos(glm::radians(angle));
+matrix3_t SpriteVertexGenerator::rotationMatrix3d(const float3_t& rollYawPitch) {
+	float3_t rollYawPitchRad = math::radians(rollYawPitch);
 
-	return float3_t(
-		center.x + (point.x - center.x) * ca - (point.y - center.y) * sa,
-		center.y + (point.x - center.x) * sa + (point.y - center.y) * ca,
-		0.0);
-}
-mat3_t SpriteVertexGenerator::rotationMatrix3d(const float3_t& rollYawPitch) {
-	float3_t rollYawPitchRad = glm::radians(rollYawPitch);
-	float_t cy = std::cos(rollYawPitchRad.y);
-	float_t sy = std::sin(rollYawPitchRad.y);
-	float_t cp = std::cos(rollYawPitchRad.z);
-	float_t sp = std::sin(rollYawPitchRad.z);
-	float_t cr = std::cos(rollYawPitchRad.x);
-	float_t sr = std::sin(rollYawPitchRad.x);
-
-	return mat3_t(
-		float3_t(cy * cr + sy * sp * sr, sr * cp, -sy * cr + cy * sp * sr),
-		float3_t(-cy * sr + sy * sp * cr, cr * cp, sr * sy + cy * sp * cr),
-		float3_t(sy * cp, -sp, cy * cp));
-}
-mat3_t SpriteVertexGenerator::lookAtMatrix3d(const float3_t& direction) {
-	float3_t up = worldUpVector3;
-	float3_t forward = glm::normalize(direction);
-	float3_t right = glm::normalize(glm::cross(forward, up));
-	up = glm::normalize(glm::cross(right, forward));
-
-	return mat3_t(right, up, -forward);
+	return matrix3_t(math::yawPitchRollRotationMatrix(rollYawPitchRad.y, rollYawPitchRad.z, rollYawPitchRad.x));
 }
 }

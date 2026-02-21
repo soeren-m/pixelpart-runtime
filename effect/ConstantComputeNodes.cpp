@@ -1,4 +1,5 @@
 #include "ConstantComputeNodes.h"
+#include <limits>
 
 namespace pixelpart {
 std::string BooleanConstantComputeNode::typeName = "compute_node_boolean";
@@ -41,7 +42,7 @@ NumberConstantComputeNode::NumberConstantComputeNode() : ComputeNodeBase(typeNam
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float } } },
 	{ },
-	{ VariantParameter::FloatParameter("compute_param_value", 0.0, -FLT_MAX, +FLT_MAX) }) {
+	{ VariantParameter::FloatParameter("compute_param_value", 0.0, std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max()) }) {
 
 }
 std::vector<VariantValue> NumberConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
@@ -54,7 +55,7 @@ Vector2ConstantComputeNode::Vector2ConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float2 } } },
 	{ },
-	{ VariantParameter::Float2Parameter("compute_param_value", float2_t(0.0), float2_t(-FLT_MAX), float2_t(+FLT_MAX)) }) {
+	{ VariantParameter::Float2Parameter("compute_param_value", float2_t(0.0), float2_t(std::numeric_limits<float>::lowest()), float2_t(std::numeric_limits<float>::max())) }) {
 
 }
 std::vector<VariantValue> Vector2ConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
@@ -67,7 +68,7 @@ Vector3ConstantComputeNode::Vector3ConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float3 } } },
 	{ },
-	{ VariantParameter::Float3Parameter("compute_param_value", float3_t(0.0), float3_t(-FLT_MAX), float3_t(+FLT_MAX)) }) {
+	{ VariantParameter::Float3Parameter("compute_param_value", float3_t(0.0), float3_t(std::numeric_limits<float>::lowest()), float3_t(std::numeric_limits<float>::max())) }) {
 
 }
 std::vector<VariantValue> Vector3ConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
@@ -80,7 +81,7 @@ Vector4ConstantComputeNode::Vector4ConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_float4 } } },
 	{ },
-	{ VariantParameter::Float4Parameter("compute_param_value", float4_t(0.0), float4_t(-FLT_MAX), float4_t(+FLT_MAX)) }) {
+	{ VariantParameter::Float4Parameter("compute_param_value", float4_t(0.0), float4_t(std::numeric_limits<float>::lowest()), float4_t(std::numeric_limits<float>::max())) }) {
 
 }
 std::vector<VariantValue> Vector4ConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {

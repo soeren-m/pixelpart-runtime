@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Collider.h"
-#include "../common/Math.h"
+#include "../common/Types.h"
 #include "../json/json.hpp"
 #include <vector>
 
