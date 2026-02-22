@@ -8,6 +8,7 @@ void to_json(nlohmann::ordered_json& j, const RenderSettings& settings) {
 		{ "frame_width", settings.frameWidth },
 		{ "frame_height", settings.frameHeight },
 
+		{ "simulation_rate", settings.simulationRate },
 		{ "capture_rate", settings.captureRate },
 		{ "duration", settings.duration },
 		{ "delay", settings.delay },
@@ -34,7 +35,8 @@ void from_json(const nlohmann::ordered_json& j, RenderSettings& settings) {
 	settings.frameWidth = j.value("frame_width", 1u);
 	settings.frameHeight = j.value("frame_height", 1u);
 
-	settings.captureRate = j.value("capture_rate", 30.0);
+	settings.simulationRate = j.value("simulation_rate", 60.0);
+	settings.captureRate = j.value("capture_rate", 60.0);
 	settings.duration = j.value("duration", 1.0);
 	settings.delay = j.value("delay", 0.0);
 	settings.playbackSpeed = j.value("playback_speed", 1.0);

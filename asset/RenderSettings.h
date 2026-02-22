@@ -11,7 +11,8 @@ struct RenderSettings {
 	std::uint32_t frameWidth = 1;
 	std::uint32_t frameHeight = 1;
 
-	float_t captureRate = 30.0;
+	float_t simulationRate = 60.0;
+	float_t captureRate = 60.0;
 	float_t duration = 1.0;
 	float_t delay = 0.0;
 	float_t playbackSpeed = 1.0;
