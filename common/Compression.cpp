@@ -30,7 +30,7 @@ std::string compressToString(const std::uint8_t* data, std::size_t size, Compres
 			compressedData.data(),
 			&compressedSize,
 			data,
-			size);
+			static_cast<uLong>(size));
 
 		if(result != Z_OK) {
 			throw CompressionException("zlib compression error: " + std::to_string(result));
@@ -51,7 +51,7 @@ std::vector<std::uint8_t> decompressFromString(const std::string& data, std::siz
 	if(method == CompressionMethod::zlib) {
 		std::vector<std::uint8_t> uncompressedData(uncompressedSize);
 
-		uLongf uncompressedSizeValue = static_cast<uLongf>(uncompressedSize);
+		uLong uncompressedSizeValue = static_cast<uLong>(uncompressedSize);
 		int result = uncompress(
 			uncompressedData.data(),
 			&uncompressedSizeValue,

@@ -248,7 +248,7 @@ void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Verte
 				math::vector2<float> particlePosition(particles.globalPosition[p]);
 				math::vector2<float> particleSize(particles.size[p]);
 				math::vector2<float> particlePivot = math::vector2<float>(pivot) * particleSize;
-				float angle = math::radians(particles.rotation[p].x + math::degrees(math::orientedAngle(math::vector2<float>(worldUpVector2), particles.velocity[p] != float3_t(0.0)
+				float angle = math::radians(static_cast<float>(particles.rotation[p].x) + math::degrees(math::orientedAngle(math::vector2<float>(worldUpVector2), particles.velocity[p] != float3_t(0.0)
 					? math::vector2<float>(math::normalize(particles.velocity[p]))
 					: math::vector2<float>(worldUpVector2))));
 				vertexPositions[0] = particlePosition + math::rotatePoint(math::vector2<float>(-0.5f, -0.5f) * particleSize, particlePivot, angle);
@@ -262,7 +262,7 @@ void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Verte
 				math::vector2<float> particleSize(particles.size[p]);
 				math::vector2<float> particlePivot = math::vector2<float>(pivot) * particleSize;
 				math::vector2<float> emissionDirection = emitterPosition - particlePosition;
-				float angle = math::radians(particles.rotation[p].x + math::degrees(math::orientedAngle(math::vector2<float>(worldUpVector2), emissionDirection != math::vector2<float>(0.0f)
+				float angle = math::radians(static_cast<float>(particles.rotation[p].x) + math::degrees(math::orientedAngle(math::vector2<float>(worldUpVector2), emissionDirection != math::vector2<float>(0.0f)
 					? math::normalize(emissionDirection)
 					: math::vector2<float>(worldUpVector2))));
 				vertexPositions[0] = particlePosition + math::rotatePoint(math::vector2<float>(-0.5f, -0.5f) * particleSize, particlePivot, angle);

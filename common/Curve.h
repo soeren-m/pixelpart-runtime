@@ -258,7 +258,7 @@ private:
 				}
 				case CurveInterpolation::spline: {
 					T c1 = curvePoints[pointIndex > 0 ? pointIndex - 1 : pointIndex].value;
-					T c2 = curvePoints[pointIndex + 2 < curvePoints.size() ? pointIndex + 2 : pointIndex + 1].value;
+					T c2 = curvePoints[pointIndex + 2 < static_cast<std::ptrdiff_t>(curvePoints.size()) ? pointIndex + 2 : pointIndex + 1].value;
 					curveCache[cacheIndex] = math::catmullRomSplineInterpolation(p1.value, p2.value, c1, c2, p1.position, p2.position, position);
 					break;
 				}
@@ -269,6 +269,7 @@ private:
 					break;
 				}
 				default: {
+					curveCache[cacheIndex] = p1.value;
 					break;
 				}
 			}
