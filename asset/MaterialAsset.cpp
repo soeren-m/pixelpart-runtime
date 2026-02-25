@@ -3,7 +3,7 @@
 #include "../common/SortedJson.h"
 
 namespace pixelpart {
-const std::uint32_t MaterialAsset::version = 9;
+const std::uint32_t MaterialAsset::version = 10;
 
 MaterialResource& MaterialAsset::material() {
 	return assetMaterial;

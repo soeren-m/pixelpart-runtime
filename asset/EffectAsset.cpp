@@ -5,7 +5,7 @@
 #include <memory>
 
 namespace pixelpart {
-const std::uint32_t EffectAsset::version = 9;
+const std::uint32_t EffectAsset::version = 10;
 
 Effect& EffectAsset::effect() {
 	return assetEffect;
