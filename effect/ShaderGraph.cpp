@@ -374,28 +374,28 @@ std::string ShaderGraph::buildValueString(const VariantValue& value, id_t nodeId
 		}
 		case VariantValue::type_float: {
 			valueString = specification.typeConstructors[VariantValue::type_float];
-			valueString = replaceString(valueString, serializeFloat(value.valueFloat(), floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat(), FloatFormat::fixed, floatPrecision), "{0}");
 			break;
 		}
 		case VariantValue::type_float2: {
 			valueString = specification.typeConstructors[VariantValue::type_float2];
-			valueString = replaceString(valueString, serializeFloat(value.valueFloat2().x, floatPrecision), "{0}");
-			valueString = replaceString(valueString, serializeFloat(value.valueFloat2().y, floatPrecision), "{1}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat2().x, FloatFormat::fixed, floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat2().y, FloatFormat::fixed, floatPrecision), "{1}");
 			break;
 		}
 		case VariantValue::type_float3: {
 			valueString = specification.typeConstructors[VariantValue::type_float3];
-			valueString = replaceString(valueString, serializeFloat(value.valueFloat3().x, floatPrecision), "{0}");
-			valueString = replaceString(valueString, serializeFloat(value.valueFloat3().y, floatPrecision), "{1}");
-			valueString = replaceString(valueString, serializeFloat(value.valueFloat3().z, floatPrecision), "{2}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat3().x, FloatFormat::fixed, floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat3().y, FloatFormat::fixed, floatPrecision), "{1}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat3().z, FloatFormat::fixed, floatPrecision), "{2}");
 			break;
 		}
 		case VariantValue::type_float4: {
 			valueString = specification.typeConstructors[VariantValue::type_float4];
-			valueString = replaceString(valueString, serializeFloat(value.valueFloat4().x, floatPrecision), "{0}");
-			valueString = replaceString(valueString, serializeFloat(value.valueFloat4().y, floatPrecision), "{1}");
-			valueString = replaceString(valueString, serializeFloat(value.valueFloat4().z, floatPrecision), "{2}");
-			valueString = replaceString(valueString, serializeFloat(value.valueFloat4().w, floatPrecision), "{3}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat4().x, FloatFormat::fixed, floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat4().y, FloatFormat::fixed, floatPrecision), "{1}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat4().z, FloatFormat::fixed, floatPrecision), "{2}");
+			valueString = replaceString(valueString, serializeFloat(value.valueFloat4().w, FloatFormat::fixed, floatPrecision), "{3}");
 			break;
 		}
 		default: {
@@ -416,29 +416,29 @@ std::string ShaderGraph::buildParameterValueString(const VariantParameter::Value
 		}
 		case VariantParameter::Value::type_float: {
 			valueString = specification.typeConstructors[VariantValue::type_float];
-			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat(), floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat(), FloatFormat::fixed, floatPrecision), "{0}");
 			break;
 		}
 		case VariantParameter::Value::type_float2: {
 			valueString = specification.typeConstructors[VariantValue::type_float2];
-			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat2().x, floatPrecision), "{0}");
-			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat2().y, floatPrecision), "{1}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat2().x, FloatFormat::fixed, floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat2().y, FloatFormat::fixed, floatPrecision), "{1}");
 			break;
 		}
 		case VariantParameter::Value::type_float3: {
 			valueString = specification.typeConstructors[VariantValue::type_float3];
-			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().x, floatPrecision), "{0}");
-			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().y, floatPrecision), "{1}");
-			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().z, floatPrecision), "{2}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().x, FloatFormat::fixed, floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().y, FloatFormat::fixed, floatPrecision), "{1}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat3().z, FloatFormat::fixed, floatPrecision), "{2}");
 			break;
 		}
 		case VariantParameter::Value::type_float4:
 		case VariantParameter::Value::type_color: {
 			valueString = specification.typeConstructors[VariantValue::type_float4];
-			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().x, floatPrecision), "{0}");
-			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().y, floatPrecision), "{1}");
-			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().z, floatPrecision), "{2}");
-			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().w, floatPrecision), "{3}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().x, FloatFormat::fixed, floatPrecision), "{0}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().y, FloatFormat::fixed, floatPrecision), "{1}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().z, FloatFormat::fixed, floatPrecision), "{2}");
+			valueString = replaceString(valueString, serializeFloat(parameterValue.valueFloat4().w, FloatFormat::fixed, floatPrecision), "{3}");
 			break;
 		}
 		case VariantParameter::Value::type_bool: {
@@ -452,7 +452,7 @@ std::string ShaderGraph::buildParameterValueString(const VariantParameter::Value
 			for(std::uint32_t pointIndex = 0; pointIndex < curveInterpolationPointCount; pointIndex++) {
 				float_t pointValue = curve.at(static_cast<float_t>(pointIndex) / static_cast<float_t>(curveInterpolationPointCount - 1));
 				std::string pointValueString = specification.typeConstructors[VariantValue::type_float];
-				pointValueString = replaceString(pointValueString, serializeFloat(pointValue, floatPrecision), "{0}");
+				pointValueString = replaceString(pointValueString, serializeFloat(pointValue, FloatFormat::fixed, floatPrecision), "{0}");
 
 				valueString += pointValueString;
 				if(pointIndex + 1 < curveInterpolationPointCount) {
@@ -468,9 +468,9 @@ std::string ShaderGraph::buildParameterValueString(const VariantParameter::Value
 			for(std::uint32_t pointIndex = 0; pointIndex < curveInterpolationPointCount; pointIndex++) {
 				float3_t pointValue = gradient.at(static_cast<float_t>(pointIndex) / static_cast<float_t>(curveInterpolationPointCount - 1));
 				std::string pointValueString = specification.typeConstructors[VariantValue::type_float3];
-				pointValueString = replaceString(pointValueString, serializeFloat(pointValue.x, floatPrecision), "{0}");
-				pointValueString = replaceString(pointValueString, serializeFloat(pointValue.y, floatPrecision), "{1}");
-				pointValueString = replaceString(pointValueString, serializeFloat(pointValue.z, floatPrecision), "{2}");
+				pointValueString = replaceString(pointValueString, serializeFloat(pointValue.x, FloatFormat::fixed, floatPrecision), "{0}");
+				pointValueString = replaceString(pointValueString, serializeFloat(pointValue.y, FloatFormat::fixed, floatPrecision), "{1}");
+				pointValueString = replaceString(pointValueString, serializeFloat(pointValue.z, FloatFormat::fixed, floatPrecision), "{2}");
 
 				valueString += pointValueString;
 				if(pointIndex + 1 < curveInterpolationPointCount) {

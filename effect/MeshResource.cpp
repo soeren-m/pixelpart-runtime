@@ -56,10 +56,10 @@ std::pair<std::string, std::size_t> serializeIntegerData(const std::vector<std::
 std::pair<std::string, std::size_t> serializeVectorData(const std::vector<math::vector2<float>>& data) {
 	std::string stringData;
 	for(std::size_t dataIndex = 0; dataIndex < data.size(); dataIndex++) {
-		stringData += serializeFloat(data[dataIndex].x, 6);
+		stringData += serializeFloat(data[dataIndex].x, FloatFormat::shortest, 6);
 		stringData += ' ';
 
-		stringData += serializeFloat(data[dataIndex].y, 6);
+		stringData += serializeFloat(data[dataIndex].y, FloatFormat::shortest, 6);
 		if(dataIndex + 1 < data.size()) {
 			stringData += ' ';
 		}
@@ -72,13 +72,13 @@ std::pair<std::string, std::size_t> serializeVectorData(const std::vector<math::
 std::pair<std::string, std::size_t> serializeVectorData(const std::vector<math::vector3<float>>& data) {
 	std::string stringData;
 	for(std::size_t dataIndex = 0; dataIndex < data.size(); dataIndex++) {
-		stringData += serializeFloat(data[dataIndex].x, 6);
+		stringData += serializeFloat(data[dataIndex].x, FloatFormat::shortest, 6);
 		stringData += ' ';
 
-		stringData += serializeFloat(data[dataIndex].y, 6);
+		stringData += serializeFloat(data[dataIndex].y, FloatFormat::shortest, 6);
 		stringData += ' ';
 
-		stringData += serializeFloat(data[dataIndex].z, 6);
+		stringData += serializeFloat(data[dataIndex].z, FloatFormat::shortest, 6);
 		if(dataIndex + 1 < data.size()) {
 			stringData += ' ';
 		}

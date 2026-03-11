@@ -26,11 +26,11 @@ void to_json(nlohmann::ordered_json& j, const VectorFieldResource& resource) {
 			for(std::size_t x = 0; x < resource.field().width(); x++) {
 				const float3_t& vector = resource.field()(x, y, z);
 
-				dataString += serializeFloat(vector.x, 8);
+				dataString += serializeFloat(vector.x, FloatFormat::shortest, 8);
 				dataString += ' ';
-				dataString += serializeFloat(vector.y, 8);
+				dataString += serializeFloat(vector.y, FloatFormat::shortest, 8);
 				dataString += ' ';
-				dataString += serializeFloat(vector.z, 8);
+				dataString += serializeFloat(vector.z, FloatFormat::shortest, 8);
 				dataString += ' ';
 			}
 		}

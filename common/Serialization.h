@@ -23,6 +23,11 @@ public:
 	DeserializationException(const std::string& msg);
 };
 
+enum class FloatFormat {
+	fixed,
+	shortest
+};
+
 template <typename T>
 std::string serializeInt(T value) {
 	static const std::size_t bufferSize = 128;
@@ -46,7 +51,7 @@ T deserializeInt(const std::string& str, T defaultValue = T(0)) {
 }
 
 template <typename T>
-std::string serializeFloat(T value, int precision) {
+std::string serializeFloat(T value, FloatFormat format, int precision) {
 #ifdef __clang__
 	std::stringstream stream;
 	stream.imbue(std::locale::classic());
@@ -59,7 +64,7 @@ std::string serializeFloat(T value, int precision) {
 	static char buffer[bufferSize];
 
 	std::to_chars_result result =
-		std::to_chars(buffer, buffer + bufferSize, value, std::chars_format::general, precision);
+		std::to_chars(buffer, buffer + bufferSize, value, format == FloatFormat::fixed ? std::chars_format::fixed : std::chars_format::general, precision);
 
 	return result.ec == std::errc()
 		? std::string(buffer, result.ptr - buffer)
