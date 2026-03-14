@@ -41,16 +41,32 @@ void SingleThreadedEffectEngine::advance(float_t dt) {
 
 	engineParticleModifier->reset(&engineEffect, engineContext);
 
-	for(auto& collectionEntry : engineState.particleCollections()) {
-		ParticleEmissionPair emissionPair = collectionEntry.first;
-		ParticleCollection& particleCollection = collectionEntry.second;
-
+	for(auto& [emissionPair, particleCollection] : engineState.particleCollections()) {
 		engineParticleModifier->apply(
 			particleCollection.writePtr(),
 			particleCollection.count(),
 			&engineEffect,
 			emissionPair.emitterId, emissionPair.typeId,
 			engineContext);
+	}
+
+	engineContext.invokedEvents().clear();
+	for(const auto& [eventId, event] : engineEffect.events()) {
+		if(event.nodeId()) {
+			const auto& node = engineEffect.sceneGraph().at(event.nodeId());
+
+			if(node.activatedByTrigger(engineContext) &&
+				engineContext.time() >= node.start() + event.time() &&
+				engineContext.time() < node.start() + event.time() + dt) {
+				engineContext.invokedEvents().push_back(eventId);
+			}
+		}
+		else {
+			if(engineContext.time() >= event.time() &&
+				engineContext.time() < event.time() + dt) {
+				engineContext.invokedEvents().push_back(eventId);
+			}
+		}
 	}
 
 	engineContext.time() += dt;

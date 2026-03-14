@@ -30,7 +30,6 @@ EffectRuntimeContext::TriggerActivationTimeMap& EffectRuntimeContext::triggerAct
 const EffectRuntimeContext::TriggerActivationTimeMap& EffectRuntimeContext::triggerActivationTimes() const {
 	return contextTriggerActivationTimes;
 }
-
 bool EffectRuntimeContext::triggerActivated(id_t triggerId) const {
 	return contextTriggerActivationTimes.count(triggerId) != 0;
 }
@@ -38,5 +37,12 @@ float_t EffectRuntimeContext::triggerActivationTime(id_t triggerId) const {
 	auto triggerIt = contextTriggerActivationTimes.find(triggerId);
 
 	return triggerIt != contextTriggerActivationTimes.end() ? triggerIt->second : -1.0;
+}
+
+EffectRuntimeContext::EventInvokationList& EffectRuntimeContext::invokedEvents() {
+	return contextInvokedEvents;
+}
+const EffectRuntimeContext::EventInvokationList& EffectRuntimeContext::invokedEvents() const {
+	return contextInvokedEvents;
 }
 }

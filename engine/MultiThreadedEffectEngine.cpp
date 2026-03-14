@@ -48,10 +48,7 @@ void MultiThreadedEffectEngine::advance(float_t dt) {
 
 	engineActiveThreadCount = 1;
 
-	for(auto& collectionEntry : engineState.particleCollections()) {
-		ParticleEmissionPair emissionPair = collectionEntry.first;
-		ParticleCollection& particleCollection = collectionEntry.second;
-
+	for(auto& [emissionPair, particleCollection] : engineState.particleCollections()) {
 		std::uint32_t availableThreadCount = engineThreadPool ? static_cast<std::uint32_t>(engineThreadPool->threadCount()) : 1;
 		std::uint32_t activeThreadCount = std::min(std::max(particleCollection.count() / engineParticleCountPerThread, 1u), availableThreadCount);
 
@@ -89,6 +86,25 @@ void MultiThreadedEffectEngine::advance(float_t dt) {
 		}
 
 		engineActiveThreadCount = std::max(engineActiveThreadCount, activeThreadCount);
+	}
+
+	engineContext.invokedEvents().clear();
+	for(const auto& [eventId, event] : engineEffect.events()) {
+		if(event.nodeId()) {
+			const auto& node = engineEffect.sceneGraph().at(event.nodeId());
+
+			if(node.activatedByTrigger(engineContext) &&
+				engineContext.time() >= node.start() + event.time() &&
+				engineContext.time() < node.start() + event.time() + dt) {
+				engineContext.invokedEvents().push_back(eventId);
+			}
+		}
+		else {
+			if(engineContext.time() >= event.time() &&
+				engineContext.time() < event.time() + dt) {
+				engineContext.invokedEvents().push_back(eventId);
+			}
+		}
 	}
 
 	engineContext.time() += dt;

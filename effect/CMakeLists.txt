@@ -13,6 +13,7 @@ target_sources(pixelpart-runtime PRIVATE
 	DirectionalLightSource.cpp
 	DragField.cpp
 	Effect.cpp
+	EffectEvent.cpp
 	EffectInput.cpp
 	EffectRuntimeContext.cpp
 	EffectTrigger.cpp
