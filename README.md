@@ -1,21 +1,33 @@
-# Runtime Library for Pixelpart
+# Pixelpart Runtime Library
 
-[Pixelpart](https://pixelpart.net/) is a tool for designing visual effects for games. This library provides methods to load and simulate effects created with *Pixelpart*. Rendering, however, is not part of the library.
+The Pixelpart runtime library is a C++17 library for loading and simulating visual effects created with [Pixelpart](https://pixelpart.net/).
 
-The library is written in C++17 and used as a basis for various game engine plugins.
+Pixelpart is a tool for designing real-time visual effects for games. This runtime library allows applications to load effect files exported from Pixelpart and simulate them at runtime. Rendering is **not** included and must be implemented by the host engine or application. However, functions for generating vertex data are provided by the library.
+
+The runtime library serves as the foundation for several game engine plugins.
+
+## Requirements
+
+- C++17 compatible compiler
+- CMake
 
 ## Building
 
-Use *CMake* to build the library by including the source code in your program and linking the library like this:
+The library is designed to be embedded directly into your project.
+Using CMake, add the repository as a subdirectory and link against the library target:
 
 ```cmake
 add_subdirectory(pixelpart-runtime)
 target_link_libraries(main PRIVATE pixelpart-runtime)
 ```
 
+| Option | Description | Default |
+| - | - | - |
+| `PIXELPART_RUNTIME_MULTITHREADING` | Enables multi-threaded simulation support | `OFF` |
+
 ## Usage
 
-Below is a basic program that uses the Pixelpart library. It loads an effect from file and simulates 1 second of it printing how many particles are created at each point in time.
+Below is a basic program that demonstrates how to load and simulate an effect.
 
 ```cpp
 #include <pixelpart-runtime/Pixelpart.h>
@@ -38,14 +50,11 @@ int main(int argc, char* argv[]) {
     }
 
     pixelpart::SingleThreadedEffectEngine effectEngine(effectAsset.effect(),
-        std::shared_ptr<pixelpart::DefaultParticleGenerator>(new pixelpart::DefaultParticleGenerator()),
-        std::shared_ptr<pixelpart::DefaultParticleModifier>(new pixelpart::DefaultParticleModifier()),
+        std::make_shared<pixelpart::DefaultParticleGenerator>(),
+        std::make_shared<pixelpart::DefaultParticleModifier>(),
         1000);
 
     for(float t = 0.0f; t < 1.0f; t += 0.01f) {
-        std::cout << "[" << t << "s] "
-            << effectEngine.particleCount() << " particles" << std::endl;
-
         effectEngine.advance(0.01);
     }
 
