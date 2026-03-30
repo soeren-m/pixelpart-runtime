@@ -29,7 +29,7 @@ IntegerConstantComputeNode::IntegerConstantComputeNode() : ComputeNodeBase(typeN
 	{ "compute_slot_value" },
 	{ Signature{ { }, { VariantValue::type_int } } },
 	{ },
-	{ VariantParameter::IntParameter("compute_param_value", 0, INT_MIN, INT_MAX) }) {
+	{ VariantParameter::IntParameter("compute_param_value", 0, std::numeric_limits<int>::lowest(), std::numeric_limits<int>::max()) }) {
 
 }
 std::vector<VariantValue> IntegerConstantComputeNode::evaluate(const std::vector<VariantValue>& in) const {
