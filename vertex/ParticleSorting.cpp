@@ -116,8 +116,8 @@ void sortParticles(ParticleCollection& resultCollection,
 	std::vector<std::uint32_t> sortKeys(particleCount);
 	std::iota(sortKeys.begin(), sortKeys.begin() + particleCount, 0);
 
-	if(particleCount > resultCollection.capacity()) {
-		resultCollection = ParticleCollection(particleCount);
+	if(particleCount > resultCollection.count()) {
+		resultCollection.add(particleCount - resultCollection.count());
 	}
 
 	switch(sortCriterion) {
@@ -149,8 +149,8 @@ void sortParticles(ParticleCollection& resultCollection,
 	std::vector<std::uint32_t> sortKeys(particleCount);
 	std::iota(sortKeys.begin(), sortKeys.begin() + particleCount, 0);
 
-	if(particleCount > resultCollection.capacity()) {
-		resultCollection = ParticleCollection(particleCount);
+	if(particleCount > resultCollection.count()) {
+		resultCollection.add(particleCount - resultCollection.count());
 	}
 
 	switch(sortCriterion) {

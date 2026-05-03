@@ -51,8 +51,7 @@ int main(int argc, char* argv[]) {
 
     pixelpart::SingleThreadedEffectEngine effectEngine(effectAsset.effect(),
         std::make_shared<pixelpart::DefaultParticleGenerator>(),
-        std::make_shared<pixelpart::DefaultParticleModifier>(),
-        1000);
+        std::make_shared<pixelpart::DefaultParticleModifier>());
 
     for(float t = 0.0f; t < 1.0f; t += 0.01f) {
         effectEngine.advance(0.01);

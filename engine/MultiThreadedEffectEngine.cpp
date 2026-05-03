@@ -10,26 +10,26 @@ MultiThreadedEffectEngine::MultiThreadedEffectEngine(const Effect& effect,
 	std::shared_ptr<ParticleGenerator> particleGenerator,
 	std::shared_ptr<ParticleModifier> particleModifier,
 	std::shared_ptr<ThreadPool> threadPool,
-	std::uint32_t particleCapacity) : EffectEngine(),
+	std::uint32_t maxParticleCount) : EffectEngine(),
 	engineEffect(effect),
 	engineParticleGenerator(particleGenerator),
 	engineParticleModifier(particleModifier),
 	engineThreadPool(threadPool),
-	engineParticleCapacity(particleCapacity) {
+	engineMaxParticleCount(maxParticleCount) {
 
 }
 MultiThreadedEffectEngine::MultiThreadedEffectEngine(const Effect& effect,
 	std::shared_ptr<ParticleGenerator> particleGenerator,
 	std::shared_ptr<ParticleModifier> particleModifier,
 	std::shared_ptr<ThreadPool> threadPool,
-	std::uint32_t particleCapacity,
+	std::uint32_t maxParticleCount,
 	const EffectRuntimeState& initialState,
 	const EffectRuntimeContext& initialContext) : EffectEngine(),
 	engineEffect(effect),
 	engineParticleGenerator(particleGenerator),
 	engineParticleModifier(particleModifier),
 	engineThreadPool(threadPool),
-	engineParticleCapacity(particleCapacity),
+	engineMaxParticleCount(maxParticleCount),
 	engineState(initialState),
 	engineContext(initialContext) {
 
@@ -39,7 +39,7 @@ void MultiThreadedEffectEngine::advance(float_t dt) {
 	dt = std::max(dt, 0.0);
 	engineContext.deltaTime() = dt;
 
-	syncMapToKeys(engineState.particleCollections(), engineEffect.particleEmissionPairs(), engineParticleCapacity);
+	syncMapToKeys(engineState.particleCollections(), engineEffect.particleEmissionPairs(), engineMaxParticleCount);
 	syncMapToKeys(engineState.particleEmissionStates(), engineEffect.particleEmissionPairs());
 
 	engineParticleGenerator->generate(engineState, &engineEffect, engineContext);
@@ -148,10 +148,6 @@ const EffectRuntimeState& MultiThreadedEffectEngine::state() const {
 }
 const EffectRuntimeContext& MultiThreadedEffectEngine::context() const {
 	return engineContext;
-}
-
-std::uint32_t MultiThreadedEffectEngine::particleCapacity() const {
-	return engineParticleCapacity;
 }
 
 void MultiThreadedEffectEngine::particleCountPerThread(std::uint32_t count) {

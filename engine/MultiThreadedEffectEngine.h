@@ -17,12 +17,12 @@ public:
 		std::shared_ptr<ParticleGenerator> particleGenerator,
 		std::shared_ptr<ParticleModifier> particleModifier,
 		std::shared_ptr<ThreadPool> threadPool,
-		std::uint32_t particleCapacity);
+		std::uint32_t maxParticleCount = 0);
 	MultiThreadedEffectEngine(const Effect& effect,
 		std::shared_ptr<ParticleGenerator> particleGenerator,
 		std::shared_ptr<ParticleModifier> particleModifier,
 		std::shared_ptr<ThreadPool> threadPool,
-		std::uint32_t particleCapacity,
+		std::uint32_t maxParticleCount,
 		const EffectRuntimeState& initialState,
 		const EffectRuntimeContext& initialContext);
 
@@ -41,8 +41,6 @@ public:
 	virtual const EffectRuntimeState& state() const override;
 	virtual const EffectRuntimeContext& context() const override;
 
-	std::uint32_t particleCapacity() const;
-
 	void particleCountPerThread(std::uint32_t count);
 	std::uint32_t particleCountPerThread() const;
 	std::uint32_t activeThreadCount() const;
@@ -56,7 +54,7 @@ private:
 	EffectRuntimeState engineState;
 	EffectRuntimeContext engineContext;
 
-	std::uint32_t engineParticleCapacity = 0;
+	std::uint32_t engineMaxParticleCount = 0;
 
 	std::uint32_t engineParticleCountPerThread = 128;
 	std::uint32_t engineActiveThreadCount = 0;

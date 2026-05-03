@@ -78,7 +78,7 @@ public:
 			const float4_t* initialColorPtr);
 	};
 
-	ParticleCollection(std::uint32_t capacity = 1024);
+	ParticleCollection(std::uint32_t maxCount = 0);
 
 	std::uint32_t add(std::uint32_t number);
 	void remove(std::uint32_t index);
@@ -92,23 +92,25 @@ public:
 	std::uint32_t capacity() const;
 
 private:
-	std::uint32_t collectionCount = 0;
-	std::uint32_t collectionCapacity = 1024;
+	void resizeBuffers(std::size_t size);
 
-	std::vector<std::uint32_t> id;
-	std::vector<std::uint32_t> parentId;
-	std::vector<float_t> life;
-	std::vector<float_t> lifespan;
-	std::vector<float3_t> position;
-	std::vector<float3_t> globalPosition;
-	std::vector<float3_t> velocity;
-	std::vector<float3_t> force;
-	std::vector<float3_t> rotation;
-	std::vector<float3_t> initialRotation;
-	std::vector<float3_t> initialAngularVelocity;
-	std::vector<float3_t> size;
-	std::vector<float_t> initialSize;
-	std::vector<float4_t> color;
-	std::vector<float4_t> initialColor;
+	std::uint32_t particleCount = 0;
+	std::uint32_t particleMaxCount = 0;
+
+	std::vector<std::uint32_t> particleId;
+	std::vector<std::uint32_t> particleParentId;
+	std::vector<float_t> particleLife;
+	std::vector<float_t> particleLifespan;
+	std::vector<float3_t> particlePosition;
+	std::vector<float3_t> particleGlobalPosition;
+	std::vector<float3_t> particleVelocity;
+	std::vector<float3_t> particleForce;
+	std::vector<float3_t> particleRotation;
+	std::vector<float3_t> particleInitialRotation;
+	std::vector<float3_t> particleInitialAngularVelocity;
+	std::vector<float3_t> particleSize;
+	std::vector<float_t> particleInitialSize;
+	std::vector<float4_t> particleColor;
+	std::vector<float4_t> particleInitialColor;
 };
 }

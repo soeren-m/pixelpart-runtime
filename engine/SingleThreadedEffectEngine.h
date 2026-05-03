@@ -15,11 +15,11 @@ public:
 	SingleThreadedEffectEngine(const Effect& effect,
 		std::shared_ptr<ParticleGenerator> particleGenerator,
 		std::shared_ptr<ParticleModifier> particleModifier,
-		std::uint32_t particleCapacity);
+		std::uint32_t maxParticleCount = 0);
 	SingleThreadedEffectEngine(const Effect& effect,
 		std::shared_ptr<ParticleGenerator> particleGenerator,
 		std::shared_ptr<ParticleModifier> particleModifier,
-		std::uint32_t particleCapacity,
+		std::uint32_t maxParticleCount,
 		const EffectRuntimeState& initialState,
 		const EffectRuntimeContext& initialContext);
 
@@ -38,8 +38,6 @@ public:
 	virtual const EffectRuntimeState& state() const override;
 	virtual const EffectRuntimeContext& context() const override;
 
-	std::uint32_t particleCapacity() const;
-
 private:
 	const Effect& engineEffect;
 	std::shared_ptr<ParticleGenerator> engineParticleGenerator;
@@ -48,6 +46,6 @@ private:
 	EffectRuntimeState engineState;
 	EffectRuntimeContext engineContext;
 
-	std::uint32_t engineParticleCapacity = 0;
+	std::uint32_t engineMaxParticleCount = 0;
 };
 }

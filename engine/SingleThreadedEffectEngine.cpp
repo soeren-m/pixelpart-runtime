@@ -8,17 +8,17 @@
 namespace pixelpart {
 SingleThreadedEffectEngine::SingleThreadedEffectEngine(const Effect& effect,
 	std::shared_ptr<ParticleGenerator> particleGenerator, std::shared_ptr<ParticleModifier> particleModifier,
-	std::uint32_t particleCapacity) : EffectEngine(),
+	std::uint32_t maxParticleCount) : EffectEngine(),
 	engineEffect(effect),
 	engineParticleGenerator(particleGenerator),
 	engineParticleModifier(particleModifier),
-	engineParticleCapacity(particleCapacity) {
+	engineMaxParticleCount(maxParticleCount) {
 
 }
 SingleThreadedEffectEngine::SingleThreadedEffectEngine(const Effect& effect,
 	std::shared_ptr<ParticleGenerator> particleGenerator,
 	std::shared_ptr<ParticleModifier> particleModifier,
-	std::uint32_t particleCapacity,
+	std::uint32_t maxParticleCount,
 	const EffectRuntimeState& initialState,
 	const EffectRuntimeContext& initialContext) : EffectEngine(),
 	engineEffect(effect),
@@ -26,7 +26,7 @@ SingleThreadedEffectEngine::SingleThreadedEffectEngine(const Effect& effect,
 	engineParticleModifier(particleModifier),
 	engineState(initialState),
 	engineContext(initialContext),
-	engineParticleCapacity(particleCapacity) {
+	engineMaxParticleCount(maxParticleCount) {
 
 }
 
@@ -34,7 +34,7 @@ void SingleThreadedEffectEngine::advance(float_t dt) {
 	dt = std::max(dt, 0.0);
 	engineContext.deltaTime() = dt;
 
-	syncMapToKeys(engineState.particleCollections(), engineEffect.particleEmissionPairs(), engineParticleCapacity);
+	syncMapToKeys(engineState.particleCollections(), engineEffect.particleEmissionPairs(), engineMaxParticleCount);
 	syncMapToKeys(engineState.particleEmissionStates(), engineEffect.particleEmissionPairs());
 
 	engineParticleGenerator->generate(engineState, &engineEffect, engineContext);
@@ -110,9 +110,5 @@ const EffectRuntimeState& SingleThreadedEffectEngine::state() const {
 }
 const EffectRuntimeContext& SingleThreadedEffectEngine::context() const {
 	return engineContext;
-}
-
-std::uint32_t SingleThreadedEffectEngine::particleCapacity() const {
-	return engineParticleCapacity;
 }
 }
