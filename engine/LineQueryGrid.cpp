@@ -36,6 +36,10 @@ LineQueryGrid::QueryResult LineQueryGrid::queryLine(const float2_t& start, const
 }
 
 void LineQueryGrid::build(const std::vector<Line>& lines, std::uint32_t cellCountFactor, float_t padding) {
+	if(lines.empty()) {
+		return;
+	}
+
 	gridBottom = float2_t(std::numeric_limits<float_t>::max());
 	gridTop = float2_t(std::numeric_limits<float_t>::lowest());
 	for(const Line& line : lines) {
