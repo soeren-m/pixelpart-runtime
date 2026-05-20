@@ -2,6 +2,7 @@
 #include "../common/Types.h"
 #include "../effect/ParticleType.h"
 #include "../effect/ParticleEmitter.h"
+#include "../effect/ParticleCoordinateSystem.h"
 #include <algorithm>
 
 namespace pixelpart {
@@ -16,14 +17,15 @@ void IntegrationModifier::apply(ParticleCollection::WritePtr particles, std::uin
 		particles.position[p] += particles.velocity[p] * dt;
 	}
 
-	std::copy(particles.position, particles.position + particleCount, particles.globalPosition);
-
-	if(particleType.positionRelative()) {
-		float3_t origin = effect->sceneGraph().globalTransform(particleEmitter.id(), runtimeContext).position();
+	if(particleType.coordinateSystem() == ParticleCoordinateSystem::local) {
+		matrix4_t parentTransform = effect->sceneGraph().globalTransform(particleEmitter.id(), runtimeContext).matrix();
 
 		for(std::uint32_t p = 0; p < particleCount; p++) {
-			particles.globalPosition[p] += origin;
+			particles.globalPosition[p] = float3_t(parentTransform * float4_t(particles.position[p], 1.0));
 		}
+	}
+	else {
+		std::copy(particles.position, particles.position + particleCount, particles.globalPosition);
 	}
 }
 

@@ -76,11 +76,11 @@ const std::string& ParticleType::name() const {
 	return particleTypeName;
 }
 
-void ParticleType::positionRelative(bool relative) {
-	particlePositionRelative = relative;
+void ParticleType::coordinateSystem(ParticleCoordinateSystem coordSystem) {
+	particleCoordinateSystem = coordSystem;
 }
-bool ParticleType::positionRelative() const {
-	return particlePositionRelative;
+ParticleCoordinateSystem ParticleType::coordinateSystem() const {
+	return particleCoordinateSystem;
 }
 
 void ParticleType::rotationMode(RotationMode mode) {
@@ -355,7 +355,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "parent_id", particleType.parentId() },
 		{ "name", particleType.name() },
 
-		{ "position_relative", particleType.positionRelative() },
+		{ "coordinate_system", particleType.coordinateSystem() },
 		{ "rotation_mode", particleType.rotationMode() },
 		{ "alignment_mode", particleType.alignmentMode() },
 
@@ -406,7 +406,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	particleType.parent(j.value("parent_id", id_t()));
 	particleType.name(j.value("name", ""));
 
-	particleType.positionRelative(j.value("position_relative", false));
+	particleType.coordinateSystem(j.value("coordinate_system", ParticleCoordinateSystem::global));
 	particleType.rotationMode(j.value("rotation_mode", RotationMode::angle));
 	particleType.alignmentMode(j.value("alignment_mode", AlignmentMode::camera));
 

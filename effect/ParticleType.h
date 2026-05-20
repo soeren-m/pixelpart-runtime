@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ParticleCoordinateSystem.h"
 #include "RotationMode.h"
 #include "AlignmentMode.h"
 #include "MaterialInstance.h"
@@ -32,8 +33,8 @@ public:
 	void name(const std::string& name);
 	const std::string& name() const;
 
-	void positionRelative(bool relative);
-	bool positionRelative() const;
+	void coordinateSystem(ParticleCoordinateSystem coordSystem);
+	ParticleCoordinateSystem coordinateSystem() const;
 
 	void rotationMode(RotationMode mode);
 	RotationMode rotationMode() const;
@@ -154,7 +155,7 @@ private:
 	id_t parentParticleTypeId = id_t();
 	std::string particleTypeName;
 
-	bool particlePositionRelative = false;
+	ParticleCoordinateSystem particleCoordinateSystem = ParticleCoordinateSystem::global;
 	RotationMode particleRotationMode = RotationMode::angle;
 	AlignmentMode particleAlignmentMode = AlignmentMode::camera;
 
