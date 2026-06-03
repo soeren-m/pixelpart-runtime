@@ -5,6 +5,7 @@ target_sources(pixelpart-runtime PRIVATE
 	Coordinate2dModifier.cpp
 	DefaultParticleGenerator.cpp
 	DefaultParticleModifier.cpp
+	EffectRuntimeQuery.cpp
 	EffectRuntimeState.cpp
 	ForceModifier.cpp
 	IntegrationModifier.cpp
