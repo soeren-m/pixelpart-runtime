@@ -20,10 +20,21 @@ float3_t Transform::position() const {
 	return float3_t(transformMatrix[3].x, transformMatrix[3].y, transformMatrix[3].z);
 }
 float3_t Transform::rotation() const {
+	constexpr float_t epsilon = 0.000001;
+
+	float_t sx = math::length(transformMatrix[0]);
+	float_t sy = math::length(transformMatrix[1]);
+	float_t sz = math::length(transformMatrix[2]);
+	if(sx < epsilon || sy < epsilon || sz < epsilon) {
+		sx = 1.0;
+		sy = 1.0;
+		sz = 1.0;
+	}
+
 	matrix4_t normalizedMatrix = transformMatrix;
-	normalizedMatrix[0] = math::normalize(transformMatrix[0]);
-	normalizedMatrix[1] = math::normalize(transformMatrix[1]);
-	normalizedMatrix[2] = math::normalize(transformMatrix[2]);
+	normalizedMatrix[0] = transformMatrix[0] / sx;
+	normalizedMatrix[1] = transformMatrix[1] / sy;
+	normalizedMatrix[2] = transformMatrix[2] / sz;
 
 	float_t roll, yaw, pitch;
 	math::extractYawPitchRoll(normalizedMatrix, yaw, pitch, roll);
