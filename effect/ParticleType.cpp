@@ -25,7 +25,7 @@ void ParticleType::applyInputs(const ComputeGraph::InputSet& inputs) {
 	particleLifetimeRotationBySpeed.applyInputs(inputs);
 	particleLifetimeAcceleration.applyInputs(inputs);
 	particleLifetimeRadialAcceleration.applyInputs(inputs);
-	particleLifetimeWeight.applyInputs(inputs);
+	particleLifetimeForceMultiplier.applyInputs(inputs);
 	particleLifetimeBounce.applyInputs(inputs);
 	particleLifetimeFriction.applyInputs(inputs);
 	particleLifetimeColor.applyInputs(inputs);
@@ -265,11 +265,11 @@ const AnimatedProperty<float_t>& ParticleType::radialAcceleration() const {
 	return particleLifetimeRadialAcceleration;
 }
 
-AnimatedProperty<float_t>& ParticleType::weight() {
-	return particleLifetimeWeight;
+AnimatedProperty<float_t>& ParticleType::forceMultiplier() {
+	return particleLifetimeForceMultiplier;
 }
-const AnimatedProperty<float_t>& ParticleType::weight() const {
-	return particleLifetimeWeight;
+const AnimatedProperty<float_t>& ParticleType::forceMultiplier() const {
+	return particleLifetimeForceMultiplier;
 }
 
 AnimatedProperty<float_t>& ParticleType::bounce() {
@@ -386,7 +386,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "rotation_by_speed", particleType.rotationBySpeed() },
 		{ "acceleration", particleType.acceleration() },
 		{ "radial_acceleration", particleType.radialAcceleration() },
-		{ "weight", particleType.weight() },
+		{ "force_multiplier", particleType.forceMultiplier() },
 		{ "bounce", particleType.bounce() },
 		{ "friction", particleType.friction() },
 		{ "color", particleType.color() },
@@ -437,7 +437,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	particleType.rotationBySpeed() = j.value("rotation_by_speed", AnimatedProperty<float3_t>(float3_t(0.0)));
 	particleType.acceleration() = j.value("acceleration", AnimatedProperty<float_t>(0.0));
 	particleType.radialAcceleration() = j.value("radial_acceleration", AnimatedProperty<float_t>(0.0));
-	particleType.weight() = j.value("weight", AnimatedProperty<float_t>(1.0));
+	particleType.forceMultiplier() = j.value("force_multiplier", AnimatedProperty<float_t>(1.0));
 	particleType.bounce() = j.value("bounce", AnimatedProperty<float_t>(1.0));
 	particleType.friction() = j.value("friction", AnimatedProperty<float_t>(1.0));
 	particleType.color() = j.value("color", AnimatedProperty<float4_t>(float4_t(1.0)));

@@ -111,7 +111,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 			center, size.x,
 			particles.globalPosition[p]);
 
-		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
+		particles.force[p] += forceVector * strength * particleType.forceMultiplier().at(particles.life[p]);
 	}
 }
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
@@ -133,7 +133,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 			rotationMatrix, inverseRotationMatrix, directionMatrix,
 			particles.globalPosition[p]);
 
-		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
+		particles.force[p] += forceVector * strength * particleType.forceMultiplier().at(particles.life[p]);
 	}
 }
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
@@ -162,7 +162,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 			particles.globalPosition[p], inside);
 
 		if(inside) {
-			forceVector *= strength * particleType.weight().at(particles.life[p]);
+			forceVector *= strength * particleType.forceMultiplier().at(particles.life[p]);
 			particles.force[p] += forceVector * (1.0 - tightness);
 			particles.velocity[p] *= 1.0 - tightness;
 			particles.velocity[p] += forceVector * tightness;
@@ -186,7 +186,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 			particles.globalPosition[p],
 			alpha, t);
 
-		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
+		particles.force[p] += forceVector * strength * particleType.forceMultiplier().at(particles.life[p]);
 	}
 }
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
@@ -204,7 +204,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 			center, size, inverseRotationMatrix,
 			particles.globalPosition[p], particles.velocity[p], particles.size[p] * particleType.physicalSize().at(particles.life[p]));
 
-		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
+		particles.force[p] += forceVector * strength * particleType.forceMultiplier().at(particles.life[p]);
 	}
 }
 
