@@ -1,5 +1,8 @@
 #include "CollisionModifier.h"
+#include "../common/Types.h"
 #include "../common/Id.h"
+#include "../common/Coordinates.h"
+#include "../common/Curve.h"
 #include "../math/Common.h"
 #include "../math/Geometry.h"
 #include "../effect/ParticleType.h"
@@ -10,36 +13,9 @@ namespace pixelpart {
 void CollisionModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
 	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
 	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
-	float_t t = runtimeContext.time();
-	float_t dt = runtimeContext.deltaTime();
 
-	if(!modifierLine2dColliders.empty()) {
-		for(std::uint32_t p = 0; p < particleCount; p++) {
-			LineQueryGrid::QueryResult potentialColliderIndices = modifierLine2dColliderGrid.queryLine(
-				float2_t(particles.globalPosition[p]),
-				float2_t(particles.globalPosition[p] + particles.velocity[p] * dt + particles.force[p] * dt * dt),
-				float2_t(particles.size[p] * particleType.physicalSize().at(particles.life[p])));
-
-			for(std::uint32_t colliderIndex : potentialColliderIndices) {
-				const Line2dColliderObject& collider = modifierLine2dColliders[colliderIndex];
-				if(collider.exclusionSet[particleType.id().value()]) {
-					continue;
-				}
-
-				collide(particleType, particles, p, t, dt, collider);
-			}
-		}
-	}
-
-	for(const Plane3dColliderObject& planeCollider : modifierPlane3dColliders) {
-		if(planeCollider.exclusionSet[particleType.id().value()]) {
-			continue;
-		}
-
-		for(std::uint32_t p = 0; p < particleCount; p++) {
-			collide(particleType, particles, p, t, dt, planeCollider);
-		}
-	}
+	calculateCollisions2d(particles, particleCount, particleType, runtimeContext);
+	calculateCollisions3d(particles, particleCount, particleType, runtimeContext);
 }
 
 void CollisionModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
@@ -210,110 +186,156 @@ std::optional<float3_t> CollisionModifier::rayColliderIntersection(const Plane3d
 	return point;
 }
 
-void CollisionModifier::collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, std::uint32_t p, float_t t, float_t dt, const Line2dColliderObject& collider) const {
-	float2_t closestPoint = closestPointOnLine(float2_t(particles.globalPosition[p]), collider);
-	if(!isPointOnLineSegment(closestPoint, collider.start, collider.end)) {
+void CollisionModifier::calculateCollisions2d(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const ParticleType& particleType, const EffectRuntimeContext& runtimeContext) const {
+	if(modifierLine2dColliders.empty()) {
 		return;
 	}
 
-	float_t colliderLife = std::fmod(t - collider.startTime, collider.duration) / collider.duration;
+	float_t t = runtimeContext.time();
+	float_t dt = runtimeContext.deltaTime();
 
-	float2_t globalParticlePosition = float2_t(particles.globalPosition[p]);
-	float2_t globalParticleVelocity = float2_t(particles.velocity[p]);
-	float2_t globalParticleForce = float2_t(particles.force[p]);
-	float2_t colliderToParticle = globalParticlePosition - closestPoint;
-	float_t distanceSqr = math::lengthSquared(colliderToParticle);
-	float_t particleRadius = std::min(particles.size[p].x, particles.size[p].y) * 0.5;
-	particleRadius = std::max(particleRadius * particleType.physicalSize().at(particles.life[p]), 0.01);
+	const Curve<float_t>& particlePhysicalSizeCurve = particleType.physicalSize().resultCurve();
+	const Curve<float_t>& particleBounceCurve = particleType.bounce().resultCurve();
+	const Curve<float_t>& particleFrictionCurve = particleType.friction().resultCurve();
 
-	if(distanceSqr <= particleRadius * particleRadius) {
-		if(collider.killOnContact) {
-			particles.life[p] = 1.0;
-		}
-		else {
-			float_t distance = std::sqrt(distanceSqr);
-			float2_t normal = math::normalize(colliderToParticle);
-			float2_t reflectedVelocity = math::reflect(globalParticleVelocity, normal);
-			float2_t segmentVector = math::normalize(collider.end - collider.start);
-			float_t slideFactor = math::dot((globalParticleForce != float2_t(0.0)) ? math::normalize(globalParticleForce) : float2_t(0.0, 1.0), segmentVector) * math::length(globalParticleForce) * distance / particleRadius;
-			float_t bounce = collider.bounce.at(colliderLife) * particleType.bounce().at(particles.life[p]);
-			float_t friction = std::min(collider.friction.at(colliderLife) * particleType.friction().at(particles.life[p]), 1.0);
+	for(std::uint32_t p = 0; p < particleCount; p++) {
+		float2_t particlePosition = float2_t(particles.globalPosition[p]);
+		float2_t particleVelocity = float2_t(particles.velocity[p]);
+		float2_t particleForce = float2_t(particles.force[p]);
+		float2_t particleSize = float2_t(particles.size[p]);
+		float_t particlePhysicalSize = particlePhysicalSizeCurve.at(particles.life[p]);
 
-			particles.velocity[p] = float3_t(reflectedVelocity * bounce, particles.velocity[p].z);
-			particles.velocity[p] += float3_t(segmentVector * slideFactor * (1.0 - friction), 0.0);
-			particles.position[p] += float3_t(normal * (particleRadius - distance), 0.0);
-		}
-	}
-	else {
-		std::optional<float3_t> intersection = rayColliderIntersection(collider, globalParticlePosition, globalParticlePosition + globalParticleVelocity * dt + globalParticleForce * dt * dt);
+		LineQueryGrid::QueryResult potentialColliderIndices = modifierLine2dColliderGrid.queryLine(
+			particlePosition,
+			particlePosition + particleVelocity * dt + particleForce * dt * dt,
+			particleSize * particlePhysicalSize);
 
-		if(intersection) {
-			if(collider.killOnContact) {
-				particles.life[p] = 1.0;
+		for(std::uint32_t colliderIndex : potentialColliderIndices) {
+			const Line2dColliderObject& collider = modifierLine2dColliders[colliderIndex];
+			if(collider.exclusionSet[particleType.id().value()]) {
+				continue;
+			}
+
+			float2_t closestPoint = closestPointOnLine(particlePosition, collider);
+			if(!isPointOnLineSegment(closestPoint, collider.start, collider.end)) {
+				continue;
+			}
+
+			float_t colliderLife = std::fmod(t - collider.startTime, collider.duration) / collider.duration;
+			float2_t colliderToParticle = particlePosition - closestPoint;
+			float_t distanceSqr = math::lengthSquared(colliderToParticle);
+			float_t particleRadius = std::min(particleSize.x, particleSize.y) * 0.5;
+			particleRadius = std::max(particleRadius * particlePhysicalSize, 0.01);
+
+			if(distanceSqr <= particleRadius * particleRadius) {
+				if(collider.killOnContact) {
+					particles.life[p] = 1.0;
+				}
+				else {
+					float_t particleForceLength = math::length(particleForce);
+					float2_t particleForceDirection = particleForceLength != 0.0
+						? particleForce / particleForceLength
+						: worldUpVector2;
+
+					float_t distance = std::sqrt(distanceSqr);
+					float2_t colliderNormal = math::normalize(colliderToParticle);
+					float2_t reflectedVelocity = math::reflect(particleVelocity, colliderNormal);
+					float2_t segmentVector = math::normalize(collider.end - collider.start);
+					float_t slideFactor = math::dot(particleForceDirection, segmentVector) * particleForceLength * distance / particleRadius;
+					float_t bounce = collider.bounce.at(colliderLife) * particleBounceCurve.at(particles.life[p]);
+					float_t friction = std::min(collider.friction.at(colliderLife) * particleFrictionCurve.at(particles.life[p]), 1.0);
+
+					particles.velocity[p] = float3_t(reflectedVelocity * bounce, particles.velocity[p].z);
+					particles.velocity[p] += float3_t(segmentVector * slideFactor * (1.0 - friction), 0.0);
+					particles.position[p] += float3_t(colliderNormal * (particleRadius - distance), 0.0);
+				}
 			}
 			else {
-				float2_t normal = math::normalize(colliderToParticle);
-				float2_t reflectedVelocity = math::reflect(globalParticleVelocity, normal);
-				float_t bounce = collider.bounce.at(colliderLife) * particleType.bounce().at(particles.life[p]);
+				std::optional<float3_t> intersection = rayColliderIntersection(collider, particlePosition, particlePosition + particleVelocity * dt + particleVelocity * dt * dt);
 
-				particles.velocity[p] = float3_t(reflectedVelocity * bounce, particles.velocity[p].z);
+				if(intersection) {
+					if(collider.killOnContact) {
+						particles.life[p] = 1.0;
+					}
+					else {
+						float2_t colliderNormal = math::normalize(colliderToParticle);
+						float2_t reflectedVelocity = math::reflect(particleVelocity, colliderNormal);
+						float_t bounce = collider.bounce.at(colliderLife) * particleBounceCurve.at(particles.life[p]);
+
+						particles.velocity[p] = float3_t(reflectedVelocity * bounce, particles.velocity[p].z);
+					}
+				}
 			}
 		}
 	}
 }
-void CollisionModifier::collide(const ParticleType& particleType, ParticleCollection::WritePtr particles, std::uint32_t p, float_t t, float_t dt, const Plane3dColliderObject& collider) const {
-	float3_t closestPoint = closestPointOnPlane(particles.globalPosition[p], collider);
-	if(!isPointOnCollider(closestPoint, collider)) {
-		return;
-	}
+void CollisionModifier::calculateCollisions3d(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const ParticleType& particleType, const EffectRuntimeContext& runtimeContext) const {
+	float_t t = runtimeContext.time();
+	float_t dt = runtimeContext.deltaTime();
 
-	float_t colliderLife = std::fmod(t - collider.startTime, collider.duration) / collider.duration;
-	float3_t globalParticlePosition = particles.globalPosition[p];
-	float3_t globalParticleVelocity = particles.velocity[p];
-	float3_t globalParticleForce = particles.force[p];
-	float3_t normalizedParticleForce = (globalParticleForce != float3_t(0.0))
-		? math::normalize(globalParticleForce)
-		: float3_t(0.0, 1.0, 0.0);
-	float3_t colliderToParticle = globalParticlePosition - closestPoint;
-	float3_t colliderNormal = math::normalize(colliderToParticle);
-	float_t distanceSqr = math::lengthSquared(colliderToParticle);
-	float_t particleRadius = std::min(particles.size[p].x, std::min(particles.size[p].y, particles.size[p].z)) * 0.5;
-	particleRadius = std::max(particleRadius * particleType.physicalSize().at(particles.life[p]), 0.01);
-
-	if(distanceSqr <= particleRadius * particleRadius) {
-		if(collider.killOnContact) {
-			particles.life[p] = 1.0;
+	for(const Plane3dColliderObject& collider : modifierPlane3dColliders) {
+		if(collider.exclusionSet[particleType.id().value()]) {
+			continue;
 		}
-		else {
-			float_t distance = std::sqrt(distanceSqr);
-			float3_t reflectedVelocity = math::reflect(globalParticleVelocity, colliderNormal);
 
-			float3_t slideVector = closestPointOnPlane(closestPoint + normalizedParticleForce, collider) - closestPoint;
-			if(slideVector != float3_t(0.0)) {
-				slideVector = math::normalize(slideVector);
+		float_t colliderLife = std::fmod(t - collider.startTime, collider.duration) / collider.duration;
+		float_t colliderBounce = collider.bounce.at(colliderLife);
+		float_t colliderFriction = collider.friction.at(colliderLife);
+
+		const Curve<float_t>& particlePhysicalSizeCurve = particleType.physicalSize().resultCurve();
+		const Curve<float_t>& particleBounceCurve = particleType.bounce().resultCurve();
+		const Curve<float_t>& particleFrictionCurve = particleType.friction().resultCurve();
+
+		for(std::uint32_t p = 0; p < particleCount; p++) {
+			float3_t closestPoint = closestPointOnPlane(particles.globalPosition[p], collider);
+			if(!isPointOnCollider(closestPoint, collider)) {
+				continue;
 			}
 
-			float_t slideFactor = math::dot(normalizedParticleForce, slideVector) * math::length(globalParticleForce) * distance / particleRadius;
-			float_t bounce = collider.bounce.at(colliderLife) * particleType.bounce().at(particles.life[p]);
-			float_t friction = std::min(collider.friction.at(colliderLife) * particleType.friction().at(particles.life[p]), 1.0);
+			float3_t colliderToParticle = particles.globalPosition[p] - closestPoint;
+			float3_t colliderNormal = math::normalize(colliderToParticle);
+			float_t distanceSqr = math::lengthSquared(colliderToParticle);
+			float_t particleRadius = std::min(particles.size[p].x, std::min(particles.size[p].y, particles.size[p].z)) * 0.5;
+			particleRadius = std::max(particleRadius * particlePhysicalSizeCurve.at(particles.life[p]), 0.01);
 
-			particles.velocity[p] = reflectedVelocity * bounce;
-			particles.velocity[p] += slideVector * slideFactor * (1.0 - friction);
-			particles.position[p] += colliderNormal * (particleRadius - distance);
-		}
-	}
-	else {
-		std::optional<float3_t> intersection = rayColliderIntersection(collider, globalParticlePosition, globalParticlePosition + globalParticleVelocity * dt + globalParticleForce * dt * dt);
+			if(distanceSqr <= particleRadius * particleRadius) {
+				if(collider.killOnContact) {
+					particles.life[p] = 1.0;
+				}
+				else {
+					float_t particleForceLength = math::length(particles.force[p]);
+					float3_t particleForceDirection = particleForceLength != 0.0
+						? particles.force[p] / particleForceLength
+						: worldUpVector3;
 
-		if(intersection) {
-			if(collider.killOnContact) {
-				particles.life[p] = 1.0;
+					float_t distance = std::sqrt(distanceSqr);
+					float3_t reflectedVelocity = math::reflect(particles.velocity[p], colliderNormal);
+
+					float3_t slideVector = math::safeNormalize(closestPointOnPlane(closestPoint + particleForceDirection, collider) - closestPoint);
+					float_t slideFactor = math::dot(particleForceDirection, slideVector) * particleForceLength * distance / particleRadius;
+					float_t bounce = colliderBounce * particleBounceCurve.at(particles.life[p]);
+					float_t friction = std::min(colliderFriction * particleFrictionCurve.at(particles.life[p]), 1.0);
+
+					particles.velocity[p] = reflectedVelocity * bounce;
+					particles.velocity[p] += slideVector * slideFactor * (1.0 - friction);
+					particles.position[p] += colliderNormal * (particleRadius - distance);
+				}
 			}
 			else {
-				float3_t reflectedVelocity = math::reflect(globalParticleVelocity, colliderNormal);
-				float_t bounce = collider.bounce.at(colliderLife) * particleType.bounce().at(particles.life[p]);
+				std::optional<float3_t> intersection = rayColliderIntersection(collider,
+					particles.globalPosition[p], particles.globalPosition[p] + particles.velocity[p] * dt + particles.force[p] * dt * dt);
 
-				particles.velocity[p] = reflectedVelocity * bounce;
+				if(intersection) {
+					if(collider.killOnContact) {
+						particles.life[p] = 1.0;
+					}
+					else {
+						float3_t reflectedVelocity = math::reflect(particles.velocity[p], colliderNormal);
+						float_t bounce = colliderBounce * particleBounceCurve.at(particles.life[p]);
+
+						particles.velocity[p] = reflectedVelocity * bounce;
+					}
+				}
 			}
 		}
 	}

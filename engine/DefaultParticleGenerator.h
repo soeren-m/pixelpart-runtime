@@ -2,6 +2,8 @@
 
 #include "ParticleGenerator.h"
 #include "../common/Types.h"
+#include "../common/Curve.h"
+#include "../common/Transform.h"
 #include "../effect/ParticleEmitter.h"
 #include "../effect/ParticleType.h"
 #include "../effect/ParticleEmissionPair.h"
@@ -20,17 +22,11 @@ public:
 		const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const override;
 
 private:
-	static std::uint32_t generateRootParticles(EffectRuntimeState& state, ParticleCollection& particleCollection, ParticleEmissionState& particleEmissionState,
-		std::uint32_t count, const Effect* effect, ParticleEmissionPair emissionPair, EffectRuntimeContext runtimeContext, bool useTriggers);
-	static std::uint32_t generateSubParticles(EffectRuntimeState& state, ParticleCollection& particleCollection, ParticleEmissionState& particleEmissionState,
-		std::uint32_t count, std::uint32_t parentParticle, const ParticleCollection& parentParticleCollection,
-		const Effect* effect, ParticleEmissionPair emissionPair, EffectRuntimeContext runtimeContext);
-
-	static void initializeParticle(ParticleEmissionState& emissionState, ParticleCollection::WritePtr particles, std::uint32_t p, std::uint32_t id, std::uint32_t parentId,
-		const ParticleEmitter& particleEmitter, const ParticleType& particleType, float_t alpha,
-		const float3_t& globalEmitterPosition, const float3_t& globalEmitterRotation, const float3_t& globalEmitterSize,
-		const float3_t& emissionPosition, const float3_t& parentVelocity, bool effect3d,
-		std::mt19937& rng);
+	static std::uint32_t initializeParticles(std::uint32_t count,
+		EffectRuntimeState& state, ParticleEmissionState& emissionState,
+		ParticleCollection& particleCollection, const ParticleCollection* parentParticleCollection, std::uint32_t parentParticle,
+		const Effect* effect, ParticleEmissionPair emissionPair, EffectRuntimeContext runtimeContext,
+		bool useTriggers);
 
 	static float3_t emitOnSegment(float_t length,
 		ParticleEmitter::Distribution distribution,
@@ -78,8 +74,5 @@ private:
 	static float_t sampleGrid1d(std::uint32_t gridIndex, std::uint32_t gridSize, float_t min, float_t max);
 	static float_t sampleGrid2d(std::uint32_t gridIndex, std::uint32_t gridSize1, std::uint32_t gridSize2, float_t min, float_t max);
 	static float_t sampleGrid3d(std::uint32_t gridIndex, std::uint32_t gridSize1, std::uint32_t gridSize2, std::uint32_t gridSize3, float_t min, float_t max);
-
-	static float3_t rotate2d(const float3_t& v, float_t a);
-	static float3_t rotate3d(const float3_t& v, const float3_t& a);
 };
 }

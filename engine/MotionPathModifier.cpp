@@ -1,5 +1,6 @@
 #include "MotionPathModifier.h"
 #include "../common/Types.h"
+#include "../common/Curve.h"
 #include "../effect/ParticleType.h"
 
 namespace pixelpart {
@@ -9,7 +10,11 @@ void MotionPathModifier::apply(ParticleCollection::WritePtr particles, std::uint
 	const float_t targetLookahead = 0.01;
 
 	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
-	if(particleType.motionPathForce().value() < 0.1) {
+
+	const Curve<float3_t>& particleMotionPath = particleType.motionPath().resultCurve();
+	float_t particleMotionPathForce = particleType.motionPathForce().value();
+
+	if(particleMotionPathForce < 0.1) {
 		return;
 	}
 
@@ -18,9 +23,9 @@ void MotionPathModifier::apply(ParticleCollection::WritePtr particles, std::uint
 			particles.velocity[p] * positionLookahead +
 			particles.force[p] * positionLookahead * positionLookahead;
 
-		float3_t targetPosition = particleType.motionPath().at(particles.life[p] + targetLookahead);
+		float3_t targetPosition = particleMotionPath.at(particles.life[p] + targetLookahead);
 		float3_t targetVelocity = targetPosition - predictedPosition;
-		targetVelocity *= particleType.motionPathForce().value();
+		targetVelocity *= particleMotionPathForce;
 
 		particles.force[p] += targetVelocity - particles.velocity[p];
 	}

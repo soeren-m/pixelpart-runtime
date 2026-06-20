@@ -1,4 +1,6 @@
 #include "RotationModifier.h"
+#include "../common/Types.h"
+#include "../common/Curve.h"
 #include "../math/Geometry.h"
 #include "../effect/ParticleType.h"
 
@@ -6,13 +8,16 @@ namespace pixelpart {
 void RotationModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
 	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
 	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
+
+	const Curve<float3_t>& particleRotationCurve = particleType.rotation().resultCurve();
+	const Curve<float3_t>& particleRotationBySpeedCurve = particleType.rotationBySpeed().resultCurve();
 	float_t dt = runtimeContext.deltaTime();
 
 	switch(particleType.rotationMode()) {
 		case RotationMode::angle: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				particles.rotation[p] = particles.initialRotation[p] + particleType.rotation().at(particles.life[p]);
-				particles.rotation[p] += particleType.rotationBySpeed().at(particles.life[p]) * math::length(particles.velocity[p]);
+				particles.rotation[p] = particles.initialRotation[p] + particleRotationCurve.at(particles.life[p]);
+				particles.rotation[p] += particleRotationBySpeedCurve.at(particles.life[p]) * math::length(particles.velocity[p]);
 			}
 
 			break;
@@ -20,8 +25,8 @@ void RotationModifier::apply(ParticleCollection::WritePtr particles, std::uint32
 
 		case RotationMode::velocity: {
 			for(std::uint32_t p = 0; p < particleCount; p++) {
-				particles.rotation[p] += (particles.initialAngularVelocity[p] + particleType.rotation().at(particles.life[p])) * dt;
-				particles.rotation[p] += particleType.rotationBySpeed().at(particles.life[p]) * math::length(particles.velocity[p]) * dt;
+				particles.rotation[p] += (particles.initialAngularVelocity[p] + particleRotationCurve.at(particles.life[p])) * dt;
+				particles.rotation[p] += particleRotationBySpeedCurve.at(particles.life[p]) * math::length(particles.velocity[p]) * dt;
 			}
 
 			break;

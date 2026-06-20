@@ -1,4 +1,5 @@
 #include "ForceModifier.h"
+#include "../common/Curve.h"
 #include "../common/Coordinates.h"
 #include "../common/Transform.h"
 #include "../math/Common.h"
@@ -100,40 +101,81 @@ void ForceModifier::reset(const Effect* effect, EffectRuntimeContext runtimeCont
 
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 	const ParticleType& particleType, const AttractionField& attractionField, const SceneGraph& sceneGraph) const {
-	float_t alpha = attractionField.life(runtimeContext);
-	Transform transform = sceneGraph.globalTransform(attractionField.id(), runtimeContext);
-	float3_t center = transform.position();
-	float3_t size = transform.scale() * 0.5;
-	float_t strength = attractionField.strength().at(alpha);
+	float_t fieldLife = attractionField.life(runtimeContext);
+	Transform fieldTransform = sceneGraph.globalTransform(attractionField.id(), runtimeContext);
+	float3_t fieldPosition = fieldTransform.position();
+	float3_t fieldSize = fieldTransform.scale() * 0.5;
+	float_t fieldStrength = attractionField.strength().at(fieldLife);
+	bool fieldInfinite = attractionField.infinite();
+
+	const Curve<float_t>& particleWeightCurve = particleType.weight().resultCurve();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		float3_t forceVector = sampleAttractionField(attractionField,
-			center, size.x,
-			particles.globalPosition[p]);
+		float3_t particleToCenter = fieldPosition - particles.globalPosition[p];
+		float_t distanceToCenter = math::length(particleToCenter);
+		if(distanceToCenter > fieldSize.x && !fieldInfinite) {
+			continue;
+		}
 
-		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
+		distanceToCenter = std::max(distanceToCenter, 0.01);
+
+		float3_t forceVector = particleToCenter / (distanceToCenter * distanceToCenter);
+		particles.force[p] += forceVector * fieldStrength * particleWeightCurve.at(particles.life[p]);
 	}
 }
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 	const ParticleType& particleType, const AccelerationField& accelerationField, const SceneGraph& sceneGraph) const {
-	float_t alpha = accelerationField.life(runtimeContext);
-	Transform transform = sceneGraph.globalTransform(accelerationField.id(), runtimeContext);
-	float3_t center = transform.position();
-	float3_t size = transform.scale() * 0.5;
-	float3_t rotation = math::radians(transform.rotation());
-	matrix4_t rotationMatrix = math::yawPitchRollRotationMatrix(rotation.y, rotation.z, rotation.x);
-	matrix4_t inverseRotationMatrix = math::yawPitchRollRotationMatrix(-rotation.y, -rotation.z, -rotation.x);
-	float3_t direction = math::radians(accelerationField.accelerationDirection().at(alpha));
-	matrix4_t directionMatrix = math::yawPitchRollRotationMatrix(direction.y, direction.z, direction.x);
-	float_t strength = accelerationField.strength().at(alpha);
+	float_t fieldLife = accelerationField.life(runtimeContext);
+	Transform fieldTransform = sceneGraph.globalTransform(accelerationField.id(), runtimeContext);
+	float3_t fieldPosition = fieldTransform.position();
+	float3_t fieldSize = fieldTransform.scale() * 0.5;
+	float3_t fieldRotation = math::radians(fieldTransform.rotation());
+	matrix4_t fieldRotationMatrix = math::yawPitchRollRotationMatrix(fieldRotation.y, fieldRotation.z, fieldRotation.x);
+	matrix4_t fieldInverseRotationMatrix = math::yawPitchRollRotationMatrix(-fieldRotation.y, -fieldRotation.z, -fieldRotation.x);
+	float_t fieldStrength = accelerationField.strength().at(fieldLife);
+	bool fieldInfinite = accelerationField.infinite();
+
+	float3_t accelerationDirection = math::radians(accelerationField.accelerationDirection().at(fieldLife));
+	matrix4_t accelerationDirectionMatrix = math::yawPitchRollRotationMatrix(accelerationDirection.y, accelerationDirection.z, accelerationDirection.x);
+	float_t accelerationStrengthVariance = accelerationField.accelerationStrengthVariance().at(fieldLife);
+	float_t accelerationDirectionVariance = accelerationField.accelerationDirectionVariance().at(fieldLife);
+	std::int32_t accelerationGridSizeX = accelerationField.accelerationGridSizeX();
+	std::int32_t accelerationGridSizeY = accelerationField.accelerationGridSizeY();
+	std::int32_t accelerationGridSizeZ = accelerationField.accelerationGridSizeZ();
+	const std::vector<float3_t>& accelerationDirectionGrid = accelerationField.accelerationDirectionGrid();
+	const std::vector<float_t>& accelerationStrengthGrid = accelerationField.accelerationStrengthGrid();
+
+	const Curve<float_t>& particleWeightCurve = particleType.weight().resultCurve();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		float3_t forceVector = sampleAccelerationField(accelerationField,
-			center, size,
-			rotationMatrix, inverseRotationMatrix, directionMatrix,
-			particles.globalPosition[p]);
+		float3_t localParticlePosition = float3_t(fieldInverseRotationMatrix * float4_t(particles.globalPosition[p] - fieldPosition, 1.0));
+		if(((localParticlePosition.x < -fieldSize.x || localParticlePosition.x > fieldSize.x) ||
+			(localParticlePosition.y < -fieldSize.y || localParticlePosition.y > fieldSize.y) ||
+			(localParticlePosition.z < -fieldSize.z || localParticlePosition.z > fieldSize.z)) && !fieldInfinite) {
+			continue;
+		}
 
-		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
+		std::int32_t gridCellX = fieldSize.x > 0.0
+			? std::clamp(static_cast<std::int32_t>((localParticlePosition.x + fieldSize.x) / (fieldSize.x * 2.0) * static_cast<float_t>(accelerationGridSizeX)), 0, accelerationGridSizeX - 1)
+			: 0;
+		std::int32_t gridCellY = fieldSize.y > 0.0
+			? std::clamp(static_cast<std::int32_t>((localParticlePosition.y + fieldSize.y) / (fieldSize.y * 2.0) * static_cast<float_t>(accelerationGridSizeY)), 0, accelerationGridSizeY - 1)
+			: 0;
+		std::int32_t gridCellZ = fieldSize.z > 0.0
+			? std::clamp(static_cast<std::int32_t>((localParticlePosition.z + fieldSize.z) / (fieldSize.z * 2.0) * static_cast<float_t>(accelerationGridSizeZ)), 0, accelerationGridSizeZ - 1)
+			: 0;
+		std::uint32_t gridCellIndex = static_cast<std::uint32_t>(
+			gridCellZ * accelerationGridSizeY * accelerationGridSizeX +
+			gridCellY * accelerationGridSizeX +
+			gridCellX);
+
+		float3_t gridDirectionOffset = math::radians(accelerationDirectionVariance * accelerationDirectionGrid[gridCellIndex]);
+		float_t gridStrengthOffset = accelerationStrengthVariance * accelerationStrengthGrid[gridCellIndex] + 1.0;
+		matrix4_t directionOffsetMatrix = math::yawPitchRollRotationMatrix(gridDirectionOffset.y, gridDirectionOffset.z, gridDirectionOffset.x);
+
+		float3_t forceVector = float3_t(fieldRotationMatrix * directionOffsetMatrix * accelerationDirectionMatrix * worldUpVector4);
+
+		particles.force[p] += forceVector * gridStrengthOffset * fieldStrength * particleWeightCurve.at(particles.life[p]);
 	}
 }
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
@@ -142,335 +184,273 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 		return;
 	}
 
-	float_t alpha = vectorField.life(runtimeContext);
-	Transform transform = sceneGraph.globalTransform(vectorField.id(), runtimeContext);
-	float3_t center = transform.position();
-	float3_t size = transform.scale() * 0.5;
-	float3_t rotation = math::radians(transform.rotation());
-	matrix4_t rotationMatrix = math::yawPitchRollRotationMatrix(rotation.y, rotation.z, rotation.x);
-	matrix4_t inverseRotationMatrix = math::yawPitchRollRotationMatrix(-rotation.y, -rotation.z, -rotation.x);
-	float_t strength = vectorField.strength().at(alpha);
+	float_t fieldLife = vectorField.life(runtimeContext);
+	Transform fieldTransform = sceneGraph.globalTransform(vectorField.id(), runtimeContext);
+	float3_t fieldPosition = fieldTransform.position();
+	float3_t fieldSize = fieldTransform.scale() * 0.5;
+	float3_t fieldRotation = math::radians(fieldTransform.rotation());
+	matrix4_t fieldRotationMatrix = math::yawPitchRollRotationMatrix(fieldRotation.y, fieldRotation.z, fieldRotation.x);
+	matrix4_t fieldInverseRotationMatrix = math::yawPitchRollRotationMatrix(-fieldRotation.y, -fieldRotation.z, -fieldRotation.x);
+	float_t fieldStrength = vectorField.strength().at(fieldLife);
+	bool fieldInfinite = vectorField.infinite();
 
 	const VectorFieldResource& vectorFieldResource = modifierEffectResources->vectorFields().at(vectorField.vectorFieldResourceId());
-	float_t tightness = std::clamp(vectorField.tightness().at(alpha), 0.0, 1.0);
+	const Grid3d<float3_t>& vectorFieldGrid = vectorFieldResource.field();
+	float_t vectorFieldTightness = std::clamp(vectorField.tightness().at(fieldLife), 0.0, 1.0);
+
+	const Curve<float_t>& particleWeightCurve = particleType.weight().resultCurve();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		bool inside = false;
-		float3_t forceVector = sampleVectorField(vectorField, vectorFieldResource,
-			center, size,
-			rotationMatrix, inverseRotationMatrix,
-			particles.globalPosition[p], inside);
-
-		if(inside) {
-			forceVector *= strength * particleType.weight().at(particles.life[p]);
-			particles.force[p] += forceVector * (1.0 - tightness);
-			particles.velocity[p] *= 1.0 - tightness;
-			particles.velocity[p] += forceVector * tightness;
+		float3_t localParticlePosition = float3_t(fieldInverseRotationMatrix * float4_t(particles.globalPosition[p] - fieldPosition, 1.0));
+		if((localParticlePosition.x < -fieldSize.x || localParticlePosition.x > fieldSize.x ||
+			localParticlePosition.y < -fieldSize.y || localParticlePosition.y > fieldSize.y ||
+			localParticlePosition.z < -fieldSize.z || localParticlePosition.z > fieldSize.z) && !fieldInfinite) {
+			continue;
 		}
+
+		float3_t forceVector = float3_t(0.0);
+		float3_t samplePosition = (localParticlePosition + fieldSize) / (fieldSize * 2.0);
+
+		if(modifierEffect3d) {
+			switch(vectorField.vectorFieldFilter()) {
+				case VectorField::Filter::none: {
+					float3_t normalizedSamplePosition = float3_t(
+						samplePosition.x * static_cast<float_t>(vectorFieldGrid.width()),
+						samplePosition.y * static_cast<float_t>(vectorFieldGrid.height()),
+						samplePosition.z * static_cast<float_t>(vectorFieldGrid.depth()));
+
+					forceVector = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x),
+						static_cast<std::int32_t>(normalizedSamplePosition.y),
+						static_cast<std::int32_t>(normalizedSamplePosition.z),
+						float3_t(0.0));
+
+					break;
+				}
+
+				case VectorField::Filter::linear: {
+					float3_t normalizedSamplePosition = float3_t(
+						samplePosition.x * static_cast<float_t>(vectorFieldGrid.width()),
+						samplePosition.y * static_cast<float_t>(vectorFieldGrid.height()),
+						samplePosition.z * static_cast<float_t>(vectorFieldGrid.depth()));
+
+					float_t fractX = math::fract(normalizedSamplePosition.x);
+					float_t fractY = math::fract(normalizedSamplePosition.y);
+					float_t fractZ = math::fract(normalizedSamplePosition.y);
+					std::int32_t nextOffsetX = fractX > 0.5 ? +1 : -1;
+					std::int32_t nextOffsetY = fractY > 0.5 ? +1 : -1;
+					std::int32_t nextOffsetZ = fractZ > 0.5 ? +1 : -1;
+
+					float3_t sample0 = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x),
+						static_cast<std::int32_t>(normalizedSamplePosition.y),
+						static_cast<std::int32_t>(normalizedSamplePosition.z),
+						float3_t(0.0));
+					float3_t sample1 = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x) + nextOffsetX,
+						static_cast<std::int32_t>(normalizedSamplePosition.y),
+						static_cast<std::int32_t>(normalizedSamplePosition.z),
+						float3_t(0.0));
+					float3_t sample2 = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x),
+						static_cast<std::int32_t>(normalizedSamplePosition.y) + nextOffsetY,
+						static_cast<std::int32_t>(normalizedSamplePosition.z),
+						float3_t(0.0));
+					float3_t sample3 = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x) + nextOffsetX,
+						static_cast<std::int32_t>(normalizedSamplePosition.y) + nextOffsetY,
+						static_cast<std::int32_t>(normalizedSamplePosition.z),
+						float3_t(0.0));
+					float3_t sample4 = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x),
+						static_cast<std::int32_t>(normalizedSamplePosition.y),
+						static_cast<std::int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
+						float3_t(0.0));
+					float3_t sample5 = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x) + nextOffsetX,
+						static_cast<std::int32_t>(normalizedSamplePosition.y),
+						static_cast<std::int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
+						float3_t(0.0));
+					float3_t sample6 = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x),
+						static_cast<std::int32_t>(normalizedSamplePosition.y) + nextOffsetY,
+						static_cast<std::int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
+						float3_t(0.0));
+					float3_t sample7 = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x) + nextOffsetX,
+						static_cast<std::int32_t>(normalizedSamplePosition.y) + nextOffsetY,
+						static_cast<std::int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
+						float3_t(0.0));
+
+					forceVector = math::linearInterpolation(
+						math::linearInterpolation(
+							math::linearInterpolation(sample0, sample1, std::abs(fractX - 0.5)),
+							math::linearInterpolation(sample2, sample3, std::abs(fractX - 0.5)),
+							std::abs(fractY - 0.5)),
+						math::linearInterpolation(
+							math::linearInterpolation(sample4, sample5, std::abs(fractX - 0.5)),
+							math::linearInterpolation(sample6, sample7, std::abs(fractX - 0.5)),
+							std::abs(fractY - 0.5)),
+						std::abs(fractZ - 0.5));
+
+					break;
+				}
+
+				default: {
+					break;
+				}
+			}
+		}
+		else {
+			switch(vectorField.vectorFieldFilter()) {
+				case VectorField::Filter::none: {
+					float3_t normalizedSamplePosition = float3_t(
+						samplePosition.x * static_cast<float_t>(vectorFieldGrid.width()),
+						samplePosition.y * static_cast<float_t>(vectorFieldGrid.height()),
+						0.0);
+
+					forceVector = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x),
+						static_cast<std::int32_t>(normalizedSamplePosition.y),
+						static_cast<std::int32_t>(normalizedSamplePosition.z),
+						float3_t(0.0));
+
+					break;
+				}
+
+				case VectorField::Filter::linear: {
+					float3_t normalizedSamplePosition = float3_t(
+						samplePosition.x * static_cast<float_t>(vectorFieldGrid.width()),
+						samplePosition.y * static_cast<float_t>(vectorFieldGrid.height()),
+						0.0);
+
+					float_t fractX = math::fract(normalizedSamplePosition.x);
+					float_t fractY = math::fract(normalizedSamplePosition.y);
+					std::int32_t nextOffsetX = fractX > 0.5 ? +1 : -1;
+					std::int32_t nextOffsetY = fractY > 0.5 ? +1 : -1;
+
+					float3_t sample0 = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x),
+						static_cast<std::int32_t>(normalizedSamplePosition.y),
+						static_cast<std::int32_t>(normalizedSamplePosition.z),
+						float3_t(0.0));
+					float3_t sample1 = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x) + nextOffsetX,
+						static_cast<std::int32_t>(normalizedSamplePosition.y),
+						static_cast<std::int32_t>(normalizedSamplePosition.z),
+						float3_t(0.0));
+					float3_t sample2 = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x),
+						static_cast<std::int32_t>(normalizedSamplePosition.y) + nextOffsetY,
+						static_cast<std::int32_t>(normalizedSamplePosition.z),
+						float3_t(0.0));
+					float3_t sample3 = vectorFieldGrid.value(
+						static_cast<std::int32_t>(normalizedSamplePosition.x) + nextOffsetX,
+						static_cast<std::int32_t>(normalizedSamplePosition.y) + nextOffsetY,
+						static_cast<std::int32_t>(normalizedSamplePosition.z),
+						float3_t(0.0));
+
+					forceVector = math::linearInterpolation(
+						math::linearInterpolation(sample0, sample1, std::abs(fractX - 0.5)),
+						math::linearInterpolation(sample2, sample3, std::abs(fractX - 0.5)),
+						std::abs(fractY - 0.5));
+
+					break;
+				}
+
+				default: {
+					break;
+				}
+			}
+		}
+
+		forceVector = float3_t(fieldRotationMatrix * float4_t(forceVector, 0.0));
+		forceVector *= fieldStrength * particleWeightCurve.at(particles.life[p]);
+
+		particles.force[p] += forceVector * (1.0 - vectorFieldTightness);
+		particles.velocity[p] *= 1.0 - vectorFieldTightness;
+		particles.velocity[p] += forceVector * vectorFieldTightness;
 	}
 }
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 	const ParticleType& particleType, const NoiseField& noiseField, const SceneGraph& sceneGraph) const {
-	float_t t = runtimeContext.time();
-	float_t alpha = noiseField.life(runtimeContext);
-	Transform transform = sceneGraph.globalTransform(noiseField.id(), runtimeContext);
-	float3_t center = transform.position();
-	float3_t size = transform.scale() * 0.5;
-	float3_t rotation = math::radians(transform.rotation());
-	matrix4_t inverseRotationMatrix = math::yawPitchRollRotationMatrix(-rotation.y, -rotation.z, -rotation.x);
-	float_t strength = noiseField.strength().at(alpha);
+	float_t fieldLife = noiseField.life(runtimeContext);
+	Transform fieldTransform = sceneGraph.globalTransform(noiseField.id(), runtimeContext);
+	float3_t fieldPosition = fieldTransform.position();
+	float3_t fieldSize = fieldTransform.scale() * 0.5;
+	float3_t fieldRotation = math::radians(fieldTransform.rotation());
+	matrix4_t fieldInverseRotationMatrix = math::yawPitchRollRotationMatrix(-fieldRotation.y, -fieldRotation.z, -fieldRotation.x);
+	float_t fieldStrength = noiseField.strength().at(fieldLife);
+	bool fieldInfinite = noiseField.infinite();
+
+	std::uint32_t noiseOctaves = static_cast<std::uint32_t>(std::max(noiseField.noiseOctaves().value(), static_cast<int_t>(0)));
+	float_t noiseFrequency = noiseField.noiseFrequency().at(fieldLife);
+	float_t noisePersistence = noiseField.noisePersistence().at(fieldLife);
+	float_t noiseLacunarity = noiseField.noiseLacunarity().at(fieldLife);
+	bool noiseAnimated = noiseField.noiseAnimated();
+	float_t noiseAnimationTime = noiseField.noiseAnimationTimeBase().value() +
+		noiseField.noiseAnimationTimeScale().value() * runtimeContext.time();
+
+	const Curve<float_t>& particleWeightCurve = particleType.weight().resultCurve();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		float3_t forceVector = sampleNoiseField(noiseField,
-			center, size, inverseRotationMatrix,
-			particles.globalPosition[p],
-			alpha, t);
+		float3_t localParticlePosition = float3_t(fieldInverseRotationMatrix * float4_t(particles.globalPosition[p] - fieldPosition, 1.0));
+		if(((localParticlePosition.x < -fieldSize.x || localParticlePosition.x > fieldSize.x) ||
+			(localParticlePosition.y < -fieldSize.y || localParticlePosition.y > fieldSize.y) ||
+			(localParticlePosition.z < -fieldSize.z || localParticlePosition.z > fieldSize.z)) && !fieldInfinite) {
+			continue;
+		}
 
-		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
+		float3_t forceVector;
+		if(noiseAnimated) {
+			forceVector = modifierEffect3d
+				? computeAnimatedCurlNoise3d(localParticlePosition, noiseAnimationTime, noiseOctaves, noiseFrequency, noisePersistence, noiseLacunarity)
+				: computeAnimatedCurlNoise2d(float2_t(localParticlePosition), noiseAnimationTime, noiseOctaves, noiseFrequency, noisePersistence, noiseLacunarity);
+		}
+		else {
+			forceVector = modifierEffect3d
+				? computeStaticCurlNoise3d(localParticlePosition, noiseOctaves, noiseFrequency, noisePersistence, noiseLacunarity)
+				: computeStaticCurlNoise2d(float2_t(localParticlePosition), noiseOctaves, noiseFrequency, noisePersistence, noiseLacunarity);
+		}
+
+		particles.force[p] += forceVector * fieldStrength * particleWeightCurve.at(particles.life[p]);
 	}
 }
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 	const ParticleType& particleType, const DragField& dragField, const SceneGraph& sceneGraph) const {
-	float_t alpha = dragField.life(runtimeContext);
-	Transform transform = sceneGraph.globalTransform(dragField.id(), runtimeContext);
-	float3_t center = transform.position();
-	float3_t size = transform.scale() * 0.5;
-	float3_t rotation = math::radians(transform.rotation());
-	matrix4_t inverseRotationMatrix = math::yawPitchRollRotationMatrix(-rotation.y, -rotation.z, -rotation.x);
-	float_t strength = dragField.strength().at(alpha);
+	float_t fieldLife = dragField.life(runtimeContext);
+	Transform fieldTransform = sceneGraph.globalTransform(dragField.id(), runtimeContext);
+	float3_t fieldPosition = fieldTransform.position();
+	float3_t fieldSize = fieldTransform.scale() * 0.5;
+	float3_t fieldRotation = math::radians(fieldTransform.rotation());
+	matrix4_t fieldInverseRotationMatrix = math::yawPitchRollRotationMatrix(-fieldRotation.y, -fieldRotation.z, -fieldRotation.x);
+	float_t fieldStrength = dragField.strength().at(fieldLife);
+	bool fieldInfinite = dragField.infinite();
+
+	float_t dragVelocityInfluence = dragField.velocityInfluence().value();
+	float_t dragSizeInfluence = dragField.sizeInfluence().value();
+
+	const Curve<float_t>& particleWeightCurve = particleType.weight().resultCurve();
+	const Curve<float_t>& particlePhysicalSizeCurve = particleType.physicalSize().resultCurve();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		float3_t forceVector = sampleDragField(dragField,
-			center, size, inverseRotationMatrix,
-			particles.globalPosition[p], particles.velocity[p], particles.size[p] * particleType.physicalSize().at(particles.life[p]));
-
-		particles.force[p] += forceVector * strength * particleType.weight().at(particles.life[p]);
-	}
-}
-
-float3_t ForceModifier::sampleAttractionField(const AttractionField& attractionField,
-	const float3_t& position, float_t size,
-	const float3_t& particlePosition) const {
-	float_t distanceToCenter = math::distance(position, particlePosition);
-	if(distanceToCenter > size && !attractionField.infinite()) {
-		return float3_t(0.0);
-	}
-
-	distanceToCenter = std::max(distanceToCenter, 0.01);
-
-	return (position - particlePosition) / (distanceToCenter * distanceToCenter);
-}
-float3_t ForceModifier::sampleAccelerationField(const AccelerationField& accelerationField,
-	const float3_t& position, const float3_t& size,
-	const matrix4_t& rotationMatrix, const matrix4_t& inverseRotationMatrix, const matrix4_t& directionMatrix,
-	const float3_t& particlePosition) const {
-	float3_t rotatedParticlePosition = position + float3_t(inverseRotationMatrix * float4_t(particlePosition - position, 1.0));
-	if(((rotatedParticlePosition.x < position.x - size.x || rotatedParticlePosition.x > position.x + size.x) ||
-		(rotatedParticlePosition.y < position.y - size.y || rotatedParticlePosition.y > position.y + size.y) ||
-		(rotatedParticlePosition.z < position.z - size.z || rotatedParticlePosition.z > position.z + size.z)) && !accelerationField.infinite()) {
-		return float3_t(0.0);
-	}
-
-	std::int32_t gridCellX = (size.x > 0.0)
-		? std::clamp(static_cast<std::int32_t>((rotatedParticlePosition.x - (position.x - size.x)) / (size.x * 2.0) * static_cast<float_t>(accelerationField.accelerationGridSizeX())), 0, accelerationField.accelerationGridSizeX() - 1)
-		: 0;
-	std::int32_t gridCellY = (size.y > 0.0)
-		? std::clamp(static_cast<std::int32_t>((rotatedParticlePosition.y - (position.y - size.y)) / (size.y * 2.0) * static_cast<float_t>(accelerationField.accelerationGridSizeY())), 0, accelerationField.accelerationGridSizeY() - 1)
-		: 0;
-	std::int32_t gridCellZ = (size.z > 0.0)
-		? std::clamp(static_cast<std::int32_t>((rotatedParticlePosition.z - (position.z - size.z)) / (size.z * 2.0) * static_cast<float_t>(accelerationField.accelerationGridSizeZ())), 0, accelerationField.accelerationGridSizeZ() - 1)
-		: 0;
-	std::uint32_t gridCellIndex = static_cast<std::uint32_t>(
-		gridCellZ * accelerationField.accelerationGridSizeY() * accelerationField.accelerationGridSizeX() +
-		gridCellY * accelerationField.accelerationGridSizeX() +
-		gridCellX);
-
-	float3_t gridDirectionOffset = math::radians(accelerationField.accelerationDirectionVariance().at() * accelerationField.accelerationDirectionGrid()[gridCellIndex]);
-	float_t gridStrengthOffset = accelerationField.accelerationStrengthVariance().at() * accelerationField.accelerationStrengthGrid()[gridCellIndex] + 1.0;
-	matrix4_t directionOffsetMatrix = math::yawPitchRollRotationMatrix(gridDirectionOffset.y, gridDirectionOffset.z, gridDirectionOffset.x);
-
-	float3_t result = float3_t(rotationMatrix * directionOffsetMatrix * directionMatrix * worldUpVector4);
-	result *= gridStrengthOffset;
-
-	return result;
-}
-float3_t ForceModifier::sampleVectorField(const VectorField& vectorField, const VectorFieldResource& resource,
-	const float3_t& position, const float3_t& size,
-	const matrix4_t& rotationMatrix, const matrix4_t& inverseRotationMatrix,
-	const float3_t& particlePosition, bool& inside) const {
-	float3_t rotatedParticlePosition = position + float3_t(inverseRotationMatrix * float4_t(particlePosition - position, 1.0));
-	if((rotatedParticlePosition.x < position.x - size.x || rotatedParticlePosition.x > position.x + size.x ||
-		rotatedParticlePosition.y < position.y - size.y || rotatedParticlePosition.y > position.y + size.y ||
-		rotatedParticlePosition.z < position.z - size.z || rotatedParticlePosition.z > position.z + size.z) && !vectorField.infinite()) {
-		inside = false;
-		return float3_t(0.0);
-	}
-
-	float3_t result = float3_t(0.0);
-	float3_t samplePosition = (rotatedParticlePosition - position + size) / (size * 2.0);
-
-	if(modifierEffect3d) {
-		switch(vectorField.vectorFieldFilter()) {
-			case VectorField::Filter::none: {
-				float3_t normalizedSamplePosition = float3_t(
-					samplePosition.x * static_cast<float_t>(resource.field().width()),
-					samplePosition.y * static_cast<float_t>(resource.field().height()),
-					samplePosition.z * static_cast<float_t>(resource.field().depth()));
-
-				result = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x),
-					static_cast<std::int32_t>(normalizedSamplePosition.y),
-					static_cast<std::int32_t>(normalizedSamplePosition.z),
-					float3_t(0.0));
-
-				break;
-			}
-
-			case VectorField::Filter::linear: {
-				float3_t normalizedSamplePosition = float3_t(
-					samplePosition.x * static_cast<float_t>(resource.field().width()),
-					samplePosition.y * static_cast<float_t>(resource.field().height()),
-					samplePosition.z * static_cast<float_t>(resource.field().depth()));
-
-				float_t fractX = math::fract(normalizedSamplePosition.x);
-				float_t fractY = math::fract(normalizedSamplePosition.y);
-				float_t fractZ = math::fract(normalizedSamplePosition.y);
-				std::int32_t nextOffsetX = fractX > 0.5 ? +1 : -1;
-				std::int32_t nextOffsetY = fractY > 0.5 ? +1 : -1;
-				std::int32_t nextOffsetZ = fractZ > 0.5 ? +1 : -1;
-
-				float3_t sample0 = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x),
-					static_cast<std::int32_t>(normalizedSamplePosition.y),
-					static_cast<std::int32_t>(normalizedSamplePosition.z),
-					float3_t(0.0));
-				float3_t sample1 = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x) + nextOffsetX,
-					static_cast<std::int32_t>(normalizedSamplePosition.y),
-					static_cast<std::int32_t>(normalizedSamplePosition.z),
-					float3_t(0.0));
-				float3_t sample2 = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x),
-					static_cast<std::int32_t>(normalizedSamplePosition.y) + nextOffsetY,
-					static_cast<std::int32_t>(normalizedSamplePosition.z),
-					float3_t(0.0));
-				float3_t sample3 = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x) + nextOffsetX,
-					static_cast<std::int32_t>(normalizedSamplePosition.y) + nextOffsetY,
-					static_cast<std::int32_t>(normalizedSamplePosition.z),
-					float3_t(0.0));
-				float3_t sample4 = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x),
-					static_cast<std::int32_t>(normalizedSamplePosition.y),
-					static_cast<std::int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
-					float3_t(0.0));
-				float3_t sample5 = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x) + nextOffsetX,
-					static_cast<std::int32_t>(normalizedSamplePosition.y),
-					static_cast<std::int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
-					float3_t(0.0));
-				float3_t sample6 = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x),
-					static_cast<std::int32_t>(normalizedSamplePosition.y) + nextOffsetY,
-					static_cast<std::int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
-					float3_t(0.0));
-				float3_t sample7 = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x) + nextOffsetX,
-					static_cast<std::int32_t>(normalizedSamplePosition.y) + nextOffsetY,
-					static_cast<std::int32_t>(normalizedSamplePosition.z) + nextOffsetZ,
-					float3_t(0.0));
-
-				result = math::linearInterpolation(
-					math::linearInterpolation(
-						math::linearInterpolation(sample0, sample1, std::abs(fractX - 0.5)),
-						math::linearInterpolation(sample2, sample3, std::abs(fractX - 0.5)),
-						std::abs(fractY - 0.5)),
-					math::linearInterpolation(
-						math::linearInterpolation(sample4, sample5, std::abs(fractX - 0.5)),
-						math::linearInterpolation(sample6, sample7, std::abs(fractX - 0.5)),
-						std::abs(fractY - 0.5)),
-					std::abs(fractZ - 0.5));
-
-				break;
-			}
-
-			default: {
-				break;
-			}
+		float3_t localParticlePosition = float3_t(fieldInverseRotationMatrix * float4_t(particles.globalPosition[p] - fieldPosition, 1.0));
+		if(((localParticlePosition.x < -fieldSize.x || localParticlePosition.x > fieldSize.x) ||
+			(localParticlePosition.y < -fieldSize.y || localParticlePosition.y > fieldSize.y) ||
+			(localParticlePosition.z < -fieldSize.z || localParticlePosition.z > fieldSize.z)) && !fieldInfinite) {
+			continue;
 		}
+
+		float3_t particleSize = particles.size[p] * particlePhysicalSizeCurve.at(particles.life[p]);
+		float_t particleSpeed = std::max(math::length(particles.velocity[p]), 0.001);
+		float_t particleArea = std::max(particleSize.x, std::max(particleSize.y, particleSize.z));
+
+		float3_t forceVector = -particles.velocity[p] / particleSpeed *
+			(1.0 + (particleSpeed * particleSpeed - 1.0) * dragVelocityInfluence) *
+			(1.0 + (particleArea - 1.0) * dragSizeInfluence);
+
+		particles.force[p] += forceVector * fieldStrength * particleWeightCurve.at(particles.life[p]);
 	}
-	else {
-		switch(vectorField.vectorFieldFilter()) {
-			case VectorField::Filter::none: {
-				float3_t normalizedSamplePosition = float3_t(
-					samplePosition.x * static_cast<float_t>(resource.field().width()),
-					samplePosition.y * static_cast<float_t>(resource.field().height()),
-					0.0);
-
-				result = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x),
-					static_cast<std::int32_t>(normalizedSamplePosition.y),
-					static_cast<std::int32_t>(normalizedSamplePosition.z),
-					float3_t(0.0));
-
-				break;
-			}
-
-			case VectorField::Filter::linear: {
-				float3_t normalizedSamplePosition = float3_t(
-					samplePosition.x * static_cast<float_t>(resource.field().width()),
-					samplePosition.y * static_cast<float_t>(resource.field().height()),
-					0.0);
-
-				float_t fractX = math::fract(normalizedSamplePosition.x);
-				float_t fractY = math::fract(normalizedSamplePosition.y);
-				std::int32_t nextOffsetX = fractX > 0.5 ? +1 : -1;
-				std::int32_t nextOffsetY = fractY > 0.5 ? +1 : -1;
-
-				float3_t sample0 = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x),
-					static_cast<std::int32_t>(normalizedSamplePosition.y),
-					static_cast<std::int32_t>(normalizedSamplePosition.z),
-					float3_t(0.0));
-				float3_t sample1 = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x) + nextOffsetX,
-					static_cast<std::int32_t>(normalizedSamplePosition.y),
-					static_cast<std::int32_t>(normalizedSamplePosition.z),
-					float3_t(0.0));
-				float3_t sample2 = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x),
-					static_cast<std::int32_t>(normalizedSamplePosition.y) + nextOffsetY,
-					static_cast<std::int32_t>(normalizedSamplePosition.z),
-					float3_t(0.0));
-				float3_t sample3 = resource.field().value(
-					static_cast<std::int32_t>(normalizedSamplePosition.x) + nextOffsetX,
-					static_cast<std::int32_t>(normalizedSamplePosition.y) + nextOffsetY,
-					static_cast<std::int32_t>(normalizedSamplePosition.z),
-					float3_t(0.0));
-
-				result = math::linearInterpolation(
-					math::linearInterpolation(sample0, sample1, std::abs(fractX - 0.5)),
-					math::linearInterpolation(sample2, sample3, std::abs(fractX - 0.5)),
-					std::abs(fractY - 0.5));
-
-				break;
-			}
-
-			default: {
-				break;
-			}
-		}
-	}
-
-	inside = true;
-
-	return float3_t(rotationMatrix * float4_t(result, 0.0));
-}
-float3_t ForceModifier::sampleNoiseField(const NoiseField& noiseField,
-	const float3_t& position, const float3_t& size, const matrix4_t& inverseRotationMatrix,
-	const float3_t& particlePosition, float_t life, float_t t) const {
-	float3_t rotatedParticlePosition = position + float3_t(inverseRotationMatrix * float4_t(particlePosition - position, 1.0));
-	if(((rotatedParticlePosition.x < position.x - size.x || rotatedParticlePosition.x > position.x + size.x) ||
-		(rotatedParticlePosition.y < position.y - size.y || rotatedParticlePosition.y > position.y + size.y) ||
-		(rotatedParticlePosition.z < position.z - size.z || rotatedParticlePosition.z > position.z + size.z)) && !noiseField.infinite()) {
-		return float3_t(0.0);
-	}
-
-	float3_t samplePosition = rotatedParticlePosition - position;
-	std::uint32_t octaves = static_cast<std::uint32_t>(std::max(noiseField.noiseOctaves().value(), static_cast<int_t>(0)));
-	float_t frequency = noiseField.noiseFrequency().at(life);
-	float_t persistence = noiseField.noisePersistence().at(life);
-	float_t lacunarity = noiseField.noiseLacunarity().at(life);
-
-	if(noiseField.noiseAnimated()) {
-		float_t animationTime = noiseField.noiseAnimationTimeBase().value() + noiseField.noiseAnimationTimeScale().value() * t;
-
-		return modifierEffect3d
-			? computeAnimatedCurlNoise3d(samplePosition, animationTime, octaves, frequency, persistence, lacunarity)
-			: computeAnimatedCurlNoise2d(float2_t(samplePosition), animationTime, octaves, frequency, persistence, lacunarity);
-	}
-	else {
-		return modifierEffect3d
-			? computeStaticCurlNoise3d(samplePosition, octaves, frequency, persistence, lacunarity)
-			: computeStaticCurlNoise2d(float2_t(samplePosition), octaves, frequency, persistence, lacunarity);
-	}
-}
-float3_t ForceModifier::sampleDragField(const DragField& dragField,
-	const float3_t& position, const float3_t& size, const matrix4_t& inverseRotationMatrix,
-	const float3_t& particlePosition, const float3_t& particleVelocity, const float3_t& particleSize) const {
-	float3_t rotatedParticlePosition = position + float3_t(inverseRotationMatrix * float4_t(particlePosition - position, 1.0));
-	if(((rotatedParticlePosition.x < position.x - size.x || rotatedParticlePosition.x > position.x + size.x) ||
-		(rotatedParticlePosition.y < position.y - size.y || rotatedParticlePosition.y > position.y + size.y) ||
-		(rotatedParticlePosition.z < position.z - size.z || rotatedParticlePosition.z > position.z + size.z)) && !dragField.infinite()) {
-		return float3_t(0.0);
-	}
-
-	float_t particleSpeed = std::max(math::length(particleVelocity), 0.001);
-	float_t particleArea = std::max(particleSize.x, std::max(particleSize.y, particleSize.z));
-
-	return -particleVelocity / particleSpeed *
-		(1.0 + (particleSpeed * particleSpeed - 1.0) * dragField.velocityInfluence().value()) *
-		(1.0 + (particleArea - 1.0) * dragField.sizeInfluence().value());
 }
 
 float3_t ForceModifier::computeStaticCurlNoise2d(const float2_t& samplePosition, std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const {

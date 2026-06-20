@@ -9,6 +9,7 @@ void IntegrationModifier::apply(ParticleCollection::WritePtr particles, std::uin
 	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
 	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
 	const ParticleEmitter& particleEmitter = effect->sceneGraph().at<ParticleEmitter>(particleEmitterId);
+
 	float_t dt = runtimeContext.deltaTime();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {

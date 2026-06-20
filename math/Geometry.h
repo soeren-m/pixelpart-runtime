@@ -88,6 +88,11 @@ TVec normalize(const TVec& v) {
 	return v / length(v);
 }
 
+template <typename TVec>
+TVec safeNormalize(const TVec& v, typename TVec::ValueType epsilon = 0.000001) {
+	return v / std::max(length(v), epsilon);
+}
+
 template <typename T>
 T dot(T v1, T v2) {
 	return v1 * v2;
