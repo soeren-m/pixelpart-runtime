@@ -6,6 +6,7 @@
 #include "CameraSettings.h"
 #include "RenderSettings.h"
 #include "../json/json.hpp"
+#include <cstdint>
 #include <string>
 #include <istream>
 

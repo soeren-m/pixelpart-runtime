@@ -5,6 +5,7 @@
 #include "../effect/MaterialResource.h"
 #include "../effect/ImageResource.h"
 #include "../json/json.hpp"
+#include <cstdint>
 #include <string>
 #include <istream>
 

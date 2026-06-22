@@ -205,8 +205,6 @@ void from_json(const nlohmann::ordered_json& j, Node& node) {
 	node.stopTrigger(j.value("stop_trigger", id_t()));
 	node.position() = j.value("position", AnimatedProperty<float3_t>(0.0, float3_t(0.0)));
 	node.rotation() = j.value("rotation", AnimatedProperty<float3_t>(float3_t(0.0)));
-	node.rotation() = j.value("orientation", node.rotation());
 	node.scale() = j.value("scale", AnimatedProperty<float3_t>(float3_t(1.0)));
-	node.scale() = j.value("size", node.scale());
 }
 }

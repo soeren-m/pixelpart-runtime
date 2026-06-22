@@ -14,7 +14,6 @@ enum class BlendMode : std::uint32_t {
 NLOHMANN_JSON_SERIALIZE_ENUM(BlendMode, {
 	{ BlendMode::off, "off" },
 	{ BlendMode::alpha, "alpha" },
-	{ BlendMode::alpha, "normal" },
 	{ BlendMode::additive, "additive" },
 	{ BlendMode::subtractive, "subtractive" }
 })

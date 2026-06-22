@@ -70,16 +70,11 @@ void to_json(nlohmann::ordered_json& j, const ImageResource& resource) {
 	};
 }
 void from_json(const nlohmann::ordered_json& j, ImageResource& resource) {
-	std::uint32_t channels = j.value("channels", 0u);
-	if(channels == 0) {
-		channels = j.value("bpp", 0u) / 8;
-	}
-
 	resource = ImageResource(
 		j.value("name", "unknown"),
 		j.value("width", 0u),
 		j.value("height", 0u),
-		channels,
+		j.value("channels", 0u),
 		j.value("color_space", ColorSpace::srgb));
 
 	resource.data() = decompressFromString(

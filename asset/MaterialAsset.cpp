@@ -3,7 +3,49 @@
 #include "../common/SortedJson.h"
 
 namespace pixelpart {
-const std::uint32_t MaterialAsset::version = 10;
+namespace {
+void migrateMaterialAssetJson(nlohmann::ordered_json& jsonData) {
+	std::uint32_t version = jsonData.at("version");
+	if(version == MaterialAsset::version) {
+		return;
+	}
+	else if(version < 8) {
+		throw DeserializationException("Unsupported material asset version " + std::to_string(version));
+	}
+
+	// Migration 1.7.x -> 1.8.x
+	if(version == 8) {
+		for(nlohmann::ordered_json& jImage : jsonData["images"]) {
+			jImage["color_space"] = "srgb";
+			jImage["channels"] = jImage.value("bpp", 0u) / 8;
+			jImage.erase("bpp");
+		}
+
+		version = 9;
+		jsonData["version"] = 9;
+	}
+
+	// Migration 1.8.x -> 1.9.x
+	if(version == 9) {
+		nlohmann::ordered_json& jMaterial = jsonData["material"];
+		std::string blendMode = jMaterial["blend_mode"];
+		if(blendMode == "normal") {
+			jMaterial["blend_mode"] = "alpha";
+		}
+
+		version = 10;
+		jsonData["version"] = 10;
+	}
+
+	// Migration 1.9.x -> 1.10.x
+	if(version == 10) {
+		version = 11;
+		jsonData["version"] = 11;
+	}
+}
+}
+
+const std::uint32_t MaterialAsset::version = 11;
 
 MaterialResource& MaterialAsset::material() {
 	return assetMaterial;
@@ -33,6 +75,7 @@ std::string serializeMaterialAsset(const MaterialAsset& asset, std::int32_t inde
 MaterialAsset deserializeMaterialAsset(std::istream& stream) {
 	try {
 		nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(stream);
+		migrateMaterialAssetJson(jsonData);
 
 		return jsonData.get<MaterialAsset>();
 	}
@@ -43,6 +86,7 @@ MaterialAsset deserializeMaterialAsset(std::istream& stream) {
 MaterialAsset deserializeMaterialAsset(const std::string& data) {
 	try {
 		nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(data);
+		migrateMaterialAssetJson(jsonData);
 
 		return jsonData.get<MaterialAsset>();
 	}
@@ -53,6 +97,7 @@ MaterialAsset deserializeMaterialAsset(const std::string& data) {
 MaterialAsset deserializeMaterialAsset(const char* data, std::size_t size) {
 	try {
 		nlohmann::ordered_json jsonData = nlohmann::ordered_json::parse(data, data + size);
+		migrateMaterialAssetJson(jsonData);
 
 		return jsonData.get<MaterialAsset>();
 	}
