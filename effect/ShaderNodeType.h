@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../common/VariantValue.h"
-#include "../common/VariantParameter.h"
+#include "VariantParameter.h"
+#include "../types/VariantValue.h"
 #include "../json/json.hpp"
 #include <string>
 #include <vector>

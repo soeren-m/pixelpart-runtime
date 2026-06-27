@@ -1,5 +1,5 @@
 #include "ResourceCollection.h"
-#include "../common/SortedJson.h"
+#include "SortedJson.h"
 
 namespace pixelpart {
 ResourceCollection::ResourceCollection(

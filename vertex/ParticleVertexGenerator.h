@@ -1,8 +1,8 @@
 #pragma once
 
 #include "VertexGenerator.h"
-#include "../common/ThreadPool.h"
 #include "../effect/ParticleRendererType.h"
+#include "../platform/ThreadPool.h"
 #include <memory>
 
 namespace pixelpart {

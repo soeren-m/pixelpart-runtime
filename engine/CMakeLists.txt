@@ -1,6 +1,7 @@
 target_sources(pixelpart-runtime PRIVATE
 	AccelerationModifier.cpp
 	CollisionModifier.cpp
+	ColorConversion.cpp
 	ColorModifier.cpp
 	Coordinate2dModifier.cpp
 	DefaultParticleGenerator.cpp

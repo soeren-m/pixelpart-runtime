@@ -1,8 +1,8 @@
 #pragma once
 
 #include "ParticleType.h"
-#include "../common/Types.h"
-#include "../common/Id.h"
+#include "../types/Types.h"
+#include "../types/Id.h"
 #include <optional>
 #include <vector>
 

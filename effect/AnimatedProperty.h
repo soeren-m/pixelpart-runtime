@@ -4,9 +4,9 @@
 #include "ComputeOutputTarget.h"
 #include "ComputeGraph.h"
 #include "OutputComputeNode.h"
-#include "../common/Types.h"
-#include "../common/Curve.h"
-#include "../common/VariantValue.h"
+#include "Curve.h"
+#include "../types/Types.h"
+#include "../types/VariantValue.h"
 #include "../json/json.hpp"
 #include <optional>
 #include <vector>

@@ -1,9 +1,9 @@
 #include "EffectAsset.h"
-#include "../common/Serialization.h"
-#include "../common/Transform.h"
-#include "../math/MatrixCommon.h"
+#include "../effect/Transform.h"
+#include "../effect/Serialization.h"
 #include "../effect/Node.h"
 #include "../effect/ParticleType.h"
+#include "../math/MatrixCommon.h"
 #include <memory>
 #include <unordered_set>
 

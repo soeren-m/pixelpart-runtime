@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ParticleModifier.h"
-#include "../common/Types.h"
 #include "../effect/AttractionField.h"
 #include "../effect/AccelerationField.h"
 #include "../effect/VectorField.h"
@@ -9,6 +8,7 @@
 #include "../effect/DragField.h"
 #include "../effect/ResourceCollection.h"
 #include "../effect/VectorFieldResource.h"
+#include "../types/Types.h"
 #include <vector>
 
 namespace pixelpart {

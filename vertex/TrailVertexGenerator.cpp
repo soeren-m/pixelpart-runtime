@@ -1,11 +1,11 @@
 #include "TrailVertexGenerator.h"
 #include "VertexDataGenerationMode.h"
 #include "VertexFormatException.h"
-#include "../common/Transform.h"
 #include "../math/Common.h"
 #include "../math/Geometry.h"
 #include "../effect/AlignmentMode.h"
 #include "../effect/ParticleRendererSettings.h"
+#include "../effect/Transform.h"
 #include <cmath>
 #include <algorithm>
 

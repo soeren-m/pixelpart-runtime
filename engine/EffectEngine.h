@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../common/Types.h"
-#include "../common/Id.h"
+#include "EffectRuntimeState.h"
 #include "../effect/Effect.h"
 #include "../effect/EffectRuntimeContext.h"
-#include "EffectRuntimeState.h"
+#include "../types/Types.h"
+#include "../types/Id.h"
 #include <cstdint>
 
 namespace pixelpart {

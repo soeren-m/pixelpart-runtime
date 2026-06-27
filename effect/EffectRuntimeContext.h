@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../common/Types.h"
-#include "../common/Id.h"
+#include "../types/Types.h"
+#include "../types/Id.h"
 #include <vector>
 #include <unordered_map>
 

@@ -1,4 +1,3 @@
-#include "common/StdThreadPool.h"
 #include "asset/EffectAsset.h"
 #include "asset/MaterialAsset.h"
 #include "engine/SingleThreadedEffectEngine.h"
@@ -6,3 +5,4 @@
 #include "engine/DefaultParticleGenerator.h"
 #include "engine/DefaultParticleModifier.h"
 #include "vertex/ParticleVertexGenerator.h"
+#include "platform/StdThreadPool.h"

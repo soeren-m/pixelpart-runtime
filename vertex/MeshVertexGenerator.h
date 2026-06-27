@@ -2,9 +2,9 @@
 
 #include "VertexGenerator.h"
 #include "VertexAttribute.h"
-#include "../common/Types.h"
-#include "../common/ThreadPool.h"
 #include "../effect/AlignmentMode.h"
+#include "../platform/ThreadPool.h"
+#include "../types/Types.h"
 #include <cstddef>
 #include <cstdint>
 #include <memory>

@@ -1,6 +1,6 @@
 #include "MaterialAsset.h"
-#include "../common/Serialization.h"
-#include "../common/SortedJson.h"
+#include "../effect/Serialization.h"
+#include "../effect/SortedJson.h"
 
 namespace pixelpart {
 namespace {

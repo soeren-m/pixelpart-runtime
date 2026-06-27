@@ -1,8 +1,8 @@
 #include "AccelerationModifier.h"
-#include "../common/Types.h"
-#include "../common/Curve.h"
-#include "../math/Geometry.h"
 #include "../effect/ParticleType.h"
+#include "../effect/Curve.h"
+#include "../types/Types.h"
+#include "../math/Geometry.h"
 
 namespace pixelpart {
 void AccelerationModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,

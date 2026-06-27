@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Types.h"
+#include "../types/Types.h"
 
 namespace pixelpart {
 inline constexpr float2_t worldUpVector2 = float2_t(0.0, 1.0);

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../common/Types.h"
-#include "../common/Id.h"
-#include "../common/VariantValue.h"
-#include "../common/VariantParameter.h"
+#include "VariantParameter.h"
+#include "../types/Types.h"
+#include "../types/VariantValue.h"
+#include "../types/Id.h"
 #include <memory>
 #include <optional>
 #include <string>

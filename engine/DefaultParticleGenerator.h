@@ -1,12 +1,12 @@
 #pragma once
 
 #include "ParticleGenerator.h"
-#include "../common/Types.h"
-#include "../common/Curve.h"
-#include "../common/Transform.h"
+#include "../effect/Curve.h"
+#include "../effect/Transform.h"
 #include "../effect/ParticleEmitter.h"
 #include "../effect/ParticleType.h"
 #include "../effect/ParticleEmissionPair.h"
+#include "../types/Types.h"
 #include <random>
 
 namespace pixelpart {

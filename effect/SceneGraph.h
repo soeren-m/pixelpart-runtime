@@ -2,9 +2,9 @@
 
 #include "Node.h"
 #include "EffectRuntimeContext.h"
-#include "../common/Types.h"
-#include "../common/Transform.h"
-#include "../common/Id.h"
+#include "Transform.h"
+#include "../types/Types.h"
+#include "../types/Id.h"
 #include "../json/json.hpp"
 #include <memory>
 #include <optional>

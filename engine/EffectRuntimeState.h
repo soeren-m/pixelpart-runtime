@@ -2,7 +2,7 @@
 
 #include "ParticleCollectionMap.h"
 #include "ParticleEmissionStateMap.h"
-#include "../common/Id.h"
+#include "../types/Id.h"
 #include <cstdint>
 #include <random>
 

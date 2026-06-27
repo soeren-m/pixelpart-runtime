@@ -4,9 +4,9 @@
 #include "ParticleGenerator.h"
 #include "ParticleModifier.h"
 #include "EffectRuntimeState.h"
-#include "../common/ThreadPool.h"
 #include "../effect/EffectRuntimeContext.h"
 #include "../effect/Effect.h"
+#include "../platform/ThreadPool.h"
 #include <cstdint>
 #include <memory>
 

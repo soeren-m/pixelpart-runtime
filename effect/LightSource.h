@@ -3,8 +3,8 @@
 #include "Node.h"
 #include "LightSourceType.h"
 #include "AnimatedProperty.h"
-#include "../common/Types.h"
-#include "../common/Id.h"
+#include "../types/Types.h"
+#include "../types/Id.h"
 #include "../json/json.hpp"
 
 namespace pixelpart {

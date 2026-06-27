@@ -1,6 +1,6 @@
 #include "MeshResource.h"
-#include "../common/Serialization.h"
-#include "../common/Compression.h"
+#include "Serialization.h"
+#include "Compression.h"
 #include <cstddef>
 #include <string>
 #include <sstream>

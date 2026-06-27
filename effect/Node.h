@@ -3,9 +3,9 @@
 #include "AnimatedProperty.h"
 #include "EffectRuntimeContext.h"
 #include "ComputeGraph.h"
-#include "../common/Types.h"
-#include "../common/Transform.h"
-#include "../common/Id.h"
+#include "Transform.h"
+#include "../types/Types.h"
+#include "../types/Id.h"
 #include <memory>
 #include <string>
 

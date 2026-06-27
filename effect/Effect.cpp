@@ -1,6 +1,6 @@
 #include "Effect.h"
-#include "../common/Id.h"
-#include "../common/SortedJson.h"
+#include "SortedJson.h"
+#include "../types/Id.h"
 #include <memory>
 
 namespace pixelpart {

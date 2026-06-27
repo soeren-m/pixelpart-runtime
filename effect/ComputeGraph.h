@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../common/Types.h"
-#include "../common/VariantValue.h"
-#include "../common/Id.h"
 #include "ComputeNode.h"
 #include "ComputeNodeFactory.h"
+#include "../types/Types.h"
+#include "../types/VariantValue.h"
+#include "../types/Id.h"
 #include "../json/json.hpp"
 #include <memory>
 #include <string>

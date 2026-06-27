@@ -4,6 +4,7 @@ target_sources(pixelpart-runtime PRIVATE
 	Collider.cpp
 	ColorComputeNodes.cpp
 	ComparisonComputeNodes.cpp
+	Compression.cpp
 	ComputeGraph.cpp
 	ComputeNode.cpp
 	ComputeNodeFactory.cpp
@@ -17,6 +18,7 @@ target_sources(pixelpart-runtime PRIVATE
 	EffectInput.cpp
 	EffectRuntimeContext.cpp
 	EffectTrigger.cpp
+	Encoding.cpp
 	ForceField.cpp
 	GroupNode.cpp
 	ImageResource.cpp
@@ -40,11 +42,15 @@ target_sources(pixelpart-runtime PRIVATE
 	Resource.cpp
 	ResourceCollection.cpp
 	SceneGraph.cpp
+	Serialization.cpp
 	ShaderGraph.cpp
 	ShaderGraphSpecification.cpp
 	ShaderNode.cpp
 	ShaderNodeType.cpp
 	SpotLightSource.cpp
+	StringFormat.cpp
+	Transform.cpp
 	UtilComputeNodes.cpp
+	VariantParameter.cpp
 	VectorField.cpp
 	VectorFieldResource.cpp)

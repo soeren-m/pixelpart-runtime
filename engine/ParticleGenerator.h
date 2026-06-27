@@ -5,9 +5,9 @@
 #include "ParticleCollection.h"
 #include "ParticleEmissionState.h"
 #include "EffectRuntimeState.h"
-#include "../common/Id.h"
 #include "../effect/Effect.h"
 #include "../effect/EffectRuntimeContext.h"
+#include "../types/Id.h"
 #include <cstdint>
 
 namespace pixelpart {

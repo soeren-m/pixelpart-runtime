@@ -1,5 +1,5 @@
 #include "MaterialInstance.h"
-#include "../common/SortedJson.h"
+#include "SortedJson.h"
 
 namespace pixelpart {
 MaterialInstance::MaterialInstance(const std::string& materialId, bool builtIn) :

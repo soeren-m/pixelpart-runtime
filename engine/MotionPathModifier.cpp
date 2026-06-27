@@ -1,7 +1,7 @@
 #include "MotionPathModifier.h"
-#include "../common/Types.h"
-#include "../common/Curve.h"
+#include "../effect/Curve.h"
 #include "../effect/ParticleType.h"
+#include "../types/Types.h"
 
 namespace pixelpart {
 void MotionPathModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,

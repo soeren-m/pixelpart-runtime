@@ -4,9 +4,9 @@
 #include "LineQueryGrid.h"
 #include "../effect/LineCollider.h"
 #include "../effect/PlaneCollider.h"
-#include "../common/Types.h"
-#include "../common/Curve.h"
-#include "../common/Transform.h"
+#include "../effect/Curve.h"
+#include "../effect/Transform.h"
+#include "../types/Types.h"
 #include <bitset>
 #include <optional>
 #include <array>

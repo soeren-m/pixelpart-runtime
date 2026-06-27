@@ -3,8 +3,8 @@
 #include "VertexGenerator.h"
 #include "VertexAttribute.h"
 #include "VertexWindingOrder.h"
-#include "../common/Types.h"
-#include "../common/ThreadPool.h"
+#include "../platform/ThreadPool.h"
+#include "../types/Types.h"
 #include <cstddef>
 #include <cstdint>
 #include <memory>

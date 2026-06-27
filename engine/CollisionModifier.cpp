@@ -1,11 +1,11 @@
 #include "CollisionModifier.h"
-#include "../common/Types.h"
-#include "../common/Id.h"
-#include "../common/Coordinates.h"
-#include "../common/Curve.h"
+#include "../effect/ParticleType.h"
+#include "../effect/Coordinates.h"
+#include "../effect/Curve.h"
+#include "../types/Types.h"
+#include "../types/Id.h"
 #include "../math/Common.h"
 #include "../math/Geometry.h"
-#include "../effect/ParticleType.h"
 #include <cmath>
 #include <algorithm>
 

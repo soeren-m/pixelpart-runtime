@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../common/VariantParameter.h"
 #include "ImageEffectType.h"
+#include "../effect/VariantParameter.h"
 #include "../json/json.hpp"
 #include <string>
 #include <vector>

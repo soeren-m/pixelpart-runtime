@@ -2,10 +2,11 @@
 
 #include "Node.h"
 #include "AnimatedProperty.h"
-#include "../common/Types.h"
-#include "../common/Id.h"
-#include "../common/Curve.h"
+#include "Curve.h"
+#include "../types/Types.h"
+#include "../types/Id.h"
 #include "../json/json.hpp"
+#include <cstdint>
 #include <vector>
 
 namespace pixelpart {

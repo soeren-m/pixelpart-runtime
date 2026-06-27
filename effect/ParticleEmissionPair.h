@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../common/Types.h"
-#include "../common/Id.h"
-#include "../common/HashCombine.h"
+#include "HashCombine.h"
+#include "../types/Types.h"
+#include "../types/Id.h"
 
 namespace pixelpart {
 struct ParticleEmissionPair {

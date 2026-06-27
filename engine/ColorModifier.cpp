@@ -1,8 +1,8 @@
 #include "ColorModifier.h"
-#include "../common/Types.h"
-#include "../common/Color.h"
-#include "../common/Curve.h"
+#include "ColorConversion.h"
 #include "../effect/ParticleType.h"
+#include "../effect/Curve.h"
+#include "../types/Types.h"
 #include <cmath>
 #include <algorithm>
 

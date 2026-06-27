@@ -1,8 +1,8 @@
 #include "ShaderGraph.h"
-#include "../common/VariantValue.h"
-#include "../common/Serialization.h"
-#include "../common/StringFormat.h"
-#include "../common/SortedJson.h"
+#include "Serialization.h"
+#include "StringFormat.h"
+#include "SortedJson.h"
+#include "../types/VariantValue.h"
 #include <algorithm>
 
 namespace pixelpart {

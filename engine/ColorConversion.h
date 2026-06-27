@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Types.h"
+#include "../types/Types.h"
 
 namespace pixelpart {
 float4_t rgb2hsv(const float4_t& rgba);

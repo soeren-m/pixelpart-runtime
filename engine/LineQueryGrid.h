@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../common/Types.h"
-#include "../common/Grid.h"
+#include "../effect/Grid.h"
+#include "../types/Types.h"
 #include <cstdint>
 #include <utility>
 #include <vector>

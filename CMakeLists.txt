@@ -39,8 +39,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 # Subdirectories
 add_subdirectory(asset)
-add_subdirectory(common)
 add_subdirectory(effect)
 add_subdirectory(engine)
+add_subdirectory(platform)
+add_subdirectory(types)
 add_subdirectory(vertex)
 add_subdirectory(zlib)

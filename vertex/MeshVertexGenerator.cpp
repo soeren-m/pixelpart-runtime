@@ -2,14 +2,14 @@
 #include "ParticleSorting.h"
 #include "VertexDataGenerationMode.h"
 #include "VertexFormatException.h"
-#include "../common/Transform.h"
-#include "../common/Coordinates.h"
+#include "../effect/Transform.h"
+#include "../effect/Coordinates.h"
+#include "../effect/ParticleSortCriterion.h"
 #include "../math/Common.h"
 #include "../math/MatrixCommon.h"
 #include "../math/Geometry.h"
 #include "../math/Trigonometry.h"
 #include "../math/Transformation.h"
-#include "../effect/ParticleSortCriterion.h"
 #include <cmath>
 #include <algorithm>
 

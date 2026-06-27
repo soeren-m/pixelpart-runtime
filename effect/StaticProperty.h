@@ -3,8 +3,8 @@
 #include "ComputeGraph.h"
 #include "OutputComputeNode.h"
 #include "ComputeOutputOperation.h"
-#include "../common/Types.h"
-#include "../common/VariantValue.h"
+#include "../types/Types.h"
+#include "../types/VariantValue.h"
 #include "../json/json.hpp"
 #include <optional>
 

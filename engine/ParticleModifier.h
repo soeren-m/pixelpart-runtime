@@ -1,10 +1,10 @@
 #pragma once
 
 #include "ParticleCollection.h"
-#include "../common/Types.h"
-#include "../common/Id.h"
 #include "../effect/Effect.h"
 #include "../effect/EffectRuntimeContext.h"
+#include "../types/Types.h"
+#include "../types/Id.h"
 #include <cstdint>
 
 namespace pixelpart {

@@ -1,7 +1,7 @@
 #include "SingleThreadedEffectEngine.h"
 #include "ParticleCollection.h"
 #include "ParticleEmissionState.h"
-#include "../common/MapSync.h"
+#include "MapSync.h"
 #include "../effect/ParticleEmissionPair.h"
 #include <algorithm>
 

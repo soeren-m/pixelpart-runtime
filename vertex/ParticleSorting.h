@@ -1,9 +1,9 @@
 #pragma once
 
 #include "SceneContext.h"
-#include "../common/ThreadPool.h"
 #include "../effect/ParticleSortCriterion.h"
 #include "../engine/ParticleCollection.h"
+#include "../platform/ThreadPool.h"
 #include <cstdint>
 
 namespace pixelpart {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../common/Id.h"
 #include "EffectTrigger.h"
+#include "../types/Id.h"
 #include <unordered_map>
 
 namespace pixelpart {

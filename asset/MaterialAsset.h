@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../common/Types.h"
 #include "../effect/ResourceMap.h"
 #include "../effect/MaterialResource.h"
 #include "../effect/ImageResource.h"
+#include "../types/Types.h"
 #include "../json/json.hpp"
 #include <cstdint>
 #include <string>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../common/VariantValue.h"
+#include "../types/VariantValue.h"
 #include "../json/json.hpp"
 #include <string>
 

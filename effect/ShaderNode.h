@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../common/Types.h"
-#include "../common/Id.h"
-#include "../common/VariantParameter.h"
+#include "VariantParameter.h"
 #include "ShaderNodeType.h"
+#include "../types/Types.h"
+#include "../types/Id.h"
 #include "../json/json.hpp"
 #include <string>
 #include <vector>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../common/Types.h"
+#include "../types/Types.h"
 #include "../json/json.hpp"
 #include <cstdint>
 

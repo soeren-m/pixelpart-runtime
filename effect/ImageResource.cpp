@@ -1,5 +1,5 @@
 #include "ImageResource.h"
-#include "../common/Compression.h"
+#include "Compression.h"
 #include <cstring>
 #include <algorithm>
 

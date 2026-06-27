@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../common/Types.h"
-#include "../common/Id.h"
-#include "../common/VariantParameter.h"
+#include "VariantParameter.h"
 #include "ShaderNode.h"
 #include "ShaderNodeType.h"
 #include "ShaderGraphSpecification.h"
+#include "../types/Types.h"
+#include "../types/Id.h"
 #include "../json/json.hpp"
 #include <optional>
 #include <string>

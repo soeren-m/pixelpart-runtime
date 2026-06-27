@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Resource.h"
-#include "../common/Types.h"
-#include "../common/Grid3d.h"
+#include "Grid3d.h"
+#include "../types/Types.h"
 #include "../json/json.hpp"
 
 namespace pixelpart {

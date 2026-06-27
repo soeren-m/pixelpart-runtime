@@ -2,7 +2,7 @@
 
 #include "ForceField.h"
 #include "AnimatedProperty.h"
-#include "../common/Types.h"
+#include "../types/Types.h"
 #include "../json/json.hpp"
 #include <vector>
 #include <random>

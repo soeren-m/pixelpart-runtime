@@ -1,8 +1,8 @@
 #pragma once
 
 #include "MaterialResource.h"
-#include "../common/VariantParameter.h"
-#include "../common/Id.h"
+#include "VariantParameter.h"
+#include "../types/Id.h"
 #include "../json/json.hpp"
 #include <string>
 #include <unordered_map>

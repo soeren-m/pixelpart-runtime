@@ -1,5 +1,6 @@
 #include "DefaultParticleGenerator.h"
-#include "../common/Coordinates.h"
+#include "../effect/Coordinates.h"
+#include "../effect/Transform.h"
 #include "../math/Common.h"
 #include "../math/Constants.h"
 #include "../math/Geometry.h"

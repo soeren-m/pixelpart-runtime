@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../common/Types.h"
-#include "../effect/Effect.h"
 #include "ImageEffectSettings.h"
 #include "CameraSettings.h"
 #include "RenderSettings.h"
+#include "../effect/Effect.h"
+#include "../types/Types.h"
 #include "../json/json.hpp"
 #include <cstdint>
 #include <string>
