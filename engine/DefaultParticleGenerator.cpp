@@ -416,21 +416,21 @@ float3_t DefaultParticleGenerator::emitOnSegment(float_t length,
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform:
 		case ParticleEmitter::Distribution::boundary: {
-			return float3_t(0.0, math::randomUniform(rng, -length, +length) * 0.5, 0.0);
+			return float3_t(math::randomUniform(rng, -length, +length) * 0.5, 0.0, 0.0);
 		}
 		case ParticleEmitter::Distribution::center: {
-			return float3_t(0.0, math::randomTruncatedNormal(rng, -length, +length) * 0.5, 0.0);
+			return float3_t(math::randomTruncatedNormal(rng, -length, +length) * 0.5, 0.0, 0.0);
 		}
 		case ParticleEmitter::Distribution::hole: {
-			return float3_t(0.0, math::randomTruncatedInverseNormal(rng, -length, +length) * 0.5, 0.0);
+			return float3_t(math::randomTruncatedInverseNormal(rng, -length, +length) * 0.5, 0.0, 0.0);
 		}
 		case ParticleEmitter::Distribution::grid_random: {
-			return float3_t(0.0, math::randomUniformGrid(rng, gridSize, -length, +length) * 0.5, 0.0);
+			return float3_t(math::randomUniformGrid(rng, gridSize, -length, +length) * 0.5, 0.0, 0.0);
 		}
 		case ParticleEmitter::Distribution::grid_ordered: {
-			float_t y = sampleGrid1d(gridIndex, gridSize, -length, +length) * 0.5;
+			float_t x = sampleGrid1d(gridIndex, gridSize, -length, +length) * 0.5;
 			gridIndex = (gridIndex + 1) % gridSize;
-			return float3_t(0.0, y, 0.0);
+			return float3_t(x, 0.0, 0.0);
 		}
 		default: {
 			return float3_t(0.0, 0.0, 0.0);

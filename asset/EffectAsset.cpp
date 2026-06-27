@@ -5,6 +5,7 @@
 #include "../effect/Node.h"
 #include "../effect/ParticleType.h"
 #include <memory>
+#include <unordered_set>
 
 namespace pixelpart {
 namespace {
@@ -871,6 +872,77 @@ void migrateEffectAssetJson(nlohmann::ordered_json& jsonData) {
 
 	// Migration 1.9.x -> 1.10.x
 	if(version == 10) {
+		const auto jsonApplyTransformationToRotation = [](nlohmann::ordered_json& jRotationProperty, const Transform& transform) {
+			for(auto& keyframe : jRotationProperty["curve"]["points"]) {
+				Transform keyframeTransform(float3_t(0.0), keyframe[1].get<float3_t>(), float3_t(1.0));
+
+				float3_t newValue = (keyframeTransform * transform).rotation();
+				keyframe[1]["x"] = newValue.x;
+				keyframe[1]["y"] = newValue.y;
+				keyframe[1]["z"] = newValue.z;
+			}
+		};
+		const auto jsonApplyTransformationToPositionFromLeft = [](nlohmann::ordered_json& jPositionProperty, const Transform& transform) {
+			for(auto& keyframe : jPositionProperty["curve"]["points"]) {
+				Transform keyframeTransform(keyframe[1].get<float3_t>(), float3_t(0.0), float3_t(1.0));
+
+				float3_t newValue = (transform * keyframeTransform).position();
+				keyframe[1]["x"] = newValue.x;
+				keyframe[1]["y"] = newValue.y;
+				keyframe[1]["z"] = newValue.z;
+			}
+		};
+		const auto jsonApplyTransformationToRotationFromLeft = [](nlohmann::ordered_json& jRotationProperty, const Transform& transform) {
+			for(auto& keyframe : jRotationProperty["curve"]["points"]) {
+				Transform keyframeTransform(float3_t(0.0), keyframe[1].get<float3_t>(), float3_t(1.0));
+
+				float3_t newValue = (transform * keyframeTransform).rotation();
+				keyframe[1]["x"] = newValue.x;
+				keyframe[1]["y"] = newValue.y;
+				keyframe[1]["z"] = newValue.z;
+			}
+		};
+		const auto jsonApplyTransformationToScaleFromLeft = [](nlohmann::ordered_json& jScaleProperty, const Transform& transform) {
+			for(auto& keyframe : jScaleProperty["curve"]["points"]) {
+				Transform keyframeTransform(float3_t(0.0), float3_t(0.0), keyframe[1].get<float3_t>());
+
+				float3_t newValue = (transform * keyframeTransform).scale();
+				keyframe[1]["x"] = newValue.x;
+				keyframe[1]["y"] = newValue.y;
+				keyframe[1]["z"] = newValue.z;
+			}
+		};
+
+		std::unordered_set<id_t> lineEmittersIds;
+		Transform lineEmitterCorrectionTransform(
+			float3_t(0.0),
+			float3_t(-90.0, 0.0, 0.0),
+			float3_t(1.0));
+		Transform inverseLineEmitterCorrectionTransform(
+			math::inverse(lineEmitterCorrectionTransform.matrix()));
+
+		for(nlohmann::ordered_json& jNode : jsonData["effect"]["scene"]) {
+			std::string nodeType = jNode.value("node_type", "");
+			std::string shape = jNode.value("shape", "");
+
+			if(nodeType == "particle_emitter" && shape == "line") {
+				lineEmittersIds.insert(jNode["id"].get<id_t>());
+
+				jsonApplyTransformationToRotation(jNode["rotation"], lineEmitterCorrectionTransform);
+				jsonApplyTransformationToRotationFromLeft(jNode["direction"], inverseLineEmitterCorrectionTransform);
+			}
+		}
+
+		for(nlohmann::ordered_json& jNode : jsonData["effect"]["scene"]) {
+			id_t parentId = jNode.value("parent_id", id_t());
+
+			if(lineEmittersIds.count(parentId) != 0) {
+				jsonApplyTransformationToPositionFromLeft(jNode["position"], inverseLineEmitterCorrectionTransform);
+				jsonApplyTransformationToRotationFromLeft(jNode["rotation"], inverseLineEmitterCorrectionTransform);
+				jsonApplyTransformationToScaleFromLeft(jNode["scale"], inverseLineEmitterCorrectionTransform);
+			}
+		}
+
 		version = 11;
 		jsonData["version"] = 11;
 	}
