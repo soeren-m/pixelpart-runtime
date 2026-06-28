@@ -6,6 +6,7 @@
 #include "../effect/VectorField.h"
 #include "../effect/NoiseField.h"
 #include "../effect/DragField.h"
+#include "../effect/VortexField.h"
 #include "../effect/ResourceCollection.h"
 #include "../effect/VectorFieldResource.h"
 #include "../types/Types.h"
@@ -32,6 +33,8 @@ private:
 		const ParticleType& particleType, const NoiseField& noiseField, const SceneGraph& sceneGraph) const;
 	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 		const ParticleType& particleType, const DragField& dragField, const SceneGraph& sceneGraph) const;
+	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
+		const ParticleType& particleType, const VortexField& vortexField, const SceneGraph& sceneGraph) const;
 
 	float3_t computeStaticCurlNoise2d(const float2_t& samplePosition, std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
 	float3_t computeStaticCurlNoise3d(const float3_t& samplePosition, std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
@@ -46,5 +49,6 @@ private:
 	std::vector<VectorField> modifierVectorFields;
 	std::vector<NoiseField> modifierNoiseFields;
 	std::vector<DragField> modifierDragFields;
+	std::vector<VortexField> modifierVortexFields;
 };
 }

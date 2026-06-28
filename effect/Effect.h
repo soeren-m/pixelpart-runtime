@@ -8,6 +8,7 @@
 #include "VectorField.h"
 #include "NoiseField.h"
 #include "DragField.h"
+#include "VortexField.h"
 #include "LineCollider.h"
 #include "PlaneCollider.h"
 #include "DirectionalLightSource.h"
