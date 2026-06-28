@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ForceField.h"
+#include "AnimatedProperty.h"
+#include "../types/Types.h"
 #include "../json/json.hpp"
 
 namespace pixelpart {
@@ -11,8 +13,14 @@ public:
 
 	virtual ForceFieldType forceFieldType() const override;
 
+	AnimatedProperty<float_t>& falloffPower();
+	const AnimatedProperty<float_t>& falloffPower() const;
+
 protected:
 	virtual Node* cloneImpl() const override;
+
+private:
+	AnimatedProperty<float_t> fieldFalloffPower = AnimatedProperty<float_t>(1.0);
 };
 
 void to_json(nlohmann::ordered_json& j, const AttractionField& field);

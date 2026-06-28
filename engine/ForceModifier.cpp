@@ -101,6 +101,8 @@ void ForceModifier::reset(const Effect* effect, EffectRuntimeContext runtimeCont
 
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 	const ParticleType& particleType, const AttractionField& attractionField, const SceneGraph& sceneGraph) const {
+	const float_t epsilon = 1.0e-6;
+
 	float_t fieldLife = attractionField.life(runtimeContext);
 	Transform fieldTransform = sceneGraph.globalTransform(attractionField.id(), runtimeContext);
 	float3_t fieldPosition = fieldTransform.position();
@@ -108,19 +110,20 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	float_t fieldStrength = attractionField.strength().at(fieldLife);
 	bool fieldInfinite = attractionField.infinite();
 
+	float_t falloffPower = attractionField.falloffPower().at(fieldLife);
+
 	const Curve<float_t>& particleWeightCurve = particleType.weight().resultCurve();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		float3_t particleToCenter = fieldPosition - particles.globalPosition[p];
-		float_t distanceToCenter = math::length(particleToCenter);
-		if(distanceToCenter > fieldSize.x && !fieldInfinite) {
+		float_t distance = math::length(particleToCenter);
+		if(distance > fieldSize.x && !fieldInfinite) {
 			continue;
 		}
 
-		distanceToCenter = std::max(distanceToCenter, 0.01);
+		float3_t forceDirection = particleToCenter / std::max(distance, epsilon);
 
-		float3_t forceVector = particleToCenter / (distanceToCenter * distanceToCenter);
-		particles.force[p] += forceVector * fieldStrength * particleWeightCurve.at(particles.life[p]);
+		particles.force[p] += forceDirection * fieldStrength / std::pow(distance + 1.0, falloffPower) * particleWeightCurve.at(particles.life[p]);
 	}
 }
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,

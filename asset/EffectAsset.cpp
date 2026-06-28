@@ -872,6 +872,20 @@ void migrateEffectAssetJson(nlohmann::ordered_json& jsonData) {
 
 	// Migration 1.9.x -> 1.10.x
 	if(version == 10) {
+		const auto jsonAnimatedPropertyFromValue = [](float_t t, const nlohmann::ordered_json& v) {
+			return nlohmann::ordered_json({
+				{ "curve", {
+					{ "interpolation", "linear" },
+					{ "points", nlohmann::ordered_json::array({ { t, v } })}
+				} },
+				{ "compute_graph", nlohmann::ordered_json({ }) },
+				{ "compute_operation", "set" },
+				{ "compute_target", {
+					{ "type", "result" },
+					{ "index", 0u }
+				}}
+			});
+		};
 		const auto jsonApplyTransformationToRotation = [](nlohmann::ordered_json& jRotationProperty, const Transform& transform) {
 			for(auto& keyframe : jRotationProperty["curve"]["points"]) {
 				Transform keyframeTransform(float3_t(0.0), keyframe[1].get<float3_t>(), float3_t(1.0));
@@ -923,13 +937,23 @@ void migrateEffectAssetJson(nlohmann::ordered_json& jsonData) {
 
 		for(nlohmann::ordered_json& jNode : jsonData["effect"]["scene"]) {
 			std::string nodeType = jNode.value("node_type", "");
-			std::string shape = jNode.value("shape", "");
 
-			if(nodeType == "particle_emitter" && shape == "line") {
-				lineEmittersIds.insert(jNode["id"].get<id_t>());
+			if(nodeType == "particle_emitter") {
+				std::string shape = jNode.value("shape", "");
 
-				jsonApplyTransformationToRotation(jNode["rotation"], lineEmitterCorrectionTransform);
-				jsonApplyTransformationToRotationFromLeft(jNode["direction"], inverseLineEmitterCorrectionTransform);
+				if(shape == "line") {
+					lineEmittersIds.insert(jNode["id"].get<id_t>());
+
+					jsonApplyTransformationToRotation(jNode["rotation"], lineEmitterCorrectionTransform);
+					jsonApplyTransformationToRotationFromLeft(jNode["direction"], inverseLineEmitterCorrectionTransform);
+				}
+			}
+			else if(nodeType == "force_field") {
+				std::string forceFieldType = jNode.value("force_field_type", "");
+
+				if(forceFieldType == "attraction") {
+					jNode["attraction"]["falloff_power"] = jsonAnimatedPropertyFromValue(0.5, nlohmann::ordered_json(1.0));
+				}
 			}
 		}
 
