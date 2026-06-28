@@ -1,6 +1,8 @@
 target_sources(pixelpart-runtime PRIVATE
 	AccelerationField.cpp
 	AttractionField.cpp
+	BuiltInMaterialMetadata.cpp
+	BuiltInMaterialRepository.cpp
 	Collider.cpp
 	ColorComputeNodes.cpp
 	ComparisonComputeNodes.cpp
