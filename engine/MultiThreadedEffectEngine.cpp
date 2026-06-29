@@ -139,6 +139,10 @@ void MultiThreadedEffectEngine::activateTrigger(id_t triggerId) {
 	engineContext.triggerActivationTimes()[triggerId] = engineContext.time() + engineContext.deltaTime() * 0.5;
 }
 
+void MultiThreadedEffectEngine::selectLod(std::uint32_t lod) {
+	engineContext.lod() = lod;
+}
+
 const Effect& MultiThreadedEffectEngine::effect() const {
 	return engineEffect;
 }

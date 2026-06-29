@@ -2,6 +2,7 @@
 
 #include "../types/Types.h"
 #include "../types/Id.h"
+#include <cstdint>
 #include <vector>
 #include <unordered_map>
 
@@ -12,14 +13,16 @@ public:
 	using EventInvokationList = std::vector<id_t>;
 
 	EffectRuntimeContext() = default;
-	EffectRuntimeContext(float_t t, float_t dt);
-	EffectRuntimeContext(float_t t, float_t dt, const TriggerActivationTimeMap& triggerActivationTimes);
+	EffectRuntimeContext(float_t t);
 
 	float_t& time();
 	float_t time() const;
 
 	float_t& deltaTime();
 	float_t deltaTime() const;
+
+	std::uint32_t& lod();
+	std::uint32_t lod() const;
 
 	TriggerActivationTimeMap& triggerActivationTimes();
 	const TriggerActivationTimeMap& triggerActivationTimes() const;
@@ -32,6 +35,7 @@ public:
 private:
 	float_t contextTime = 0.0;
 	float_t contextDeltaTime = 0.0;
+	std::uint32_t contextLod = 0;
 	TriggerActivationTimeMap contextTriggerActivationTimes;
 	EventInvokationList contextInvokedEvents;
 };
