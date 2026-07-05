@@ -21,20 +21,11 @@ public:
 
 private:
 	void addMaterial(const std::string& name,
-		ParticleRendererType remdererType, BlendMode blendMode, LightingMode lightingMode,
-		const std::vector<std::string>& parameterNames);
+		ParticleRendererType rendererType, BlendMode blendMode, LightingMode lightingMode,
+		const std::vector<std::string>& parameterNames,
+		const std::unordered_map<std::string, id_t>& parameterIdMap,
+		const std::unordered_map<std::string, VariantParameter>& parameterMap);
 
 	std::unordered_map<std::string, BuiltInMaterialMetadata> repositoryMaterials;
-
-	static const std::vector<std::string> repositorySpriteUnlitParameterNames;
-	static const std::vector<std::string> repositorySpriteLitParameterNames;
-	static const std::vector<std::string> repositoryTrailUnlitParameterNames;
-	static const std::vector<std::string> repositoryTrailLitParameterNames;
-	static const std::vector<std::string> repositoryMeshUnlitParameterNames;
-	static const std::vector<std::string> repositoryMeshUnlitAlphaParameterNames;
-	static const std::vector<std::string> repositoryMeshLitParameterNames;
-	static const std::vector<std::string> repositoryMeshLitAlphaParameterNames;
-	static const std::unordered_map<std::string, id_t> repositoryMaterialParameterIds;
-	static const std::unordered_map<std::string, VariantParameter> repositoryMaterialParameters;
 };
 }
