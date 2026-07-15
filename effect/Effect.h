@@ -17,8 +17,10 @@
 #include "EffectInputCollection.h"
 #include "EffectTriggerCollection.h"
 #include "EffectEventCollection.h"
+#include "LevelOfDetailCollection.h"
 #include "ResourceCollection.h"
 #include "ParticleEmissionPair.h"
+#include "../types/Id.h"
 #include "../json/json.hpp"
 #include <vector>
 
@@ -46,6 +48,9 @@ public:
 	EffectEventCollection& events();
 	const EffectEventCollection& events() const;
 
+	LevelOfDetailCollection& lods();
+	const LevelOfDetailCollection& lods() const;
+
 	ResourceCollection& resources();
 	const ResourceCollection& resources() const;
 
@@ -62,6 +67,7 @@ private:
 	EffectInputCollection effectInputs;
 	EffectTriggerCollection effectTriggers;
 	EffectEventCollection effectEvents;
+	LevelOfDetailCollection effectLods;
 	ResourceCollection effectResources;
 };
 

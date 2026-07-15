@@ -36,6 +36,8 @@ public:
 
 	virtual void activateTrigger(id_t triggerId) override;
 
+	virtual void selectLod(std::uint32_t lod) override;
+
 	virtual const Effect& effect() const override;
 
 	virtual const EffectRuntimeState& state() const override;

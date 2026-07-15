@@ -1,12 +1,7 @@
 #include "EffectRuntimeContext.h"
 
 namespace pixelpart {
-EffectRuntimeContext::EffectRuntimeContext(float_t t, float_t dt) :
-	contextTime(t), contextDeltaTime(dt) {
-
-}
-EffectRuntimeContext::EffectRuntimeContext(float_t t, float_t dt, const TriggerActivationTimeMap& triggerActivationTimes) :
-	contextTime(t), contextDeltaTime(dt), contextTriggerActivationTimes(triggerActivationTimes) {
+EffectRuntimeContext::EffectRuntimeContext(float_t t) : contextTime(t) {
 
 }
 
@@ -22,6 +17,13 @@ float_t& EffectRuntimeContext::deltaTime() {
 }
 float_t EffectRuntimeContext::deltaTime() const {
 	return contextDeltaTime;
+}
+
+std::uint32_t& EffectRuntimeContext::lod() {
+	return contextLod;
+}
+std::uint32_t EffectRuntimeContext::lod() const {
+	return contextLod;
 }
 
 EffectRuntimeContext::TriggerActivationTimeMap& EffectRuntimeContext::triggerActivationTimes() {

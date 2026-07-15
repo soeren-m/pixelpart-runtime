@@ -101,6 +101,10 @@ void SingleThreadedEffectEngine::activateTrigger(id_t triggerId) {
 	engineContext.triggerActivationTimes()[triggerId] = engineContext.time() + engineContext.deltaTime() * 0.5;
 }
 
+void SingleThreadedEffectEngine::selectLod(std::uint32_t lod) {
+	engineContext.lod() = lod;
+}
+
 const Effect& SingleThreadedEffectEngine::effect() const {
 	return engineEffect;
 }

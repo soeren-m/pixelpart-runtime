@@ -967,6 +967,15 @@ void migrateEffectAssetJson(nlohmann::ordered_json& jsonData) {
 			}
 		}
 
+		jsonData["effect"]["lods"] = nlohmann::ordered_json::array({
+			{
+				{ "distance_threshold", 0.0 }
+			} });
+
+		for(nlohmann::ordered_json& jParticleType : jsonData["effect"]["particles"]) {
+			jParticleType["lod_strategy"] = nlohmann::ordered_json::array();
+		}
+
 		version = 11;
 		jsonData["version"] = 11;
 	}

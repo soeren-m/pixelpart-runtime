@@ -24,6 +24,7 @@ target_sources(pixelpart-runtime PRIVATE
 	ForceField.cpp
 	GroupNode.cpp
 	ImageResource.cpp
+	LevelOfDetail.cpp
 	LightSource.cpp
 	LineCollider.cpp
 	LogicComputeNodes.cpp
@@ -36,6 +37,7 @@ target_sources(pixelpart-runtime PRIVATE
 	OutputComputeNode.cpp
 	ParticleEmissionPair.cpp
 	ParticleEmitter.cpp
+	ParticleLodStrategy.cpp
 	ParticleRendererSettings.cpp
 	ParticleType.cpp
 	ParticleTypeCollection.cpp

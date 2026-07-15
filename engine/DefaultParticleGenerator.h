@@ -22,7 +22,7 @@ public:
 		const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const override;
 
 private:
-	static std::uint32_t initializeParticles(std::uint32_t count,
+	static std::uint32_t initializeParticles(std::uint32_t count, float_t lifetimeFactor,
 		EffectRuntimeState& state, ParticleEmissionState& emissionState,
 		ParticleCollection& particleCollection, const ParticleCollection* parentParticleCollection, std::uint32_t parentParticle,
 		const Effect* effect, ParticleEmissionPair emissionPair, EffectRuntimeContext runtimeContext,

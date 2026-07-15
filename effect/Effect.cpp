@@ -1,6 +1,5 @@
 #include "Effect.h"
 #include "SortedJson.h"
-#include "../types/Id.h"
 #include <memory>
 
 namespace pixelpart {
@@ -48,6 +47,13 @@ EffectEventCollection& Effect::events() {
 }
 const EffectEventCollection& Effect::events() const {
 	return effectEvents;
+}
+
+LevelOfDetailCollection& Effect::lods() {
+	return effectLods;
+}
+const LevelOfDetailCollection& Effect::lods() const {
+	return effectLods;
 }
 
 ResourceCollection& Effect::resources() {
@@ -105,6 +111,7 @@ void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 		{ "inputs", toSortedJson(effect.inputs()) },
 		{ "triggers", toSortedJson(effect.triggers()) },
 		{ "events", toSortedJson(effect.events()) },
+		{ "lods", effect.lods() },
 		{ "resources", effect.resources() }
 	};
 }
@@ -115,6 +122,7 @@ void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 	effect.inputs() = j.value("inputs", EffectInputCollection());
 	effect.triggers() = j.value("triggers", EffectTriggerCollection());
 	effect.events() = j.value("events", EffectEventCollection());
+	effect.lods() = j.value("lods", LevelOfDetailCollection());
 	effect.resources() = j.value("resources", ResourceCollection());
 }
 }

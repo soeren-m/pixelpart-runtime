@@ -17,6 +17,9 @@
 namespace pixelpart {
 void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 	const Effect* effect, EffectRuntimeContext runtimeContext) const {
+	float_t t = runtimeContext.time();
+	float_t dt = runtimeContext.deltaTime();
+
 	for(auto& [emissionPair, particleCollection] : state.particleCollections()) {
 		const ParticleType& particleType = effect->particleTypes().at(emissionPair.typeId);
 
@@ -30,6 +33,7 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 			continue;
 		}
 
+		ParticleLodStrategy lodStrategy = particleType.lodStrategy(runtimeContext.lod());
 		ParticleEmissionState& emissionState = state.particleEmissionStates().at(emissionPair);
 
 		float_t startTime = particleEmitter.startTrigger()
@@ -37,21 +41,23 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 			: particleEmitter.start();
 
 		float_t emissionTime = particleEmitter.repeat()
-			? std::fmod(runtimeContext.time() - startTime, particleEmitter.duration())
-			: runtimeContext.time() - startTime;
+			? std::fmod(t - startTime, particleEmitter.duration())
+			: t - startTime;
 
 		switch(particleEmitter.emissionMode()) {
 			case ParticleEmitter::EmissionMode::continuous:
 				emissionState.emissionCount +=
-					particleType.count().at(emissionTime / particleEmitter.duration()) * runtimeContext.deltaTime();
+					particleType.count().at(emissionTime / particleEmitter.duration()) * dt * lodStrategy.emissionFactor();
 				break;
 			case ParticleEmitter::EmissionMode::burst_start:
-				emissionState.emissionCount +=
-					emissionTime < runtimeContext.deltaTime() ? particleType.count().at(0) : 0.0;
+				if(emissionTime < dt) {
+					emissionState.emissionCount += particleType.count().at(0) * lodStrategy.emissionFactor();
+				}
 				break;
 			case ParticleEmitter::EmissionMode::burst_end:
-				emissionState.emissionCount +=
-					emissionTime > particleEmitter.duration() - runtimeContext.deltaTime() ? particleType.count().at(1) : 0.0;
+				if(emissionTime > particleEmitter.duration() - dt) {
+					emissionState.emissionCount += particleType.count().at(1) * lodStrategy.emissionFactor();
+				}
 				break;
 			default:
 				break;
@@ -59,17 +65,17 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 
 		std::uint32_t emittedParticleCount = static_cast<std::uint32_t>(std::max(emissionState.emissionCount, 0.0));
 		if(emittedParticleCount > 0) {
-			emissionState.emissionCount -= static_cast<float_t>(initializeParticles(emittedParticleCount,
+			emissionState.emissionCount -= static_cast<float_t>(initializeParticles(emittedParticleCount, lodStrategy.lifetimeFactor(),
 				state, emissionState,
 				particleCollection, nullptr, id_t::nullValue,
 				effect, emissionPair, runtimeContext, true));
 		}
 	}
 
-	std::unordered_map<ParticleEmissionPair, std::vector<ParticleEmissionPair>> subEmissionPairCollection;
+	std::unordered_map<ParticleEmissionPair, std::vector<ParticleEmissionPair>> childEmissionPairCollection;
 
 	for(const auto& [emissionPair, particleCollection] : state.particleCollections()) {
-		std::vector<ParticleEmissionPair>& subEmissionPairs = subEmissionPairCollection[emissionPair];
+		std::vector<ParticleEmissionPair>& childEmissionPairs = childEmissionPairCollection[emissionPair];
 		const ParticleType& particleType = effect->particleTypes().at(emissionPair.typeId);
 
 		for(const auto& [otherEmissionPair, otherParticleCollection] : state.particleCollections()) {
@@ -78,67 +84,87 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 			}
 
 			const ParticleEmitter& otherParticleEmitter = effect->sceneGraph().at<ParticleEmitter>(otherEmissionPair.emitterId);
-			if(otherParticleEmitter.primary() || !otherParticleEmitter.activatedByTrigger(runtimeContext)) {
+			const ParticleType& otherParticleType = effect->particleTypes().at(otherEmissionPair.typeId);
+			if(otherParticleType.parentId() != particleType.id() ||
+				otherParticleEmitter.primary() ||
+				!otherParticleEmitter.activatedByTrigger(runtimeContext)) {
 				continue;
 			}
 
-			const ParticleType& otherParticleType = effect->particleTypes().at(otherEmissionPair.typeId);
-			if(otherParticleType.parentId() == particleType.id()) {
-				subEmissionPairs.emplace_back(otherEmissionPair);
-			}
+			childEmissionPairs.emplace_back(otherEmissionPair);
 		}
 	}
 
 	for(const auto& [emissionPair, particleCollection] : state.particleCollections()) {
-		const std::vector<ParticleEmissionPair>& subEmissionPairs = subEmissionPairCollection.at(emissionPair);
-		if(subEmissionPairs.empty()) {
+		const std::vector<ParticleEmissionPair>& childEmissionPairs = childEmissionPairCollection.at(emissionPair);
+		if(childEmissionPairs.empty()) {
 			continue;
 		}
 
 		const ParticleEmitter& particleEmitter = effect->sceneGraph().at<ParticleEmitter>(emissionPair.emitterId);
 		ParticleCollection::ReadPtr particles = particleCollection.readPtr();
 
-		for(ParticleEmissionPair subEmissionPair : subEmissionPairs) {
-			ParticleCollection& subParticleCollection = state.particleCollections().at(subEmissionPair);
-			ParticleEmissionState& subEmissionState = state.particleEmissionStates().at(subEmissionPair);
-			const ParticleType& subParticleType = effect->particleTypes().at(subEmissionPair.typeId);
-			const ParticleEmitter& subParticleEmitter = effect->sceneGraph().at<ParticleEmitter>(subEmissionPair.emitterId);
+		float_t parentEmitterDuration = particleEmitter.duration();
+
+		for(ParticleEmissionPair childEmissionPair : childEmissionPairs) {
+			ParticleCollection& childParticleCollection = state.particleCollections().at(childEmissionPair);
+			ParticleEmissionState& childEmissionState = state.particleEmissionStates().at(childEmissionPair);
+			const ParticleType& childParticleType = effect->particleTypes().at(childEmissionPair.typeId);
+			const ParticleEmitter& childParticleEmitter = effect->sceneGraph().at<ParticleEmitter>(childEmissionPair.emitterId);
+
+			float_t childEmitterDuration = childParticleEmitter.duration();
+			bool childEmitterRepeat = childParticleEmitter.repeat();
+			ParticleEmitter::EmissionMode childEmissionMode = childParticleEmitter.emissionMode();
+
+			const Curve<float_t>& childParticleTypeCountCurve = childParticleType.count().resultCurve();
+
+			float_t lodEmissionFactor = childParticleType.lodStrategy(runtimeContext.lod()).emissionFactor();
+			float_t lodLifetimeFactor = childParticleType.lodStrategy(runtimeContext.lod()).lifetimeFactor();
 
 			for(std::uint32_t p = 0; p < particleCollection.count(); p++) {
 				float_t particleTime = particles.life[p] * particles.lifespan[p];
-				if(particleTime > subParticleEmitter.duration() && !subParticleEmitter.repeat()) {
+				if(particleTime > childEmitterDuration && !childEmitterRepeat) {
 					continue;
 				}
 
-				float_t emissionTime = subParticleEmitter.repeat()
-					? std::fmod(particleTime, subParticleEmitter.duration())
-					: particleTime;
+				switch(childEmissionMode) {
+					case ParticleEmitter::EmissionMode::continuous: {
+						float_t emissionTime = childEmitterRepeat
+							? std::fmod(particleTime, childEmitterDuration)
+							: particleTime;
 
-				switch(subParticleEmitter.emissionMode()) {
-					case ParticleEmitter::EmissionMode::continuous:
-						subEmissionState.emissionCount +=
-							subParticleType.count().at(emissionTime / particleEmitter.duration()) * runtimeContext.deltaTime();
+						childEmissionState.emissionCount +=
+							childParticleTypeCountCurve.at(emissionTime / parentEmitterDuration) * dt * lodEmissionFactor;
+
 						break;
-					case ParticleEmitter::EmissionMode::burst_start:
-						subEmissionState.emissionCount +=
-							particles.life[p] < runtimeContext.deltaTime() / particles.lifespan[p] ? subParticleType.count().at(0) : 0.0;
+					}
+					case ParticleEmitter::EmissionMode::burst_start: {
+						if(particleTime < dt) {
+							childEmissionState.emissionCount += childParticleTypeCountCurve.at(0) * lodEmissionFactor;
+						}
+
 						break;
-					case ParticleEmitter::EmissionMode::burst_end:
-						subEmissionState.emissionCount +=
-							particles.life[p] > 1.0 ? subParticleType.count().at(1) : 0.0;
+					}
+					case ParticleEmitter::EmissionMode::burst_end: {
+						if(particles.life[p] > 1.0) {
+							childEmissionState.emissionCount += childParticleTypeCountCurve.at(1) * lodEmissionFactor;
+						}
+
 						break;
-					default:
+					}
+					default: {
 						break;
+					}
 				}
 
-				std::uint32_t emittedParticleCount = static_cast<std::uint32_t>(std::max(subEmissionState.emissionCount, 0.0));
+				std::uint32_t emittedParticleCount = static_cast<std::uint32_t>(std::max(childEmissionState.emissionCount, 0.0));
 				if(emittedParticleCount > 0) {
-					EffectRuntimeContext particleRuntimeContext(particleTime, 0.0);
+					EffectRuntimeContext particleRuntimeContext(particleTime);
 
-					subEmissionState.emissionCount -= static_cast<float_t>(initializeParticles(emittedParticleCount,
-						state, subEmissionState,
-						subParticleCollection, &particleCollection, p,
-						effect, subEmissionPair, particleRuntimeContext, false));
+					childEmissionState.emissionCount -= static_cast<float_t>(initializeParticles(emittedParticleCount, lodLifetimeFactor,
+						state, childEmissionState,
+						childParticleCollection, &particleCollection, p,
+						effect, childEmissionPair, particleRuntimeContext, false));
 				}
 			}
 		}
@@ -170,13 +196,13 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state, std::uint32_t
 		return;
 	}
 
-	initializeParticles(count,
+	initializeParticles(count, 1.0,
 		state, *particleEmissionState,
 		*particleCollection, nullptr, id_t::nullValue,
 		effect, emissionPair, runtimeContext, false);
 }
 
-std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
+std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count, float_t lifetimeFactor,
 	EffectRuntimeState& state, ParticleEmissionState& emissionState,
 	ParticleCollection& particleCollection, const ParticleCollection* parentParticleCollection, std::uint32_t parentParticle,
 	const Effect* effect, ParticleEmissionPair emissionPair, EffectRuntimeContext runtimeContext,
@@ -199,7 +225,9 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 	float3_t parentVelocity;
 
 	if(parentParticle == id_t::nullValue) {
-		EffectRuntimeContext prevRuntimeContext(runtimeContext.time() - 0.1, 0.0, runtimeContext.triggerActivationTimes());
+		EffectRuntimeContext prevRuntimeContext(runtimeContext.time() - 0.1);
+		prevRuntimeContext.triggerActivationTimes() = runtimeContext.triggerActivationTimes();
+
 		Transform emitterPrevTransform = effect->sceneGraph().globalTransform(particleEmitter.id(), prevRuntimeContext, useTriggers);
 
 		emissionPosition = !particleType.positionRelative() ? emitterPosition : float3_t(0.0);
@@ -250,7 +278,7 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 		particles.id[p] = state.particleIdCounter()++;
 		particles.parentId[p] = parentId;
 		particles.life[p] = 0.0;
-		particles.lifespan[p] = std::max(lifespan + math::randomUniform(rng, -lifespanVariance, +lifespanVariance), 0.000001);
+		particles.lifespan[p] = std::max((lifespan + math::randomUniform(rng, -lifespanVariance, +lifespanVariance)) * lifetimeFactor, 0.000001);
 
 		float3_t particleSpawnPosition = float3_t(0.0);
 		switch(particleEmitter.shape()) {

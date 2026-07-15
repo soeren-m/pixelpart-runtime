@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ParticleLodStrategy.h"
 #include "RotationMode.h"
 #include "AlignmentMode.h"
 #include "MaterialInstance.h"
@@ -13,6 +14,7 @@
 #include "../json/json.hpp"
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace pixelpart {
 class ParticleType {
@@ -36,6 +38,10 @@ public:
 	void positionRelative(bool relative);
 	bool positionRelative() const;
 
+	std::vector<ParticleLodStrategy>& lodStrategy();
+	const std::vector<ParticleLodStrategy>& lodStrategy() const;
+	ParticleLodStrategy lodStrategy(std::uint32_t lod) const;
+
 	void rotationMode(RotationMode mode);
 	RotationMode rotationMode() const;
 
@@ -50,6 +56,7 @@ public:
 
 	void visible(bool mode);
 	bool visible() const;
+	bool visibleAtLod(std::uint32_t lod) const;
 
 	void layer(std::uint32_t layer);
 	std::uint32_t layer() const;
@@ -156,6 +163,7 @@ private:
 	std::string particleTypeName;
 
 	bool particlePositionRelative = false;
+	std::vector<ParticleLodStrategy> particleLodStrategy;
 	RotationMode particleRotationMode = RotationMode::angle;
 	AlignmentMode particleAlignmentMode = AlignmentMode::camera;
 
