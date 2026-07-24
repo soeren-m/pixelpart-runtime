@@ -22,10 +22,16 @@ public:
 	virtual void reset(const Effect* effect, EffectRuntimeContext runtimeContext) override;
 
 private:
+	struct AccelerationFieldData {
+		AccelerationField forceField;
+		std::vector<float_t> strengthGrid;
+		std::vector<matrix4_t> directionMatrixGrid;
+	};
+
 	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 		const ParticleType& particleType, const AttractionField& attractionField, const SceneGraph& sceneGraph) const;
 	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
-		const ParticleType& particleType, const AccelerationField& accelerationField, const SceneGraph& sceneGraph) const;
+		const ParticleType& particleType, const AccelerationFieldData& accelerationField, const SceneGraph& sceneGraph) const;
 	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
 		const ParticleType& particleType, const VectorField& vectorField, const SceneGraph& sceneGraph) const;
 	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
@@ -42,7 +48,7 @@ private:
 	bool modifierEffect3d = false;
 
 	std::vector<AttractionField> modifierAttractionFields;
-	std::vector<AccelerationField> modifierAccelerationFields;
+	std::vector<AccelerationFieldData> modifierAccelerationFields;
 	std::vector<VectorField> modifierVectorFields;
 	std::vector<NoiseField> modifierNoiseFields;
 	std::vector<DragField> modifierDragFields;
