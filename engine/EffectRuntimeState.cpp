@@ -55,10 +55,7 @@ std::uint32_t EffectRuntimeState::particleIdCounter() const {
 	return stateParticleIdCounter;
 }
 
-std::mt19937& EffectRuntimeState::rng() {
-	return stateRng;
-}
-std::mt19937 EffectRuntimeState::rng() const {
+pcg32& EffectRuntimeState::rng() {
 	return stateRng;
 }
 }

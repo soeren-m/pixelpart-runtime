@@ -2,9 +2,9 @@
 
 #include "ParticleCollectionMap.h"
 #include "ParticleEmissionStateMap.h"
+#include "../math/Pcg32.h"
 #include "../types/Id.h"
 #include <cstdint>
-#include <random>
 
 namespace pixelpart {
 class EffectRuntimeState {
@@ -24,13 +24,12 @@ public:
 	std::uint32_t& particleIdCounter();
 	std::uint32_t particleIdCounter() const;
 
-	std::mt19937& rng();
-	std::mt19937 rng() const;
+	pcg32& rng();
 
 private:
 	ParticleCollectionMap stateParticleCollections;
 	ParticleEmissionStateMap stateParticleEmissionStates;
 	std::uint32_t stateParticleIdCounter = 0;
-	std::mt19937 stateRng;
+	pcg32 stateRng;
 };
 }

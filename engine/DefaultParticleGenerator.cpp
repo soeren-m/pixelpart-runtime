@@ -7,11 +7,11 @@
 #include "../math/Trigonometry.h"
 #include "../math/Transformation.h"
 #include "../math/Interpolation.h"
-#include "../math/Random.h"
 #include <cmath>
 #include <optional>
 #include <vector>
 #include <unordered_map>
+#include <random>
 #include <algorithm>
 
 namespace pixelpart {
@@ -270,7 +270,7 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 	float_t opacityVariance = particleType.opacityVariance().value();
 	float4_t color = float4_t(float3_t(particleType.color().at()), particleType.opacity().at());
 
-	std::mt19937& rng = state.rng();
+	pcg32& rng = state.rng();
 
 	for(std::uint32_t addIndex = 0; addIndex < count; addIndex++) {
 		std::uint32_t p = particleCollectionCount - count + addIndex;
@@ -278,7 +278,7 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 		particles.id[p] = state.particleIdCounter()++;
 		particles.parentId[p] = parentId;
 		particles.life[p] = 0.0;
-		particles.lifespan[p] = std::max((lifespan + math::randomUniform(rng, -lifespanVariance, +lifespanVariance)) * lifetimeFactor, 0.000001);
+		particles.lifespan[p] = std::max((lifespan + rng.next(-lifespanVariance, +lifespanVariance)) * lifetimeFactor, 0.000001);
 
 		float3_t particleSpawnPosition = float3_t(0.0);
 		switch(particleEmitter.shape()) {
@@ -352,9 +352,9 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 
 		if(effect3d) {
 			matrix3_t directionMatrix = matrix3_t(math::yawPitchRollRotationMatrix(
-				math::radians(emitterDirection.y + emitterSpread * math::randomUniform(rng, -0.5, +0.5)),
-				math::radians(emitterDirection.z + emitterSpread * math::randomUniform(rng, -0.5, +0.5)),
-				math::radians(emitterDirection.x + emitterSpread * math::randomUniform(rng, -0.5, +0.5))));
+				math::radians(emitterDirection.y + emitterSpread * rng.next(-0.5, +0.5)),
+				math::radians(emitterDirection.z + emitterSpread * rng.next(-0.5, +0.5)),
+				math::radians(emitterDirection.x + emitterSpread * rng.next(-0.5, +0.5))));
 
 			particleSpawnPosition = emitterRotationMatrix * particleSpawnPosition;
 
@@ -379,7 +379,7 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 			}
 		}
 		else {
-			float_t direction = math::radians(emitterDirection.x + emitterSpread * math::randomUniform(rng, -0.5, +0.5));
+			float_t direction = math::radians(emitterDirection.x + emitterSpread * rng.next(-0.5, +0.5));
 
 			particleSpawnPosition = float3_t(math::rotateVector(float2_t(particleSpawnPosition), emitterRotation.x), 0.0);
 
@@ -406,7 +406,7 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 			}
 		}
 
-		particles.velocity[p] *= velocity + math::randomUniform(rng, -velocityVariance, +velocityVariance);
+		particles.velocity[p] *= velocity + rng.next(-velocityVariance, +velocityVariance);
 		particles.force[p] = float3_t(0.0);
 		particles.position[p] = emissionPosition + particleSpawnPosition;
 		particles.globalPosition[p] = localCoords
@@ -414,23 +414,23 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 			: particles.position[p];
 
 		particles.initialRotation[p] = initialRotation + float3_t(
-			math::randomUniform(rng, -rotationVariance.x, +rotationVariance.x),
-			math::randomUniform(rng, -rotationVariance.y, +rotationVariance.y),
-			math::randomUniform(rng, -rotationVariance.z, +rotationVariance.z));
+			rng.next(-rotationVariance.x, +rotationVariance.x),
+			rng.next(-rotationVariance.y, +rotationVariance.y),
+			rng.next(-rotationVariance.z, +rotationVariance.z));
 		particles.initialAngularVelocity[p] = float3_t(
-			math::randomUniform(rng, -angularVelocityVariance.x, +angularVelocityVariance.x),
-			math::randomUniform(rng, -angularVelocityVariance.y, +angularVelocityVariance.y),
-			math::randomUniform(rng, -angularVelocityVariance.z, +angularVelocityVariance.z));
+			rng.next(-angularVelocityVariance.x, +angularVelocityVariance.x),
+			rng.next(-angularVelocityVariance.y, +angularVelocityVariance.y),
+			rng.next(-angularVelocityVariance.z, +angularVelocityVariance.z));
 		particles.rotation[p] = particles.initialRotation[p];
 
-		particles.initialSize[p] = initialSize + math::randomUniform(rng, -sizeVariance, +sizeVariance);
+		particles.initialSize[p] = initialSize + rng.next(-sizeVariance, +sizeVariance);
 		particles.size[p] = size * particles.initialSize[p];
 
 		particles.initialColor[p] = float4_t(
-			math::randomUniform(rng, -colorVariance.x, +colorVariance.x),
-			math::randomUniform(rng, -colorVariance.y, +colorVariance.y),
-			math::randomUniform(rng, -colorVariance.z, +colorVariance.z),
-			initialOpacity + math::randomUniform(rng, -opacityVariance, +opacityVariance));
+			rng.next(-colorVariance.x, +colorVariance.x),
+			rng.next(-colorVariance.y, +colorVariance.y),
+			rng.next(-colorVariance.z, +colorVariance.z),
+			initialOpacity + rng.next(-opacityVariance, +opacityVariance));
 		particles.color[p] = color;
 	}
 
@@ -441,20 +441,20 @@ float3_t DefaultParticleGenerator::emitOnSegment(float_t length,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
 	std::uint32_t gridSize, std::uint32_t& gridIndex,
-	std::mt19937& rng) {
+	pcg32& rng) {
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform:
 		case ParticleEmitter::Distribution::boundary: {
-			return float3_t(math::randomUniform(rng, -length, +length) * 0.5, 0.0, 0.0);
+			return float3_t(rng.next(-length, +length) * 0.5, 0.0, 0.0);
 		}
 		case ParticleEmitter::Distribution::center: {
-			return float3_t(math::randomTruncatedNormal(rng, -length, +length) * 0.5, 0.0, 0.0);
+			return float3_t(randomCentered(rng, -length, +length) * 0.5, 0.0, 0.0);
 		}
 		case ParticleEmitter::Distribution::hole: {
-			return float3_t(math::randomTruncatedInverseNormal(rng, -length, +length) * 0.5, 0.0, 0.0);
+			return float3_t(randomInverseCentered(rng, -length, +length) * 0.5, 0.0, 0.0);
 		}
 		case ParticleEmitter::Distribution::grid_random: {
-			return float3_t(math::randomUniformGrid(rng, gridSize, -length, +length) * 0.5, 0.0, 0.0);
+			return float3_t(randomUniformGrid(rng, gridSize, -length, +length) * 0.5, 0.0, 0.0);
 		}
 		case ParticleEmitter::Distribution::grid_ordered: {
 			float_t x = sampleGrid1d(gridIndex, gridSize, -length, +length) * 0.5;
@@ -471,15 +471,15 @@ float3_t DefaultParticleGenerator::emitInEllipse(const float2_t& size,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
 	std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t& gridIndex,
-	std::mt19937& rng) {
+	pcg32& rng) {
 	float_t r = 0.0;
 	float_t phi = 0.0;
 	float3_t point = float3_t(0.0);
 
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform: {
-			r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
-			phi = math::randomUniform(rng, 0.0, math::twoPi);
+			r = std::sqrt(rng.next());
+			phi = rng.next(0.0, math::twoPi);
 			point = float3_t(
 				std::cos(phi),
 				std::sin(phi),
@@ -489,32 +489,32 @@ float3_t DefaultParticleGenerator::emitInEllipse(const float2_t& size,
 		}
 		case ParticleEmitter::Distribution::center: {
 			do {
-				r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
-				phi = math::randomUniform(rng, 0.0, math::twoPi);
+				r = std::sqrt(rng.next());
+				phi = rng.next(0.0, math::twoPi);
 				point = float3_t(
 					std::cos(phi),
 					std::sin(phi),
 					0.0) * r;
 			}
-			while(std::pow(math::randomUniform(rng, 0.0, 1.0), 2) < point.x * point.x + point.y * point.y);
+			while(std::pow(rng.next(), 2) < point.x * point.x + point.y * point.y);
 
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
 			do {
-				r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
-				phi = math::randomUniform(rng, 0.0, math::twoPi);
+				r = std::sqrt(rng.next());
+				phi = rng.next(0.0, math::twoPi);
 				point = float3_t(
 					std::cos(phi),
 					std::sin(phi),
 					0.0) * r;
 			}
-			while(std::pow(math::randomUniform(rng, 0.0, 1.0), 2) > point.x * point.x + point.y * point.y);
+			while(std::pow(rng.next(), 2) > point.x * point.x + point.y * point.y);
 
 			break;
 		}
 		case ParticleEmitter::Distribution::boundary: {
-			phi = math::randomUniform(rng, 0.0, math::twoPi);
+			phi = rng.next(0.0, math::twoPi);
 			point = float3_t(
 				std::cos(phi),
 				std::sin(phi),
@@ -523,8 +523,8 @@ float3_t DefaultParticleGenerator::emitInEllipse(const float2_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::grid_random: {
-			r = math::randomUniformGrid(rng, gridSizeX, 0.0, 1.0);
-			phi = math::randomUniformGrid(rng, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+			r = randomUniformGrid(rng, gridSizeX, 0.0, 1.0);
+			phi = randomUniformGrid(rng, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
 			point = float3_t(
 				std::cos(phi),
 				std::sin(phi),
@@ -573,22 +573,22 @@ float3_t DefaultParticleGenerator::emitInRectangle(const float2_t& size,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
 	std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t& gridIndex,
-	std::mt19937& rng) {
+	pcg32& rng) {
 	float3_t point = float3_t(0.0);
 
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform: {
 			point = float3_t(
-				math::randomUniform(rng, -size.x, +size.x),
-				math::randomUniform(rng, -size.y, +size.y),
+				rng.next(-size.x, +size.x),
+				rng.next(-size.y, +size.y),
 				0.0) * 0.5;
 
 			break;
 		}
 		case ParticleEmitter::Distribution::center: {
 			point = float3_t(
-				math::randomTruncatedNormal(rng, -size.x, +size.x),
-				math::randomTruncatedNormal(rng, -size.y, +size.y),
+				randomCentered(rng, -size.x, +size.x),
+				randomCentered(rng, -size.y, +size.y),
 				0.0) * 0.5;
 
 			break;
@@ -596,11 +596,11 @@ float3_t DefaultParticleGenerator::emitInRectangle(const float2_t& size,
 		case ParticleEmitter::Distribution::hole: {
 			do {
 				point = float3_t(
-					math::randomUniform(rng, -1.0, +1.0),
-					math::randomUniform(rng, -1.0, +1.0),
+					rng.next(-1.0, +1.0),
+					rng.next(-1.0, +1.0),
 					0.0);
 			}
-			while(math::randomUniform(rng, 0.0, 1.0) > (point.x * point.x + point.y * point.y) * 0.5);
+			while(rng.next() > (point.x * point.x + point.y * point.y) * 0.5);
 
 			point.x *= size.x * 0.5;
 			point.y *= size.y * 0.5;
@@ -608,7 +608,7 @@ float3_t DefaultParticleGenerator::emitInRectangle(const float2_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::boundary: {
-			float_t r = math::randomUniform(rng, 0.0, (size.x + size.y) * 2.0);
+			float_t r = rng.next(0.0, (size.x + size.y) * 2.0);
 			point = float3_t(-size * 0.5, 0.0);
 
 			if(r < size.y) {
@@ -628,8 +628,8 @@ float3_t DefaultParticleGenerator::emitInRectangle(const float2_t& size,
 		}
 		case ParticleEmitter::Distribution::grid_random: {
 			point = float3_t(
-				math::randomUniformGrid(rng, gridSizeX, -size.x, +size.x),
-				math::randomUniformGrid(rng, gridSizeY, -size.y, +size.y),
+				randomUniformGrid(rng, gridSizeX, -size.x, +size.x),
+				randomUniformGrid(rng, gridSizeY, -size.y, +size.y),
 				0.0) * 0.5;
 
 			break;
@@ -673,25 +673,25 @@ float3_t DefaultParticleGenerator::emitOnPath(const float3_t& size,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
 	std::uint32_t gridSize, std::uint32_t& gridIndex,
-	std::mt19937& rng) {
+	pcg32& rng) {
 	float_t x = 0.0;
 
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform:
 		case ParticleEmitter::Distribution::boundary: {
-			x = math::randomUniform(rng, 0.0, 1.0);
+			x = rng.next();
 			break;
 		}
 		case ParticleEmitter::Distribution::center: {
-			x = math::randomTruncatedNormal(rng, 0.0, 1.0);
+			x = randomCentered(rng, 0.0, 1.0);
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
-			x = math::randomTruncatedInverseNormal(rng, 0.0, 1.0);
+			x = randomInverseCentered(rng, 0.0, 1.0);
 			break;
 		}
 		case ParticleEmitter::Distribution::grid_random: {
-			x = math::randomUniformGrid(rng, gridSize, 0.0, 1.0);
+			x = randomUniformGrid(rng, gridSize, 0.0, 1.0);
 			break;
 		}
 		case ParticleEmitter::Distribution::grid_ordered: {
@@ -711,14 +711,14 @@ float3_t DefaultParticleGenerator::emitInEllipsoid(const float3_t& size,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
 	std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t gridSizeZ, std::uint32_t& gridIndex,
-	std::mt19937& rng) {
+	pcg32& rng) {
 	float3_t point = float3_t(0.0);
 
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform: {
-			float_t r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
-			float_t phi = math::randomUniform(rng, 0.0, math::twoPi);
-			float_t ctheta = math::randomUniform(rng, -1.0, +1.0);
+			float_t r = std::sqrt(rng.next());
+			float_t phi = rng.next(0.0, math::twoPi);
+			float_t ctheta = rng.next(-1.0, +1.0);
 			float_t theta = std::acos(ctheta);
 			float_t stheta = std::sin(theta);
 
@@ -731,9 +731,9 @@ float3_t DefaultParticleGenerator::emitInEllipsoid(const float3_t& size,
 		}
 		case ParticleEmitter::Distribution::center: {
 			do {
-				float_t r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
-				float_t phi = math::randomUniform(rng, 0.0, math::twoPi);
-				float_t ctheta = math::randomUniform(rng, -1.0, +1.0);
+				float_t r = std::sqrt(rng.next());
+				float_t phi = rng.next(0.0, math::twoPi);
+				float_t ctheta = rng.next(-1.0, +1.0);
 				float_t theta = std::acos(ctheta);
 				float_t stheta = std::sin(theta);
 
@@ -742,15 +742,15 @@ float3_t DefaultParticleGenerator::emitInEllipsoid(const float3_t& size,
 					stheta * std::sin(phi),
 					ctheta) * r;
 			}
-			while(std::pow(math::randomUniform(rng, 0.0, 1.0), 3) < point.x * point.x + point.y * point.y + point.z * point.z);
+			while(std::pow(rng.next(), 3) < point.x * point.x + point.y * point.y + point.z * point.z);
 
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
 			do {
-				float_t r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
-				float_t phi = math::randomUniform(rng, 0.0, math::twoPi);
-				float_t ctheta = math::randomUniform(rng, -1.0, +1.0);
+				float_t r = std::sqrt(rng.next());
+				float_t phi = rng.next(0.0, math::twoPi);
+				float_t ctheta = rng.next(-1.0, +1.0);
 				float_t theta = std::acos(ctheta);
 				float_t stheta = std::sin(theta);
 
@@ -759,13 +759,13 @@ float3_t DefaultParticleGenerator::emitInEllipsoid(const float3_t& size,
 					stheta * std::sin(phi),
 					ctheta) * r;
 			}
-			while(std::pow(math::randomUniform(rng, 0.0, 1.0), 3) > point.x * point.x + point.y * point.y + point.z * point.z);
+			while(std::pow(rng.next(), 3) > point.x * point.x + point.y * point.y + point.z * point.z);
 
 			break;
 		}
 		case ParticleEmitter::Distribution::boundary: {
-			float_t phi = math::randomUniform(rng, 0.0, math::twoPi);
-			float_t ctheta = math::randomUniform(rng, -1.0, +1.0);
+			float_t phi = rng.next(0.0, math::twoPi);
+			float_t ctheta = rng.next(-1.0, +1.0);
 			float_t theta = std::acos(ctheta);
 			float_t stheta = std::sin(theta);
 
@@ -777,9 +777,9 @@ float3_t DefaultParticleGenerator::emitInEllipsoid(const float3_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::grid_random: {
-			float_t r = math::randomUniformGrid(rng, gridSizeX, 0.0, 1.0);
-			float_t phi = math::randomUniformGrid(rng, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
-			float_t theta = math::randomUniformGrid(rng, gridSizeZ, 0.0, math::pi);
+			float_t r = randomUniformGrid(rng, gridSizeX, 0.0, 1.0);
+			float_t phi = randomUniformGrid(rng, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+			float_t theta = randomUniformGrid(rng, gridSizeZ, 0.0, math::pi);
 			float_t stheta = std::sin(theta);
 			float_t ctheta = std::cos(theta);
 
@@ -854,59 +854,59 @@ float3_t DefaultParticleGenerator::emitInCuboid(const float3_t& size,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
 	std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t gridSizeZ, std::uint32_t& gridIndex,
-	std::mt19937& rng) {
+	pcg32& rng) {
 	float3_t point = float3_t(0.0);
 
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform: {
 			point = float3_t(
-				math::randomUniform(rng, -size.x, +size.x),
-				math::randomUniform(rng, -size.y, +size.y),
-				math::randomUniform(rng, -size.z, +size.z)) * 0.5;
+				rng.next(-size.x, +size.x),
+				rng.next(-size.y, +size.y),
+				rng.next(-size.z, +size.z)) * 0.5;
 
 			break;
 		}
 		case ParticleEmitter::Distribution::center: {
 			point = float3_t(
-				math::randomTruncatedNormal(rng, -size.x, +size.x),
-				math::randomTruncatedNormal(rng, -size.y, +size.y),
-				math::randomTruncatedNormal(rng, -size.z, +size.z)) * 0.5;
+				randomCentered(rng, -size.x, +size.x),
+				randomCentered(rng, -size.y, +size.y),
+				randomCentered(rng, -size.z, +size.z)) * 0.5;
 
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
 			do {
 				point = float3_t(
-					math::randomUniform(rng, -1.0, +1.0),
-					math::randomUniform(rng, -1.0, +1.0),
-					math::randomUniform(rng, -1.0, +1.0));
+					rng.next(-1.0, +1.0),
+					rng.next(-1.0, +1.0),
+					rng.next(-1.0, +1.0));
 			}
-			while(math::randomUniform(rng, 0.0, 1.0) > (point.x * point.x + point.y * point.y + point.z * point.z) * 0.5);
+			while(rng.next() > (point.x * point.x + point.y * point.y + point.z * point.z) * 0.5);
 
 			point *= size * 0.5;
 
 			break;
 		}
 		case ParticleEmitter::Distribution::boundary: {
-			std::int32_t side = math::randomDiscreteUniform(rng, 0, 5);
+			std::int32_t side = std::uniform_int_distribution<std::int32_t>(0, 5)(rng);
 			switch(side) {
 				case 0:
-					point = float3_t(-size.x, math::randomUniform(rng, -size.y, +size.y), math::randomUniform(rng, -size.z, +size.z)) * 0.5;
+					point = float3_t(-size.x, rng.next(-size.y, +size.y), rng.next(-size.z, +size.z)) * 0.5;
 					break;
 				case 1:
-					point = float3_t(+size.x, math::randomUniform(rng, -size.y, +size.y), math::randomUniform(rng, -size.z, +size.z)) * 0.5;
+					point = float3_t(+size.x, rng.next(-size.y, +size.y), rng.next(-size.z, +size.z)) * 0.5;
 					break;
 				case 2:
-					point = float3_t(math::randomUniform(rng, -size.x, +size.x), -size.y, math::randomUniform(rng, -size.z, +size.z)) * 0.5;
+					point = float3_t(rng.next(-size.x, +size.x), -size.y, rng.next(-size.z, +size.z)) * 0.5;
 					break;
 				case 3:
-					point = float3_t(math::randomUniform(rng, -size.x, +size.x), +size.y, math::randomUniform(rng, -size.z, +size.z)) * 0.5;
+					point = float3_t(rng.next(-size.x, +size.x), +size.y, rng.next(-size.z, +size.z)) * 0.5;
 					break;
 				case 4:
-					point = float3_t(math::randomUniform(rng, -size.x, +size.x), math::randomUniform(rng, -size.y, +size.y), -size.z) * 0.5;
+					point = float3_t(rng.next(-size.x, +size.x), rng.next(-size.y, +size.y), -size.z) * 0.5;
 					break;
 				case 5:
-					point = float3_t(math::randomUniform(rng, -size.x, +size.x), math::randomUniform(rng, -size.y, +size.y), +size.z) * 0.5;
+					point = float3_t(rng.next(-size.x, +size.x), rng.next(-size.y, +size.y), +size.z) * 0.5;
 					break;
 				default:
 					point = float3_t(0.0);
@@ -917,9 +917,9 @@ float3_t DefaultParticleGenerator::emitInCuboid(const float3_t& size,
 		}
 		case ParticleEmitter::Distribution::grid_random: {
 			point = float3_t(
-				math::randomUniformGrid(rng, gridSizeX, -size.x, +size.x),
-				math::randomUniformGrid(rng, gridSizeY, -size.y, +size.y),
-				math::randomUniformGrid(rng, gridSizeZ, -size.z, +size.z)) * 0.5;
+				randomUniformGrid(rng, gridSizeX, -size.x, +size.x),
+				randomUniformGrid(rng, gridSizeY, -size.y, +size.y),
+				randomUniformGrid(rng, gridSizeZ, -size.z, +size.z)) * 0.5;
 
 			break;
 		}
@@ -981,14 +981,14 @@ float3_t DefaultParticleGenerator::emitInCylinder(const float3_t& size,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
 	std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t gridSizeZ, std::uint32_t& gridIndex,
-	std::mt19937& rng) {
+	pcg32& rng) {
 	float3_t point = float3_t(0.0);
 
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform: {
-			float_t h = math::randomUniform(rng, -1.0, +1.0);
-			float_t phi = math::randomUniform(rng, 0.0, math::twoPi);
-			float_t r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
+			float_t h = rng.next(-1.0, +1.0);
+			float_t phi = rng.next(0.0, math::twoPi);
+			float_t r = std::sqrt(rng.next());
 
 			point = float3_t(
 				std::cos(phi) * r,
@@ -998,30 +998,30 @@ float3_t DefaultParticleGenerator::emitInCylinder(const float3_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::center: {
-			float_t h = math::randomUniform(rng, -1.0, +1.0);
+			float_t h = rng.next(-1.0, +1.0);
 			do {
-				float_t r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
-				float_t phi = math::randomUniform(rng, 0.0, math::twoPi);
+				float_t r = std::sqrt(rng.next());
+				float_t phi = rng.next(0.0, math::twoPi);
 				point = float3_t(
 					std::cos(phi) * r,
 					std::sin(phi) * r,
 					h);
 			}
-			while(std::pow(math::randomUniform(rng, 0.0, 1.0), 2) < point.x * point.x + point.y * point.y);
+			while(std::pow(rng.next(), 2) < point.x * point.x + point.y * point.y);
 
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
-			float_t h = math::randomUniform(rng, -1.0, +1.0);
+			float_t h = rng.next(-1.0, +1.0);
 			do {
-				float_t r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
-				float_t phi = math::randomUniform(rng, 0.0, math::twoPi);
+				float_t r = std::sqrt(rng.next());
+				float_t phi = rng.next(0.0, math::twoPi);
 				point = float3_t(
 					std::cos(phi) * r,
 					std::sin(phi) * r,
 					h);
 			}
-			while(std::pow(math::randomUniform(rng, 0.0, 1.0), 2) > point.x * point.x + point.y * point.y);
+			while(std::pow(rng.next(), 2) > point.x * point.x + point.y * point.y);
 
 			break;
 		}
@@ -1030,21 +1030,21 @@ float3_t DefaultParticleGenerator::emitInCylinder(const float3_t& size,
 			float_t r = 0.0;
 			float_t baseArea = size.x * size.y * math::pi;
 			float_t lateralArea = math::pi * (size.x + size.y) * size.z;
-			float_t side = math::randomUniform(rng, 0.0, baseArea * 2.0 + lateralArea);
+			float_t side = rng.next(0.0, baseArea * 2.0 + lateralArea);
 			if(side < baseArea) {
 				h = -1.0;
-				r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
+				r = std::sqrt(rng.next());
 			}
 			else if(side < baseArea * 2.0) {
 				h = +1.0;
-				r = std::sqrt(math::randomUniform(rng, 0.0, 1.0));
+				r = std::sqrt(rng.next());
 			}
 			else {
-				h = math::randomUniform(rng, -1.0, +1.0);
+				h = rng.next(-1.0, +1.0);
 				r = 1.0;
 			}
 
-			float_t phi = math::randomUniform(rng, 0.0, math::twoPi);
+			float_t phi = rng.next(0.0, math::twoPi);
 			point = float3_t(
 				std::cos(phi) * r,
 				std::sin(phi) * r,
@@ -1053,9 +1053,9 @@ float3_t DefaultParticleGenerator::emitInCylinder(const float3_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::grid_random: {
-			float_t r = math::randomUniformGrid(rng, gridSizeX, 0.0, 1.0);
-			float_t phi = math::randomUniformGrid(rng, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
-			float_t h = math::randomUniformGrid(rng, gridSizeZ, -1.0, +1.0);
+			float_t r = randomUniformGrid(rng, gridSizeX, 0.0, 1.0);
+			float_t phi = randomUniformGrid(rng, gridSizeY, 0.0, math::twoPi * (1.0 - 1.0 / static_cast<float_t>(gridSizeY)));
+			float_t h = randomUniformGrid(rng, gridSizeZ, -1.0, +1.0);
 			point = float3_t(
 				std::cos(phi) * r,
 				std::sin(phi) * r,
@@ -1128,5 +1128,27 @@ float_t DefaultParticleGenerator::sampleGrid2d(std::uint32_t gridIndex, std::uin
 }
 float_t DefaultParticleGenerator::sampleGrid3d(std::uint32_t gridIndex, std::uint32_t gridSize1, std::uint32_t gridSize2, std::uint32_t gridSize3, float_t min, float_t max) {
 	return static_cast<float_t>(gridIndex / gridSize1 / gridSize2 % gridSize3) / static_cast<float_t>(gridSize3 - 1) * (max - min) + min;
+}
+
+float_t DefaultParticleGenerator::randomCentered(pcg32& rng, float_t min, float_t max) {
+	float_t u1 = rng.next();
+	float_t u2 = rng.next();
+	float_t u3 = rng.next();
+
+	return (u1 + u2 + u3) / 3.0 * (max - min) + min;
+}
+float_t DefaultParticleGenerator::randomInverseCentered(pcg32& rng, float_t min, float_t max) {
+	float_t u1 = rng.next();
+	float_t u2 = rng.next();
+	float_t u3 = rng.next();
+
+	float_t x = (u1 + u2 + u3) / 3.0;
+
+	return (0.5 + std::copysign(0.5 - std::abs(x - 0.5), x - 0.5)) * (max - min) + min;
+}
+float_t DefaultParticleGenerator::randomUniformGrid(pcg32& rng, std::uint32_t size, float_t min, float_t max) {
+	std::uniform_int_distribution<std::uint32_t> distrib(0, size - 1);
+
+	return static_cast<float_t>(distrib(rng)) / static_cast<float_t>(size - 1) * (max - min) + min;
 }
 }

@@ -119,7 +119,7 @@ void MultiThreadedEffectEngine::reset(const EffectRuntimeState& initialState, Ef
 	engineContext = initialContext;
 }
 void MultiThreadedEffectEngine::reseed(std::uint32_t seed) {
-	engineState.rng() = std::mt19937(seed);
+	engineState.rng().seed(seed);
 }
 
 void MultiThreadedEffectEngine::generateParticles(std::uint32_t count, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) {
