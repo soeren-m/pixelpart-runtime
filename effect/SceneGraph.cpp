@@ -12,6 +12,7 @@
 #include "DirectionalLightSource.h"
 #include "PointLightSource.h"
 #include "SpotLightSource.h"
+#include <utility>
 #include <algorithm>
 
 namespace pixelpart {
@@ -22,6 +23,11 @@ SceneGraph::SceneGraph(const SceneGraph& other) {
 
 	rebuildIndex();
 }
+SceneGraph::SceneGraph(SceneGraph&& other) :
+	sceneNodes(std::move(other.sceneNodes)),
+	indexMap(std::move(other.indexMap)) {
+
+}
 
 SceneGraph& SceneGraph::operator=(const SceneGraph& other) {
 	sceneNodes.clear();
@@ -30,6 +36,12 @@ SceneGraph& SceneGraph::operator=(const SceneGraph& other) {
 	}
 
 	rebuildIndex();
+
+	return *this;
+}
+SceneGraph& SceneGraph::operator=(SceneGraph&& other) {
+	sceneNodes = std::move(other.sceneNodes);
+	indexMap = std::move(other.indexMap);
 
 	return *this;
 }

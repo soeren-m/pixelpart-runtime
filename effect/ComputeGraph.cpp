@@ -1,4 +1,5 @@
 #include "ComputeGraph.h"
+#include <utility>
 #include <algorithm>
 
 namespace pixelpart {
@@ -20,16 +21,6 @@ std::optional<std::uint32_t> ComputeGraph::EvaluationException::slotIndex() cons
 
 ComputeNodeFactory ComputeGraph::nodeFactory = ComputeNodeFactory();
 
-ComputeGraph::ComputeGraph(const ComputeGraph& other) {
-	for(const auto& [nodeId, node] : other.graphNodes) {
-		if(node) {
-			graphNodes[nodeId] = std::move(node->clone());
-		}
-	}
-
-	graphNextNodeId = other.graphNextNodeId;
-	graphNextLinkId = other.graphNextLinkId;
-}
 ComputeGraph::ComputeGraph(const ComputeNodeCollection& initialNodes) {
 	for(const auto& [nodeId, node] : initialNodes) {
 		if(node) {
@@ -55,6 +46,22 @@ ComputeGraph::ComputeGraph(const ComputeNodeCollection& initialNodes) {
 	graphNextNodeId = maxNodeId.value() + 1;
 	graphNextLinkId = maxLinkId.value() + 1;
 }
+ComputeGraph::ComputeGraph(const ComputeGraph& other) {
+	for(const auto& [nodeId, node] : other.graphNodes) {
+		if(node) {
+			graphNodes[nodeId] = std::move(node->clone());
+		}
+	}
+
+	graphNextNodeId = other.graphNextNodeId;
+	graphNextLinkId = other.graphNextLinkId;
+}
+ComputeGraph::ComputeGraph(ComputeGraph&& other) :
+	graphNodes(std::move(other.graphNodes)),
+	graphNextNodeId(std::move(other.graphNextNodeId)),
+	graphNextLinkId(std::move(other.graphNextLinkId)) {
+
+}
 
 ComputeGraph& ComputeGraph::operator=(const ComputeGraph& other) {
 	graphNodes.clear();
@@ -66,6 +73,13 @@ ComputeGraph& ComputeGraph::operator=(const ComputeGraph& other) {
 
 	graphNextNodeId = other.graphNextNodeId;
 	graphNextLinkId = other.graphNextLinkId;
+
+	return *this;
+}
+ComputeGraph& ComputeGraph::operator=(ComputeGraph&& other) {
+	graphNodes = std::move(other.graphNodes);
+	graphNextNodeId = std::move(other.graphNextNodeId);
+	graphNextLinkId = std::move(other.graphNextLinkId);
 
 	return *this;
 }

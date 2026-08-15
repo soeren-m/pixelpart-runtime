@@ -19,8 +19,10 @@ public:
 
 	SceneGraph() = default;
 	SceneGraph(const SceneGraph& other);
+	SceneGraph(SceneGraph&& other);
 
 	SceneGraph& operator=(const SceneGraph& other);
+	SceneGraph& operator=(SceneGraph&& other);
 
 	iterator begin();
 	iterator end();

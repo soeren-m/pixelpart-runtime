@@ -39,10 +39,12 @@ public:
 	static ComputeNodeFactory nodeFactory;
 
 	ComputeGraph() = default;
-	ComputeGraph(const ComputeGraph& other);
 	ComputeGraph(const ComputeNodeCollection& initialNodes);
+	ComputeGraph(const ComputeGraph& other);
+	ComputeGraph(ComputeGraph&& other);
 
 	ComputeGraph& operator=(const ComputeGraph& other);
+	ComputeGraph& operator=(ComputeGraph&& other);
 
 	std::vector<VariantValue> evaluate(const InputSet& graphInputs) const;
 	std::vector<VariantValue> evaluate(const InputSet& graphInputs, BuildResult& result, id_t nodeId = id_t(0)) const;
