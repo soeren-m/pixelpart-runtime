@@ -23,11 +23,54 @@ public:
 		const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const override;
 
 private:
+	struct ParticleEmitterEmissionData {
+		Transform globalTransform;
+		Transform globalPrevTransform;
+		float3_t globalPosition;
+		float3_t globalRotation;
+		float3_t globalScale;
+		matrix3_t globalRotationMatrix;
+		ParticleEmitter::Shape shape;
+		Curve<float3_t> path;
+		ParticleEmitter::Distribution distribution;
+		ParticleEmitter::GridOrder gridOrder;
+		std::uint32_t gridSize[3];
+		ParticleEmitter::EmissionMode emissionMode;
+		ParticleEmitter::DirectionMode directionMode;
+		float3_t direction;
+		float_t spread;
+		float3_t velocity;
+
+		ParticleEmitterEmissionData(const Effect* effect, id_t particleEmitterId, EffectRuntimeContext runtimeContext, bool useTriggers);
+	};
+
+	struct ParticleTypeEmissionData {
+		bool localCoords;
+		float_t lifespan;
+		float_t lifespanVariance;
+		float_t initialVelocity;
+		float_t inheritedVelocity;
+		float_t velocityVariance;
+		float3_t initialRotation;
+		float3_t rotationVariance;
+		float3_t angularVelocityVariance;
+		float_t initialSize;
+		float_t sizeVariance;
+		float3_t size;
+		float_t initialOpacity;
+		float4_t colorVariance;
+		float_t opacityVariance;
+		float4_t color;
+
+		ParticleTypeEmissionData(const Effect* effect, ParticleEmissionPair emissionPair, EffectRuntimeContext runtimeContext, bool useTriggers);
+	};
+
 	static std::uint32_t initializeParticles(std::uint32_t count, float_t lifetimeFactor,
 		EffectRuntimeState& state, ParticleEmissionState& emissionState,
 		ParticleCollection& particleCollection, const ParticleCollection* parentParticleCollection, std::uint32_t parentParticle,
 		const Effect* effect, ParticleEmissionPair emissionPair, EffectRuntimeContext runtimeContext,
-		bool useTriggers);
+		const ParticleEmitterEmissionData& emitterEmissionData,
+		const ParticleTypeEmissionData& ptypeEmissionData);
 
 	static float3_t emitOnSegment(float_t length,
 		ParticleEmitter::Distribution distribution,

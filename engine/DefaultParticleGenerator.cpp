@@ -65,10 +65,14 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 
 		std::uint32_t emittedParticleCount = static_cast<std::uint32_t>(std::max(emissionState.emissionCount, 0.0));
 		if(emittedParticleCount > 0) {
+			ParticleEmitterEmissionData emitterEmissionData(effect, emissionPair.emitterId, runtimeContext, true);
+			ParticleTypeEmissionData ptypeEmissionData(effect, emissionPair, runtimeContext, true);
+
 			emissionState.emissionCount -= static_cast<float_t>(initializeParticles(emittedParticleCount, lodStrategy.lifetimeFactor(),
 				state, emissionState,
 				particleCollection, nullptr, id_t::nullValue,
-				effect, emissionPair, runtimeContext, true));
+				effect, emissionPair, runtimeContext,
+				emitterEmissionData, ptypeEmissionData));
 		}
 	}
 
@@ -121,6 +125,9 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 			float_t lodEmissionFactor = childParticleType.lodStrategy(runtimeContext.lod()).emissionFactor();
 			float_t lodLifetimeFactor = childParticleType.lodStrategy(runtimeContext.lod()).lifetimeFactor();
 
+			ParticleEmitterEmissionData childEmitterEmissionData(effect, childEmissionPair.emitterId, runtimeContext, false);
+			ParticleTypeEmissionData childPTypeEmissionData(effect, childEmissionPair, runtimeContext, false);
+
 			for(std::uint32_t p = 0; p < particleCollection.count(); p++) {
 				float_t particleTime = particles.life[p] * particles.lifespan[p];
 				if(particleTime > childEmitterDuration && !childEmitterRepeat) {
@@ -164,7 +171,8 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 					childEmissionState.emissionCount -= static_cast<float_t>(initializeParticles(emittedParticleCount, lodLifetimeFactor,
 						state, childEmissionState,
 						childParticleCollection, &particleCollection, p,
-						effect, childEmissionPair, particleRuntimeContext, false));
+						effect, childEmissionPair, particleRuntimeContext,
+						childEmitterEmissionData, childPTypeEmissionData));
 				}
 			}
 		}
@@ -196,51 +204,90 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state, std::uint32_t
 		return;
 	}
 
+	ParticleEmitterEmissionData emitterEmissionData(effect, emissionPair.emitterId, runtimeContext, false);
+	ParticleTypeEmissionData ptypeEmissionData(effect, emissionPair, runtimeContext, false);
+
 	initializeParticles(count, 1.0,
 		state, *particleEmissionState,
 		*particleCollection, nullptr, id_t::nullValue,
-		effect, emissionPair, runtimeContext, false);
+		effect, emissionPair, runtimeContext,
+		emitterEmissionData, ptypeEmissionData);
+}
+
+DefaultParticleGenerator::ParticleEmitterEmissionData::ParticleEmitterEmissionData(const Effect* effect, id_t particleEmitterId, EffectRuntimeContext runtimeContext, bool useTriggers) {
+	const ParticleEmitter& particleEmitter = effect->sceneGraph().at<ParticleEmitter>(particleEmitterId);
+
+	EffectRuntimeContext prevRuntimeContext(runtimeContext.time() - 0.1);
+	prevRuntimeContext.triggerActivationTimes() = runtimeContext.triggerActivationTimes();
+
+	float_t life = particleEmitter.life(runtimeContext, useTriggers);
+
+	globalTransform = effect->sceneGraph().globalTransform(particleEmitterId, runtimeContext, useTriggers);
+	globalPrevTransform = effect->sceneGraph().globalTransform(particleEmitterId, prevRuntimeContext, useTriggers);
+	globalPosition = globalTransform.position();
+	globalRotation = math::radians(globalTransform.rotation());
+	globalScale = globalTransform.scale();
+	globalRotationMatrix = matrix3_t(math::yawPitchRollRotationMatrix(globalRotation.y, globalRotation.z, globalRotation.x));
+	shape = particleEmitter.shape();
+	path = particleEmitter.path();
+	distribution = particleEmitter.distribution();
+	gridOrder = particleEmitter.gridOrder();
+	gridSize[0] = particleEmitter.gridSizeX();
+	gridSize[1] = particleEmitter.gridSizeY();
+	gridSize[2] = particleEmitter.gridSizeZ();
+	emissionMode = particleEmitter.emissionMode();
+	directionMode = particleEmitter.directionMode();
+	direction = particleEmitter.direction().at(life);
+	spread = particleEmitter.spread().at(life);
+	velocity = (globalPosition - globalPrevTransform.position()) / (particleEmitter.duration() * 0.1);
+}
+
+DefaultParticleGenerator::ParticleTypeEmissionData::ParticleTypeEmissionData(const Effect* effect, ParticleEmissionPair emissionPair, EffectRuntimeContext runtimeContext, bool useTriggers) {
+	const ParticleEmitter& particleEmitter = effect->sceneGraph().at<ParticleEmitter>(emissionPair.emitterId);
+	const ParticleType& particleType = effect->particleTypes().at(emissionPair.typeId);
+
+	float_t emitterLife = particleEmitter.life(runtimeContext, useTriggers);
+
+	localCoords = particleType.positionRelative();
+	lifespan = particleType.lifespan().at(emitterLife);
+	lifespanVariance = particleType.lifespanVariance().value();
+	initialVelocity = particleType.initialVelocity().at(emitterLife);
+	inheritedVelocity = particleType.inheritedVelocity().at(emitterLife);
+	velocityVariance = particleType.velocityVariance().value();
+	initialRotation = particleType.initialRotation().at(emitterLife);
+	rotationVariance = particleType.rotationVariance().value();
+	angularVelocityVariance = particleType.angularVelocityVariance().value();
+	initialSize = particleType.initialSize().at(emitterLife);
+	sizeVariance = particleType.sizeVariance().value();
+	size = particleType.size().at();
+	initialOpacity = particleType.initialOpacity().at(emitterLife);
+	colorVariance = particleType.colorVariance().value();
+	opacityVariance = particleType.opacityVariance().value();
+	color = float4_t(float3_t(particleType.color().at()), particleType.opacity().at());
 }
 
 std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count, float_t lifetimeFactor,
 	EffectRuntimeState& state, ParticleEmissionState& emissionState,
 	ParticleCollection& particleCollection, const ParticleCollection* parentParticleCollection, std::uint32_t parentParticle,
 	const Effect* effect, ParticleEmissionPair emissionPair, EffectRuntimeContext runtimeContext,
-	bool useTriggers) {
-	const ParticleType& particleType = effect->particleTypes().at(emissionPair.typeId);
-	const ParticleEmitter& particleEmitter = effect->sceneGraph().at<ParticleEmitter>(emissionPair.emitterId);
-
-	float_t emitterLife = particleEmitter.life(runtimeContext, useTriggers && parentParticle == id_t::nullValue);
-	Transform emitterTransform = effect->sceneGraph().globalTransform(particleEmitter.id(), runtimeContext, useTriggers && parentParticle == id_t::nullValue);
-	float3_t emitterPosition = emitterTransform.position();
-	float3_t emitterRotation = math::radians(emitterTransform.rotation());
-	float3_t emitterScale = emitterTransform.scale();
-	matrix3_t emitterRotationMatrix = matrix3_t(math::yawPitchRollRotationMatrix(emitterRotation.y, emitterRotation.z, emitterRotation.x));
-	float3_t emitterDirection = particleEmitter.direction().at(emitterLife);
-	float_t emitterSpread = particleEmitter.spread().at(emitterLife);
-
+	const ParticleEmitterEmissionData& emitterEmissionData,
+	const ParticleTypeEmissionData& ptypeEmissionData) {
+	bool effect3d = effect->is3d();
 	std::uint32_t parentId = id_t::nullValue;
 
 	float3_t emissionPosition;
 	float3_t parentVelocity;
 
 	if(parentParticle == id_t::nullValue) {
-		EffectRuntimeContext prevRuntimeContext(runtimeContext.time() - 0.1);
-		prevRuntimeContext.triggerActivationTimes() = runtimeContext.triggerActivationTimes();
-
-		Transform emitterPrevTransform = effect->sceneGraph().globalTransform(particleEmitter.id(), prevRuntimeContext, useTriggers);
-
-		emissionPosition = !particleType.positionRelative() ? emitterPosition : float3_t(0.0);
-		parentVelocity = (emitterPosition - emitterPrevTransform.position()) / (particleEmitter.duration() * 0.1);
+		emissionPosition = !ptypeEmissionData.localCoords ? emitterEmissionData.globalPosition : float3_t(0.0);
+		parentVelocity = emitterEmissionData.velocity;
 	}
 	else {
 		ParticleCollection::ReadPtr parentParticles = parentParticleCollection->readPtr();
+		Transform localEmitterTransform = effect->sceneGraph().localTransform(emissionPair.emitterId, runtimeContext, false);
 
-		Transform localEmitterTransform = effect->sceneGraph().localTransform(particleEmitter.id(), runtimeContext, false);
-		float3_t localEmitterPosition = localEmitterTransform.position();
-
-		emissionPosition = parentParticles.globalPosition[parentParticle] + localEmitterPosition +
-			(particleType.positionRelative() ? -emitterPosition : float3_t(0.0));
+		emissionPosition = parentParticles.globalPosition[parentParticle] + localEmitterTransform.position() +
+			(ptypeEmissionData.localCoords ? -emitterEmissionData.globalPosition : float3_t(0.0));
 		parentId = parentParticles.id[parentParticle];
 		parentVelocity = parentParticles.velocity[parentParticle];
 	}
@@ -253,23 +300,6 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 	ParticleCollection::WritePtr particles = particleCollection.writePtr();
 	std::uint32_t particleCollectionCount = particleCollection.count();
 
-	bool effect3d = effect->is3d();
-	bool localCoords = particleType.positionRelative();
-	float_t lifespan = particleType.lifespan().at(emitterLife);
-	float_t lifespanVariance = particleType.lifespanVariance().value();
-	float_t velocity = math::linearInterpolation(particleType.initialVelocity().at(emitterLife), parentSpeed, particleType.inheritedVelocity().at(emitterLife));
-	float_t velocityVariance = particleType.velocityVariance().value();
-	float3_t initialRotation = particleType.initialRotation().at(emitterLife);
-	float3_t rotationVariance = particleType.rotationVariance().value();
-	float3_t angularVelocityVariance = particleType.angularVelocityVariance().value();
-	float_t initialSize = particleType.initialSize().at(emitterLife);
-	float_t sizeVariance = particleType.sizeVariance().value();
-	float3_t size = particleType.size().at();
-	float_t initialOpacity = particleType.initialOpacity().at(emitterLife);
-	float4_t colorVariance = particleType.colorVariance().value();
-	float_t opacityVariance = particleType.opacityVariance().value();
-	float4_t color = float4_t(float3_t(particleType.color().at()), particleType.opacity().at());
-
 	pcg32& rng = state.rng();
 
 	for(std::uint32_t addIndex = 0; addIndex < count; addIndex++) {
@@ -278,71 +308,71 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 		particles.id[p] = state.particleIdCounter()++;
 		particles.parentId[p] = parentId;
 		particles.life[p] = 0.0;
-		particles.lifespan[p] = std::max((lifespan + rng.next(-lifespanVariance, +lifespanVariance)) * lifetimeFactor, 0.000001);
+		particles.lifespan[p] = std::max((ptypeEmissionData.lifespan + rng.next(-ptypeEmissionData.lifespanVariance, ptypeEmissionData.lifespanVariance)) * lifetimeFactor, 0.000001);
 
 		float3_t particleSpawnPosition = float3_t(0.0);
-		switch(particleEmitter.shape()) {
+		switch(emitterEmissionData.shape) {
 			case ParticleEmitter::Shape::line:
 				particleSpawnPosition = emitOnSegment(
-					emitterScale.x,
-					particleEmitter.distribution(),
-					particleEmitter.gridOrder(),
-					particleEmitter.gridSizeX(),
+					emitterEmissionData.globalScale.x,
+					emitterEmissionData.distribution,
+					emitterEmissionData.gridOrder,
+					emitterEmissionData.gridSize[0],
 					emissionState.emitterGridIndex,
 					rng);
 				break;
 			case ParticleEmitter::Shape::ellipse:
 				particleSpawnPosition = emitInEllipse(
-					float2_t(emitterScale),
-					particleEmitter.distribution(),
-					particleEmitter.gridOrder(),
-					particleEmitter.gridSizeX(), particleEmitter.gridSizeY(),
+					float2_t(emitterEmissionData.globalScale),
+					emitterEmissionData.distribution,
+					emitterEmissionData.gridOrder,
+					emitterEmissionData.gridSize[0], emitterEmissionData.gridSize[1],
 					emissionState.emitterGridIndex,
 					rng);
 				break;
 			case ParticleEmitter::Shape::rectangle:
 				particleSpawnPosition = emitInRectangle(
-					float2_t(emitterScale),
-					particleEmitter.distribution(),
-					particleEmitter.gridOrder(),
-					particleEmitter.gridSizeX(), particleEmitter.gridSizeY(),
+					float2_t(emitterEmissionData.globalScale),
+					emitterEmissionData.distribution,
+					emitterEmissionData.gridOrder,
+					emitterEmissionData.gridSize[0], emitterEmissionData.gridSize[1],
 					emissionState.emitterGridIndex,
 					rng);
 				break;
 			case ParticleEmitter::Shape::path:
 				particleSpawnPosition = emitOnPath(
-					emitterScale,
-					particleEmitter.path(),
-					particleEmitter.distribution(),
-					particleEmitter.gridOrder(),
-					particleEmitter.gridSizeX(),
+					emitterEmissionData.globalScale,
+					emitterEmissionData.path,
+					emitterEmissionData.distribution,
+					emitterEmissionData.gridOrder,
+					emitterEmissionData.gridSize[0],
 					emissionState.emitterGridIndex,
 					rng);
 				break;
 			case ParticleEmitter::Shape::ellipsoid:
 				particleSpawnPosition = emitInEllipsoid(
-					emitterScale,
-					particleEmitter.distribution(),
-					particleEmitter.gridOrder(),
-					particleEmitter.gridSizeX(), particleEmitter.gridSizeY(), particleEmitter.gridSizeZ(),
+					emitterEmissionData.globalScale,
+					emitterEmissionData.distribution,
+					emitterEmissionData.gridOrder,
+					emitterEmissionData.gridSize[0], emitterEmissionData.gridSize[1], emitterEmissionData.gridSize[2],
 					emissionState.emitterGridIndex,
 					rng);
 				break;
 			case ParticleEmitter::Shape::cuboid:
 				particleSpawnPosition = emitInCuboid(
-					emitterScale,
-					particleEmitter.distribution(),
-					particleEmitter.gridOrder(),
-					particleEmitter.gridSizeX(), particleEmitter.gridSizeY(), particleEmitter.gridSizeZ(),
+					emitterEmissionData.globalScale,
+					emitterEmissionData.distribution,
+					emitterEmissionData.gridOrder,
+					emitterEmissionData.gridSize[0], emitterEmissionData.gridSize[1], emitterEmissionData.gridSize[2],
 					emissionState.emitterGridIndex,
 					rng);
 				break;
 			case ParticleEmitter::Shape::cylinder:
 				particleSpawnPosition = emitInCylinder(
-					emitterScale,
-					particleEmitter.distribution(),
-					particleEmitter.gridOrder(),
-					particleEmitter.gridSizeX(), particleEmitter.gridSizeY(), particleEmitter.gridSizeZ(),
+					emitterEmissionData.globalScale,
+					emitterEmissionData.distribution,
+					emitterEmissionData.gridOrder,
+					emitterEmissionData.gridSize[0], emitterEmissionData.gridSize[1], emitterEmissionData.gridSize[2],
 					emissionState.emitterGridIndex,
 					rng);
 				break;
@@ -350,88 +380,60 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 				break;
 		}
 
-		if(effect3d) {
-			matrix3_t directionMatrix = matrix3_t(math::yawPitchRollRotationMatrix(
-				math::radians(emitterDirection.y + emitterSpread * rng.next(-0.5, +0.5)),
-				math::radians(emitterDirection.z + emitterSpread * rng.next(-0.5, +0.5)),
-				math::radians(emitterDirection.x + emitterSpread * rng.next(-0.5, +0.5))));
+		particleSpawnPosition = emitterEmissionData.globalRotationMatrix * particleSpawnPosition;
 
-			particleSpawnPosition = emitterRotationMatrix * particleSpawnPosition;
+		matrix3_t directionMatrix = matrix3_t(math::yawPitchRollRotationMatrix(
+			effect3d ? math::radians(emitterEmissionData.direction.y + emitterEmissionData.spread * rng.next(-0.5, 0.5)) : 0.0,
+			effect3d ? math::radians(emitterEmissionData.direction.z + emitterEmissionData.spread * rng.next(-0.5, 0.5)) : 0.0,
+			math::radians(emitterEmissionData.direction.x + emitterEmissionData.spread * rng.next(-0.5, 0.5))));
 
-			switch(particleEmitter.directionMode()) {
-				case ParticleEmitter::DirectionMode::outwards:
-					particles.velocity[p] = directionMatrix *
-						((particleSpawnPosition != float3_t(0.0)) ? math::normalize(particleSpawnPosition) : worldUpVector3);
-					break;
-				case ParticleEmitter::DirectionMode::inwards:
-					particles.velocity[p] = directionMatrix *
-						((particleSpawnPosition != float3_t(0.0)) ? math::normalize(-particleSpawnPosition) : worldUpVector3);
-					break;
-				case ParticleEmitter::DirectionMode::inherit:
-					particles.velocity[p] = directionMatrix * parentDirection;
-					break;
-				case ParticleEmitter::DirectionMode::inherit_inverse:
-					particles.velocity[p] = directionMatrix * -parentDirection;
-					break;
-				default:
-					particles.velocity[p] = emitterRotationMatrix * directionMatrix * worldUpVector3;
-					break;
-			}
-		}
-		else {
-			float_t direction = math::radians(emitterDirection.x + emitterSpread * rng.next(-0.5, +0.5));
-
-			particleSpawnPosition = float3_t(math::rotateVector(float2_t(particleSpawnPosition), emitterRotation.x), 0.0);
-
-			switch(particleEmitter.directionMode()) {
-				case ParticleEmitter::DirectionMode::outwards:
-					particles.velocity[p] = float3_t(math::rotateVector(
-						(particleSpawnPosition != float3_t(0.0)) ? float2_t(math::normalize(particleSpawnPosition)) : worldUpVector2,
-						direction), 0.0);
-					break;
-				case ParticleEmitter::DirectionMode::inwards:
-					particles.velocity[p] = float3_t(math::rotateVector(
-						(particleSpawnPosition != float3_t(0.0)) ? float2_t(math::normalize(-particleSpawnPosition)) : worldUpVector2,
-						direction), 0.0);
-					break;
-				case ParticleEmitter::DirectionMode::inherit:
-					particles.velocity[p] = float3_t(math::rotateVector(float2_t(parentDirection), direction), 0.0);
-					break;
-				case ParticleEmitter::DirectionMode::inherit_inverse:
-					particles.velocity[p] = float3_t(math::rotateVector(float2_t(-parentDirection), direction), 0.0);
-					break;
-				default:
-					particles.velocity[p] = float3_t(math::rotateVector(worldUpVector2, emitterRotation.x + direction), 0.0);
-					break;
-			}
+		switch(emitterEmissionData.directionMode) {
+			case ParticleEmitter::DirectionMode::outwards:
+				particles.velocity[p] = directionMatrix *
+					((particleSpawnPosition != float3_t(0.0)) ? math::normalize(particleSpawnPosition) : worldUpVector3);
+				break;
+			case ParticleEmitter::DirectionMode::inwards:
+				particles.velocity[p] = directionMatrix *
+					((particleSpawnPosition != float3_t(0.0)) ? math::normalize(-particleSpawnPosition) : worldUpVector3);
+				break;
+			case ParticleEmitter::DirectionMode::inherit:
+				particles.velocity[p] = directionMatrix * parentDirection;
+				break;
+			case ParticleEmitter::DirectionMode::inherit_inverse:
+				particles.velocity[p] = directionMatrix * -parentDirection;
+				break;
+			default:
+				particles.velocity[p] = emitterEmissionData.globalRotationMatrix * directionMatrix * worldUpVector3;
+				break;
 		}
 
-		particles.velocity[p] *= velocity + rng.next(-velocityVariance, +velocityVariance);
+		particles.velocity[p] *= math::linearInterpolation(ptypeEmissionData.initialVelocity, parentSpeed, ptypeEmissionData.inheritedVelocity) +
+			rng.next(-ptypeEmissionData.velocityVariance, ptypeEmissionData.velocityVariance);
 		particles.force[p] = float3_t(0.0);
 		particles.position[p] = emissionPosition + particleSpawnPosition;
-		particles.globalPosition[p] = localCoords
-			? particles.position[p] + emitterPosition
+		particles.globalPosition[p] = ptypeEmissionData.localCoords
+			? particles.position[p] + emitterEmissionData.globalPosition
 			: particles.position[p];
 
-		particles.initialRotation[p] = initialRotation + float3_t(
-			rng.next(-rotationVariance.x, +rotationVariance.x),
-			rng.next(-rotationVariance.y, +rotationVariance.y),
-			rng.next(-rotationVariance.z, +rotationVariance.z));
+		particles.initialRotation[p] = ptypeEmissionData.initialRotation + float3_t(
+			rng.next(-ptypeEmissionData.rotationVariance.x, ptypeEmissionData.rotationVariance.x),
+			rng.next(-ptypeEmissionData.rotationVariance.y, ptypeEmissionData.rotationVariance.y),
+			rng.next(-ptypeEmissionData.rotationVariance.z, ptypeEmissionData.rotationVariance.z));
 		particles.initialAngularVelocity[p] = float3_t(
-			rng.next(-angularVelocityVariance.x, +angularVelocityVariance.x),
-			rng.next(-angularVelocityVariance.y, +angularVelocityVariance.y),
-			rng.next(-angularVelocityVariance.z, +angularVelocityVariance.z));
+			rng.next(-ptypeEmissionData.angularVelocityVariance.x, ptypeEmissionData.angularVelocityVariance.x),
+			rng.next(-ptypeEmissionData.angularVelocityVariance.y, ptypeEmissionData.angularVelocityVariance.y),
+			rng.next(-ptypeEmissionData.angularVelocityVariance.z, ptypeEmissionData.angularVelocityVariance.z));
 		particles.rotation[p] = particles.initialRotation[p];
 
-		particles.initialSize[p] = initialSize + rng.next(-sizeVariance, +sizeVariance);
-		particles.size[p] = size * particles.initialSize[p];
+		particles.initialSize[p] = ptypeEmissionData.initialSize + rng.next(-ptypeEmissionData.sizeVariance, ptypeEmissionData.sizeVariance);
+		particles.size[p] = ptypeEmissionData.size * particles.initialSize[p];
 
 		particles.initialColor[p] = float4_t(
-			rng.next(-colorVariance.x, +colorVariance.x),
-			rng.next(-colorVariance.y, +colorVariance.y),
-			rng.next(-colorVariance.z, +colorVariance.z),
-			initialOpacity + rng.next(-opacityVariance, +opacityVariance));
-		particles.color[p] = color;
+			rng.next(-ptypeEmissionData.colorVariance.x, ptypeEmissionData.colorVariance.x),
+			rng.next(-ptypeEmissionData.colorVariance.y, ptypeEmissionData.colorVariance.y),
+			rng.next(-ptypeEmissionData.colorVariance.z, ptypeEmissionData.colorVariance.z),
+			ptypeEmissionData.initialOpacity + rng.next(-ptypeEmissionData.opacityVariance, ptypeEmissionData.opacityVariance));
+		particles.color[p] = ptypeEmissionData.color;
 	}
 
 	return count;
@@ -488,28 +490,23 @@ float3_t DefaultParticleGenerator::emitInEllipse(const float2_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::center: {
-			do {
-				r = std::sqrt(rng.next());
-				phi = rng.next(0.0, math::twoPi);
-				point = float3_t(
-					std::cos(phi),
-					std::sin(phi),
-					0.0) * r;
-			}
-			while(std::pow(rng.next(), 2) < point.x * point.x + point.y * point.y);
+			r = rng.next();
+			r *= r;
+			phi = rng.next(0.0, math::twoPi);
+			point = float3_t(
+				std::cos(phi),
+				std::sin(phi),
+				0.0) * r;
 
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
-			do {
-				r = std::sqrt(rng.next());
-				phi = rng.next(0.0, math::twoPi);
-				point = float3_t(
-					std::cos(phi),
-					std::sin(phi),
-					0.0) * r;
-			}
-			while(std::pow(rng.next(), 2) > point.x * point.x + point.y * point.y);
+			r = std::sqrt(std::sqrt(std::sqrt(rng.next())));
+			phi = rng.next(0.0, math::twoPi);
+			point = float3_t(
+				std::cos(phi),
+				std::sin(phi),
+				0.0) * r;
 
 			break;
 		}
@@ -594,16 +591,24 @@ float3_t DefaultParticleGenerator::emitInRectangle(const float2_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
-			do {
-				point = float3_t(
-					rng.next(-1.0, +1.0),
-					rng.next(-1.0, +1.0),
-					0.0);
-			}
-			while(rng.next() > (point.x * point.x + point.y * point.y) * 0.5);
+			float_t r = rng.next(0.0, (size.x + size.y) * 2.0);
+			float_t d = rng.next();
+			d = d * d * d * d * 0.5;
 
-			point.x *= size.x * 0.5;
-			point.y *= size.y * 0.5;
+			point = float3_t(-size * 0.5, 0.0);
+
+			if(r < size.y) {
+				point += float3_t(d * size.x, r, 0.0);
+			}
+			else if(r < size.y + size.x) {
+				point += float3_t(r - size.y, size.y - d * size.y, 0.0);
+			}
+			else if(r < (size.y + size.x) + size.y) {
+				point += float3_t(size.x - d * size.x, r - (size.y + size.x), 0.0);
+			}
+			else {
+				point += float3_t(r - (size.y + size.x + size.y), d * size.y, 0.0);
+			}
 
 			break;
 		}
@@ -730,36 +735,31 @@ float3_t DefaultParticleGenerator::emitInEllipsoid(const float3_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::center: {
-			do {
-				float_t r = std::sqrt(rng.next());
-				float_t phi = rng.next(0.0, math::twoPi);
-				float_t ctheta = rng.next(-1.0, +1.0);
-				float_t theta = std::acos(ctheta);
-				float_t stheta = std::sin(theta);
+			float_t r = rng.next();
+			r *= r;
+			float_t phi = rng.next(0.0, math::twoPi);
+			float_t ctheta = rng.next(-1.0, +1.0);
+			float_t theta = std::acos(ctheta);
+			float_t stheta = std::sin(theta);
 
-				point = float3_t(
-					stheta * std::cos(phi),
-					stheta * std::sin(phi),
-					ctheta) * r;
-			}
-			while(std::pow(rng.next(), 3) < point.x * point.x + point.y * point.y + point.z * point.z);
+			point = float3_t(
+				stheta * std::cos(phi),
+				stheta * std::sin(phi),
+				ctheta) * r;
 
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
-			do {
-				float_t r = std::sqrt(rng.next());
-				float_t phi = rng.next(0.0, math::twoPi);
-				float_t ctheta = rng.next(-1.0, +1.0);
-				float_t theta = std::acos(ctheta);
-				float_t stheta = std::sin(theta);
+			float_t r = std::sqrt(std::sqrt(std::sqrt(rng.next())));
+			float_t phi = rng.next(0.0, math::twoPi);
+			float_t ctheta = rng.next(-1.0, +1.0);
+			float_t theta = std::acos(ctheta);
+			float_t stheta = std::sin(theta);
 
-				point = float3_t(
-					stheta * std::cos(phi),
-					stheta * std::sin(phi),
-					ctheta) * r;
-			}
-			while(std::pow(rng.next(), 3) > point.x * point.x + point.y * point.y + point.z * point.z);
+			point = float3_t(
+				stheta * std::cos(phi),
+				stheta * std::sin(phi),
+				ctheta) * r;
 
 			break;
 		}
@@ -875,20 +875,38 @@ float3_t DefaultParticleGenerator::emitInCuboid(const float3_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
-			do {
-				point = float3_t(
-					rng.next(-1.0, +1.0),
-					rng.next(-1.0, +1.0),
-					rng.next(-1.0, +1.0));
-			}
-			while(rng.next() > (point.x * point.x + point.y * point.y + point.z * point.z) * 0.5);
+			std::int32_t side = std::uniform_int_distribution<std::int32_t>(0, 5)(rng);
+			float_t d = rng.next();
+			d = d * d * d * d;
 
-			point *= size * 0.5;
+			switch(side) {
+				case 0:
+					point = float3_t(-size.x + d * size.x, rng.next(-size.y, +size.y), rng.next(-size.z, +size.z)) * 0.5;
+					break;
+				case 1:
+					point = float3_t(+size.x - d * size.x, rng.next(-size.y, +size.y), rng.next(-size.z, +size.z)) * 0.5;
+					break;
+				case 2:
+					point = float3_t(rng.next(-size.x, +size.x), -size.y + d * size.y, rng.next(-size.z, +size.z)) * 0.5;
+					break;
+				case 3:
+					point = float3_t(rng.next(-size.x, +size.x), +size.y - d * size.y, rng.next(-size.z, +size.z)) * 0.5;
+					break;
+				case 4:
+					point = float3_t(rng.next(-size.x, +size.x), rng.next(-size.y, +size.y), -size.z + d * size.z) * 0.5;
+					break;
+				case 5:
+					point = float3_t(rng.next(-size.x, +size.x), rng.next(-size.y, +size.y), +size.z - d * size.z) * 0.5;
+					break;
+				default:
+					break;
+			}
 
 			break;
 		}
 		case ParticleEmitter::Distribution::boundary: {
 			std::int32_t side = std::uniform_int_distribution<std::int32_t>(0, 5)(rng);
+
 			switch(side) {
 				case 0:
 					point = float3_t(-size.x, rng.next(-size.y, +size.y), rng.next(-size.z, +size.z)) * 0.5;
@@ -909,7 +927,6 @@ float3_t DefaultParticleGenerator::emitInCuboid(const float3_t& size,
 					point = float3_t(rng.next(-size.x, +size.x), rng.next(-size.y, +size.y), +size.z) * 0.5;
 					break;
 				default:
-					point = float3_t(0.0);
 					break;
 			}
 
@@ -998,30 +1015,45 @@ float3_t DefaultParticleGenerator::emitInCylinder(const float3_t& size,
 			break;
 		}
 		case ParticleEmitter::Distribution::center: {
-			float_t h = rng.next(-1.0, +1.0);
-			do {
-				float_t r = std::sqrt(rng.next());
-				float_t phi = rng.next(0.0, math::twoPi);
-				point = float3_t(
-					std::cos(phi) * r,
-					std::sin(phi) * r,
-					h);
-			}
-			while(std::pow(rng.next(), 2) < point.x * point.x + point.y * point.y);
+			float_t h = randomCentered(rng, -1.0, +1.0);
+			float_t r = rng.next();
+			r *= r;
+			float_t phi = rng.next(0.0, math::twoPi);
+
+			point = float3_t(
+				std::cos(phi) * r,
+				std::sin(phi) * r,
+				h);
 
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
-			float_t h = rng.next(-1.0, +1.0);
-			do {
-				float_t r = std::sqrt(rng.next());
-				float_t phi = rng.next(0.0, math::twoPi);
-				point = float3_t(
-					std::cos(phi) * r,
-					std::sin(phi) * r,
-					h);
+			float_t d = rng.next();
+			d = d * d * d * d;
+
+			float_t h = 0.0;
+			float_t r = 0.0;
+			float_t baseArea = size.x * size.y * math::pi;
+			float_t lateralArea = math::pi * (size.x + size.y) * size.z;
+			float_t side = rng.next(0.0, baseArea * 2.0 + lateralArea);
+			if(side < baseArea) {
+				h = -1.0 + d;
+				r = std::sqrt(rng.next());
 			}
-			while(std::pow(rng.next(), 2) > point.x * point.x + point.y * point.y);
+			else if(side < baseArea * 2.0) {
+				h = 1.0 - d;
+				r = std::sqrt(rng.next());
+			}
+			else {
+				h = rng.next(-1.0, +1.0);
+				r = std::sqrt(std::sqrt(std::sqrt(rng.next())));
+			}
+
+			float_t phi = rng.next(0.0, math::twoPi);
+			point = float3_t(
+				std::cos(phi) * r,
+				std::sin(phi) * r,
+				h);
 
 			break;
 		}
