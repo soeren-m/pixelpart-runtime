@@ -2,7 +2,7 @@
 
 #include "Node.h"
 #include "AnimatedProperty.h"
-#include "Curve.h"
+#include "Polyline.h"
 #include "../types/Types.h"
 #include "../types/Id.h"
 #include "../json/json.hpp"
@@ -68,8 +68,8 @@ public:
 	void shape(Shape shape);
 	Shape shape() const;
 
-	Curve<float3_t>& path();
-	const Curve<float3_t>& path() const;
+	Polyline& path();
+	const Polyline& path() const;
 
 	void distribution(Distribution distribution);
 	Distribution distribution() const;
@@ -102,7 +102,7 @@ private:
 	std::vector<id_t> emitterParticleTypes;
 
 	Shape emitterShape = Shape::point;
-	Curve<float3_t> emitterPath = Curve<float3_t>();
+	Polyline emitterPath;
 
 	Distribution emitterDistribution = Distribution::uniform;
 	GridOrder emitterGridOrder = GridOrder::x_y_z;

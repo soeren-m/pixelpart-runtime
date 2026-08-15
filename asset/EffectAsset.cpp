@@ -947,6 +947,13 @@ void migrateEffectAssetJson(nlohmann::ordered_json& jsonData) {
 					jsonApplyTransformationToRotation(jNode["rotation"], lineEmitterCorrectionTransform);
 					jsonApplyTransformationToRotationFromLeft(jNode["direction"], inverseLineEmitterCorrectionTransform);
 				}
+
+				nlohmann::ordered_json jPathPointList = nlohmann::ordered_json::array();
+				for(const auto& jPoint : jNode["path"]["points"]) {
+					jPathPointList.push_back(jPoint[1]);
+				}
+
+				jNode["path"] = jPathPointList;
 			}
 			else if(nodeType == "force_field") {
 				std::string forceFieldType = jNode.value("force_field_type", "");

@@ -45,10 +45,10 @@ ParticleEmitter::Shape ParticleEmitter::shape() const {
 	return emitterShape;
 }
 
-Curve<float3_t>& ParticleEmitter::path() {
+Polyline& ParticleEmitter::path() {
 	return emitterPath;
 }
-const Curve<float3_t>& ParticleEmitter::path() const {
+const Polyline& ParticleEmitter::path() const {
 	return emitterPath;
 }
 
@@ -140,7 +140,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleEmitter& particleEmitter
 	particleEmitter.primary(j.value("primary", true));
 	particleEmitter.particleTypes(j.value("particle_types", std::vector<id_t>()));
 	particleEmitter.shape(j.value("shape", ParticleEmitter::Shape::point));
-	particleEmitter.path() = j.value("path", Curve<float3_t>());
+	particleEmitter.path() = j.value("path", Polyline());
 	particleEmitter.distribution(j.value("distribution", ParticleEmitter::Distribution::uniform));
 	particleEmitter.gridOrder(j.value("grid_order", ParticleEmitter::GridOrder::x_y_z));
 	particleEmitter.gridSize(

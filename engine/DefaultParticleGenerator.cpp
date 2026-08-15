@@ -1,6 +1,6 @@
 #include "DefaultParticleGenerator.h"
 #include "../effect/Coordinates.h"
-#include "../effect/Transform.h"
+#include "../effect/Curve.h"
 #include "../math/Common.h"
 #include "../math/Constants.h"
 #include "../math/Geometry.h"
@@ -674,33 +674,33 @@ float3_t DefaultParticleGenerator::emitInRectangle(const float2_t& size,
 }
 
 float3_t DefaultParticleGenerator::emitOnPath(const float3_t& size,
-	const Curve<float3_t>& path,
+	const Polyline& path,
 	ParticleEmitter::Distribution distribution,
 	ParticleEmitter::GridOrder gridOrder,
 	std::uint32_t gridSize, std::uint32_t& gridIndex,
 	pcg32& rng) {
-	float_t x = 0.0;
+	float_t d = 0.0;
 
 	switch(distribution) {
 		case ParticleEmitter::Distribution::uniform:
 		case ParticleEmitter::Distribution::boundary: {
-			x = rng.next();
+			d = rng.next(0.0, path.length());
 			break;
 		}
 		case ParticleEmitter::Distribution::center: {
-			x = randomCentered(rng, 0.0, 1.0);
+			d = randomCentered(rng, 0.0, path.length());
 			break;
 		}
 		case ParticleEmitter::Distribution::hole: {
-			x = randomInverseCentered(rng, 0.0, 1.0);
+			d = randomInverseCentered(rng, 0.0, path.length());
 			break;
 		}
 		case ParticleEmitter::Distribution::grid_random: {
-			x = randomUniformGrid(rng, gridSize, 0.0, 1.0);
+			d = randomUniformGrid(rng, gridSize, 0.0, path.length());
 			break;
 		}
 		case ParticleEmitter::Distribution::grid_ordered: {
-			x = sampleGrid1d(gridIndex, gridSize, 0.0, 1.0);
+			d = sampleGrid1d(gridIndex, gridSize, 0.0, path.length());
 			gridIndex = (gridIndex + 1) % gridSize;
 			break;
 		}
@@ -709,7 +709,7 @@ float3_t DefaultParticleGenerator::emitOnPath(const float3_t& size,
 		}
 	}
 
-	return path.at(x) * size;
+	return path.sample(d) * size;
 }
 
 float3_t DefaultParticleGenerator::emitInEllipsoid(const float3_t& size,

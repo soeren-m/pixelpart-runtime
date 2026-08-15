@@ -43,6 +43,7 @@ target_sources(pixelpart-runtime PRIVATE
 	ParticleTypeCollection.cpp
 	PlaneCollider.cpp
 	PointLightSource.cpp
+	Polyline.cpp
 	Resource.cpp
 	ResourceCollection.cpp
 	SceneGraph.cpp

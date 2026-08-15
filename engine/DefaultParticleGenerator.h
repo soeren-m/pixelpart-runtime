@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ParticleGenerator.h"
-#include "../effect/Curve.h"
+#include "../effect/Polyline.h"
 #include "../effect/Transform.h"
 #include "../effect/ParticleEmitter.h"
 #include "../effect/ParticleType.h"
@@ -31,7 +31,7 @@ private:
 		float3_t globalScale;
 		matrix3_t globalRotationMatrix;
 		ParticleEmitter::Shape shape;
-		Curve<float3_t> path;
+		Polyline path;
 		ParticleEmitter::Distribution distribution;
 		ParticleEmitter::GridOrder gridOrder;
 		std::uint32_t gridSize[3];
@@ -91,7 +91,7 @@ private:
 		pcg32& rng);
 
 	static float3_t emitOnPath(const float3_t& size,
-		const Curve<float3_t>& path,
+		const Polyline& path,
 		ParticleEmitter::Distribution distribution,
 		ParticleEmitter::GridOrder gridOrder,
 		std::uint32_t gridSize, std::uint32_t& gridIndex,
