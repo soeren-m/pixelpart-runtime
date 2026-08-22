@@ -9,7 +9,8 @@ enum class ForceFieldType : std::uint32_t {
 	acceleration = 1,
 	vector = 2,
 	noise = 3,
-	drag = 4
+	drag = 4,
+	vortex = 5
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ForceFieldType, {
@@ -17,6 +18,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ForceFieldType, {
 	{ ForceFieldType::acceleration, "acceleration" },
 	{ ForceFieldType::vector, "vector" },
 	{ ForceFieldType::noise, "noise" },
-	{ ForceFieldType::drag, "drag" }
+	{ ForceFieldType::drag, "drag" },
+	{ ForceFieldType::vortex, "vortex" }
 })
 }

@@ -59,6 +59,14 @@ void ForceModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t 
 
 		applyForce(particles, particleCount, runtimeContext, particleType, field, effect->sceneGraph());
 	}
+
+	for(const VortexField& field : modifierVortexFields) {
+		if(field.exclusionSet().count(particleType.id()) != 0) {
+			continue;
+		}
+
+		applyForce(particles, particleCount, runtimeContext, particleType, field, effect->sceneGraph());
+	}
 }
 
 void ForceModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
@@ -70,6 +78,7 @@ void ForceModifier::reset(const Effect* effect, EffectRuntimeContext runtimeCont
 	modifierVectorFields.clear();
 	modifierNoiseFields.clear();
 	modifierDragFields.clear();
+	modifierVortexFields.clear();
 
 	for(const ForceField* forceField : effect->sceneGraph().nodesWithType<ForceField>()) {
 		if(!forceField->active(runtimeContext)) {
@@ -81,6 +90,7 @@ void ForceModifier::reset(const Effect* effect, EffectRuntimeContext runtimeCont
 		const VectorField* vectorField = dynamic_cast<const VectorField*>(forceField);
 		const NoiseField* noiseField = dynamic_cast<const NoiseField*>(forceField);
 		const DragField* dragField = dynamic_cast<const DragField*>(forceField);
+		const VortexField* vortexField = dynamic_cast<const VortexField*>(forceField);
 
 		float_t life = forceField->life(runtimeContext);
 
@@ -118,6 +128,9 @@ void ForceModifier::reset(const Effect* effect, EffectRuntimeContext runtimeCont
 		}
 		else if(dragField) {
 			modifierDragFields.emplace_back(*dragField);
+		}
+		else if(vortexField) {
+			modifierVortexFields.emplace_back(*vortexField);
 		}
 	}
 }
@@ -451,6 +464,51 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 			(1.0 + (particleArea - 1.0) * dragSizeInfluence);
 
 		particles.force[p] += forceVector * fieldStrength * particleWeightCurve.at(particles.life[p]);
+	}
+}
+void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
+	const ParticleType& particleType, const VortexField& vortexField, const SceneGraph& sceneGraph) const {
+	const float_t epsilon = 1.0e-6;
+
+	float_t fieldLife = vortexField.life(runtimeContext);
+	Transform fieldTransform = sceneGraph.globalTransform(vortexField.id(), runtimeContext);
+	float3_t fieldPosition = fieldTransform.position();
+	float3_t fieldSize = fieldTransform.scale() * 0.5;
+	float3_t fieldRotation = math::radians(fieldTransform.rotation());
+	matrix3_t fieldRotationMatrix = matrix3_t(math::yawPitchRollRotationMatrix(fieldRotation.y, fieldRotation.z, fieldRotation.x));
+	float_t fieldStrength = vortexField.strength().at(fieldLife);
+	bool fieldInfinite = vortexField.infinite();
+
+	float3_t axis = fieldRotationMatrix * float3_t(0.0, 0.0, 1.0);
+	float3_t rightAxis = fieldRotationMatrix * float3_t(1.0, 0.0, 0.0);
+	float3_t upAxis = fieldRotationMatrix * float3_t(0.0, 1.0, 0.0);
+	float_t tangentialStrength = vortexField.tangentialStrength().at(fieldLife);
+	float_t radialStrength = vortexField.radialStrength().at(fieldLife);
+
+	const Curve<float_t>& particleWeightCurve = particleType.weight().resultCurve();
+
+	for(std::uint32_t p = 0; p < particleCount; p++) {
+		float3_t centerToParticle = particles.globalPosition[p] - fieldPosition;
+
+		float_t axisDistance = math::dot(centerToParticle, axis);
+
+		float_t crossSectionDistanceX = math::dot(centerToParticle, rightAxis);
+		float_t crossSectionDistanceY = math::dot(centerToParticle, upAxis);
+		float_t crossSectionDistance =
+			crossSectionDistanceX * crossSectionDistanceX / (fieldSize.x * fieldSize.x) +
+			crossSectionDistanceY * crossSectionDistanceY / (fieldSize.y * fieldSize.y);
+
+		if((axisDistance < -fieldSize.z || axisDistance > fieldSize.z || crossSectionDistance > 1.0) && !fieldInfinite) {
+			continue;
+		}
+
+		float3_t axisToParticle = centerToParticle - axis * axisDistance;
+		float_t distanceToAxis = math::length(axisToParticle);
+
+		float3_t radialDirection = axisToParticle / std::max(distanceToAxis, epsilon);
+		float3_t tangentDirection = math::safeNormalize(math::cross(axis, radialDirection));
+
+		particles.force[p] += (tangentDirection * tangentialStrength - radialDirection * radialStrength) * fieldStrength * particleWeightCurve.at(particles.life[p]);
 	}
 }
 

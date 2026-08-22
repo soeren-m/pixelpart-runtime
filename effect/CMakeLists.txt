@@ -58,4 +58,5 @@ target_sources(pixelpart-runtime PRIVATE
 	UtilComputeNodes.cpp
 	VariantParameter.cpp
 	VectorField.cpp
-	VectorFieldResource.cpp)
+	VectorFieldResource.cpp
+	VortexField.cpp)

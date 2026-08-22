@@ -7,6 +7,7 @@
 #include "VectorField.h"
 #include "NoiseField.h"
 #include "DragField.h"
+#include "VortexField.h"
 #include "LineCollider.h"
 #include "PlaneCollider.h"
 #include "DirectionalLightSource.h"
@@ -277,6 +278,7 @@ void to_json(nlohmann::ordered_json& j, const SceneGraph& sceneGraph) {
 		const VectorField* vectorField = dynamic_cast<const VectorField*>(node.get());
 		const NoiseField* noiseField = dynamic_cast<const NoiseField*>(node.get());
 		const DragField* dragField = dynamic_cast<const DragField*>(node.get());
+		const VortexField* vortexField = dynamic_cast<const VortexField*>(node.get());
 		const LineCollider* lineCollider = dynamic_cast<const LineCollider*>(node.get());
 		const PlaneCollider* planeCollider = dynamic_cast<const PlaneCollider*>(node.get());
 		const DirectionalLightSource* directionLightSource = dynamic_cast<const DirectionalLightSource*>(node.get());
@@ -303,6 +305,9 @@ void to_json(nlohmann::ordered_json& j, const SceneGraph& sceneGraph) {
 		}
 		else if(dragField) {
 			j.emplace_back(*dragField);
+		}
+		else if(vortexField) {
+			j.emplace_back(*vortexField);
 		}
 		else if(lineCollider) {
 			j.emplace_back(*lineCollider);
@@ -355,6 +360,9 @@ void from_json(const nlohmann::ordered_json& j, SceneGraph& sceneGraph) {
 						break;
 					case ForceFieldType::drag:
 						nodes.emplace_back(std::make_unique<DragField>(jNode.get<DragField>()));
+						break;
+					case ForceFieldType::vortex:
+						nodes.emplace_back(std::make_unique<VortexField>(jNode.get<VortexField>()));
 						break;
 					default:
 						break;
