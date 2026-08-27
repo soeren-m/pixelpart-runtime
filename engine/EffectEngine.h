@@ -25,8 +25,6 @@ public:
 	virtual void selectLod(std::uint32_t lod) = 0;
 
 	virtual const Effect& effect() const = 0;
-
-	virtual const EffectRuntimeState& state() const = 0;
 	virtual const EffectRuntimeContext& context() const = 0;
 };
 }

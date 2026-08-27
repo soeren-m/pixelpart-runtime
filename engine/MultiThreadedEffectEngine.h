@@ -39,9 +39,9 @@ public:
 	virtual void selectLod(std::uint32_t lod) override;
 
 	virtual const Effect& effect() const override;
-
-	virtual const EffectRuntimeState& state() const override;
 	virtual const EffectRuntimeContext& context() const override;
+
+	const EffectRuntimeState& state() const;
 
 	void particleCountPerThread(std::uint32_t count);
 	std::uint32_t particleCountPerThread() const;

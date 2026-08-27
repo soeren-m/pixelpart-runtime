@@ -108,11 +108,11 @@ void SingleThreadedEffectEngine::selectLod(std::uint32_t lod) {
 const Effect& SingleThreadedEffectEngine::effect() const {
 	return engineEffect;
 }
+const EffectRuntimeContext& SingleThreadedEffectEngine::context() const {
+	return engineContext;
+}
 
 const EffectRuntimeState& SingleThreadedEffectEngine::state() const {
 	return engineState;
-}
-const EffectRuntimeContext& SingleThreadedEffectEngine::context() const {
-	return engineContext;
 }
 }
