@@ -146,12 +146,12 @@ void MultiThreadedEffectEngine::selectLod(std::uint32_t lod) {
 const Effect& MultiThreadedEffectEngine::effect() const {
 	return engineEffect;
 }
+const EffectRuntimeContext& MultiThreadedEffectEngine::context() const {
+	return engineContext;
+}
 
 const EffectRuntimeState& MultiThreadedEffectEngine::state() const {
 	return engineState;
-}
-const EffectRuntimeContext& MultiThreadedEffectEngine::context() const {
-	return engineContext;
 }
 
 void MultiThreadedEffectEngine::particleCountPerThread(std::uint32_t count) {

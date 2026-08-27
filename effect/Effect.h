@@ -31,8 +31,11 @@ public:
 	Effect() = default;
 	Effect(bool is3d);
 
-	void enable3d(bool mode);
+	void enable3d(bool enable);
 	bool is3d() const;
+
+	void enableGpuParticles(bool enable);
+	bool gpuParticlesEnabled() const;
 
 	SceneGraph& sceneGraph();
 	const SceneGraph& sceneGraph() const;
@@ -62,6 +65,7 @@ public:
 
 private:
 	bool effect3d = false;
+	bool effectGpuParticles = false;
 
 	SceneGraph effectSceneGraph;
 	ParticleTypeCollection effectParticleTypes;

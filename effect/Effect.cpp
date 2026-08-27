@@ -7,11 +7,18 @@ Effect::Effect(bool is3d) : effect3d(is3d) {
 
 }
 
-void Effect::enable3d(bool mode) {
-	effect3d = mode;
+void Effect::enable3d(bool enable) {
+	effect3d = enable;
 }
 bool Effect::is3d() const {
 	return effect3d;
+}
+
+void Effect::enableGpuParticles(bool enable) {
+	effectGpuParticles = enable;
+}
+bool Effect::gpuParticlesEnabled() const {
+	return effectGpuParticles;
 }
 
 SceneGraph& Effect::sceneGraph() {
@@ -106,6 +113,7 @@ void Effect::applyInputs() {
 void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 	j = nlohmann::ordered_json{
 		{ "3d", effect.is3d() },
+		{ "gpu_particles", effect.gpuParticlesEnabled() },
 		{ "scene", effect.sceneGraph() },
 		{ "particles", effect.particleTypes() },
 		{ "inputs", toSortedJson(effect.inputs()) },
@@ -117,6 +125,7 @@ void to_json(nlohmann::ordered_json& j, const Effect& effect) {
 }
 void from_json(const nlohmann::ordered_json& j, Effect& effect) {
 	effect = Effect(j.value("3d", false));
+	effect.enableGpuParticles(j.value("gpu_particles", false));
 	effect.sceneGraph() = j.value("scene", SceneGraph());
 	effect.particleTypes() = j.value("particles", ParticleTypeCollection());
 	effect.inputs() = j.value("inputs", EffectInputCollection());
