@@ -11,7 +11,7 @@ bool isEffectSimulationFinished(const Effect& effect, const EffectRuntimeState& 
 
 		if(particleEmitter->active(context) ||
 			particleEmitter->repeat() ||
-			context.time() < particleEmitter->start() + particleEmitter->duration()) {
+			context.time() < particleEmitter->lifetimeStart() + particleEmitter->lifetimeDuration()) {
 			return false;
 		}
 	}

@@ -94,8 +94,8 @@ void MultiThreadedEffectEngine::advance(float_t dt) {
 			const auto& node = engineEffect.sceneGraph().at(event.nodeId());
 
 			if(node.activatedByTrigger(engineContext) &&
-				engineContext.time() >= node.start() + event.time() &&
-				engineContext.time() < node.start() + event.time() + dt) {
+				engineContext.time() >= node.lifetimeStart() + event.time() &&
+				engineContext.time() < node.lifetimeStart() + event.time() + dt) {
 				engineContext.invokedEvents().push_back(eventId);
 			}
 		}

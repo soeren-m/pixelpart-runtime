@@ -36,11 +36,11 @@ public:
 	void displayOrder(std::uint32_t order);
 	std::uint32_t displayOrder() const;
 
-	void start(float_t time);
-	float_t start() const;
+	void lifetimeStart(float_t time);
+	float_t lifetimeStart() const;
 
-	void duration(float_t time);
-	float_t duration() const;
+	void lifetimeDuration(float_t time);
+	float_t lifetimeDuration() const;
 
 	void repeat(bool repeat);
 	bool repeat() const;

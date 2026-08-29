@@ -70,7 +70,7 @@ void CollisionModifier::reset(const Effect* effect, EffectRuntimeContext runtime
 }
 
 CollisionModifier::ColliderObject::ColliderObject(const Collider& collider) :
-	startTime(collider.start()), duration(collider.duration()), repeat(collider.repeat()),
+	startTime(collider.lifetimeStart()), duration(collider.lifetimeDuration()), repeat(collider.repeat()),
 	killOnContact(collider.killOnContact().value()),
 	bounce(collider.bounce().resultCurve()),
 	friction(collider.friction().resultCurve()) {
