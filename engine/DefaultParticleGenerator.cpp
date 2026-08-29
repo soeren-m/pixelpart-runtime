@@ -23,12 +23,11 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 	for(auto& [emissionPair, particleCollection] : state.particleCollections()) {
 		const ParticleType& particleType = effect->particleTypes().at(emissionPair.typeId);
 
-		std::optional<std::uint32_t> particleEmitterIndex = effect->sceneGraph().indexOf(emissionPair.emitterId);
-		if(!particleEmitterIndex) {
+		if(!effect->sceneGraph().contains<ParticleEmitter>(emissionPair.emitterId)) {
 			continue;
 		}
 
-		const ParticleEmitter& particleEmitter = effect->sceneGraph().atIndex<ParticleEmitter>(particleEmitterIndex.value());
+		const ParticleEmitter& particleEmitter = effect->sceneGraph().at<ParticleEmitter>(emissionPair.emitterId);
 		if(!particleEmitter.primary() || !particleEmitter.active(runtimeContext)) {
 			continue;
 		}

@@ -54,6 +54,8 @@ public:
 	void parent(id_t nodeId, id_t parentId);
 	id_t parentId(id_t nodeId) const;
 	std::vector<id_t> childIds(id_t nodeId) const;
+	std::vector<id_t> siblingIds(id_t nodeId) const;
+	std::vector<id_t> rootIds() const;
 
 	std::optional<std::uint32_t> indexOf(id_t nodeId) const;
 
@@ -126,6 +128,8 @@ public:
 
 private:
 	void rebuildIndex();
+
+	bool isDescendantOf(id_t parentId, id_t targetId) const;
 
 	std::vector<std::unique_ptr<Node>> sceneNodes;
 	std::vector<std::uint32_t> indexMap;

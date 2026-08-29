@@ -6,6 +6,7 @@
 #include "Transform.h"
 #include "../types/Types.h"
 #include "../types/Id.h"
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -31,6 +32,9 @@ public:
 
 	void name(const std::string& name);
 	const std::string& name() const;
+
+	void displayOrder(std::uint32_t order);
+	std::uint32_t displayOrder() const;
 
 	void start(float_t time);
 	float_t start() const;
@@ -71,6 +75,7 @@ private:
 	id_t nodeId;
 	id_t nodeParentId;
 	std::string nodeName;
+	std::uint32_t nodeDisplayOrder = 0;
 
 	float_t nodeLifetimeStart = 0.0;
 	float_t nodeLifetimeDuration = 1.0;

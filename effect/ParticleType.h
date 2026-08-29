@@ -35,6 +35,9 @@ public:
 	void name(const std::string& name);
 	const std::string& name() const;
 
+	void displayOrder(std::uint32_t order);
+	std::uint32_t displayOrder() const;
+
 	void positionRelative(bool relative);
 	bool positionRelative() const;
 
@@ -161,6 +164,7 @@ private:
 	id_t particleTypeId = id_t();
 	id_t parentParticleTypeId = id_t();
 	std::string particleTypeName;
+	std::uint32_t particleTypeDisplayOrder = 0;
 
 	bool particlePositionRelative = false;
 	std::vector<ParticleLodStrategy> particleLodStrategy;

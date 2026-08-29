@@ -24,9 +24,17 @@ id_t Node::id() const {
 }
 
 void Node::parent(const Node& parentNode) {
+	if(parentNode.id() == nodeId) {
+		return;
+	}
+
 	nodeParentId = parentNode.id();
 }
 void Node::parent(id_t parentNodeId) {
+	if(parentNodeId == nodeId) {
+		return;
+	}
+
 	nodeParentId = parentNodeId;
 }
 id_t Node::parentId() const {
@@ -38,6 +46,13 @@ void Node::name(const std::string& name) {
 }
 const std::string& Node::name() const {
 	return nodeName;
+}
+
+void Node::displayOrder(std::uint32_t order) {
+	nodeDisplayOrder = order;
+}
+std::uint32_t Node::displayOrder() const {
+	return nodeDisplayOrder;
 }
 
 void Node::start(float_t time) {
@@ -185,6 +200,7 @@ void to_json(nlohmann::ordered_json& j, const Node& node) {
 		{ "id", node.id() },
 		{ "parent_id", node.parentId() },
 		{ "name", node.name() },
+		{ "display_order", node.displayOrder() },
 		{ "lifetime_start", node.start() },
 		{ "lifetime_duration", node.duration() },
 		{ "repeat", node.repeat() },
@@ -198,6 +214,7 @@ void to_json(nlohmann::ordered_json& j, const Node& node) {
 void from_json(const nlohmann::ordered_json& j, Node& node) {
 	node.parent(j.value("parent_id", id_t()));
 	node.name(j.value("name", ""));
+	node.displayOrder(j.value("display_order", 0u));
 	node.start(j.value("lifetime_start", 0.0));
 	node.duration(j.value("lifetime_duration", 1.0));
 	node.repeat(j.value("repeat", true));

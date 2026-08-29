@@ -109,10 +109,17 @@ void ParticleTypeCollection::clear() {
 }
 
 void ParticleTypeCollection::parent(id_t id, id_t parentId) {
+	if(parentId == id) {
+		return;
+	}
+
 	ParticleType& particleType = at(id);
-	for(ParticleType& otherParticleType : particleTypes) {
-		if(otherParticleType.parentId() == id) {
-			otherParticleType.parent(particleType.parentId());
+
+	if(isDescendantOf(id, parentId)) {
+		for(ParticleType& otherParticleType : particleTypes) {
+			if(otherParticleType.parentId() == id) {
+				otherParticleType.parent(particleType.parentId());
+			}
 		}
 	}
 
@@ -131,6 +138,34 @@ std::vector<id_t> ParticleTypeCollection::childIds(id_t id) const {
 
 	return result;
 }
+std::vector<id_t> ParticleTypeCollection::siblingIds(id_t id) const {
+	std::vector<id_t> result;
+	std::optional<std::uint32_t> index = indexOf(id);
+	if(!index) {
+		return result;
+	}
+
+	const ParticleType& particleType = particleTypes[index.value()];
+
+	for(const ParticleType& otherParticleType : particleTypes) {
+		if(otherParticleType.id() != id && otherParticleType.parentId() == particleType.parentId()) {
+			result.push_back(otherParticleType.id());
+		}
+	}
+
+	return result;
+}
+std::vector<id_t> ParticleTypeCollection::rootIds() const {
+	std::vector<id_t> result;
+	for(const ParticleType& particleType : particleTypes) {
+		if(!particleType.parentId()) {
+			result.push_back(particleType.id());
+		}
+	}
+
+	return result;
+}
+
 
 std::uint32_t ParticleTypeCollection::count() const {
 	return static_cast<std::uint32_t>(particleTypes.size());
@@ -177,6 +212,24 @@ void ParticleTypeCollection::rebuildIndex() {
 
 		indexMap[id.value()] = index;
 	}
+}
+
+bool ParticleTypeCollection::isDescendantOf(id_t parentId, id_t targetId) const {
+	if(!parentId) {
+		return false;
+	}
+
+	for(id_t childId : childIds(parentId)) {
+		if(childId == targetId) {
+			return true;
+		}
+
+		if(isDescendantOf(childId, targetId)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void to_json(nlohmann::ordered_json& j, const ParticleTypeCollection& collection) {

@@ -76,6 +76,13 @@ const std::string& ParticleType::name() const {
 	return particleTypeName;
 }
 
+void ParticleType::displayOrder(std::uint32_t order) {
+	particleTypeDisplayOrder = order;
+}
+std::uint32_t ParticleType::displayOrder() const {
+	return particleTypeDisplayOrder;
+}
+
 void ParticleType::positionRelative(bool relative) {
 	particlePositionRelative = relative;
 }
@@ -375,6 +382,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "id", particleType.id() },
 		{ "parent_id", particleType.parentId() },
 		{ "name", particleType.name() },
+		{ "display_order", particleType.displayOrder() },
 
 		{ "position_relative", particleType.positionRelative() },
 		{ "lod_strategy", particleType.lodStrategy() },
@@ -427,6 +435,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	particleType = ParticleType(j.at("id").get<id_t>());
 	particleType.parent(j.value("parent_id", id_t()));
 	particleType.name(j.value("name", ""));
+	particleType.displayOrder(j.value("display_order", 0u));
 
 	particleType.positionRelative(j.value("position_relative", false));
 	particleType.lodStrategy() = j.value("lod_strategy", std::vector<ParticleLodStrategy>());

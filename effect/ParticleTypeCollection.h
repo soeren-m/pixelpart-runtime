@@ -30,6 +30,8 @@ public:
 	void parent(id_t id, id_t parentId);
 	id_t parentId(id_t id) const;
 	std::vector<id_t> childIds(id_t id) const;
+	std::vector<id_t> siblingIds(id_t id) const;
+	std::vector<id_t> rootIds() const;
 
 	std::uint32_t count() const;
 
@@ -46,6 +48,8 @@ public:
 
 private:
 	void rebuildIndex();
+
+	bool isDescendantOf(id_t parentId, id_t targetId) const;
 
 	std::vector<ParticleType> particleTypes;
 	std::vector<std::uint32_t> indexMap;

@@ -147,10 +147,17 @@ void SceneGraph::clear() {
 }
 
 void SceneGraph::parent(id_t nodeId, id_t parentId) {
+	if(parentId == nodeId) {
+		return;
+	}
+
 	Node& node = at(nodeId);
-	for(std::unique_ptr<Node>& otherNode : sceneNodes) {
-		if(otherNode->parentId() == nodeId) {
-			otherNode->parent(node.parentId());
+
+	if(isDescendantOf(nodeId, parentId)) {
+		for(const std::unique_ptr<Node>& otherNode : sceneNodes) {
+			if(otherNode->parentId() == nodeId) {
+				otherNode->parent(node.parentId());
+			}
 		}
 	}
 
@@ -164,6 +171,33 @@ std::vector<id_t> SceneGraph::childIds(id_t nodeId) const {
 	for(const std::unique_ptr<Node>& otherNode : sceneNodes) {
 		if(otherNode->parentId() == nodeId) {
 			result.push_back(otherNode->id());
+		}
+	}
+
+	return result;
+}
+std::vector<id_t> SceneGraph::siblingIds(id_t nodeId) const {
+	std::vector<id_t> result;
+	std::optional<std::uint32_t> index = indexOf(nodeId);
+	if(!index) {
+		return result;
+	}
+
+	const std::unique_ptr<Node>& node = sceneNodes[index.value()];
+
+	for(const std::unique_ptr<Node>& otherNode : sceneNodes) {
+		if(otherNode->id() != nodeId && otherNode->parentId() == node->parentId()) {
+			result.push_back(otherNode->id());
+		}
+	}
+
+	return result;
+}
+std::vector<id_t> SceneGraph::rootIds() const {
+	std::vector<id_t> result;
+	for(const std::unique_ptr<Node>& node : sceneNodes) {
+		if(!node->parentId()) {
+			result.push_back(node->id());
 		}
 	}
 
@@ -265,6 +299,24 @@ void SceneGraph::rebuildIndex() {
 
 		indexMap[nodeId.value()] = nodeIndex;
 	}
+}
+
+bool SceneGraph::isDescendantOf(id_t parentId, id_t targetId) const {
+	if(!parentId) {
+		return false;
+	}
+
+	for(id_t childId : childIds(parentId)) {
+		if(childId == targetId) {
+			return true;
+		}
+
+		if(isDescendantOf(childId, targetId)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void to_json(nlohmann::ordered_json& j, const SceneGraph& sceneGraph) {

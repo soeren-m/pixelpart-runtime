@@ -935,8 +935,17 @@ void migrateEffectAssetJson(nlohmann::ordered_json& jsonData) {
 		Transform inverseLineEmitterCorrectionTransform(
 			math::inverse(lineEmitterCorrectionTransform.matrix()));
 
+		std::unordered_map<id_t, std::uint32_t> nodeDisplayOrdersPerParent;
+
 		for(nlohmann::ordered_json& jNode : jsonData["effect"]["scene"]) {
+			id_t parentId = jNode.value("parent_id", id_t());
 			std::string nodeType = jNode.value("node_type", "");
+
+			if(nodeDisplayOrdersPerParent.count(parentId) == 0) {
+				nodeDisplayOrdersPerParent[parentId] = 0;
+			}
+
+			jNode["display_order"] = nodeDisplayOrdersPerParent[parentId]++;
 
 			if(nodeType == "particle_emitter") {
 				std::string shape = jNode.value("shape", "");
@@ -974,14 +983,23 @@ void migrateEffectAssetJson(nlohmann::ordered_json& jsonData) {
 			}
 		}
 
+		std::unordered_map<id_t, std::uint32_t> particleTypeDisplayOrderPerParent;
+
+		for(nlohmann::ordered_json& jParticleType : jsonData["effect"]["particles"]) {
+			id_t parentId = jParticleType.value("parent_id", id_t());
+
+			if(particleTypeDisplayOrderPerParent.count(parentId) == 0) {
+				particleTypeDisplayOrderPerParent[parentId] = 0;
+			}
+
+			jParticleType["display_order"] = particleTypeDisplayOrderPerParent[parentId]++;
+			jParticleType["lod_strategy"] = nlohmann::ordered_json::array();
+		}
+
 		jsonData["effect"]["lods"] = nlohmann::ordered_json::array({
 			{
 				{ "distance_threshold", 0.0 }
 			} });
-
-		for(nlohmann::ordered_json& jParticleType : jsonData["effect"]["particles"]) {
-			jParticleType["lod_strategy"] = nlohmann::ordered_json::array();
-		}
 
 		version = 11;
 		jsonData["version"] = 11;
