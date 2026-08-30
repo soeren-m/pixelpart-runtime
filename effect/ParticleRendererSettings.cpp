@@ -10,6 +10,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleTrailRendererSettings& ren
 	j = nlohmann::ordered_json{
 		{ "smoothing_method", rendererSettings.smoothingMethod },
 		{ "smoothing_segments", rendererSettings.smoothingSegmentCount },
+		{ "texture_mode", rendererSettings.textureMode },
 		{ "texture_rotation", rendererSettings.textureRotation },
 		{ "texture_uv_factor", rendererSettings.textureUVFactor }
 	};
@@ -28,6 +29,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleTrailRendererSettings& r
 	rendererSettings = ParticleTrailRendererSettings();
 	rendererSettings.smoothingMethod = j.value("smoothing_method", ParticleTrailRendererSettings::SmoothingMethod::none);
 	rendererSettings.smoothingSegmentCount = j.value("smoothing_segments", 100u);
+	rendererSettings.textureMode = j.value("texture_mode", ParticleTrailRendererSettings::TextureMode::stretch);
 	rendererSettings.textureRotation = j.value("texture_rotation", ParticleTrailRendererSettings::TextureRotation::up);
 	rendererSettings.textureUVFactor = j.value("texture_uv_factor", 1.0);
 }

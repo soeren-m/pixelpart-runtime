@@ -994,6 +994,7 @@ void migrateEffectAssetJson(nlohmann::ordered_json& jsonData) {
 
 			jParticleType["display_order"] = particleTypeDisplayOrderPerParent[parentId]++;
 			jParticleType["lod_strategy"] = nlohmann::ordered_json::array();
+			jParticleType["trail_renderer_settings"]["texture_mode"] = "stretch";
 		}
 
 		jsonData["effect"]["lods"] = nlohmann::ordered_json::array({

@@ -194,10 +194,6 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 		}
 
 		trail.directionToEdge[0] = trail.directionToEdge[1];
-
-		for(float_t& index : trail.index) {
-			index /= trail.length;
-		}
 	}
 
 	for(const VertexAttribute& attribute : generatorVertexFormat.attributes()) {
@@ -633,6 +629,8 @@ void TrailVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAttr
 void TrailVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
+	ParticleTrailRendererSettings::TextureMode textureMode =
+		particleType.trailRendererSettings().textureMode;
 	ParticleTrailRendererSettings::TextureRotation textureRotation =
 		particleType.trailRendererSettings().textureRotation;
 	float uvFactor =
@@ -649,9 +647,23 @@ void TrailVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const Vert
 			continue;
 		}
 
+		float invTrailLength = 1.0f / static_cast<float>(trail.length);
+
 		for(std::uint32_t p = 0; p < trail.index.size() - 1; p++) {
-			float index = static_cast<float>(trail.index[p]);
-			float nextIndex = static_cast<float>(trail.index[p + 1]);
+			float index = 0.0f;
+			float nextIndex = 1.0f;
+			switch(textureMode) {
+				case ParticleTrailRendererSettings::TextureMode::stretch:
+					index = static_cast<float>(trail.index[p]) * invTrailLength;
+					nextIndex = static_cast<float>(trail.index[p + 1]) * invTrailLength;
+					break;
+				case ParticleTrailRendererSettings::TextureMode::tile:
+					index = static_cast<float>(trail.index[p]);
+					nextIndex = static_cast<float>(trail.index[p + 1]);
+					break;
+				default:
+					break;
+			}
 
 			switch(textureRotation) {
 				case ParticleTrailRendererSettings::TextureRotation::left:
