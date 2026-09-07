@@ -71,56 +71,5 @@ private:
 		const Effect* effect, ParticleEmissionPair emissionPair, EffectRuntimeContext runtimeContext,
 		const ParticleEmitterEmissionData& emitterEmissionData,
 		const ParticleTypeEmissionData& ptypeEmissionData);
-
-	static float3_t emitOnSegment(float_t length,
-		ParticleEmitter::Distribution distribution,
-		ParticleEmitter::GridOrder gridOrder,
-		std::uint32_t gridSize, std::uint32_t& gridIndex,
-		pcg32& rng);
-
-	static float3_t emitInEllipse(const float2_t& size,
-		ParticleEmitter::Distribution distribution,
-		ParticleEmitter::GridOrder gridOrder,
-		std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t& gridIndex,
-		pcg32& rng);
-
-	static float3_t emitInRectangle(const float2_t& size,
-		ParticleEmitter::Distribution distribution,
-		ParticleEmitter::GridOrder gridOrder,
-		std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t& gridIndex,
-		pcg32& rng);
-
-	static float3_t emitOnPath(const float3_t& size,
-		const Polyline& path,
-		ParticleEmitter::Distribution distribution,
-		ParticleEmitter::GridOrder gridOrder,
-		std::uint32_t gridSize, std::uint32_t& gridIndex,
-		pcg32& rng);
-
-	static float3_t emitInEllipsoid(const float3_t& size,
-		ParticleEmitter::Distribution distribution,
-		ParticleEmitter::GridOrder gridOrder,
-		std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t gridSizeZ, std::uint32_t& gridIndex,
-		pcg32& rng);
-
-	static float3_t emitInCuboid(const float3_t& size,
-		ParticleEmitter::Distribution distribution,
-		ParticleEmitter::GridOrder gridOrder,
-		std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t gridSizeZ, std::uint32_t& gridIndex,
-		pcg32& rng);
-
-	static float3_t emitInCylinder(const float3_t& size,
-		ParticleEmitter::Distribution distribution,
-		ParticleEmitter::GridOrder gridOrder,
-		std::uint32_t gridSizeX, std::uint32_t gridSizeY, std::uint32_t gridSizeZ, std::uint32_t& gridIndex,
-		pcg32& rng);
-
-	static float_t sampleGrid1d(std::uint32_t gridIndex, std::uint32_t gridSize, float_t min, float_t max);
-	static float_t sampleGrid2d(std::uint32_t gridIndex, std::uint32_t gridSize1, std::uint32_t gridSize2, float_t min, float_t max);
-	static float_t sampleGrid3d(std::uint32_t gridIndex, std::uint32_t gridSize1, std::uint32_t gridSize2, std::uint32_t gridSize3, float_t min, float_t max);
-
-	static float_t randomCentered(pcg32& rng, float_t min, float_t max);
-	static float_t randomInverseCentered(pcg32& rng, float_t min, float_t max);
-	static float_t randomUniformGrid(pcg32& rng, std::uint32_t size, float_t min, float_t max);
 };
 }

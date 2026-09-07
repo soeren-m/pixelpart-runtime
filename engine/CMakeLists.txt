@@ -17,4 +17,6 @@ target_sources(pixelpart-runtime PRIVATE
 	ParticleCollection.cpp
 	RotationModifier.cpp
 	SingleThreadedEffectEngine.cpp
-	SizeModifier.cpp)
+	SizeModifier.cpp
+	SpawnDirectionGeneration.cpp
+	SpawnPositionGeneration.cpp)
