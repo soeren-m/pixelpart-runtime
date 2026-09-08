@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EffectEngine.h"
+#include "CpuEffectEngine.h"
 #include "ParticleGenerator.h"
 #include "ParticleModifier.h"
 #include "EffectRuntimeState.h"
@@ -10,7 +10,7 @@
 #include <memory>
 
 namespace pixelpart {
-class SingleThreadedEffectEngine : public EffectEngine {
+class SingleThreadedEffectEngine : public CpuEffectEngine {
 public:
 	SingleThreadedEffectEngine(const Effect& effect,
 		std::shared_ptr<ParticleGenerator> particleGenerator,
@@ -38,7 +38,7 @@ public:
 	virtual const Effect& effect() const override;
 	virtual const EffectRuntimeContext& context() const override;
 
-	const EffectRuntimeState& state() const;
+	virtual const EffectRuntimeState& state() const override;
 
 private:
 	const Effect& engineEffect;
