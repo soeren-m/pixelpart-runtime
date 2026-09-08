@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ParticleSimulationSpace.h"
 #include "ParticleLodStrategy.h"
 #include "RotationMode.h"
 #include "AlignmentMode.h"
@@ -38,8 +39,8 @@ public:
 	void displayOrder(std::uint32_t order);
 	std::uint32_t displayOrder() const;
 
-	void positionRelative(bool relative);
-	bool positionRelative() const;
+	void simulationSpace(ParticleSimulationSpace space);
+	ParticleSimulationSpace simulationSpace() const;
 
 	std::vector<ParticleLodStrategy>& lodStrategy();
 	const std::vector<ParticleLodStrategy>& lodStrategy() const;
@@ -166,7 +167,7 @@ private:
 	std::string particleTypeName;
 	std::uint32_t particleTypeDisplayOrder = 0;
 
-	bool particlePositionRelative = false;
+	ParticleSimulationSpace particleSimulationSpace = ParticleSimulationSpace::global;
 	std::vector<ParticleLodStrategy> particleLodStrategy;
 	RotationMode particleRotationMode = RotationMode::angle;
 	AlignmentMode particleAlignmentMode = AlignmentMode::camera;

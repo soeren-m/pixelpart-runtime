@@ -1,21 +1,20 @@
 #include "CollisionModifier.h"
-#include "../effect/ParticleType.h"
 #include "../effect/Coordinates.h"
-#include "../effect/Curve.h"
-#include "../types/Types.h"
 #include "../types/Id.h"
 #include "../math/Common.h"
 #include "../math/Geometry.h"
+#include "../math/MatrixCommon.h"
 #include <cmath>
 #include <algorithm>
 
 namespace pixelpart {
 void CollisionModifier::apply(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
 	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
+	const ParticleEmitter& particleEmitter = effect->sceneGraph().at<ParticleEmitter>(particleEmitterId);
 	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
 
-	calculateCollisions2d(particles, particleCount, particleType, runtimeContext);
-	calculateCollisions3d(particles, particleCount, particleType, runtimeContext);
+	calculateCollisions2d(particles, particleCount, effect, particleEmitter, particleType, runtimeContext);
+	calculateCollisions3d(particles, particleCount, effect, particleEmitter, particleType, runtimeContext);
 }
 
 void CollisionModifier::reset(const Effect* effect, EffectRuntimeContext runtimeContext) {
@@ -186,7 +185,9 @@ std::optional<float3_t> CollisionModifier::rayColliderIntersection(const Plane3d
 	return point;
 }
 
-void CollisionModifier::calculateCollisions2d(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const ParticleType& particleType, const EffectRuntimeContext& runtimeContext) const {
+void CollisionModifier::calculateCollisions2d(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+	const Effect* effect, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+	const EffectRuntimeContext& runtimeContext) const {
 	if(modifierLine2dColliders.empty()) {
 		return;
 	}
@@ -197,6 +198,11 @@ void CollisionModifier::calculateCollisions2d(ParticleCollection::WritePtr parti
 	const Curve<float_t>& particlePhysicalSizeCurve = particleType.physicalSize().resultCurve();
 	const Curve<float_t>& particleBounceCurve = particleType.bounce().resultCurve();
 	const Curve<float_t>& particleFrictionCurve = particleType.friction().resultCurve();
+
+	matrix4_t parentTransform = effect->sceneGraph().globalTransform(particleEmitter.id(), runtimeContext).matrix();
+	matrix3_t invParentTransform = particleType.simulationSpace() == ParticleSimulationSpace::local
+		? matrix3_t(math::inverse(parentTransform))
+		: matrix3_t(1.0);
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		float2_t particlePosition = float2_t(particles.globalPosition[p]);
@@ -247,7 +253,7 @@ void CollisionModifier::calculateCollisions2d(ParticleCollection::WritePtr parti
 
 					particles.velocity[p] = float3_t(reflectedVelocity * bounce, particles.velocity[p].z);
 					particles.velocity[p] += float3_t(segmentVector * slideFactor * (1.0 - friction), 0.0);
-					particles.position[p] += float3_t(colliderNormal * (particleRadius - distance), 0.0);
+					particles.position[p] += invParentTransform * float3_t(colliderNormal * (particleRadius - distance), 0.0);
 				}
 			}
 			else {
@@ -269,9 +275,16 @@ void CollisionModifier::calculateCollisions2d(ParticleCollection::WritePtr parti
 		}
 	}
 }
-void CollisionModifier::calculateCollisions3d(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const ParticleType& particleType, const EffectRuntimeContext& runtimeContext) const {
+void CollisionModifier::calculateCollisions3d(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+	const Effect* effect, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+	const EffectRuntimeContext& runtimeContext) const {
 	float_t t = runtimeContext.time();
 	float_t dt = runtimeContext.deltaTime();
+
+	matrix4_t parentTransform = effect->sceneGraph().globalTransform(particleEmitter.id(), runtimeContext).matrix();
+	matrix3_t invParentTransform = particleType.simulationSpace() == ParticleSimulationSpace::local
+		? matrix3_t(math::inverse(parentTransform))
+		: matrix3_t(1.0);
 
 	for(const Plane3dColliderObject& collider : modifierPlane3dColliders) {
 		if(collider.exclusionSet[particleType.id().value()]) {
@@ -318,7 +331,7 @@ void CollisionModifier::calculateCollisions3d(ParticleCollection::WritePtr parti
 
 					particles.velocity[p] = reflectedVelocity * bounce;
 					particles.velocity[p] += slideVector * slideFactor * (1.0 - friction);
-					particles.position[p] += colliderNormal * (particleRadius - distance);
+					particles.position[p] += invParentTransform * (colliderNormal * (particleRadius - distance));
 				}
 			}
 			else {
