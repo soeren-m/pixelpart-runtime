@@ -16,22 +16,17 @@ void IntegrationModifier::apply(ParticleCollection::WritePtr particles, std::uin
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		particles.velocity[p] += particles.force[p] * dt;
+		particles.position[p] += particles.velocity[p] * dt;
 	}
 
 	if(particleType.simulationSpace() == ParticleSimulationSpace::local) {
 		matrix4_t parentTransform = effect->sceneGraph().globalTransform(particleEmitter.id(), runtimeContext).matrix();
-		matrix3_t invParentTransform = matrix3_t(math::inverse(parentTransform));
 
 		for(std::uint32_t p = 0; p < particleCount; p++) {
-			particles.position[p] += (invParentTransform * particles.velocity[p]) * dt;
 			particles.globalPosition[p] = float3_t(parentTransform * float4_t(particles.position[p], 1.0));
 		}
 	}
 	else {
-		for(std::uint32_t p = 0; p < particleCount; p++) {
-			particles.position[p] += particles.velocity[p] * dt;
-		}
-
 		std::copy(particles.position, particles.position + particleCount, particles.globalPosition);
 	}
 }

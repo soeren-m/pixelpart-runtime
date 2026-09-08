@@ -200,14 +200,16 @@ void CollisionModifier::calculateCollisions2d(ParticleCollection::WritePtr parti
 	const Curve<float_t>& particleFrictionCurve = particleType.friction().resultCurve();
 
 	matrix4_t parentTransform = effect->sceneGraph().globalTransform(particleEmitter.id(), runtimeContext).matrix();
+	matrix3_t parentTransform3 = matrix3_t(parentTransform);
 	matrix3_t invParentTransform = particleType.simulationSpace() == ParticleSimulationSpace::local
 		? matrix3_t(math::inverse(parentTransform))
 		: matrix3_t(1.0);
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		float2_t particlePosition = float2_t(particles.globalPosition[p]);
-		float2_t particleVelocity = float2_t(particles.velocity[p]);
-		float2_t particleForce = float2_t(particles.force[p]);
+		float3_t particleVelocity3 = parentTransform3 * particles.velocity[p];
+		float2_t particleVelocity = float2_t(particleVelocity3);
+		float2_t particleForce = float2_t(parentTransform3 * particles.force[p]);
 		float2_t particleSize = float2_t(particles.size[p]);
 		float_t particlePhysicalSize = particlePhysicalSizeCurve.at(particles.life[p]);
 
@@ -251,8 +253,7 @@ void CollisionModifier::calculateCollisions2d(ParticleCollection::WritePtr parti
 					float_t bounce = collider.bounce.at(colliderLife) * particleBounceCurve.at(particles.life[p]);
 					float_t friction = std::min(collider.friction.at(colliderLife) * particleFrictionCurve.at(particles.life[p]), 1.0);
 
-					particles.velocity[p] = float3_t(reflectedVelocity * bounce, particles.velocity[p].z);
-					particles.velocity[p] += float3_t(segmentVector * slideFactor * (1.0 - friction), 0.0);
+					particles.velocity[p] = invParentTransform * (float3_t(reflectedVelocity * bounce, particleVelocity3.z) + float3_t(segmentVector * slideFactor * (1.0 - friction), 0.0));
 					particles.position[p] += invParentTransform * float3_t(colliderNormal * (particleRadius - distance), 0.0);
 				}
 			}
@@ -268,7 +269,7 @@ void CollisionModifier::calculateCollisions2d(ParticleCollection::WritePtr parti
 						float2_t reflectedVelocity = math::reflect(particleVelocity, colliderNormal);
 						float_t bounce = collider.bounce.at(colliderLife) * particleBounceCurve.at(particles.life[p]);
 
-						particles.velocity[p] = float3_t(reflectedVelocity * bounce, particles.velocity[p].z);
+						particles.velocity[p] = invParentTransform * float3_t(reflectedVelocity * bounce, particleVelocity3.z);
 					}
 				}
 			}
@@ -282,6 +283,7 @@ void CollisionModifier::calculateCollisions3d(ParticleCollection::WritePtr parti
 	float_t dt = runtimeContext.deltaTime();
 
 	matrix4_t parentTransform = effect->sceneGraph().globalTransform(particleEmitter.id(), runtimeContext).matrix();
+	matrix3_t parentTransform3 = matrix3_t(parentTransform);
 	matrix3_t invParentTransform = particleType.simulationSpace() == ParticleSimulationSpace::local
 		? matrix3_t(math::inverse(parentTransform))
 		: matrix3_t(1.0);
@@ -300,12 +302,16 @@ void CollisionModifier::calculateCollisions3d(ParticleCollection::WritePtr parti
 		const Curve<float_t>& particleFrictionCurve = particleType.friction().resultCurve();
 
 		for(std::uint32_t p = 0; p < particleCount; p++) {
-			float3_t closestPoint = closestPointOnPlane(particles.globalPosition[p], collider);
+			float3_t particlePosition = particles.globalPosition[p];
+			float3_t closestPoint = closestPointOnPlane(particlePosition, collider);
 			if(!isPointOnCollider(closestPoint, collider)) {
 				continue;
 			}
 
-			float3_t colliderToParticle = particles.globalPosition[p] - closestPoint;
+			float3_t particleVelocity = parentTransform3 * particles.velocity[p];
+			float3_t particleForce = parentTransform3 * particles.force[p];
+
+			float3_t colliderToParticle = particlePosition - closestPoint;
 			float3_t colliderNormal = math::normalize(colliderToParticle);
 			float_t distanceSqr = math::lengthSquared(colliderToParticle);
 			float_t particleRadius = std::min(particles.size[p].x, std::min(particles.size[p].y, particles.size[p].z)) * 0.5;
@@ -316,37 +322,36 @@ void CollisionModifier::calculateCollisions3d(ParticleCollection::WritePtr parti
 					particles.life[p] = 1.0;
 				}
 				else {
-					float_t particleForceLength = math::length(particles.force[p]);
+					float_t particleForceLength = math::length(particleForce);
 					float3_t particleForceDirection = particleForceLength != 0.0
-						? particles.force[p] / particleForceLength
+						? particleForce / particleForceLength
 						: worldUpVector3;
 
 					float_t distance = std::sqrt(distanceSqr);
-					float3_t reflectedVelocity = math::reflect(particles.velocity[p], colliderNormal);
+					float3_t reflectedVelocity = math::reflect(particleVelocity, colliderNormal);
 
 					float3_t slideVector = math::safeNormalize(closestPointOnPlane(closestPoint + particleForceDirection, collider) - closestPoint);
 					float_t slideFactor = math::dot(particleForceDirection, slideVector) * particleForceLength * distance / particleRadius;
 					float_t bounce = colliderBounce * particleBounceCurve.at(particles.life[p]);
 					float_t friction = std::min(colliderFriction * particleFrictionCurve.at(particles.life[p]), 1.0);
 
-					particles.velocity[p] = reflectedVelocity * bounce;
-					particles.velocity[p] += slideVector * slideFactor * (1.0 - friction);
+					particles.velocity[p] = invParentTransform * (reflectedVelocity * bounce + slideVector * slideFactor * (1.0 - friction));
 					particles.position[p] += invParentTransform * (colliderNormal * (particleRadius - distance));
 				}
 			}
 			else {
 				std::optional<float3_t> intersection = rayColliderIntersection(collider,
-					particles.globalPosition[p], particles.globalPosition[p] + particles.velocity[p] * dt + particles.force[p] * dt * dt);
+					particlePosition, particlePosition + particleVelocity * dt + particleForce * dt * dt);
 
 				if(intersection) {
 					if(collider.killOnContact) {
 						particles.life[p] = 1.0;
 					}
 					else {
-						float3_t reflectedVelocity = math::reflect(particles.velocity[p], colliderNormal);
+						float3_t reflectedVelocity = math::reflect(particleVelocity, colliderNormal);
 						float_t bounce = colliderBounce * particleBounceCurve.at(particles.life[p]);
 
-						particles.velocity[p] = reflectedVelocity * bounce;
+						particles.velocity[p] = invParentTransform * reflectedVelocity * bounce;
 					}
 				}
 			}

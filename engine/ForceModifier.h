@@ -26,21 +26,21 @@ private:
 	struct AccelerationFieldData {
 		AccelerationField forceField;
 		std::vector<float_t> strengthGrid;
-		std::vector<matrix4_t> directionMatrixGrid;
+		std::vector<matrix3_t> directionMatrixGrid;
 	};
 
 	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
-		const ParticleType& particleType, const AttractionField& attractionField, const SceneGraph& sceneGraph) const;
+		const ParticleType& particleType, id_t particleEmitterId, const AttractionField& attractionField, const SceneGraph& sceneGraph) const;
 	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
-		const ParticleType& particleType, const AccelerationFieldData& accelerationField, const SceneGraph& sceneGraph) const;
+		const ParticleType& particleType, id_t particleEmitterId, const AccelerationFieldData& accelerationField, const SceneGraph& sceneGraph) const;
 	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
-		const ParticleType& particleType, const VectorField& vectorField, const SceneGraph& sceneGraph) const;
+		const ParticleType& particleType, id_t particleEmitterId, const VectorField& vectorField, const SceneGraph& sceneGraph) const;
 	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
-		const ParticleType& particleType, const NoiseField& noiseField, const SceneGraph& sceneGraph) const;
+		const ParticleType& particleType, id_t particleEmitterId, const NoiseField& noiseField, const SceneGraph& sceneGraph) const;
 	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
-		const ParticleType& particleType, const DragField& dragField, const SceneGraph& sceneGraph) const;
+		const ParticleType& particleType, id_t particleEmitterId, const DragField& dragField, const SceneGraph& sceneGraph) const;
 	void applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
-		const ParticleType& particleType, const VortexField& vortexField, const SceneGraph& sceneGraph) const;
+		const ParticleType& particleType, id_t particleEmitterId, const VortexField& vortexField, const SceneGraph& sceneGraph) const;
 
 	float3_t computeStaticCurlNoise2d(const float2_t& samplePosition, std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;
 	float3_t computeStaticCurlNoise3d(const float3_t& samplePosition, std::uint32_t octaves, float_t frequency, float_t persistence, float_t lacunarity) const;

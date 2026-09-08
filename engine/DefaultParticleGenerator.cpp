@@ -295,6 +295,8 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 		parentVelocity = parentParticles.velocity[parentParticle];
 	}
 
+	matrix3_t parentRotation = matrix3_t(parentTransform); // TODO: remove scale
+
 	float_t parentSpeed = math::length(parentVelocity);
 	float3_t parentDirection = parentSpeed != 0.0 ? parentVelocity / parentSpeed : worldUpVector3;
 
@@ -386,34 +388,36 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 
 		particleSpawnPosition /= math::max(emitterEmissionData.globalScale, float3_t(0.000001));
 
-		matrix3_t directionMatrix = matrix3_t(math::yawPitchRollRotationMatrix(
+		matrix4_t directionMatrix = math::yawPitchRollRotationMatrix(
 			effect3d ? math::radians(emitterEmissionData.direction.y + emitterEmissionData.spread * rng.next(-0.5, 0.5)) : 0.0,
 			effect3d ? math::radians(emitterEmissionData.direction.z + emitterEmissionData.spread * rng.next(-0.5, 0.5)) : 0.0,
-			math::radians(emitterEmissionData.direction.x + emitterEmissionData.spread * rng.next(-0.5, 0.5))));
+			math::radians(emitterEmissionData.direction.x + emitterEmissionData.spread * rng.next(-0.5, 0.5)));
 
 		switch(emitterEmissionData.directionMode) {
 			case ParticleEmitter::DirectionMode::outwards:
-				particles.velocity[p] = emitterEmissionData.globalRotationMatrix * directionMatrix *
-					((particleSpawnPosition != float3_t(0.0)) ? math::normalize(particleSpawnPosition) : worldUpVector3);
+				particles.velocity[p] = particleSpawnPosition != float3_t(0.0) ? math::normalize(particleSpawnPosition) : worldUpVector3;
 				break;
 			case ParticleEmitter::DirectionMode::inwards:
-				particles.velocity[p] = emitterEmissionData.globalRotationMatrix * directionMatrix *
-					((particleSpawnPosition != float3_t(0.0)) ? math::normalize(-particleSpawnPosition) : worldUpVector3);
+				particles.velocity[p] = particleSpawnPosition != float3_t(0.0) ? math::normalize(-particleSpawnPosition) : worldUpVector3;
 				break;
 			case ParticleEmitter::DirectionMode::inherit:
-				particles.velocity[p] = directionMatrix * parentDirection;
+				particles.velocity[p] = parentDirection;
 				break;
 			case ParticleEmitter::DirectionMode::inherit_inverse:
-				particles.velocity[p] = directionMatrix * -parentDirection;
+				particles.velocity[p] = -parentDirection;
 				break;
 			default:
-				particles.velocity[p] = emitterEmissionData.globalRotationMatrix * directionMatrix * worldUpVector3;
+				particles.velocity[p] = worldUpVector3;
 				break;
 		}
 
+		// TODO: use scale here?
+		particles.velocity[p] = float3_t(parentTransform * directionMatrix * float4_t(particles.velocity[p], 0.0));
 		particles.velocity[p] *= math::linearInterpolation(ptypeEmissionData.initialVelocity, parentSpeed, ptypeEmissionData.inheritedVelocity) +
 			rng.next(-ptypeEmissionData.velocityVariance, ptypeEmissionData.velocityVariance);
+
 		particles.force[p] = float3_t(0.0);
+
 		particles.position[p] = float3_t(parentTransform * float4_t(particleSpawnPosition, 1.0));
 		particles.globalPosition[p] = ptypeEmissionData.localCoords
 			? float3_t(emitterEmissionData.globalTransform * float4_t(particles.position[p], 1.0))
