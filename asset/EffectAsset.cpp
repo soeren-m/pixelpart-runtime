@@ -993,7 +993,14 @@ void migrateEffectAssetJson(nlohmann::ordered_json& jsonData) {
 			}
 
 			jParticleType["display_order"] = particleTypeDisplayOrderPerParent[parentId]++;
+
+			jParticleType["simulation_space"] = jParticleType.value("position_relative", false)
+				? "local"
+				: "global";
+			jParticleType.erase("position_relative");
+
 			jParticleType["lod_strategy"] = nlohmann::ordered_json::array();
+
 			jParticleType["trail_renderer_settings"]["texture_mode"] = "stretch";
 		}
 

@@ -4,6 +4,8 @@
 #include "LineQueryGrid.h"
 #include "../effect/LineCollider.h"
 #include "../effect/PlaneCollider.h"
+#include "../effect/ParticleEmitter.h"
+#include "../effect/ParticleType.h"
 #include "../effect/Curve.h"
 #include "../effect/Transform.h"
 #include "../types/Types.h"
@@ -60,8 +62,12 @@ private:
 	static std::optional<float3_t> rayColliderIntersection(const Line2dColliderObject& collider, const float2_t& rayOrigin, const float2_t& rayEnd);
 	static std::optional<float3_t> rayColliderIntersection(const Plane3dColliderObject& collider, const float3_t& rayOrigin, const float3_t& rayEnd);
 
-	void calculateCollisions2d(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const ParticleType& particleType, const EffectRuntimeContext& runtimeContext) const;
-	void calculateCollisions3d(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const ParticleType& particleType, const EffectRuntimeContext& runtimeContext) const;
+	void calculateCollisions2d(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+		const Effect* effect, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+		const EffectRuntimeContext& runtimeContext) const;
+	void calculateCollisions3d(ParticleCollection::WritePtr particles, std::uint32_t particleCount,
+		const Effect* effect, const ParticleEmitter& particleEmitter, const ParticleType& particleType,
+		const EffectRuntimeContext& runtimeContext) const;
 
 	std::vector<Line2dColliderObject> modifierLine2dColliders;
 	std::vector<Plane3dColliderObject> modifierPlane3dColliders;

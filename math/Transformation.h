@@ -207,6 +207,27 @@ matrix4x4<T> lookAtMatrix(const vector3<T>& eye, const vector3<T>& center, const
 }
 
 template <typename T>
+matrix4x4<T> normalizeTransformationMatrix(const matrix4x4<T>& m) {
+	constexpr T epsilon = 0.000001;
+
+	T sx = length(m[0]);
+	T sy = length(m[1]);
+	T sz = length(m[2]);
+	if(sx < epsilon || sy < epsilon || sz < epsilon) {
+		sx = 1.0;
+		sy = 1.0;
+		sz = 1.0;
+	}
+
+	matrix4x4<T> result = m;
+	result[0] /= sx;
+	result[1] /= sy;
+	result[2] /= sz;
+
+	return result;
+}
+
+template <typename T>
 void extractYawPitchRoll(const matrix4x4<T>& m, T& yaw, T& pitch, T& roll) {
 	T t1 = std::atan2(m[2][0], m[2][2]);
 	T c2 = std::sqrt(m[0][1] * m[0][1] + m[1][1] * m[1][1]);

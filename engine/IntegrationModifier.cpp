@@ -1,7 +1,9 @@
 #include "IntegrationModifier.h"
 #include "../effect/ParticleType.h"
 #include "../effect/ParticleEmitter.h"
+#include "../effect/ParticleSimulationSpace.h"
 #include "../types/Types.h"
+#include "../math/Transformation.h"
 #include <algorithm>
 
 namespace pixelpart {
@@ -17,14 +19,16 @@ void IntegrationModifier::apply(ParticleCollection::WritePtr particles, std::uin
 		particles.position[p] += particles.velocity[p] * dt;
 	}
 
-	std::copy(particles.position, particles.position + particleCount, particles.globalPosition);
-
-	if(particleType.positionRelative()) {
-		float3_t origin = effect->sceneGraph().globalTransform(particleEmitter.id(), runtimeContext).position();
+	if(particleType.simulationSpace() == ParticleSimulationSpace::local) {
+		matrix4_t localToGlobalTransform = math::normalizeTransformationMatrix(
+			effect->sceneGraph().globalTransform(particleEmitter.id(), runtimeContext).matrix());
 
 		for(std::uint32_t p = 0; p < particleCount; p++) {
-			particles.globalPosition[p] += origin;
+			particles.globalPosition[p] = float3_t(localToGlobalTransform * float4_t(particles.position[p], 1.0));
 		}
+	}
+	else {
+		std::copy(particles.position, particles.position + particleCount, particles.globalPosition);
 	}
 }
 

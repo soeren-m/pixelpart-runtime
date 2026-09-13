@@ -24,10 +24,10 @@ public:
 
 private:
 	struct ParticleEmitterEmissionData {
-		Transform globalTransform;
-		Transform globalPrevTransform;
+		matrix4_t globalTransform;
+		matrix4_t invGlobalTransform;
+		matrix4_t localTransform;
 		float3_t globalPosition;
-		float3_t globalRotation;
 		float3_t globalScale;
 		matrix3_t globalRotationMatrix;
 		ParticleEmitter::Shape shape;
@@ -41,7 +41,7 @@ private:
 		float_t spread;
 		float3_t velocity;
 
-		ParticleEmitterEmissionData(const Effect* effect, id_t particleEmitterId, EffectRuntimeContext runtimeContext, bool useTriggers);
+		ParticleEmitterEmissionData(const Effect* effect, id_t particleEmitterId, EffectRuntimeContext runtimeContext, bool useTriggers, const Transform& prevTransform);
 	};
 
 	struct ParticleTypeEmissionData {

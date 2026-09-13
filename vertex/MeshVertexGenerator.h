@@ -76,6 +76,7 @@ private:
 		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
 
 	static matrix4_t particleTransformationMatrix(AlignmentMode alignmentMode, const float3_t& pivot,
+		const matrix3_t& simulationSpaceToGlobalMatrix,
 		const float3_t& emitterPosition, const matrix3_t& emitterRotation,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleIndex);
 

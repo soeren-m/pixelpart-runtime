@@ -83,11 +83,11 @@ std::uint32_t ParticleType::displayOrder() const {
 	return particleTypeDisplayOrder;
 }
 
-void ParticleType::positionRelative(bool relative) {
-	particlePositionRelative = relative;
+void ParticleType::simulationSpace(ParticleSimulationSpace space) {
+	particleSimulationSpace = space;
 }
-bool ParticleType::positionRelative() const {
-	return particlePositionRelative;
+ParticleSimulationSpace ParticleType::simulationSpace() const {
+	return particleSimulationSpace;
 }
 
 std::vector<ParticleLodStrategy>& ParticleType::lodStrategy() {
@@ -384,7 +384,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "name", particleType.name() },
 		{ "display_order", particleType.displayOrder() },
 
-		{ "position_relative", particleType.positionRelative() },
+		{ "simulation_space", particleType.simulationSpace() },
 		{ "lod_strategy", particleType.lodStrategy() },
 		{ "rotation_mode", particleType.rotationMode() },
 		{ "alignment_mode", particleType.alignmentMode() },
@@ -437,7 +437,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	particleType.name(j.value("name", ""));
 	particleType.displayOrder(j.value("display_order", 0u));
 
-	particleType.positionRelative(j.value("position_relative", false));
+	particleType.simulationSpace(j.value("simulation_space", ParticleSimulationSpace::global));
 	particleType.lodStrategy() = j.value("lod_strategy", std::vector<ParticleLodStrategy>());
 	particleType.rotationMode(j.value("rotation_mode", RotationMode::angle));
 	particleType.alignmentMode(j.value("alignment_mode", AlignmentMode::camera));

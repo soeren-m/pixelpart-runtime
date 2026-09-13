@@ -1,7 +1,9 @@
 #include "DefaultParticleGenerator.h"
+#include "../effect/ParticleSimulationSpace.h"
 #include "../effect/Coordinates.h"
 #include "../effect/Curve.h"
 #include "../math/Common.h"
+#include "../math/MatrixCommon.h"
 #include "../math/Constants.h"
 #include "../math/Geometry.h"
 #include "../math/Trigonometry.h"
@@ -64,7 +66,7 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 
 		std::uint32_t emittedParticleCount = static_cast<std::uint32_t>(std::max(emissionState.emissionCount, 0.0));
 		if(emittedParticleCount > 0) {
-			ParticleEmitterEmissionData emitterEmissionData(effect, emissionPair.emitterId, runtimeContext, true);
+			ParticleEmitterEmissionData emitterEmissionData(effect, emissionPair.emitterId, runtimeContext, true, emissionState.emitterPrevTransform);
 			ParticleTypeEmissionData ptypeEmissionData(effect, emissionPair, runtimeContext, true);
 
 			emissionState.emissionCount -= static_cast<float_t>(initializeParticles(emittedParticleCount, lodStrategy.lifetimeFactor(),
@@ -124,7 +126,7 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 			float_t lodEmissionFactor = childParticleType.lodStrategy(runtimeContext.lod()).emissionFactor();
 			float_t lodLifetimeFactor = childParticleType.lodStrategy(runtimeContext.lod()).lifetimeFactor();
 
-			ParticleEmitterEmissionData childEmitterEmissionData(effect, childEmissionPair.emitterId, runtimeContext, false);
+			ParticleEmitterEmissionData childEmitterEmissionData(effect, childEmissionPair.emitterId, runtimeContext, false, childEmissionState.emitterPrevTransform);
 			ParticleTypeEmissionData childPTypeEmissionData(effect, childEmissionPair, runtimeContext, false);
 
 			for(std::uint32_t p = 0; p < particleCollection.count(); p++) {
@@ -177,6 +179,10 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state,
 		}
 	}
 
+	for(auto& [emissionPair, emissionState] : state.particleEmissionStates()) {
+		emissionState.emitterPrevTransform = effect->sceneGraph().globalTransform(emissionPair.emitterId, runtimeContext);
+	}
+
 	for(auto& [emissionPair, particleCollection] : state.particleCollections()) {
 		particleCollection.removeDead();
 	}
@@ -203,7 +209,7 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state, std::uint32_t
 		return;
 	}
 
-	ParticleEmitterEmissionData emitterEmissionData(effect, emissionPair.emitterId, runtimeContext, false);
+	ParticleEmitterEmissionData emitterEmissionData(effect, emissionPair.emitterId, runtimeContext, false, particleEmissionState->emitterPrevTransform);
 	ParticleTypeEmissionData ptypeEmissionData(effect, emissionPair, runtimeContext, false);
 
 	initializeParticles(count, 1.0,
@@ -213,19 +219,19 @@ void DefaultParticleGenerator::generate(EffectRuntimeState& state, std::uint32_t
 		emitterEmissionData, ptypeEmissionData);
 }
 
-DefaultParticleGenerator::ParticleEmitterEmissionData::ParticleEmitterEmissionData(const Effect* effect, id_t particleEmitterId, EffectRuntimeContext runtimeContext, bool useTriggers) {
+DefaultParticleGenerator::ParticleEmitterEmissionData::ParticleEmitterEmissionData(const Effect* effect, id_t particleEmitterId, EffectRuntimeContext runtimeContext, bool useTriggers, const Transform& prevTransform) {
 	const ParticleEmitter& particleEmitter = effect->sceneGraph().at<ParticleEmitter>(particleEmitterId);
-
-	EffectRuntimeContext prevRuntimeContext(runtimeContext.time() - 0.1);
-	prevRuntimeContext.triggerActivationTimes() = runtimeContext.triggerActivationTimes();
 
 	float_t life = particleEmitter.life(runtimeContext, useTriggers);
 
-	globalTransform = effect->sceneGraph().globalTransform(particleEmitterId, runtimeContext, useTriggers);
-	globalPrevTransform = effect->sceneGraph().globalTransform(particleEmitterId, prevRuntimeContext, useTriggers);
-	globalPosition = globalTransform.position();
-	globalRotation = math::radians(globalTransform.rotation());
-	globalScale = globalTransform.scale();
+	Transform transform = effect->sceneGraph().globalTransform(particleEmitterId, runtimeContext, useTriggers);
+	float3_t globalRotation = math::radians(transform.rotation());
+
+	globalTransform = math::normalizeTransformationMatrix(transform.matrix());
+	invGlobalTransform = math::inverse(globalTransform);
+	localTransform = math::normalizeTransformationMatrix(particleEmitter.transform(runtimeContext, false).matrix());
+	globalPosition = transform.position();
+	globalScale = transform.scale();
 	globalRotationMatrix = matrix3_t(math::yawPitchRollRotationMatrix(globalRotation.y, globalRotation.z, globalRotation.x));
 	shape = particleEmitter.shape();
 	path = particleEmitter.path();
@@ -238,7 +244,7 @@ DefaultParticleGenerator::ParticleEmitterEmissionData::ParticleEmitterEmissionDa
 	directionMode = particleEmitter.directionMode();
 	direction = particleEmitter.direction().at(life);
 	spread = particleEmitter.spread().at(life);
-	velocity = (globalPosition - globalPrevTransform.position()) / (particleEmitter.lifetimeDuration() * 0.1);
+	velocity = float3_t(invGlobalTransform * float4_t((globalPosition - prevTransform.position()) / runtimeContext.deltaTime(), 0.0));
 }
 
 DefaultParticleGenerator::ParticleTypeEmissionData::ParticleTypeEmissionData(const Effect* effect, ParticleEmissionPair emissionPair, EffectRuntimeContext runtimeContext, bool useTriggers) {
@@ -247,7 +253,7 @@ DefaultParticleGenerator::ParticleTypeEmissionData::ParticleTypeEmissionData(con
 
 	float_t emitterLife = particleEmitter.life(runtimeContext, useTriggers);
 
-	localCoords = particleType.positionRelative();
+	localCoords = particleType.simulationSpace() == ParticleSimulationSpace::local;
 	lifespan = particleType.lifespan().at(emitterLife);
 	lifespanVariance = particleType.lifespanVariance().value();
 	initialVelocity = particleType.initialVelocity().at(emitterLife);
@@ -272,22 +278,24 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 	const ParticleEmitterEmissionData& emitterEmissionData,
 	const ParticleTypeEmissionData& ptypeEmissionData) {
 	bool effect3d = effect->is3d();
-	std::uint32_t parentId = id_t::nullValue;
 
-	float3_t emissionPosition;
+	std::uint32_t parentId = id_t::nullValue;
+	matrix4_t localToSimulationSpaceTransform;
 	float3_t parentVelocity;
 
 	if(parentParticle == id_t::nullValue) {
-		emissionPosition = !ptypeEmissionData.localCoords ? emitterEmissionData.globalPosition : float3_t(0.0);
+		localToSimulationSpaceTransform = !ptypeEmissionData.localCoords ? emitterEmissionData.globalTransform : matrix4_t(1.0);
 		parentVelocity = emitterEmissionData.velocity;
 	}
 	else {
 		ParticleCollection::ReadPtr parentParticles = parentParticleCollection->readPtr();
-		Transform localEmitterTransform = effect->sceneGraph().localTransform(emissionPair.emitterId, runtimeContext, false);
-
-		emissionPosition = parentParticles.globalPosition[parentParticle] + localEmitterTransform.position() +
-			(ptypeEmissionData.localCoords ? -emitterEmissionData.globalPosition : float3_t(0.0));
 		parentId = parentParticles.id[parentParticle];
+
+		localToSimulationSpaceTransform = math::translationMatrix(parentParticles.globalPosition[parentParticle]) * emitterEmissionData.localTransform;
+		if(ptypeEmissionData.localCoords) {
+			localToSimulationSpaceTransform = emitterEmissionData.invGlobalTransform * localToSimulationSpaceTransform;
+		}
+
 		parentVelocity = parentParticles.velocity[parentParticle];
 	}
 
@@ -310,6 +318,7 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 		particles.lifespan[p] = std::max((ptypeEmissionData.lifespan + rng.next(-ptypeEmissionData.lifespanVariance, ptypeEmissionData.lifespanVariance)) * lifetimeFactor, 0.000001);
 
 		float3_t particleSpawnPosition = float3_t(0.0);
+
 		switch(emitterEmissionData.shape) {
 			case ParticleEmitter::Shape::line:
 				particleSpawnPosition = emitOnSegment(
@@ -379,39 +388,38 @@ std::uint32_t DefaultParticleGenerator::initializeParticles(std::uint32_t count,
 				break;
 		}
 
-		particleSpawnPosition = emitterEmissionData.globalRotationMatrix * particleSpawnPosition;
-
-		matrix3_t directionMatrix = matrix3_t(math::yawPitchRollRotationMatrix(
+		matrix4_t directionMatrix = math::yawPitchRollRotationMatrix(
 			effect3d ? math::radians(emitterEmissionData.direction.y + emitterEmissionData.spread * rng.next(-0.5, 0.5)) : 0.0,
 			effect3d ? math::radians(emitterEmissionData.direction.z + emitterEmissionData.spread * rng.next(-0.5, 0.5)) : 0.0,
-			math::radians(emitterEmissionData.direction.x + emitterEmissionData.spread * rng.next(-0.5, 0.5))));
+			math::radians(emitterEmissionData.direction.x + emitterEmissionData.spread * rng.next(-0.5, 0.5)));
 
 		switch(emitterEmissionData.directionMode) {
 			case ParticleEmitter::DirectionMode::outwards:
-				particles.velocity[p] = directionMatrix *
-					((particleSpawnPosition != float3_t(0.0)) ? math::normalize(particleSpawnPosition) : worldUpVector3);
+				particles.velocity[p] = particleSpawnPosition != float3_t(0.0) ? math::normalize(particleSpawnPosition) : worldUpVector3;
 				break;
 			case ParticleEmitter::DirectionMode::inwards:
-				particles.velocity[p] = directionMatrix *
-					((particleSpawnPosition != float3_t(0.0)) ? math::normalize(-particleSpawnPosition) : worldUpVector3);
+				particles.velocity[p] = particleSpawnPosition != float3_t(0.0) ? math::normalize(-particleSpawnPosition) : worldUpVector3;
 				break;
 			case ParticleEmitter::DirectionMode::inherit:
-				particles.velocity[p] = directionMatrix * parentDirection;
+				particles.velocity[p] = parentDirection;
 				break;
 			case ParticleEmitter::DirectionMode::inherit_inverse:
-				particles.velocity[p] = directionMatrix * -parentDirection;
+				particles.velocity[p] = -parentDirection;
 				break;
 			default:
-				particles.velocity[p] = emitterEmissionData.globalRotationMatrix * directionMatrix * worldUpVector3;
+				particles.velocity[p] = worldUpVector3;
 				break;
 		}
 
+		particles.velocity[p] = float3_t(localToSimulationSpaceTransform * directionMatrix * float4_t(particles.velocity[p], 0.0));
 		particles.velocity[p] *= math::linearInterpolation(ptypeEmissionData.initialVelocity, parentSpeed, ptypeEmissionData.inheritedVelocity) +
 			rng.next(-ptypeEmissionData.velocityVariance, ptypeEmissionData.velocityVariance);
+
 		particles.force[p] = float3_t(0.0);
-		particles.position[p] = emissionPosition + particleSpawnPosition;
+
+		particles.position[p] = float3_t(localToSimulationSpaceTransform * float4_t(particleSpawnPosition, 1.0));
 		particles.globalPosition[p] = ptypeEmissionData.localCoords
-			? particles.position[p] + emitterEmissionData.globalPosition
+			? float3_t(emitterEmissionData.globalTransform * float4_t(particles.position[p], 1.0))
 			: particles.position[p];
 
 		particles.initialRotation[p] = ptypeEmissionData.initialRotation + float3_t(

@@ -230,6 +230,10 @@ void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Verte
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
+	matrix3_t simulationSpaceToGlobalMatrix = particleType.simulationSpace() == ParticleSimulationSpace::local
+		? matrix3_t(math::normalizeTransformationMatrix(emitterTransform.matrix()))
+		: matrix3_t(1.0);
+
 	math::vector2<float> emitterPosition(emitterTransform.position());
 	math::matrix3x3<float> emitterRotationMatrix(rotationMatrix3d(emitterTransform.rotation()));
 
@@ -245,11 +249,12 @@ void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Verte
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		switch(particleType.alignmentMode()) {
 			case AlignmentMode::motion: {
+				float3_t globalVelocity = simulationSpaceToGlobalMatrix * particles.velocity[p];
 				math::vector2<float> particlePosition(particles.globalPosition[p]);
 				math::vector2<float> particleSize(particles.size[p]);
 				math::vector2<float> particlePivot = math::vector2<float>(pivot) * particleSize;
-				float angle = math::radians(static_cast<float>(particles.rotation[p].x) + math::degrees(math::orientedAngle(math::vector2<float>(worldUpVector2), particles.velocity[p] != float3_t(0.0)
-					? math::vector2<float>(math::normalize(particles.velocity[p]))
+				float angle = math::radians(static_cast<float>(particles.rotation[p].x) + math::degrees(math::orientedAngle(math::vector2<float>(worldUpVector2), globalVelocity != float3_t(0.0)
+					? math::vector2<float>(math::normalize(globalVelocity))
 					: math::vector2<float>(worldUpVector2))));
 				vertexPositions[0] = particlePosition + math::rotatePoint(math::vector2<float>(-0.5f, -0.5f) * particleSize, particlePivot, angle);
 				vertexPositions[1] = particlePosition + math::rotatePoint(math::vector2<float>(+0.5f, -0.5f) * particleSize, particlePivot, angle);
@@ -347,6 +352,9 @@ void SpriteVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Verte
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
 	float3_t emitterPosition = emitterTransform.position();
 	math::matrix3x3<float> emitterRotationMatrix(rotationMatrix3d(emitterTransform.rotation()));
+	matrix3_t simulationSpaceToGlobalMatrix = particleType.simulationSpace() == ParticleSimulationSpace::local
+		? matrix3_t(math::normalizeTransformationMatrix(emitterTransform.matrix()))
+		: matrix3_t(1.0);
 
 	AlignmentMode alignmentMode = particleType.alignmentMode();
 	math::vector3<float> pivot(particleType.pivot().value());
@@ -380,7 +388,8 @@ void SpriteVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Verte
 				break;
 			}
 			case AlignmentMode::motion: {
-				math::matrix3x3<float> lookAtMatrix(math::transpose(math::lookAtMatrix(particles.velocity[p] * sceneContext.effectScale, worldUpVector3)));
+				float3_t globalVelocity = simulationSpaceToGlobalMatrix * particles.velocity[p];
+				math::matrix3x3<float> lookAtMatrix(math::transpose(math::lookAtMatrix(globalVelocity * sceneContext.effectScale, worldUpVector3)));
 				vertexPositions[0] = particlePosition * scale + lookAtMatrix * vertexPositions[0];
 				vertexPositions[1] = particlePosition * scale + lookAtMatrix * vertexPositions[1];
 				vertexPositions[2] = particlePosition * scale + lookAtMatrix * vertexPositions[2];
@@ -459,6 +468,10 @@ void SpriteVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAtt
 	math::vector3<float> cameraPosition(sceneContext.cameraPosition);
 
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
+	matrix3_t simulationSpaceToGlobalMatrix = particleType.simulationSpace() == ParticleSimulationSpace::local
+		? matrix3_t(math::normalizeTransformationMatrix(emitterTransform.matrix()))
+		: matrix3_t(1.0);
+
 	math::vector3<float> emitterPosition(emitterTransform.position());
 	math::matrix3x3<float> emitterRotationMatrix(rotationMatrix3d(emitterTransform.rotation()));
 
@@ -476,7 +489,7 @@ void SpriteVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAtt
 				particleNormal = cameraPosition - math::vector3<float>(particles.globalPosition[p]);
 				break;
 			case AlignmentMode::motion:
-				particleNormal = math::transpose(math::lookAtMatrix(math::vector3<float>(particles.velocity[p]), upVector3)) * particleNormal;
+				particleNormal = math::transpose(math::lookAtMatrix(math::vector3<float>(simulationSpaceToGlobalMatrix * particles.velocity[p]), upVector3)) * particleNormal;
 				break;
 			case AlignmentMode::emission:
 				particleNormal = math::transpose(math::lookAtMatrix(emitterPosition - math::vector3<float>(particles.globalPosition[p]), upVector3)) * particleNormal;
