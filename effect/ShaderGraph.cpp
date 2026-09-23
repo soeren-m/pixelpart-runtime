@@ -153,21 +153,17 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 
 	for(std::size_t inputSlot = 0; inputSlot < node.inputs().size(); inputSlot++) {
 		const ShaderNode::Link& link = node.inputs()[inputSlot];
+		if(!link.id || graphNodes.count(link.nodeId) == 0) {
+			continue;
+		}
+
 		if(typeMatch[inputSlot] == TypeMatch::none) {
 			throw BuildException("Types do not match", nodeId, static_cast<std::uint32_t>(inputSlot));
 		}
 
-		VariantValue::Type sourceValueType = VariantValue::type_null;
-
-		if(graphNodes.count(link.nodeId) != 0) {
-			const ShaderNodeType& sourceNodeType = nodeType(link.nodeId);
-			const ShaderNodeType::Signature& sourceNodeSignature = sourceNodeType.signatures[result.nodeSignatures[link.nodeId]];
-
-			sourceValueType = sourceNodeSignature.outputTypes[link.slot];
-		}
-		else {
-			sourceValueType = shaderNodeType.defaultInputs[inputSlot].type();
-		}
+		const ShaderNodeType& sourceNodeType = nodeType(link.nodeId);
+		const ShaderNodeType::Signature& sourceNodeSignature = sourceNodeType.signatures[result.nodeSignatures[link.nodeId]];
+		VariantValue::Type sourceValueType = sourceNodeSignature.outputTypes[link.slot];
 
 		std::string inputVariableTemplate = "{in" + serializeInt(inputSlot) + "}";
 
@@ -177,7 +173,7 @@ std::string ShaderGraph::build(BuildResult& result, id_t nodeId) const {
 			code = replaceString(code, codeTypeCast, inputVariableTemplate);
 		}
 
-		code = replaceString(code, result.nodeOutputVariables[link.nodeId][link.slot], inputVariableTemplate);
+		code = replaceString(code, result.nodeOutputVariables.at(link.nodeId).at(link.slot), inputVariableTemplate);
 	}
 
 	result.resolvedNodes.insert(nodeId);
