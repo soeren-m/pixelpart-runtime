@@ -127,7 +127,7 @@ void ForceModifier::reset(const Effect* effect, EffectRuntimeContext runtimeCont
 			float_t accelerationDirectionVariance = accelerationField->accelerationDirectionVariance().at(life);
 
 			for(std::uint32_t gridIndex = 0; gridIndex < accelerationStrengthGrid.size(); gridIndex++) {
-				fieldData.strengthGrid[gridIndex] = accelerationStrengthVariance * accelerationStrengthGrid[gridIndex] + 1.0;
+				fieldData.strengthGrid[gridIndex] = accelerationStrengthVariance * accelerationStrengthGrid[gridIndex];
 			}
 
 			for(std::uint32_t gridIndex = 0; gridIndex < accelerationDirectionGrid.size(); gridIndex++) {
@@ -185,11 +185,8 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	const matrix3_t& globalToSimulationSpaceTransform) const {
 	float_t fieldLife = accelerationField.forceField.life(runtimeContext);
 	Transform fieldTransform = sceneGraph.globalTransform(accelerationField.forceField.id(), runtimeContext);
-	float3_t fieldPosition = fieldTransform.position();
-	float3_t fieldSize = fieldTransform.scale() * 0.5;
-	float3_t fieldRotation = math::radians(fieldTransform.rotation());
-	matrix4_t fieldRotationMatrix = math::yawPitchRollRotationMatrix(fieldRotation.y, fieldRotation.z, fieldRotation.x);
-	matrix4_t fieldInverseRotationMatrix = math::transpose(fieldRotationMatrix);
+	matrix3_t fieldRotationMatrix = matrix3_t(math::normalizeTransformationMatrix(fieldTransform.matrix()));
+	matrix4_t fieldInverseTransformMatrix = math::inverse(fieldTransform.matrix());
 	float_t fieldStrength = accelerationField.forceField.strength().at(fieldLife);
 	bool fieldInfinite = accelerationField.forceField.infinite();
 
@@ -203,30 +200,24 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	const Curve<float_t>& particleWeightCurve = particleType.weight().resultCurve();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		float3_t localParticlePosition = float3_t(fieldInverseRotationMatrix * float4_t(particles.globalPosition[p] - fieldPosition, 1.0));
-		if(((localParticlePosition.x < -fieldSize.x || localParticlePosition.x > fieldSize.x) ||
-			(localParticlePosition.y < -fieldSize.y || localParticlePosition.y > fieldSize.y) ||
-			(localParticlePosition.z < -fieldSize.z || localParticlePosition.z > fieldSize.z)) && !fieldInfinite) {
+		float3_t localParticlePosition = float3_t(fieldInverseTransformMatrix * float4_t(particles.globalPosition[p], 1.0));
+		if((localParticlePosition.x < -0.5 || localParticlePosition.x > 0.5 ||
+			localParticlePosition.y < -0.5 || localParticlePosition.y > 0.5 ||
+			localParticlePosition.z < -0.5 || localParticlePosition.z > 0.5) && !fieldInfinite) {
 			continue;
 		}
 
-		std::int32_t gridCellX = fieldSize.x > 0.0
-			? std::clamp(static_cast<std::int32_t>((localParticlePosition.x + fieldSize.x) / (fieldSize.x * 2.0) * static_cast<float_t>(accelerationGridSizeX)), 0, accelerationGridSizeX - 1)
-			: 0;
-		std::int32_t gridCellY = fieldSize.y > 0.0
-			? std::clamp(static_cast<std::int32_t>((localParticlePosition.y + fieldSize.y) / (fieldSize.y * 2.0) * static_cast<float_t>(accelerationGridSizeY)), 0, accelerationGridSizeY - 1)
-			: 0;
-		std::int32_t gridCellZ = fieldSize.z > 0.0
-			? std::clamp(static_cast<std::int32_t>((localParticlePosition.z + fieldSize.z) / (fieldSize.z * 2.0) * static_cast<float_t>(accelerationGridSizeZ)), 0, accelerationGridSizeZ - 1)
-			: 0;
+		std::int32_t gridCellX = std::clamp(static_cast<std::int32_t>((localParticlePosition.x + 0.5) * static_cast<float_t>(accelerationGridSizeX)), 0, accelerationGridSizeX - 1);
+		std::int32_t gridCellY = std::clamp(static_cast<std::int32_t>((localParticlePosition.y + 0.5) * static_cast<float_t>(accelerationGridSizeY)), 0, accelerationGridSizeY - 1);
+		std::int32_t gridCellZ = std::clamp(static_cast<std::int32_t>((localParticlePosition.z + 0.5) * static_cast<float_t>(accelerationGridSizeZ)), 0, accelerationGridSizeZ - 1);
 		std::uint32_t gridCellIndex = static_cast<std::uint32_t>(
 			gridCellZ * accelerationGridSizeY * accelerationGridSizeX +
 			gridCellY * accelerationGridSizeX +
 			gridCellX);
 
-		float3_t forceVector = float3_t(globalToSimulationSpaceTransform * matrix3_t(fieldRotationMatrix) * accelerationField.directionMatrixGrid[gridCellIndex] * accelerationDirectionMatrix * worldUpVector3);
+		float3_t forceVector = float3_t(globalToSimulationSpaceTransform * fieldRotationMatrix * accelerationField.directionMatrixGrid[gridCellIndex] * accelerationDirectionMatrix * worldUpVector3);
 
-		particles.force[p] += forceVector * accelerationField.strengthGrid[gridCellIndex] * fieldStrength * particleWeightCurve.at(particles.life[p]);
+		particles.force[p] += forceVector * (accelerationField.strengthGrid[gridCellIndex] + fieldStrength) * particleWeightCurve.at(particles.life[p]);
 	}
 }
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
@@ -238,11 +229,8 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 
 	float_t fieldLife = vectorField.life(runtimeContext);
 	Transform fieldTransform = sceneGraph.globalTransform(vectorField.id(), runtimeContext);
-	float3_t fieldPosition = fieldTransform.position();
-	float3_t fieldSize = fieldTransform.scale() * 0.5;
-	float3_t fieldRotation = math::radians(fieldTransform.rotation());
-	matrix4_t fieldRotationMatrix = math::yawPitchRollRotationMatrix(fieldRotation.y, fieldRotation.z, fieldRotation.x);
-	matrix4_t fieldInverseRotationMatrix = math::transpose(fieldRotationMatrix);
+	matrix3_t fieldRotationMatrix = matrix3_t(math::normalizeTransformationMatrix(fieldTransform.matrix()));
+	matrix4_t fieldInverseTransformMatrix = math::inverse(fieldTransform.matrix());
 	float_t fieldStrength = vectorField.strength().at(fieldLife);
 	bool fieldInfinite = vectorField.infinite();
 
@@ -257,15 +245,15 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	const Curve<float_t>& particleWeightCurve = particleType.weight().resultCurve();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		float3_t localParticlePosition = float3_t(fieldInverseRotationMatrix * float4_t(particles.globalPosition[p] - fieldPosition, 1.0));
-		if((localParticlePosition.x < -fieldSize.x || localParticlePosition.x > fieldSize.x ||
-			localParticlePosition.y < -fieldSize.y || localParticlePosition.y > fieldSize.y ||
-			localParticlePosition.z < -fieldSize.z || localParticlePosition.z > fieldSize.z) && !fieldInfinite) {
+		float3_t localParticlePosition = float3_t(fieldInverseTransformMatrix * float4_t(particles.globalPosition[p], 1.0));
+		if((localParticlePosition.x < -0.5 || localParticlePosition.x > 0.5 ||
+			localParticlePosition.y < -0.5 || localParticlePosition.y > 0.5 ||
+			localParticlePosition.z < -0.5 || localParticlePosition.z > 0.5) && !fieldInfinite) {
 			continue;
 		}
 
 		float3_t forceVector = float3_t(0.0);
-		float3_t samplePosition = (localParticlePosition + fieldSize) / (fieldSize * 2.0);
+		float3_t samplePosition = localParticlePosition + float3_t(0.5);
 		float3_t gridSamplePosition = samplePosition * vectorFieldGridSize;
 
 		if(modifierEffect3d) {
@@ -396,7 +384,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 			}
 		}
 
-		forceVector = globalToSimulationSpaceTransform * float3_t(fieldRotationMatrix * float4_t(forceVector, 0.0));
+		forceVector = globalToSimulationSpaceTransform * fieldRotationMatrix * forceVector;
 		forceVector *= fieldStrength * particleWeightCurve.at(particles.life[p]);
 
 		particles.force[p] += forceVector * (1.0 - vectorFieldTightness);
@@ -409,11 +397,8 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	const matrix3_t& globalToSimulationSpaceTransform) const {
 	float_t fieldLife = noiseField.life(runtimeContext);
 	Transform fieldTransform = sceneGraph.globalTransform(noiseField.id(), runtimeContext);
-	float3_t fieldPosition = fieldTransform.position();
-	float3_t fieldSize = fieldTransform.scale() * 0.5;
-	float3_t fieldRotation = math::radians(fieldTransform.rotation());
-	matrix4_t fieldRotationMatrix = math::yawPitchRollRotationMatrix(fieldRotation.y, fieldRotation.z, fieldRotation.x);
-	matrix4_t fieldInverseRotationMatrix = math::transpose(fieldRotationMatrix);
+	matrix3_t fieldRotationMatrix = matrix3_t(math::normalizeTransformationMatrix(fieldTransform.matrix()));
+	matrix4_t fieldInverseTransformMatrix = math::inverse(fieldTransform.matrix());
 	float_t fieldStrength = noiseField.strength().at(fieldLife);
 	bool fieldInfinite = noiseField.infinite();
 
@@ -428,10 +413,10 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	const Curve<float_t>& particleWeightCurve = particleType.weight().resultCurve();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		float3_t localParticlePosition = float3_t(fieldInverseRotationMatrix * float4_t(particles.globalPosition[p] - fieldPosition, 1.0));
-		if(((localParticlePosition.x < -fieldSize.x || localParticlePosition.x > fieldSize.x) ||
-			(localParticlePosition.y < -fieldSize.y || localParticlePosition.y > fieldSize.y) ||
-			(localParticlePosition.z < -fieldSize.z || localParticlePosition.z > fieldSize.z)) && !fieldInfinite) {
+		float3_t localParticlePosition = float3_t(fieldInverseTransformMatrix * float4_t(particles.globalPosition[p], 1.0));
+		if((localParticlePosition.x < -0.5 || localParticlePosition.x > 0.5 ||
+			localParticlePosition.y < -0.5 || localParticlePosition.y > 0.5 ||
+			localParticlePosition.z < -0.5 || localParticlePosition.z > 0.5) && !fieldInfinite) {
 			continue;
 		}
 
@@ -447,7 +432,9 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 				: computeStaticCurlNoise2d(float2_t(localParticlePosition), noiseOctaves, noiseFrequency, noisePersistence, noiseLacunarity);
 		}
 
-		particles.force[p] += (globalToSimulationSpaceTransform * forceVector) * fieldStrength * particleWeightCurve.at(particles.life[p]);
+		forceVector = globalToSimulationSpaceTransform * fieldRotationMatrix * forceVector;
+
+		particles.force[p] += forceVector * fieldStrength * particleWeightCurve.at(particles.life[p]);
 	}
 }
 void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint32_t particleCount, const EffectRuntimeContext& runtimeContext,
@@ -457,11 +444,7 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 
 	float_t fieldLife = dragField.life(runtimeContext);
 	Transform fieldTransform = sceneGraph.globalTransform(dragField.id(), runtimeContext);
-	float3_t fieldPosition = fieldTransform.position();
-	float3_t fieldSize = fieldTransform.scale() * 0.5;
-	float3_t fieldRotation = math::radians(fieldTransform.rotation());
-	matrix4_t fieldRotationMatrix = math::yawPitchRollRotationMatrix(fieldRotation.y, fieldRotation.z, fieldRotation.x);
-	matrix4_t fieldInverseRotationMatrix = math::transpose(fieldRotationMatrix);
+	matrix4_t fieldInverseTransformMatrix = math::inverse(fieldTransform.matrix());
 	float_t fieldStrength = dragField.strength().at(fieldLife);
 	bool fieldInfinite = dragField.infinite();
 
@@ -472,10 +455,10 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	const Curve<float_t>& particlePhysicalSizeCurve = particleType.physicalSize().resultCurve();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		float3_t localParticlePosition = float3_t(fieldInverseRotationMatrix * float4_t(particles.globalPosition[p] - fieldPosition, 1.0));
-		if(((localParticlePosition.x < -fieldSize.x || localParticlePosition.x > fieldSize.x) ||
-			(localParticlePosition.y < -fieldSize.y || localParticlePosition.y > fieldSize.y) ||
-			(localParticlePosition.z < -fieldSize.z || localParticlePosition.z > fieldSize.z)) && !fieldInfinite) {
+		float3_t localParticlePosition = float3_t(fieldInverseTransformMatrix * float4_t(particles.globalPosition[p], 1.0));
+		if((localParticlePosition.x < -0.5 || localParticlePosition.x > 0.5 ||
+			localParticlePosition.y < -0.5 || localParticlePosition.y > 0.5 ||
+			localParticlePosition.z < -0.5 || localParticlePosition.z > 0.5) && !fieldInfinite) {
 			continue;
 		}
 
@@ -496,46 +479,44 @@ void ForceModifier::applyForce(ParticleCollection::WritePtr particles, std::uint
 	const ParticleType& particleType, id_t particleEmitterId, const VortexField& vortexField, const SceneGraph& sceneGraph,
 	const matrix3_t& globalToSimulationSpaceTransform) const {
 	const float_t epsilon = 1.0e-6;
+	const float3_t axis = float3_t(0.0, 0.0, 1.0);
+	const float3_t rightAxis = float3_t(1.0, 0.0, 0.0);
+	const float3_t upAxis = float3_t(0.0, 1.0, 0.0);
 
 	float_t fieldLife = vortexField.life(runtimeContext);
 	Transform fieldTransform = sceneGraph.globalTransform(vortexField.id(), runtimeContext);
-	float3_t fieldPosition = fieldTransform.position();
-	float3_t fieldSize = fieldTransform.scale() * 0.5;
-	float3_t fieldRotation = math::radians(fieldTransform.rotation());
-	matrix3_t fieldRotationMatrix = matrix3_t(math::yawPitchRollRotationMatrix(fieldRotation.y, fieldRotation.z, fieldRotation.x));
+	matrix3_t fieldRotationMatrix = matrix3_t(math::normalizeTransformationMatrix(fieldTransform.matrix()));
+	matrix4_t fieldInverseTransformMatrix = math::inverse(fieldTransform.matrix());
 	float_t fieldStrength = vortexField.strength().at(fieldLife);
 	bool fieldInfinite = vortexField.infinite();
 
-	float3_t axis = fieldRotationMatrix * float3_t(0.0, 0.0, 1.0);
-	float3_t rightAxis = fieldRotationMatrix * float3_t(1.0, 0.0, 0.0);
-	float3_t upAxis = fieldRotationMatrix * float3_t(0.0, 1.0, 0.0);
 	float_t tangentialStrength = vortexField.tangentialStrength().at(fieldLife);
 	float_t radialStrength = vortexField.radialStrength().at(fieldLife);
 
 	const Curve<float_t>& particleWeightCurve = particleType.weight().resultCurve();
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		float3_t centerToParticle = particles.globalPosition[p] - fieldPosition;
+		float3_t localParticlePosition = float3_t(fieldInverseTransformMatrix * float4_t(particles.globalPosition[p], 1.0));
 
-		float_t axisDistance = math::dot(centerToParticle, axis);
+		float_t axisDistance = math::dot(localParticlePosition, axis);
 
-		float_t crossSectionDistanceX = math::dot(centerToParticle, rightAxis);
-		float_t crossSectionDistanceY = math::dot(centerToParticle, upAxis);
+		float_t crossSectionDistanceX = math::dot(localParticlePosition, rightAxis);
+		float_t crossSectionDistanceY = math::dot(localParticlePosition, upAxis);
 		float_t crossSectionDistance =
-			crossSectionDistanceX * crossSectionDistanceX / (fieldSize.x * fieldSize.x) +
-			crossSectionDistanceY * crossSectionDistanceY / (fieldSize.y * fieldSize.y);
+			crossSectionDistanceX * crossSectionDistanceX / 0.25 +
+			crossSectionDistanceY * crossSectionDistanceY / 0.25;
 
-		if((axisDistance < -fieldSize.z || axisDistance > fieldSize.z || crossSectionDistance > 1.0) && !fieldInfinite) {
+		if((axisDistance < -0.5 || axisDistance > 0.5 || crossSectionDistance > 1.0) && !fieldInfinite) {
 			continue;
 		}
 
-		float3_t axisToParticle = centerToParticle - axis * axisDistance;
+		float3_t axisToParticle = localParticlePosition - axis * axisDistance;
 		float_t distanceToAxis = math::length(axisToParticle);
 
 		float3_t radialDirection = axisToParticle / std::max(distanceToAxis, epsilon);
 		float3_t tangentDirection = math::safeNormalize(math::cross(axis, radialDirection));
 
-		float3_t forceVector = globalToSimulationSpaceTransform * (tangentDirection * tangentialStrength - radialDirection * radialStrength);
+		float3_t forceVector = globalToSimulationSpaceTransform * fieldRotationMatrix * (tangentDirection * tangentialStrength - radialDirection * radialStrength);
 
 		particles.force[p] += forceVector * fieldStrength * particleWeightCurve.at(particles.life[p]);
 	}
