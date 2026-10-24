@@ -1012,6 +1012,18 @@ void migrateEffectAssetJson(nlohmann::ordered_json& jsonData) {
 		version = 11;
 		jsonData["version"] = 11;
 	}
+
+	// Migration 1.10.x -> 1.11.x
+	if(version == 11) {
+		for(nlohmann::ordered_json& jParticleType : jsonData["effect"]["particles"]) {
+			// TODO
+			jParticleType["linear_acceleration"] = jParticleType["acceleration"];
+			jParticleType.erase("acceleration");
+		}
+
+		version = 12;
+		jsonData["version"] = 12;
+	}
 }
 }
 
