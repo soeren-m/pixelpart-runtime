@@ -231,7 +231,7 @@ void TrailVertexGenerator::generateVertexData(const VertexDataBufferCollection& 
 			continue;
 		}
 
-		std::uint8_t* buffer = dataBuffers[attribute.bufferIndex];
+		unsigned char* buffer = dataBuffers[attribute.bufferIndex];
 
 		switch(attribute.usage) {
 			case VertexAttributeUsage::index:
@@ -371,7 +371,7 @@ void TrailVertexGenerator::validateVertexFormat() const {
 	}
 }
 
-void TrailVertexGenerator::generatePosition2d(std::uint8_t* buffer, const VertexAttribute& attribute,
+void TrailVertexGenerator::generatePosition2d(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const SceneContext& sceneContext) const {
 	math::vector2<float> vertices[5];
@@ -454,7 +454,7 @@ void TrailVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Vertex
 		}
 	}
 }
-void TrailVertexGenerator::generatePosition3d(std::uint8_t* buffer, const VertexAttribute& attribute,
+void TrailVertexGenerator::generatePosition3d(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
@@ -547,7 +547,7 @@ void TrailVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Vertex
 		}
 	}
 }
-void TrailVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAttribute& attribute,
+void TrailVertexGenerator::generateNormal(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
@@ -626,7 +626,7 @@ void TrailVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAttr
 		}
 	}
 }
-void TrailVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const VertexAttribute& attribute,
+void TrailVertexGenerator::generateTextureCoord(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 	ParticleTrailRendererSettings::TextureMode textureMode =
@@ -751,7 +751,7 @@ void TrailVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const Vert
 		}
 	}
 }
-void TrailVertexGenerator::generateColorFloat(std::uint8_t* buffer, const VertexAttribute& attribute,
+void TrailVertexGenerator::generateColorFloat(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -834,7 +834,7 @@ void TrailVertexGenerator::generateColorFloat(std::uint8_t* buffer, const Vertex
 		}
 	}
 }
-void TrailVertexGenerator::generateColorByte(std::uint8_t* buffer, const VertexAttribute& attribute,
+void TrailVertexGenerator::generateColorByte(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -918,7 +918,7 @@ void TrailVertexGenerator::generateColorByte(std::uint8_t* buffer, const VertexA
 		}
 	}
 }
-void TrailVertexGenerator::generateLife(std::uint8_t* buffer, const VertexAttribute& attribute,
+void TrailVertexGenerator::generateLife(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -1001,7 +1001,7 @@ void TrailVertexGenerator::generateLife(std::uint8_t* buffer, const VertexAttrib
 		}
 	}
 }
-void TrailVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const VertexAttribute& attribute,
+void TrailVertexGenerator::generateVelocity2d(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -1084,7 +1084,7 @@ void TrailVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const Vertex
 		}
 	}
 }
-void TrailVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const VertexAttribute& attribute,
+void TrailVertexGenerator::generateVelocity3d(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;

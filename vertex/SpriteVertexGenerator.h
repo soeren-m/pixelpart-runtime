@@ -28,7 +28,7 @@ private:
 	void validateVertexFormat() const;
 
 	template <typename T>
-	void generateIndex(std::uint8_t* buffer, const VertexAttribute& attribute,
+	void generateIndex(unsigned char* buffer, const VertexAttribute& attribute,
 		std::uint32_t particleCount) const {
 		std::size_t stride = attribute.byteStride;
 		buffer += attribute.byteOffset;
@@ -60,7 +60,7 @@ private:
 	}
 
 	template <typename T>
-	void generateId(std::uint8_t* buffer, const VertexAttribute& attribute,
+	void generateId(unsigned char* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 		std::size_t stride = attribute.byteStride;
 		buffer += attribute.byteOffset;
@@ -111,26 +111,26 @@ private:
 		}
 	}
 
-	void generatePosition2d(std::uint8_t* buffer, const VertexAttribute& attribute,
+	void generatePosition2d(unsigned char* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
-	void generatePosition3d(std::uint8_t* buffer, const VertexAttribute& attribute,
+	void generatePosition3d(unsigned char* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
-	void generateNormal(std::uint8_t* buffer, const VertexAttribute& attribute,
+	void generateNormal(unsigned char* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
-	void generateTextureCoord(std::uint8_t* buffer, const VertexAttribute& attribute,
+	void generateTextureCoord(unsigned char* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
-	void generateColorFloat(std::uint8_t* buffer, const VertexAttribute& attribute,
+	void generateColorFloat(unsigned char* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
-	void generateColorByte(std::uint8_t* buffer, const VertexAttribute& attribute,
+	void generateColorByte(unsigned char* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
-	void generateLife(std::uint8_t* buffer, const VertexAttribute& attribute,
+	void generateLife(unsigned char* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
-	void generateVelocity2d(std::uint8_t* buffer, const VertexAttribute& attribute,
+	void generateVelocity2d(unsigned char* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
-	void generateVelocity3d(std::uint8_t* buffer, const VertexAttribute& attribute,
+	void generateVelocity3d(unsigned char* buffer, const VertexAttribute& attribute,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const;
 
 	static matrix3_t rotationMatrix3d(const float3_t& rollYawPitch);

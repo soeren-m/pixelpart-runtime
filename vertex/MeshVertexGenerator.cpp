@@ -78,7 +78,7 @@ void MeshVertexGenerator::generateVertexData(const VertexDataBufferCollection& d
 			continue;
 		}
 
-		std::uint8_t* buffer = dataBuffers[attribute.bufferIndex];
+		unsigned char* buffer = dataBuffers[attribute.bufferIndex];
 
 		switch(attribute.usage) {
 			case VertexAttributeUsage::position2d:
@@ -190,7 +190,7 @@ void MeshVertexGenerator::validateVertexFormat() const {
 	}
 }
 
-void MeshVertexGenerator::generatePosition2d(std::uint8_t* buffer, const VertexAttribute& attribute,
+void MeshVertexGenerator::generatePosition2d(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -200,7 +200,7 @@ void MeshVertexGenerator::generatePosition2d(std::uint8_t* buffer, const VertexA
 		buffer += stride;
 	}
 }
-void MeshVertexGenerator::generatePosition3d(std::uint8_t* buffer, const VertexAttribute& attribute,
+void MeshVertexGenerator::generatePosition3d(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -210,7 +210,7 @@ void MeshVertexGenerator::generatePosition3d(std::uint8_t* buffer, const VertexA
 		buffer += stride;
 	}
 }
-void MeshVertexGenerator::generateColorFloat(std::uint8_t* buffer, const VertexAttribute& attribute,
+void MeshVertexGenerator::generateColorFloat(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -220,7 +220,7 @@ void MeshVertexGenerator::generateColorFloat(std::uint8_t* buffer, const VertexA
 		buffer += stride;
 	}
 }
-void MeshVertexGenerator::generateColorByte(std::uint8_t* buffer, const VertexAttribute& attribute,
+void MeshVertexGenerator::generateColorByte(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -235,7 +235,7 @@ void MeshVertexGenerator::generateColorByte(std::uint8_t* buffer, const VertexAt
 		buffer += stride;
 	}
 }
-void MeshVertexGenerator::generateLife(std::uint8_t* buffer, const VertexAttribute& attribute,
+void MeshVertexGenerator::generateLife(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -245,7 +245,7 @@ void MeshVertexGenerator::generateLife(std::uint8_t* buffer, const VertexAttribu
 		buffer += stride;
 	}
 }
-void MeshVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const VertexAttribute& attribute,
+void MeshVertexGenerator::generateVelocity2d(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -255,7 +255,7 @@ void MeshVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const VertexA
 		buffer += stride;
 	}
 }
-void MeshVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const VertexAttribute& attribute,
+void MeshVertexGenerator::generateVelocity3d(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -265,7 +265,7 @@ void MeshVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const VertexA
 		buffer += stride;
 	}
 }
-void MeshVertexGenerator::generateMatrix4x4ColumnMajor(std::uint8_t* buffer, const VertexAttribute& attribute,
+void MeshVertexGenerator::generateMatrix4x4ColumnMajor(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
@@ -294,7 +294,7 @@ void MeshVertexGenerator::generateMatrix4x4ColumnMajor(std::uint8_t* buffer, con
 		buffer += stride;
 	}
 }
-void MeshVertexGenerator::generateMatrix4x3ColumnMajor(std::uint8_t* buffer, const VertexAttribute& attribute,
+void MeshVertexGenerator::generateMatrix4x3ColumnMajor(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
@@ -328,7 +328,7 @@ void MeshVertexGenerator::generateMatrix4x3ColumnMajor(std::uint8_t* buffer, con
 		buffer += stride;
 	}
 }
-void MeshVertexGenerator::generateMatrix4x4RowMajor(std::uint8_t* buffer, const VertexAttribute& attribute,
+void MeshVertexGenerator::generateMatrix4x4RowMajor(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
@@ -357,7 +357,7 @@ void MeshVertexGenerator::generateMatrix4x4RowMajor(std::uint8_t* buffer, const 
 		buffer += stride;
 	}
 }
-void MeshVertexGenerator::generateMatrix4x3RowMajor(std::uint8_t* buffer, const VertexAttribute& attribute,
+void MeshVertexGenerator::generateMatrix4x3RowMajor(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
