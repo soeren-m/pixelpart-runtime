@@ -1027,7 +1027,7 @@ void migrateEffectAssetJson(nlohmann::ordered_json& jsonData) {
 }
 }
 
-const std::uint32_t EffectAsset::version = 11;
+const std::uint32_t EffectAsset::version = 12;
 
 Effect& EffectAsset::effect() {
 	return assetEffect;
