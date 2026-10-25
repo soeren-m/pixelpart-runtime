@@ -285,9 +285,10 @@ void MeshVertexGenerator::generateMatrix4x4ColumnMajor(std::uint8_t* buffer, con
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		*reinterpret_cast<math::matrix4x4<float>*>(buffer) = math::matrix4x4<float>(globalScaleMatrix *
+		math::matrix4x4<float> transformMatix(globalScaleMatrix *
 			particleTransformationMatrix(alignmentMode, pivot, simulationSpaceToGlobalMatrix, emitterTransformMatrix, particles, p));
 
+		*reinterpret_cast<math::matrix4x4<float>*>(buffer) = transformMatix;
 		buffer += stride;
 	}
 }
@@ -341,9 +342,10 @@ void MeshVertexGenerator::generateMatrix4x4RowMajor(std::uint8_t* buffer, const 
 	buffer += attribute.byteOffset;
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
-		*reinterpret_cast<math::matrix4x4<float>*>(buffer) = math::matrix4x4<float>(math::transpose(globalScaleMatrix *
+		math::matrix4x4<float> transformMatix(math::transpose(globalScaleMatrix *
 			particleTransformationMatrix(alignmentMode, pivot, simulationSpaceToGlobalMatrix, emitterTransformMatrix, particles, p)));
 
+		*reinterpret_cast<math::matrix4x4<float>*>(buffer) = transformMatix;
 		buffer += stride;
 	}
 }
