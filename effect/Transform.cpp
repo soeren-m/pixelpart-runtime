@@ -17,7 +17,7 @@ Transform::Transform(const float3_t& position, const float3_t& rotation, const f
 }
 
 float3_t Transform::position() const {
-	return float3_t(transformMatrix[3].x, transformMatrix[3].y, transformMatrix[3].z);
+	return extractTranslation(transformMatrix);
 }
 float3_t Transform::rotation() const {
 	constexpr float_t epsilon = 0.000001;

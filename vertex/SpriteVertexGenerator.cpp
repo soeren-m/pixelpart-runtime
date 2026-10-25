@@ -231,7 +231,7 @@ void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Verte
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 
 	Transform emitterTransform = generatorEffect.sceneGraph().globalTransform(generatorParticleEmitterId, runtimeContext);
-	matrix3_t emitterTransformMatrix = math::normalizeTransformationMatrix(emitterTransform.matrix());
+	matrix4_t emitterTransformMatrix = math::normalizeTransformationMatrix(emitterTransform.matrix());
 	matrix3_t simulationSpaceToGlobalMatrix = particleType.simulationSpace() == ParticleSimulationSpace::local
 		? matrix3_t(emitterTransformMatrix)
 		: matrix3_t(1.0);
@@ -255,12 +255,12 @@ void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Verte
 		math::matrix3x3<float> particleRotationMatrix = math::matrix3x3<float>(rotationMatrix3d(particles.rotation[p]));
 
 		math::matrix3x3<float> particleAlignmentMatrix(1.0f);
-		switch(particleType.alignmentMode()) {
+		switch(alignmentMode) {
 			case AlignmentMode::motion:
 				particleAlignmentMatrix = math::matrix3x3<float>(motionAlignmentMatrix2d(simulationSpaceToGlobalMatrix * particles.velocity[p]));
 				break;
 			case AlignmentMode::emission:
-				particleAlignmentMatrix = math::matrix3x3<float>(emissionAlignmentMatrix2d(particlePosition, emitterTransformMatrix));
+				particleAlignmentMatrix = math::matrix3x3<float>(emissionAlignmentMatrix2d(particles.globalPosition[p], emitterTransformMatrix));
 				break;
 			case AlignmentMode::emitter:
 				particleAlignmentMatrix = math::matrix3x3<float>(emitterAlignmentMatrix(emitterTransformMatrix));
@@ -269,10 +269,10 @@ void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Verte
 				break;
 		}
 
-		vertexPositions[0] = scale * math::vector2<float>(particlePosition + particleAlignmentMatrix * (particleRotationMatrix * (math::vector3<float>(-0.5f, -0.5f, 0.0f) * particleSize - particlePivot) + particlePivot));
-		vertexPositions[1] = scale * math::vector2<float>(particlePosition + particleAlignmentMatrix * (particleRotationMatrix * (math::vector3<float>(+0.5f, -0.5f, 0.0f) * particleSize - particlePivot) + particlePivot));
-		vertexPositions[2] = scale * math::vector2<float>(particlePosition + particleAlignmentMatrix * (particleRotationMatrix * (math::vector3<float>(+0.5f, +0.5f, 0.0f) * particleSize - particlePivot) + particlePivot));
-		vertexPositions[3] = scale * math::vector2<float>(particlePosition + particleAlignmentMatrix * (particleRotationMatrix * (math::vector3<float>(-0.5f, +0.5f, 0.0f) * particleSize - particlePivot) + particlePivot));
+		vertexPositions[0] = math::vector2<float>(particlePosition + particleAlignmentMatrix * (particleRotationMatrix * (math::vector3<float>(-0.5f, -0.5f, 0.0f) * particleSize - particlePivot) + particlePivot)) * scale;
+		vertexPositions[1] = math::vector2<float>(particlePosition + particleAlignmentMatrix * (particleRotationMatrix * (math::vector3<float>(+0.5f, -0.5f, 0.0f) * particleSize - particlePivot) + particlePivot)) * scale;
+		vertexPositions[2] = math::vector2<float>(particlePosition + particleAlignmentMatrix * (particleRotationMatrix * (math::vector3<float>(+0.5f, +0.5f, 0.0f) * particleSize - particlePivot) + particlePivot)) * scale;
+		vertexPositions[3] = math::vector2<float>(particlePosition + particleAlignmentMatrix * (particleRotationMatrix * (math::vector3<float>(-0.5f, +0.5f, 0.0f) * particleSize - particlePivot) + particlePivot)) * scale;
 
 		switch(attribute.dataGenerationMode) {
 			case VertexDataGenerationMode::vertex:

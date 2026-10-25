@@ -228,6 +228,11 @@ matrix4x4<T> normalizeTransformationMatrix(const matrix4x4<T>& m) {
 }
 
 template <typename T>
+const vector3<T>& extractTranslation(const matrix4x4<T>& m) {
+	return vector3<T>(m[3].x, m[3].y, m[3].z);
+}
+
+template <typename T>
 void extractYawPitchRoll(const matrix4x4<T>& m, T& yaw, T& pitch, T& roll) {
 	T t1 = std::atan2(m[2][0], m[2][2]);
 	T c2 = std::sqrt(m[0][1] * m[0][1] + m[1][1] * m[1][1]);
