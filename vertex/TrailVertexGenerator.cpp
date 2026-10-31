@@ -20,73 +20,12 @@ TrailVertexGenerator::TrailVertexGenerator(const Effect& effect, id_t particleEm
 	validateVertexFormat();
 }
 
-void TrailVertexGenerator::buildStandardTrailSegments(const ParticleType& particleType,
-	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) {
-	const float_t epsilon = 0.000001;
-
-	generatorTotalSegmentVertexCount = particleCount;
-
-	generatorTrailIds.resize(particleCount);
-	generatorTrailIndices.resize(particleCount);
-	generatorTrailLengths.resize(particleCount);
-	generatorLives.resize(particleCount);
-	generatorPositions.resize(particleCount);
-	generatorWidths.resize(particleCount);
-	generatorColors.resize(particleCount);
-	generatorVelocities.resize(particleCount);
-	generatorTangents.resize(particleCount);
-	generatorSideDirections.resize(particleCount);
-
-	std::uint32_t trailId = 0xFFFFFFFE;
-	std::uint32_t trailStartIndex = 0;
-	std::uint32_t trailParticleCount = 0;
-	float_t trailLength = 0.0;
-
-	for(std::uint32_t p = 0; p < particleCount; p++) {
-		std::uint32_t particleIndex = generatorSortKeys[p];
-		std::uint32_t particleParentId = particles.parentId[particleIndex];
-
-		if(particleParentId != trailId) {
-			for(std::uint32_t q = 0; q < trailParticleCount; q++) {
-				generatorTrailLengths[trailStartIndex + q] = static_cast<float>(trailLength);
-			}
-
-			trailId = particleParentId;
-			trailStartIndex = p;
-			trailParticleCount = 0;
-			trailLength = 0.0;
-		}
-
-		std::uint32_t prevParticleIndex = generatorSortKeys[p > trailStartIndex ? p - 1 : trailStartIndex];
-
-		float3_t toNext = particles.globalPosition[particleIndex] - particles.globalPosition[prevParticleIndex];
-		float_t distance = math::length(toNext);
-		float3_t size = particles.size[particleIndex];
-		float_t width = std::max(std::max(size.x, size.y), size.z);
-
-		trailLength += distance;
-		trailParticleCount++;
-
-		generatorTrailIds[p] = trailId;
-		generatorTrailIndices[p] = static_cast<float>(trailLength);
-		// trail lengths
-		generatorLives[p] = static_cast<float>(particles.life[particleIndex]);
-		generatorPositions[p] = math::vector3<float>(particles.globalPosition[particleIndex]);
-		generatorWidths[p] = static_cast<float>(width);
-		generatorColors[p] = math::vector4<float>(particles.color[particleIndex]);
-		generatorVelocities[p] = math::vector3<float>(particles.velocity[particleIndex]);
-	}
-
-	for(std::uint32_t q = 0; q < trailParticleCount; q++) {
-		generatorTrailLengths[trailStartIndex + q] = static_cast<float>(trailLength);
-	}
-}
-
 VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) {
 	const ParticleEmitter& particleEmitter = generatorEffect.sceneGraph().at<ParticleEmitter>(generatorParticleEmitterId);
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
+	const ParticleTrailRendererSettings& trailSettings = particleType.trailRendererSettings();
 
 	VertexDataBufferDimensions result;
 	for(const VertexAttribute& attribute : generatorVertexFormat.attributes()) {
@@ -107,128 +46,62 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 			: particles.id[p0] > particles.id[p1];
 	});
 
-	if(particleType.trailRendererSettings().smoothingMethod == ParticleTrailRendererSettings::SmoothingMethod::spline) {
-		//buildSmoothTrailSegments(particleType, particles, particleCount);
+	if(trailSettings.smoothingMethod == ParticleTrailRendererSettings::SmoothingMethod::spline) {
+		buildSmoothTrailSegments(particles, particleCount, trailSettings.smoothingSegmentCount);
 	}
 	else {
-		buildStandardTrailSegments(particleType, particles, particleCount);
+		buildStandardTrailSegments(particles, particleCount);
 	}
 
 	const float epsilon = 0.000001f;
 	const math::vector3<float> forwardVector(0.0f, 0.0f, 1.0f);
 
-	std::uint32_t trailStartIndex = 0; // TODO
 	for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
-		// TODO: if new trail
-
-		math::vector3<float> toNext = generatorPositions[s + 1] - generatorPositions[s];
-		float distance = math::length(toNext);
-
-		math::vector3<float> tangent = math::vector3<float>(toNext / std::max(distance, epsilon));
-		math::vector3<float> prevTangent = generatorTangents[s > trailStartIndex ? s - 1 : trailStartIndex];
-
-		math::vector3<float> toEdge = tangent - prevTangent;
-		math::vector3<float> sideDirection;
-
-		float toEdgeLength = math::length(toEdge);
-		if(toEdgeLength < epsilon) {
-			sideDirection = math::vector3<float>(-tangent.y, tangent.x, tangent.z);
-		}
-		else {
-			sideDirection = toEdge / toEdgeLength;
-			sideDirection = math::dot(math::cross(tangent, forwardVector), sideDirection) < 0.0 ? sideDirection : -sideDirection;
+		if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+			generatorTangents[s] = generatorTangents[s > 0 ? s - 1 : 0];
+			continue;
 		}
 
-		generatorTangents[s] = tangent;
-		generatorSideDirections[s] = sideDirection;
+		generatorTangents[s] = math::safeNormalize(generatorPositions[s + 1] - generatorPositions[s], epsilon);
+	}
+
+	generatorTangents[generatorTotalSegmentVertexCount - 1] = generatorTangents[ generatorTotalSegmentVertexCount - 2];
+
+	if(generatorEffect.is3d() && particleType.alignmentMode() == AlignmentMode::camera) {
+		math::vector3<float> cameraPosition(sceneContext.cameraPosition);
+
+		for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+			math::vector3<float> cameraToVertex = math::normalize(cameraPosition - generatorPositions[s]);
+
+			generatorSideDirections[s] = math::normalize(math::cross(cameraToVertex, generatorTangents[s]));
+		}
+	}
+	else {
+		std::uint32_t trailStartIndex = 0; // TODO
+		for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+			math::vector3<float> tangent = generatorTangents[s];
+			math::vector3<float> prevTangent = generatorTangents[s > trailStartIndex ? s - 1 : trailStartIndex];
+
+			math::vector3<float> toEdge = tangent - prevTangent;
+			math::vector3<float> sideDirection;
+
+			float toEdgeLength = math::length(toEdge);
+			if(toEdgeLength < epsilon) {
+				sideDirection = math::vector3<float>(-tangent.y, tangent.x, tangent.z);
+			}
+			else {
+				sideDirection = toEdge / toEdgeLength;
+				sideDirection = math::dot(math::cross(tangent, forwardVector), sideDirection) < 0.0 ? sideDirection : -sideDirection;
+			}
+
+			generatorSideDirections[s] = sideDirection;
+		}
 	}
 
 	// TODO
-	generatorTangents[generatorTotalSegmentVertexCount - 1] = generatorTangents[generatorTotalSegmentVertexCount - 2];
 	generatorSideDirections[generatorTotalSegmentVertexCount - 1] = generatorSideDirections[generatorTotalSegmentVertexCount - 2];
 
-	/*switch(particleType.trailRendererSettings().smoothingMethod) {
-		case ParticleTrailRendererSettings::SmoothingMethod::spline: {
-			for(std::uint32_t p = 0, particleParentId = 0, trailId = 0xFFFFFFFE; p < particleCount; p++) {
-				std::uint32_t particleIndex = generatorSortKeys[p];
-				particleParentId = particles.parentId[particleIndex];
-
-				if(particleParentId != trailId) {
-					trailId = particleParentId;
-					currentTrail = &generatorTrails.at(trailId);
-
-					std::vector<float_t> relativeParticlePosition(currentTrail->particleCount);
-					relativeParticlePosition[0] = 0.0;
-
-					currentTrail->length = 0.0;
-					for(std::uint32_t q = 1; q < currentTrail->particleCount; q++) {
-						currentTrail->length += math::length(particles.globalPosition[generatorSortKeys[p + q]] - particles.globalPosition[generatorSortKeys[p + q - 1]]);
-						relativeParticlePosition[q] = currentTrail->length;
-					}
-					for(std::uint32_t q = 1; q < currentTrail->particleCount; q++) {
-						relativeParticlePosition[q] /= currentTrail->length;
-					}
-
-					Curve<float3_t> positionCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
-					positionCurve.points(orderedPoints(relativeParticlePosition.data(), particles.globalPosition, generatorSortKeys.data() + p, currentTrail->particleCount));
-
-					Curve<float3_t> sizeCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
-					sizeCurve.points(orderedPoints(relativeParticlePosition.data(), particles.size, generatorSortKeys.data() + p, currentTrail->particleCount));
-
-					Curve<float4_t> colorCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
-					colorCurve.points(orderedPoints(relativeParticlePosition.data(), particles.color, generatorSortKeys.data() + p, currentTrail->particleCount));
-
-					Curve<float3_t> velocityCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
-					velocityCurve.points(orderedPoints(relativeParticlePosition.data(), particles.velocity, generatorSortKeys.data() + p, currentTrail->particleCount));
-
-					Curve<float_t> lifeCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
-					lifeCurve.points(orderedPoints(relativeParticlePosition.data(), particles.life, generatorSortKeys.data() + p, currentTrail->particleCount));
-
-					currentTrail->position = positionCurve.cache();
-					currentTrail->size = sizeCurve.cache();
-					currentTrail->color = colorCurve.cache();
-					currentTrail->velocity = velocityCurve.cache();
-					currentTrail->life = lifeCurve.cache();
-					currentTrail->direction.resize(particleType.trailRendererSettings().smoothingSegmentCount);
-					currentTrail->directionToEdge.resize(particleType.trailRendererSettings().smoothingSegmentCount);
-					currentTrail->index.resize(particleType.trailRendererSettings().smoothingSegmentCount);
-				}
-			}
-
-			break;
-		}
-
-		default: {
-			for(std::uint32_t p = 0, q = 0, particleParentId = 0, trailId = 0xFFFFFFFE; p < particleCount; p++, q++) {
-				std::uint32_t particleIndex = generatorSortKeys[p];
-				particleParentId = particles.parentId[particleIndex];
-
-				if(particleParentId != trailId) {
-					trailId = particleParentId;
-					q = 0;
-
-					currentTrail = &generatorTrails.at(trailId);
-					currentTrail->position.resize(currentTrail->particleCount);
-					currentTrail->size.resize(currentTrail->particleCount);
-					currentTrail->color.resize(currentTrail->particleCount);
-					currentTrail->velocity.resize(currentTrail->particleCount);
-					currentTrail->life.resize(currentTrail->particleCount);
-					currentTrail->direction.resize(currentTrail->particleCount);
-					currentTrail->directionToEdge.resize(currentTrail->particleCount);
-					currentTrail->index.resize(currentTrail->particleCount);
-				}
-
-				currentTrail->position[q] = particles.globalPosition[particleIndex];
-				currentTrail->size[q] = particles.size[particleIndex];
-				currentTrail->color[q] = particles.color[particleIndex];
-				currentTrail->velocity[q] = particles.velocity[particleIndex];
-				currentTrail->life[q] = particles.life[particleIndex];
-			}
-
-			break;
-		}
-	}
-
+	/*
 	for(auto& trailEntry : generatorTrails) {
 		Trail& trail = trailEntry.second;
 		trail.length = 0.0;
@@ -267,31 +140,32 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 		}
 
 		trail.directionToEdge[0] = trail.directionToEdge[1];
+	}*/
+
+	std::uint32_t cleanedSegmentCount = 0;
+	for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+		if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+			continue;
+		}
+
+		cleanedSegmentCount++;
 	}
 
 	for(const VertexAttribute& attribute : generatorVertexFormat.attributes()) {
 		std::uint32_t count = 0;
-
-		for(const auto& trailEntry : generatorTrails) {
-			const Trail& trail = trailEntry.second;
-			if(trail.position.empty()) {
-				continue;
-			}
-
-			switch(attribute.dataGenerationMode) {
-				case VertexDataGenerationMode::vertex:
-					count += (static_cast<std::uint32_t>(trail.position.size()) - 1) * 12;
-					break;
-				case VertexDataGenerationMode::element:
-					count += (static_cast<std::uint32_t>(trail.position.size()) - 1) * 5;
-					break;
-				default:
-					break;
-			}
+		switch(attribute.dataGenerationMode) {
+			case VertexDataGenerationMode::vertex:
+				count = cleanedSegmentCount * 12;
+				break;
+			case VertexDataGenerationMode::element:
+				count = cleanedSegmentCount * 5;
+				break;
+			default:
+				break;
 		}
 
 		result[attribute.bufferIndex] = std::max(result[attribute.bufferIndex], count);
-	}*/
+	}
 
 	return result;
 }
@@ -444,6 +318,166 @@ void TrailVertexGenerator::validateVertexFormat() const {
 	}
 }
 
+void TrailVertexGenerator::buildStandardTrailSegments(ParticleCollection::ReadPtr particles, std::uint32_t particleCount) {
+	const float_t epsilon = 0.000001;
+
+	generatorTotalSegmentVertexCount = particleCount;
+
+	generatorTrailIds.resize(particleCount);
+	generatorTrailIndices.resize(particleCount);
+	generatorTrailLengths.resize(particleCount);
+	generatorLives.resize(particleCount);
+	generatorPositions.resize(particleCount);
+	generatorWidths.resize(particleCount);
+	generatorColors.resize(particleCount);
+	generatorVelocities.resize(particleCount);
+	generatorTangents.resize(particleCount);
+	generatorSideDirections.resize(particleCount);
+
+	std::uint32_t trailId = 0xFFFFFFFE;
+	std::uint32_t trailStartIndex = 0;
+	std::uint32_t trailParticleCount = 0;
+	float_t trailLength = 0.0;
+
+	for(std::uint32_t p = 0; p < particleCount; p++) {
+		std::uint32_t particleIndex = generatorSortKeys[p];
+		std::uint32_t particleParentId = particles.parentId[particleIndex];
+
+		if(particleParentId != trailId) {
+			for(std::uint32_t q = 0; q < trailParticleCount; q++) {
+				generatorTrailLengths[trailStartIndex + q] = static_cast<float>(trailLength);
+			}
+
+			trailId = particleParentId;
+			trailStartIndex = p;
+			trailParticleCount = 0;
+			trailLength = 0.0;
+		}
+
+		std::uint32_t prevParticleIndex = generatorSortKeys[p > trailStartIndex ? p - 1 : trailStartIndex];
+
+		float3_t toNext = particles.globalPosition[particleIndex] - particles.globalPosition[prevParticleIndex];
+		float_t distance = math::length(toNext);
+		float3_t size = particles.size[particleIndex];
+		float_t width = std::max(std::max(size.x, size.y), size.z);
+
+		trailLength += distance;
+		trailParticleCount++;
+
+		generatorTrailIds[p] = trailId;
+		generatorTrailIndices[p] = static_cast<float>(trailLength);
+		generatorLives[p] = static_cast<float>(particles.life[particleIndex]);
+		generatorPositions[p] = math::vector3<float>(particles.globalPosition[particleIndex]);
+		generatorWidths[p] = static_cast<float>(width);
+		generatorColors[p] = math::vector4<float>(particles.color[particleIndex]);
+		generatorVelocities[p] = math::vector3<float>(particles.velocity[particleIndex]);
+	}
+
+	for(std::uint32_t q = 0; q < trailParticleCount; q++) {
+		generatorTrailLengths[trailStartIndex + q] = static_cast<float>(trailLength);
+	}
+}
+void TrailVertexGenerator::buildSmoothTrailSegments(ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
+	std::uint32_t segmentCountPerTrail) {
+	const float_t epsilon = 0.000001;
+
+	generatorTotalSegmentVertexCount = 0;
+
+	for(std::uint32_t p = 0, trailId = 0xFFFFFFFE; p < particleCount; p++) {
+		std::uint32_t particleParentId = particles.parentId[generatorSortKeys[p]];
+		if(particleParentId != trailId) {
+			trailId = particleParentId;
+			generatorTotalSegmentVertexCount += segmentCountPerTrail;
+		}
+	}
+
+	generatorTrailIds.resize(generatorTotalSegmentVertexCount);
+	generatorTrailIndices.resize(generatorTotalSegmentVertexCount);
+	generatorTrailLengths.resize(generatorTotalSegmentVertexCount);
+	generatorLives.resize(generatorTotalSegmentVertexCount);
+	generatorPositions.resize(generatorTotalSegmentVertexCount);
+	generatorWidths.resize(generatorTotalSegmentVertexCount);
+	generatorColors.resize(generatorTotalSegmentVertexCount);
+	generatorVelocities.resize(generatorTotalSegmentVertexCount);
+	generatorTangents.resize(generatorTotalSegmentVertexCount);
+	generatorSideDirections.resize(generatorTotalSegmentVertexCount);
+
+	std::uint32_t trailId = 0xFFFFFFFE;
+	std::uint32_t baseIndex = 0;
+
+	for(std::uint32_t p = 0; p < particleCount; p++) {
+		std::uint32_t particleParentId = particles.parentId[generatorSortKeys[p]];
+		if(particleParentId == trailId) {
+			continue;
+		}
+
+		trailId = particleParentId;
+
+		std::uint32_t trailParticleCount = particleCount - p;
+		for(std::uint32_t q = 1; q < particleCount - p; q++) {
+			if(particles.parentId[generatorSortKeys[p + q]] != particleParentId) {
+				trailParticleCount = q;
+				break;
+			}
+		}
+
+		pixelpart::float_t trailLength = 0.0;
+
+		std::vector<pixelpart::float_t> trailParticlePositions(trailParticleCount);
+		trailParticlePositions[0] = 0.0;
+
+		for(std::uint32_t q = 1; q < trailParticleCount; q++) {
+			trailLength += pixelpart::math::distance(
+				particles.globalPosition[generatorSortKeys[p + q]],
+				particles.globalPosition[generatorSortKeys[p + q - 1]]);
+			trailParticlePositions[q] = trailLength;
+		}
+
+		trailLength = std::max(trailLength, epsilon);
+		for(std::uint32_t q = 1; q < trailParticleCount; q++) {
+			trailParticlePositions[q] /= trailLength;
+		}
+
+		pixelpart::Curve<pixelpart::float_t> lifeCurve(pixelpart::CurveInterpolation::spline, segmentCountPerTrail);
+		pixelpart::Curve<pixelpart::float3_t> positionCurve(pixelpart::CurveInterpolation::spline, segmentCountPerTrail);
+		pixelpart::Curve<pixelpart::float3_t> sizeCurve(pixelpart::CurveInterpolation::spline, segmentCountPerTrail);
+		pixelpart::Curve<pixelpart::float4_t> colorCurve(pixelpart::CurveInterpolation::spline, segmentCountPerTrail);
+		pixelpart::Curve<pixelpart::float3_t> velocityCurve(pixelpart::CurveInterpolation::spline, segmentCountPerTrail);
+		lifeCurve.points(orderedPoints<pixelpart::float_t>(trailParticlePositions.data(), particles.life, generatorSortKeys.data() + p, trailParticleCount));
+		positionCurve.points(orderedPoints<pixelpart::float3_t>(trailParticlePositions.data(), particles.globalPosition, generatorSortKeys.data() + p, trailParticleCount));
+		sizeCurve.points(orderedPoints<pixelpart::float3_t>(trailParticlePositions.data(), particles.size, generatorSortKeys.data() + p, trailParticleCount));
+		colorCurve.points(orderedPoints<pixelpart::float4_t>(trailParticlePositions.data(), particles.color, generatorSortKeys.data() + p, trailParticleCount));
+		velocityCurve.points(orderedPoints<pixelpart::float3_t>(trailParticlePositions.data(), particles.velocity, generatorSortKeys.data() + p, trailParticleCount));
+
+		const auto& lifeData = lifeCurve.cache();
+		const auto& positionData = positionCurve.cache();
+		const auto& sizeData = sizeCurve.cache();
+		const auto& colorData = colorCurve.cache();
+		const auto& velocityData = velocityCurve.cache();
+
+		pixelpart::float_t distance = 0.0;
+
+		for(std::uint32_t s = 0; s < segmentCountPerTrail; s++) {
+			distance += pixelpart::math::distance(
+				positionData[s],
+				positionData[s > 0 ? s - 1 : 0]);
+
+			pixelpart::float_t width = std::max(std::max(sizeData[s].x, sizeData[s].y), sizeData[s].z);
+
+			generatorTrailIds[baseIndex + s] = trailId;
+			generatorTrailIndices[baseIndex + s] = static_cast<float>(distance);
+			generatorTrailLengths[baseIndex + s] = static_cast<float>(trailLength);
+			generatorLives[baseIndex + s] = static_cast<float>(lifeData[s]);
+			generatorPositions[baseIndex + s] = math::vector3<float>(positionData[s]);
+			generatorWidths[baseIndex + s] = static_cast<float>(width);
+			generatorColors[baseIndex + s] = math::vector4<float>(colorData[s]);
+			generatorVelocities[baseIndex + s] = math::vector3<float>(velocityData[s]);
+		}
+
+		baseIndex += segmentCountPerTrail;
+	}
+}
+
 void TrailVertexGenerator::generatePosition2d(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const SceneContext& sceneContext) const {
@@ -540,19 +574,8 @@ void TrailVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Vertex
 			continue;
 		}
 
-		math::vector3<float> startToEdgeDirection = generatorSideDirections[s];
-		math::vector3<float> endToEdgeDirection = generatorSideDirections[s + 1];
-
-		// TODO: move alignment calc to previous step?
-		if(alignmentMode == AlignmentMode::camera) {
-			math::vector3<float> cameraToStart = math::normalize(cameraPosition - generatorPositions[s]);
-			math::vector3<float> cameraToEnd = math::normalize(cameraPosition - generatorPositions[s + 1]);
-			startToEdgeDirection = math::normalize(math::cross(cameraToStart, generatorTangents[s]));
-			endToEdgeDirection = math::normalize(math::cross(cameraToEnd, generatorTangents[s + 1]));
-		}
-
-		math::vector3<float> startToEdge = startToEdgeDirection * generatorWidths[s] * 0.5f;
-		math::vector3<float> endToEdge = endToEdgeDirection * generatorWidths[s + 1] * 0.5f;
+		math::vector3<float> startToEdge = generatorSideDirections[s] * generatorWidths[s] * 0.5f;
+		math::vector3<float> endToEdge = generatorSideDirections[s + 1] * generatorWidths[s + 1] * 0.5f;
 
 		vertices[0] = (generatorPositions[s] + startToEdge) * scale;
 		vertices[1] = (generatorPositions[s] - startToEdge) * scale;
@@ -629,19 +652,8 @@ void TrailVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAttr
 			continue;
 		}
 
-		math::vector3<float> startToEdgeDirection = generatorSideDirections[s];
-		math::vector3<float> endToEdgeDirection = generatorSideDirections[s + 1];
-
-		// TODO: move to previous step
-		if(alignmentMode == AlignmentMode::camera) {
-			math::vector3<float> cameraToStart = math::normalize(sceneContext.cameraPosition - generatorPositions[s]);
-			math::vector3<float> cameraToEnd = math::normalize(sceneContext.cameraPosition - generatorPositions[s + 1]);
-			startToEdgeDirection = math::normalize(math::cross(cameraToStart, generatorTangents[s]));
-			endToEdgeDirection = math::normalize(math::cross(cameraToEnd, generatorTangents[s + 1]));
-		}
-
-		math::vector3<float> normal = math::vector3<float>(math::cross(generatorTangents[s], startToEdgeDirection));
-		math::vector3<float> nextNormal = math::vector3<float>(math::cross(generatorTangents[s + 1], endToEdgeDirection));
+		math::vector3<float> normal = math::cross(generatorTangents[s], generatorSideDirections[s]);
+		math::vector3<float> nextNormal = math::cross(generatorTangents[s + 1], generatorSideDirections[s + 1]);
 		math::vector3<float> centerNormal = (normal + nextNormal) * 0.5f;
 
 		switch(attribute.dataGenerationMode) {

@@ -30,58 +30,67 @@ public:
 private:
 	void validateVertexFormat() const;
 
-	void buildStandardTrailSegments(const pixelpart::ParticleType& particleType,
-		pixelpart::ParticleCollection::ReadPtr particles, std::uint32_t particleCount);
+	void buildStandardTrailSegments(pixelpart::ParticleCollection::ReadPtr particles, std::uint32_t particleCount);
+	void buildSmoothTrailSegments(pixelpart::ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
+		std::uint32_t segmentCountPerTrail);
 
 	template <typename T>
 	void generateIndex(std::uint8_t* buffer, const VertexAttribute& attribute) const {
 		std::size_t stride = attribute.byteStride;
 		buffer += attribute.byteOffset;
-		// TODO
 
-		std::uint32_t startIndex = 0;
-
-		for(std::uint32_t p = 0; p < generatorTotalSegmentVertexCount; p++) {
-			std::uint32_t segmentCount = static_cast<std::uint32_t>(trail.position.size() - 1);
-
-			switch(generatorVertexFormat.windingOrder()) {
-				case VertexWindingOrder::cw:
-					for(std::uint32_t p = 0; p < segmentCount; p++) {
-						*reinterpret_cast<T*>(buffer + stride * 0) = static_cast<T>(startIndex + p * 5 + 0);
-						*reinterpret_cast<T*>(buffer + stride * 1) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 2) = static_cast<T>(startIndex + p * 5 + 1);
-						*reinterpret_cast<T*>(buffer + stride * 3) = static_cast<T>(startIndex + p * 5 + 2);
-						*reinterpret_cast<T*>(buffer + stride * 4) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 5) = static_cast<T>(startIndex + p * 5 + 0);
-						*reinterpret_cast<T*>(buffer + stride * 6) = static_cast<T>(startIndex + p * 5 + 1);
-						*reinterpret_cast<T*>(buffer + stride * 7) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 8) = static_cast<T>(startIndex + p * 5 + 3);
-						*reinterpret_cast<T*>(buffer + stride * 9) = static_cast<T>(startIndex + p * 5 + 3);
-						*reinterpret_cast<T*>(buffer + stride * 10) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 11) = static_cast<T>(startIndex + p * 5 + 2);
-						buffer += stride * 12;
+		switch(generatorVertexFormat.windingOrder()) {
+			case VertexWindingOrder::cw: {
+				for(std::uint32_t s = 0, v = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+					if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+						continue;
 					}
-					break;
-				default:
-					for(std::uint32_t p = 0; p < segmentCount; p++) {
-						*reinterpret_cast<T*>(buffer + stride * 0) = static_cast<T>(startIndex + p * 5 + 0);
-						*reinterpret_cast<T*>(buffer + stride * 1) = static_cast<T>(startIndex + p * 5 + 1);
-						*reinterpret_cast<T*>(buffer + stride * 2) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 3) = static_cast<T>(startIndex + p * 5 + 2);
-						*reinterpret_cast<T*>(buffer + stride * 4) = static_cast<T>(startIndex + p * 5 + 0);
-						*reinterpret_cast<T*>(buffer + stride * 5) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 6) = static_cast<T>(startIndex + p * 5 + 1);
-						*reinterpret_cast<T*>(buffer + stride * 7) = static_cast<T>(startIndex + p * 5 + 3);
-						*reinterpret_cast<T*>(buffer + stride * 8) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 9) = static_cast<T>(startIndex + p * 5 + 3);
-						*reinterpret_cast<T*>(buffer + stride * 10) = static_cast<T>(startIndex + p * 5 + 2);
-						*reinterpret_cast<T*>(buffer + stride * 11) = static_cast<T>(startIndex + p * 5 + 4);
-						buffer += stride * 12;
-					}
-					break;
+
+					*reinterpret_cast<T*>(buffer + stride * 0) = static_cast<T>(v * 5 + 0);
+					*reinterpret_cast<T*>(buffer + stride * 1) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 2) = static_cast<T>(v * 5 + 1);
+					*reinterpret_cast<T*>(buffer + stride * 3) = static_cast<T>(v * 5 + 2);
+					*reinterpret_cast<T*>(buffer + stride * 4) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 5) = static_cast<T>(v * 5 + 0);
+					*reinterpret_cast<T*>(buffer + stride * 6) = static_cast<T>(v * 5 + 1);
+					*reinterpret_cast<T*>(buffer + stride * 7) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 8) = static_cast<T>(v * 5 + 3);
+					*reinterpret_cast<T*>(buffer + stride * 9) = static_cast<T>(v * 5 + 3);
+					*reinterpret_cast<T*>(buffer + stride * 10) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 11) = static_cast<T>(v * 5 + 2);
+					buffer += stride * 12;
+
+					v++;
+				}
+
+				break;
 			}
 
-			startIndex += segmentCount * 5;
+			default: {
+				for(std::uint32_t s = 0, v = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+					if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+						continue;
+					}
+
+					*reinterpret_cast<T*>(buffer + stride * 0) = static_cast<T>(v * 5 + 0);
+					*reinterpret_cast<T*>(buffer + stride * 1) = static_cast<T>(v * 5 + 1);
+					*reinterpret_cast<T*>(buffer + stride * 2) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 3) = static_cast<T>(v * 5 + 2);
+					*reinterpret_cast<T*>(buffer + stride * 4) = static_cast<T>(v * 5 + 0);
+					*reinterpret_cast<T*>(buffer + stride * 5) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 6) = static_cast<T>(v * 5 + 1);
+					*reinterpret_cast<T*>(buffer + stride * 7) = static_cast<T>(v * 5 + 3);
+					*reinterpret_cast<T*>(buffer + stride * 8) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 9) = static_cast<T>(v * 5 + 3);
+					*reinterpret_cast<T*>(buffer + stride * 10) = static_cast<T>(v * 5 + 2);
+					*reinterpret_cast<T*>(buffer + stride * 11) = static_cast<T>(v * 5 + 4);
+					buffer += stride * 12;
+
+					v++;
+				}
+
+				break;
+			}
 		}
 	}
 
@@ -196,5 +205,6 @@ private:
 	std::vector<math::vector3<float>> generatorVelocities;
 	std::vector<math::vector3<float>> generatorTangents;
 	std::vector<math::vector3<float>> generatorSideDirections;
+	// TODO: vector<bool> generatorDegenerate
 };
 }
