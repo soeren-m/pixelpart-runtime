@@ -20,11 +20,71 @@ TrailVertexGenerator::TrailVertexGenerator(const Effect& effect, id_t particleEm
 	validateVertexFormat();
 }
 
+void TrailVertexGenerator::buildStandardTrailSegments(const ParticleType& particleType,
+	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) {
+	const float_t epsilon = 0.000001;
+
+	generatorTotalSegmentVertexCount = particleCount;
+
+	generatorTrailIds.resize(particleCount);
+	generatorTrailIndices.resize(particleCount);
+	generatorTrailLengths.resize(particleCount);
+	generatorLives.resize(particleCount);
+	generatorPositions.resize(particleCount);
+	generatorWidths.resize(particleCount);
+	generatorColors.resize(particleCount);
+	generatorVelocities.resize(particleCount);
+	generatorTangents.resize(particleCount);
+	generatorSideDirections.resize(particleCount);
+
+	std::uint32_t trailId = 0xFFFFFFFE;
+	std::uint32_t trailStartIndex = 0;
+	std::uint32_t trailParticleCount = 0;
+	float_t trailLength = 0.0;
+
+	for(std::uint32_t p = 0; p < particleCount; p++) {
+		std::uint32_t particleIndex = generatorSortKeys[p];
+		std::uint32_t particleParentId = particles.parentId[particleIndex];
+
+		if(particleParentId != trailId) {
+			for(std::uint32_t q = 0; q < trailParticleCount; q++) {
+				generatorTrailLengths[trailStartIndex + q] = static_cast<float>(trailLength);
+			}
+
+			trailId = particleParentId;
+			trailStartIndex = p;
+			trailParticleCount = 0;
+			trailLength = 0.0;
+		}
+
+		std::uint32_t prevParticleIndex = generatorSortKeys[p > trailStartIndex ? p - 1 : trailStartIndex];
+
+		float3_t toNext = particles.globalPosition[particleIndex] - particles.globalPosition[prevParticleIndex];
+		float_t distance = math::length(toNext);
+		float3_t size = particles.size[particleIndex];
+		float_t width = std::max(std::max(size.x, size.y), size.z);
+
+		trailLength += distance;
+		trailParticleCount++;
+
+		generatorTrailIds[p] = trailId;
+		generatorTrailIndices[p] = static_cast<float>(trailLength);
+		// trail lengths
+		generatorLives[p] = static_cast<float>(particles.life[particleIndex]);
+		generatorPositions[p] = math::vector3<float>(particles.globalPosition[particleIndex]);
+		generatorWidths[p] = static_cast<float>(width);
+		generatorColors[p] = math::vector4<float>(particles.color[particleIndex]);
+		generatorVelocities[p] = math::vector3<float>(particles.velocity[particleIndex]);
+	}
+
+	for(std::uint32_t q = 0; q < trailParticleCount; q++) {
+		generatorTrailLengths[trailStartIndex + q] = static_cast<float>(trailLength);
+	}
+}
+
 VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) {
-	const float_t epsilon = 0.000001;
-
 	const ParticleEmitter& particleEmitter = generatorEffect.sceneGraph().at<ParticleEmitter>(generatorParticleEmitterId);
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 
@@ -39,45 +99,58 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 		return result;
 	}
 
-	std::vector<std::uint32_t> sortKeys(particleCount);
-	std::iota(sortKeys.begin(), sortKeys.end(), 0);
-	std::sort(sortKeys.begin(), sortKeys.end(), [&particles](std::uint32_t p0, std::uint32_t p1) {
+	generatorSortKeys.resize(particleCount);
+	std::iota(generatorSortKeys.begin(), generatorSortKeys.end(), 0);
+	std::sort(generatorSortKeys.begin(), generatorSortKeys.end(), [&particles](std::uint32_t p0, std::uint32_t p1) {
 		return (particles.parentId[p0] != particles.parentId[p1])
 			? particles.parentId[p0] > particles.parentId[p1]
 			: particles.id[p0] > particles.id[p1];
 	});
 
-	for(auto& trailEntry : generatorTrails) {
-		trailEntry.second.particleCount = 0;
+	if(particleType.trailRendererSettings().smoothingMethod == ParticleTrailRendererSettings::SmoothingMethod::spline) {
+		//buildSmoothTrailSegments(particleType, particles, particleCount);
+	}
+	else {
+		buildStandardTrailSegments(particleType, particles, particleCount);
 	}
 
-	Trail* currentTrail = nullptr;
-	for(std::uint32_t p = 0, particleParentId = 0, trailId = 0xFFFFFFFE; p < particleCount; p++) {
-		particleParentId = particles.parentId[sortKeys[p]];
+	const float epsilon = 0.000001f;
+	const math::vector3<float> forwardVector(0.0f, 0.0f, 1.0f);
 
-		if(particleParentId != trailId) {
-			trailId = particleParentId;
-			currentTrail = &generatorTrails[trailId];
-		}
+	std::uint32_t trailStartIndex = 0; // TODO
+	for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+		// TODO: if new trail
 
-		currentTrail->particleCount++;
-	}
+		math::vector3<float> toNext = generatorPositions[s + 1] - generatorPositions[s];
+		float distance = math::length(toNext);
 
-	for(auto trailIt = generatorTrails.begin(); trailIt != generatorTrails.end(); ) {
-		if(trailIt->second.particleCount == 0) {
-			trailIt = generatorTrails.erase(trailIt);
+		math::vector3<float> tangent = math::vector3<float>(toNext / std::max(distance, epsilon));
+		math::vector3<float> prevTangent = generatorTangents[s > trailStartIndex ? s - 1 : trailStartIndex];
+
+		math::vector3<float> toEdge = tangent - prevTangent;
+		math::vector3<float> sideDirection;
+
+		float toEdgeLength = math::length(toEdge);
+		if(toEdgeLength < epsilon) {
+			sideDirection = math::vector3<float>(-tangent.y, tangent.x, tangent.z);
 		}
 		else {
-			trailIt++;
+			sideDirection = toEdge / toEdgeLength;
+			sideDirection = math::dot(math::cross(tangent, forwardVector), sideDirection) < 0.0 ? sideDirection : -sideDirection;
 		}
+
+		generatorTangents[s] = tangent;
+		generatorSideDirections[s] = sideDirection;
 	}
 
-	currentTrail = nullptr;
+	// TODO
+	generatorTangents[generatorTotalSegmentVertexCount - 1] = generatorTangents[generatorTotalSegmentVertexCount - 2];
+	generatorSideDirections[generatorTotalSegmentVertexCount - 1] = generatorSideDirections[generatorTotalSegmentVertexCount - 2];
 
-	switch(particleType.trailRendererSettings().smoothingMethod) {
+	/*switch(particleType.trailRendererSettings().smoothingMethod) {
 		case ParticleTrailRendererSettings::SmoothingMethod::spline: {
 			for(std::uint32_t p = 0, particleParentId = 0, trailId = 0xFFFFFFFE; p < particleCount; p++) {
-				std::uint32_t particleIndex = sortKeys[p];
+				std::uint32_t particleIndex = generatorSortKeys[p];
 				particleParentId = particles.parentId[particleIndex];
 
 				if(particleParentId != trailId) {
@@ -89,7 +162,7 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 
 					currentTrail->length = 0.0;
 					for(std::uint32_t q = 1; q < currentTrail->particleCount; q++) {
-						currentTrail->length += math::length(particles.globalPosition[sortKeys[p + q]] - particles.globalPosition[sortKeys[p + q - 1]]);
+						currentTrail->length += math::length(particles.globalPosition[generatorSortKeys[p + q]] - particles.globalPosition[generatorSortKeys[p + q - 1]]);
 						relativeParticlePosition[q] = currentTrail->length;
 					}
 					for(std::uint32_t q = 1; q < currentTrail->particleCount; q++) {
@@ -97,19 +170,19 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 					}
 
 					Curve<float3_t> positionCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
-					positionCurve.points(orderedPoints(relativeParticlePosition.data(), particles.globalPosition, sortKeys.data() + p, currentTrail->particleCount));
+					positionCurve.points(orderedPoints(relativeParticlePosition.data(), particles.globalPosition, generatorSortKeys.data() + p, currentTrail->particleCount));
 
 					Curve<float3_t> sizeCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
-					sizeCurve.points(orderedPoints(relativeParticlePosition.data(), particles.size, sortKeys.data() + p, currentTrail->particleCount));
+					sizeCurve.points(orderedPoints(relativeParticlePosition.data(), particles.size, generatorSortKeys.data() + p, currentTrail->particleCount));
 
 					Curve<float4_t> colorCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
-					colorCurve.points(orderedPoints(relativeParticlePosition.data(), particles.color, sortKeys.data() + p, currentTrail->particleCount));
+					colorCurve.points(orderedPoints(relativeParticlePosition.data(), particles.color, generatorSortKeys.data() + p, currentTrail->particleCount));
 
 					Curve<float3_t> velocityCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
-					velocityCurve.points(orderedPoints(relativeParticlePosition.data(), particles.velocity, sortKeys.data() + p, currentTrail->particleCount));
+					velocityCurve.points(orderedPoints(relativeParticlePosition.data(), particles.velocity, generatorSortKeys.data() + p, currentTrail->particleCount));
 
 					Curve<float_t> lifeCurve(CurveInterpolation::spline, particleType.trailRendererSettings().smoothingSegmentCount);
-					lifeCurve.points(orderedPoints(relativeParticlePosition.data(), particles.life, sortKeys.data() + p, currentTrail->particleCount));
+					lifeCurve.points(orderedPoints(relativeParticlePosition.data(), particles.life, generatorSortKeys.data() + p, currentTrail->particleCount));
 
 					currentTrail->position = positionCurve.cache();
 					currentTrail->size = sizeCurve.cache();
@@ -127,7 +200,7 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 
 		default: {
 			for(std::uint32_t p = 0, q = 0, particleParentId = 0, trailId = 0xFFFFFFFE; p < particleCount; p++, q++) {
-				std::uint32_t particleIndex = sortKeys[p];
+				std::uint32_t particleIndex = generatorSortKeys[p];
 				particleParentId = particles.parentId[particleIndex];
 
 				if(particleParentId != trailId) {
@@ -218,7 +291,7 @@ VertexDataBufferDimensions TrailVertexGenerator::buildGeometry(
 		}
 
 		result[attribute.bufferIndex] = std::max(result[attribute.bufferIndex], count);
-	}
+	}*/
 
 	return result;
 }
@@ -374,82 +447,77 @@ void TrailVertexGenerator::validateVertexFormat() const {
 void TrailVertexGenerator::generatePosition2d(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const SceneContext& sceneContext) const {
-	math::vector2<float> vertices[5];
-
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
-	for(const auto& trailEntry : generatorTrails) {
-		const Trail& trail = trailEntry.second;
-		if(trail.position.size() < 2) {
+	math::vector2<float> vertices[5];
+	math::vector3<float> scale(sceneContext.effectScale);
+
+	for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+		if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
 			continue;
 		}
 
-		for(std::uint32_t p = 0; p < trail.position.size() - 1; p++) {
-			float3_t startToEdgeDirection = trail.directionToEdge[p];
-			float3_t endToEdgeDirection = trail.directionToEdge[p + 1];
+		math::vector3<float> startToEdge = generatorSideDirections[s] * generatorWidths[s] * 0.5f;
+		math::vector3<float> endToEdge = generatorSideDirections[s + 1] * generatorWidths[s + 1] * 0.5f;
 
-			float3_t startToEdge = startToEdgeDirection * std::max(trail.size[p].x, trail.size[p].y) * 0.5;
-			float3_t endToEdge = endToEdgeDirection * std::max(trail.size[p + 1].x, trail.size[p + 1].y) * 0.5;
+		vertices[0] = math::vector2<float>((generatorPositions[s] + startToEdge) * scale);
+		vertices[1] = math::vector2<float>((generatorPositions[s] - startToEdge) * scale);
+		vertices[2] = math::vector2<float>((generatorPositions[s + 1] + endToEdge) * scale);
+		vertices[3] = math::vector2<float>((generatorPositions[s + 1] - endToEdge) * scale);
+		vertices[4] = math::vector2<float>((generatorPositions[s] + generatorPositions[s + 1]) * 0.5f * scale);
 
-			vertices[0] = math::vector2<float>((trail.position[p] + startToEdge) * sceneContext.effectScale);
-			vertices[1] = math::vector2<float>((trail.position[p] - startToEdge) * sceneContext.effectScale);
-			vertices[2] = math::vector2<float>((trail.position[p + 1] + endToEdge) * sceneContext.effectScale);
-			vertices[3] = math::vector2<float>((trail.position[p + 1] - endToEdge) * sceneContext.effectScale);
-			vertices[4] = math::vector2<float>((trail.position[p] + trail.position[p + 1]) * 0.5 * sceneContext.effectScale);
-
-			switch(attribute.dataGenerationMode) {
-				case VertexDataGenerationMode::vertex: {
-					switch(generatorVertexFormat.windingOrder()) {
-						case VertexWindingOrder::cw:
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = vertices[0];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = vertices[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = vertices[1];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = vertices[2];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = vertices[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = vertices[0];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = vertices[1];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = vertices[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = vertices[3];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = vertices[3];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = vertices[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = vertices[2];
-							buffer += stride * 12;
-							break;
-						default:
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = vertices[0];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = vertices[1];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = vertices[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = vertices[2];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = vertices[0];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = vertices[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = vertices[1];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = vertices[3];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = vertices[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = vertices[3];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = vertices[2];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = vertices[4];
-							buffer += stride * 12;
-							break;
-					}
-
-					break;
+		switch(attribute.dataGenerationMode) {
+			case VertexDataGenerationMode::vertex: {
+				switch(generatorVertexFormat.windingOrder()) {
+					case VertexWindingOrder::cw:
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = vertices[0];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = vertices[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = vertices[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = vertices[2];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = vertices[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = vertices[0];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = vertices[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = vertices[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = vertices[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = vertices[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = vertices[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = vertices[2];
+						buffer += stride * 12;
+						break;
+					default:
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = vertices[0];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = vertices[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = vertices[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = vertices[2];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = vertices[0];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = vertices[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = vertices[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = vertices[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = vertices[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = vertices[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = vertices[2];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = vertices[4];
+						buffer += stride * 12;
+						break;
 				}
 
-				case VertexDataGenerationMode::element: {
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = vertices[0];
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = vertices[1];
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = vertices[2];
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = vertices[3];
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = vertices[4];
-					buffer += stride * 5;
+				break;
+			}
 
-					break;
-				}
+			case VertexDataGenerationMode::element: {
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = vertices[0];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = vertices[1];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = vertices[2];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = vertices[3];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = vertices[4];
+				buffer += stride * 5;
 
-				default: {
-					break;
-				}
+				break;
+			}
+
+			default: {
+				break;
 			}
 		}
 	}
@@ -460,89 +528,89 @@ void TrailVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Vertex
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
 	AlignmentMode alignmentMode = particleType.alignmentMode();
 
-	math::vector3<float> vertices[5];
-
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
-	for(const auto& trailEntry : generatorTrails) {
-		const Trail& trail = trailEntry.second;
-		if(trail.position.size() < 2) {
+	math::vector3<float> vertices[5];
+	math::vector3<float> cameraPosition(sceneContext.cameraPosition);
+	math::vector3<float> scale(sceneContext.effectScale);
+
+	for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+		if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
 			continue;
 		}
 
-		for(std::uint32_t p = 0; p < trail.position.size() - 1; p++) {
-			float3_t startToEdgeDirection = trail.directionToEdge[p];
-			float3_t endToEdgeDirection = trail.directionToEdge[p + 1];
+		math::vector3<float> startToEdgeDirection = generatorSideDirections[s];
+		math::vector3<float> endToEdgeDirection = generatorSideDirections[s + 1];
 
-			if(alignmentMode == AlignmentMode::camera) {
-				float3_t cameraToStart = math::normalize(sceneContext.cameraPosition - trail.position[p]);
-				float3_t cameraToEnd = math::normalize(sceneContext.cameraPosition - trail.position[p + 1]);
-				startToEdgeDirection = math::normalize(math::cross(cameraToStart, trail.direction[p]));
-				endToEdgeDirection = math::normalize(math::cross(cameraToEnd, trail.direction[p + 1]));
+		// TODO: move alignment calc to previous step?
+		if(alignmentMode == AlignmentMode::camera) {
+			math::vector3<float> cameraToStart = math::normalize(cameraPosition - generatorPositions[s]);
+			math::vector3<float> cameraToEnd = math::normalize(cameraPosition - generatorPositions[s + 1]);
+			startToEdgeDirection = math::normalize(math::cross(cameraToStart, generatorTangents[s]));
+			endToEdgeDirection = math::normalize(math::cross(cameraToEnd, generatorTangents[s + 1]));
+		}
+
+		math::vector3<float> startToEdge = startToEdgeDirection * generatorWidths[s] * 0.5f;
+		math::vector3<float> endToEdge = endToEdgeDirection * generatorWidths[s + 1] * 0.5f;
+
+		vertices[0] = (generatorPositions[s] + startToEdge) * scale;
+		vertices[1] = (generatorPositions[s] - startToEdge) * scale;
+		vertices[2] = (generatorPositions[s + 1] + endToEdge) * scale;
+		vertices[3] = (generatorPositions[s + 1] - endToEdge) * scale;
+		vertices[4] = (generatorPositions[s] + generatorPositions[s + 1]) * 0.5f * scale;
+
+		switch(attribute.dataGenerationMode) {
+			case VertexDataGenerationMode::vertex: {
+				switch(generatorVertexFormat.windingOrder()) {
+					case VertexWindingOrder::cw:
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = vertices[0];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = vertices[4];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = vertices[1];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = vertices[2];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = vertices[4];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = vertices[0];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = vertices[1];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = vertices[4];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = vertices[3];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = vertices[3];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = vertices[4];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = vertices[2];
+						buffer += stride * 12;
+						break;
+					default:
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = vertices[0];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = vertices[1];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = vertices[4];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = vertices[2];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = vertices[0];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = vertices[4];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = vertices[1];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = vertices[3];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = vertices[4];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = vertices[3];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = vertices[2];
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = vertices[4];
+						buffer += stride * 12;
+						break;
+				}
+
+				break;
 			}
 
-			float3_t startToEdge = startToEdgeDirection * std::max(trail.size[p].x, std::max(trail.size[p].y, trail.size[p].z)) * 0.5;
-			float3_t endToEdge = endToEdgeDirection * std::max(trail.size[p + 1].x, std::max(trail.size[p + 1].y, trail.size[p + 1].z)) * 0.5;
+			case VertexDataGenerationMode::element: {
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = vertices[0];
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = vertices[1];
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = vertices[2];
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = vertices[3];
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = vertices[4];
+				buffer += stride * 5;
 
-			vertices[0] = math::vector3<float>((trail.position[p] + startToEdge) * sceneContext.effectScale);
-			vertices[1] = math::vector3<float>((trail.position[p] - startToEdge) * sceneContext.effectScale);
-			vertices[2] = math::vector3<float>((trail.position[p + 1] + endToEdge) * sceneContext.effectScale);
-			vertices[3] = math::vector3<float>((trail.position[p + 1] - endToEdge) * sceneContext.effectScale);
-			vertices[4] = math::vector3<float>((trail.position[p] + trail.position[p + 1]) * 0.5 * sceneContext.effectScale);
+				break;
+			}
 
-			switch(attribute.dataGenerationMode) {
-				case VertexDataGenerationMode::vertex: {
-					switch(generatorVertexFormat.windingOrder()) {
-						case VertexWindingOrder::cw:
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = vertices[0];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = vertices[4];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = vertices[1];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = vertices[2];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = vertices[4];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = vertices[0];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = vertices[1];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = vertices[4];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = vertices[3];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = vertices[3];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = vertices[4];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = vertices[2];
-							buffer += stride * 12;
-							break;
-						default:
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = vertices[0];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = vertices[1];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = vertices[4];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = vertices[2];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = vertices[0];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = vertices[4];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = vertices[1];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = vertices[3];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = vertices[4];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = vertices[3];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = vertices[2];
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = vertices[4];
-							buffer += stride * 12;
-							break;
-					}
-
-					break;
-				}
-
-				case VertexDataGenerationMode::element: {
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = vertices[0];
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = vertices[1];
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = vertices[2];
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = vertices[3];
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = vertices[4];
-					buffer += stride * 5;
-
-					break;
-				}
-
-				default: {
-					break;
-				}
+			default: {
+				break;
 			}
 		}
 	}
@@ -556,197 +624,189 @@ void TrailVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAttr
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
-	for(const auto& trailEntry : generatorTrails) {
-		const Trail& trail = trailEntry.second;
-		if(trail.direction.size() < 2) {
+	for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+		if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
 			continue;
 		}
 
-		for(std::uint32_t p = 0; p < trail.direction.size() - 1; p++) {
-			float3_t startToEdgeDirection = trail.directionToEdge[p];
-			float3_t endToEdgeDirection = trail.directionToEdge[p + 1];
+		math::vector3<float> startToEdgeDirection = generatorSideDirections[s];
+		math::vector3<float> endToEdgeDirection = generatorSideDirections[s + 1];
 
-			if(alignmentMode == AlignmentMode::camera) {
-				float3_t cameraToStart = math::normalize(sceneContext.cameraPosition - trail.position[p]);
-				float3_t cameraToEnd = math::normalize(sceneContext.cameraPosition - trail.position[p + 1]);
-				startToEdgeDirection = math::normalize(math::cross(cameraToStart, trail.direction[p]));
-				endToEdgeDirection = math::normalize(math::cross(cameraToEnd, trail.direction[p + 1]));
-			}
+		// TODO: move to previous step
+		if(alignmentMode == AlignmentMode::camera) {
+			math::vector3<float> cameraToStart = math::normalize(sceneContext.cameraPosition - generatorPositions[s]);
+			math::vector3<float> cameraToEnd = math::normalize(sceneContext.cameraPosition - generatorPositions[s + 1]);
+			startToEdgeDirection = math::normalize(math::cross(cameraToStart, generatorTangents[s]));
+			endToEdgeDirection = math::normalize(math::cross(cameraToEnd, generatorTangents[s + 1]));
+		}
 
-			math::vector3<float> normal = math::vector3<float>(math::cross(trail.direction[p], startToEdgeDirection));
-			math::vector3<float> nextNormal = math::vector3<float>(math::cross(trail.direction[p + 1], endToEdgeDirection));
-			math::vector3<float> centerNormal = (normal + nextNormal) * 0.5f;
+		math::vector3<float> normal = math::vector3<float>(math::cross(generatorTangents[s], startToEdgeDirection));
+		math::vector3<float> nextNormal = math::vector3<float>(math::cross(generatorTangents[s + 1], endToEdgeDirection));
+		math::vector3<float> centerNormal = (normal + nextNormal) * 0.5f;
 
-			switch(attribute.dataGenerationMode) {
-				case VertexDataGenerationMode::vertex:
-					switch(generatorVertexFormat.windingOrder()) {
-						case VertexWindingOrder::cw:
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = normal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = centerNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = normal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = centerNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = normal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = normal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = centerNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = nextNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = nextNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = centerNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = nextNormal;
-							buffer += stride * 12;
-							break;
-						default:
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = normal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = normal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = centerNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = normal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = centerNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = normal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = nextNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = centerNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = nextNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = nextNormal;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = centerNormal;
-							buffer += stride * 12;
-							break;
-					}
-					break;
-				case VertexDataGenerationMode::element:
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = normal;
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = normal;
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = nextNormal;
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextNormal;
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = centerNormal;
-					buffer += stride * 5;
-					break;
-				default:
-					break;
-			}
+		switch(attribute.dataGenerationMode) {
+			case VertexDataGenerationMode::vertex:
+				switch(generatorVertexFormat.windingOrder()) {
+					case VertexWindingOrder::cw:
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = normal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = centerNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = normal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = centerNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = normal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = normal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = centerNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = nextNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = nextNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = centerNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = nextNormal;
+						buffer += stride * 12;
+						break;
+					default:
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = normal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = normal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = centerNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = normal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = centerNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = normal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = nextNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = centerNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = nextNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = nextNormal;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = centerNormal;
+						buffer += stride * 12;
+						break;
+				}
+				break;
+			case VertexDataGenerationMode::element:
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = normal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = normal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = nextNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextNormal;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = centerNormal;
+				buffer += stride * 5;
+				break;
+			default:
+				break;
 		}
 	}
 }
 void TrailVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
-	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
-	ParticleTrailRendererSettings::TextureMode textureMode =
-		particleType.trailRendererSettings().textureMode;
-	ParticleTrailRendererSettings::TextureRotation textureRotation =
-		particleType.trailRendererSettings().textureRotation;
-	float uvFactor =
-		static_cast<float>(particleType.trailRendererSettings().textureUVFactor);
+	const ParticleTrailRendererSettings& trailSettings = generatorEffect.particleTypes().at(generatorParticleTypeId).trailRendererSettings();
+	ParticleTrailRendererSettings::TextureMode textureMode = trailSettings.textureMode;
+	ParticleTrailRendererSettings::TextureRotation textureRotation = trailSettings.textureRotation;
+	float uvFactor = static_cast<float>(trailSettings.textureUVFactor);
 
 	math::vector2<float> textureCoords[5];
 
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
-	for(const auto& trailEntry : generatorTrails) {
-		const Trail& trail = trailEntry.second;
-		if(trail.index.size() < 2) {
+	for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+		if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
 			continue;
 		}
 
-		float invTrailLength = 1.0f / static_cast<float>(trail.length);
+		float invTrailLength = 1.0f / generatorTrailLengths[s];
 
-		for(std::uint32_t p = 0; p < trail.index.size() - 1; p++) {
-			float index = 0.0f;
-			float nextIndex = 1.0f;
-			switch(textureMode) {
-				case ParticleTrailRendererSettings::TextureMode::stretch:
-					index = static_cast<float>(trail.index[p]) * invTrailLength;
-					nextIndex = static_cast<float>(trail.index[p + 1]) * invTrailLength;
-					break;
-				case ParticleTrailRendererSettings::TextureMode::tile:
-					index = static_cast<float>(trail.index[p]);
-					nextIndex = static_cast<float>(trail.index[p + 1]);
-					break;
-				default:
-					break;
+		float uvIndex = 0.0f;
+		float nextUvIndex = uvFactor;
+		switch(textureMode) {
+			case ParticleTrailRendererSettings::TextureMode::stretch:
+				uvIndex = generatorTrailIndices[s] * invTrailLength * uvFactor;
+				nextUvIndex = generatorTrailIndices[s + 1] * invTrailLength * uvFactor;
+				break;
+			case ParticleTrailRendererSettings::TextureMode::tile:
+				uvIndex = generatorTrailIndices[s] * uvFactor;
+				nextUvIndex = generatorTrailIndices[s + 1] * uvFactor;
+				break;
+			default:
+				break;
+		}
+
+		switch(textureRotation) {
+			case ParticleTrailRendererSettings::TextureRotation::left:
+				textureCoords[0] = math::vector2<float>(uvIndex, 1.0f);
+				textureCoords[1] = math::vector2<float>(uvIndex, 0.0f);
+				textureCoords[2] = math::vector2<float>(nextUvIndex, 1.0f);
+				textureCoords[3] = math::vector2<float>(nextUvIndex, 0.0f);
+				textureCoords[4] = math::vector2<float>((uvIndex + nextUvIndex) * 0.5f, 0.5f);
+				break;
+			case ParticleTrailRendererSettings::TextureRotation::down:
+				textureCoords[0] = math::vector2<float>(1.0f, 1.0f - uvIndex);
+				textureCoords[1] = math::vector2<float>(0.0f, 1.0f - uvIndex);
+				textureCoords[2] = math::vector2<float>(1.0f, 1.0f - nextUvIndex);
+				textureCoords[3] = math::vector2<float>(0.0f, 1.0f - nextUvIndex);
+				textureCoords[4] = math::vector2<float>(0.5f, 1.0f - (uvIndex + nextUvIndex) * 0.5f);
+				break;
+			case ParticleTrailRendererSettings::TextureRotation::right:
+				textureCoords[0] = math::vector2<float>(1.0f - uvIndex, 0.0f);
+				textureCoords[1] = math::vector2<float>(1.0f - uvIndex, 1.0f);
+				textureCoords[2] = math::vector2<float>(1.0f - nextUvIndex, 0.0f);
+				textureCoords[3] = math::vector2<float>(1.0f - nextUvIndex, 1.0f);
+				textureCoords[4] = math::vector2<float>(1.0f - (uvIndex + nextUvIndex) * 0.5f, 0.5f);
+				break;
+			default:
+				textureCoords[0] = math::vector2<float>(0.0f, uvIndex);
+				textureCoords[1] = math::vector2<float>(1.0f, uvIndex);
+				textureCoords[2] = math::vector2<float>(0.0f, nextUvIndex);
+				textureCoords[3] = math::vector2<float>(1.0f, nextUvIndex);
+				textureCoords[4] = math::vector2<float>(0.5f, (uvIndex + nextUvIndex) * 0.5f);
+				break;
+		}
+
+		switch(attribute.dataGenerationMode) {
+			case VertexDataGenerationMode::vertex: {
+				switch(generatorVertexFormat.windingOrder()) {
+					case VertexWindingOrder::cw:
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = textureCoords[0];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = textureCoords[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = textureCoords[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = textureCoords[2];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = textureCoords[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = textureCoords[0];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = textureCoords[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = textureCoords[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = textureCoords[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = textureCoords[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = textureCoords[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = textureCoords[2];
+						buffer += stride * 12;
+						break;
+					default:
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = textureCoords[0];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = textureCoords[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = textureCoords[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = textureCoords[2];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = textureCoords[0];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = textureCoords[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = textureCoords[1];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = textureCoords[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = textureCoords[4];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = textureCoords[3];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = textureCoords[2];
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = textureCoords[4];
+						buffer += stride * 12;
+						break;
+				}
+
+				break;
 			}
 
-			switch(textureRotation) {
-				case ParticleTrailRendererSettings::TextureRotation::left:
-					textureCoords[0] = math::vector2<float>(index * uvFactor, 1.0f);
-					textureCoords[1] = math::vector2<float>(index * uvFactor, 0.0f);
-					textureCoords[2] = math::vector2<float>(nextIndex * uvFactor, 1.0f);
-					textureCoords[3] = math::vector2<float>(nextIndex * uvFactor, 0.0f);
-					textureCoords[4] = math::vector2<float>((index + nextIndex) * 0.5f * uvFactor, 0.5f);
-					break;
-				case ParticleTrailRendererSettings::TextureRotation::down:
-					textureCoords[0] = math::vector2<float>(1.0f, 1.0f - index * uvFactor);
-					textureCoords[1] = math::vector2<float>(0.0f, 1.0f - index * uvFactor);
-					textureCoords[2] = math::vector2<float>(1.0f, 1.0f - nextIndex * uvFactor);
-					textureCoords[3] = math::vector2<float>(0.0f, 1.0f - nextIndex * uvFactor);
-					textureCoords[4] = math::vector2<float>(0.5f, 1.0f - (index + nextIndex) * 0.5f * uvFactor);
-					break;
-				case ParticleTrailRendererSettings::TextureRotation::right:
-					textureCoords[0] = math::vector2<float>(1.0f - index * uvFactor, 0.0f);
-					textureCoords[1] = math::vector2<float>(1.0f - index * uvFactor, 1.0f);
-					textureCoords[2] = math::vector2<float>(1.0f - nextIndex * uvFactor, 0.0f);
-					textureCoords[3] = math::vector2<float>(1.0f - nextIndex * uvFactor, 1.0f);
-					textureCoords[4] = math::vector2<float>(1.0f - (index + nextIndex) * 0.5f * uvFactor, 0.5f);
-					break;
-				default:
-					textureCoords[0] = math::vector2<float>(0.0f, index * uvFactor);
-					textureCoords[1] = math::vector2<float>(1.0f, index * uvFactor);
-					textureCoords[2] = math::vector2<float>(0.0f, nextIndex * uvFactor);
-					textureCoords[3] = math::vector2<float>(1.0f, nextIndex * uvFactor);
-					textureCoords[4] = math::vector2<float>(0.5f, (index + nextIndex) * 0.5f * uvFactor);
-					break;
+			case VertexDataGenerationMode::element: {
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = textureCoords[0];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = textureCoords[1];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = textureCoords[2];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = textureCoords[3];
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = textureCoords[4];
+				buffer += stride * 5;
+				break;
 			}
 
-			switch(attribute.dataGenerationMode) {
-				case VertexDataGenerationMode::vertex: {
-					switch(generatorVertexFormat.windingOrder()) {
-						case VertexWindingOrder::cw:
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = textureCoords[0];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = textureCoords[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = textureCoords[1];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = textureCoords[2];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = textureCoords[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = textureCoords[0];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = textureCoords[1];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = textureCoords[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = textureCoords[3];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = textureCoords[3];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = textureCoords[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = textureCoords[2];
-							buffer += stride * 12;
-							break;
-						default:
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = textureCoords[0];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = textureCoords[1];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = textureCoords[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = textureCoords[2];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = textureCoords[0];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = textureCoords[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = textureCoords[1];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = textureCoords[3];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = textureCoords[4];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = textureCoords[3];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = textureCoords[2];
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = textureCoords[4];
-							buffer += stride * 12;
-							break;
-					}
-
-					break;
-				}
-
-				case VertexDataGenerationMode::element: {
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = textureCoords[0];
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = textureCoords[1];
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = textureCoords[2];
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = textureCoords[3];
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = textureCoords[4];
-					buffer += stride * 5;
-					break;
-				}
-
-				default: {
-					break;
-				}
+			default: {
+				break;
 			}
 		}
 	}
@@ -756,81 +816,86 @@ void TrailVertexGenerator::generateColorFloat(std::uint8_t* buffer, const Vertex
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
-	for(const auto& trailEntry : generatorTrails) {
-		const Trail& trail = trailEntry.second;
-		if(trail.color.size() < 2) {
-			continue;
+	switch(attribute.dataGenerationMode) {
+		case VertexDataGenerationMode::vertex: {
+			switch(generatorVertexFormat.windingOrder()) {
+				case VertexWindingOrder::cw:
+					for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+						if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+							continue;
+						}
+
+						math::vector4<float> color = generatorColors[s];
+						math::vector4<float> nextColor = generatorColors[s + 1];
+						math::vector4<float> centerColor = (color + nextColor) * 0.5f;
+
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 0) = color;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 1) = centerColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 2) = color;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 3) = nextColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 4) = centerColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 5) = color;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 6) = color;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 7) = centerColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 8) = nextColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 9) = nextColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 10) = centerColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 11) = nextColor;
+						buffer += stride * 12;
+					}
+					break;
+				default:
+					for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+						if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+							continue;
+						}
+
+						math::vector4<float> color = generatorColors[s];
+						math::vector4<float> nextColor = generatorColors[s + 1];
+						math::vector4<float> centerColor = (color + nextColor) * 0.5f;
+
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 0) = color;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 1) = color;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 2) = centerColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 3) = nextColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 4) = color;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 5) = centerColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 6) = color;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 7) = nextColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 8) = centerColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 9) = nextColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 10) = nextColor;
+						*reinterpret_cast<math::vector4<float>*>(buffer + stride * 11) = centerColor;
+						buffer += stride * 12;
+					}
+					break;
+			}
+
+			break;
 		}
 
-		switch(attribute.dataGenerationMode) {
-			case VertexDataGenerationMode::vertex: {
-				switch(generatorVertexFormat.windingOrder()) {
-					case VertexWindingOrder::cw:
-						for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-							math::vector4<float> color(trail.color[p]);
-							math::vector4<float> nextColor(trail.color[p + 1]);
-							math::vector4<float> centerColor = (color + nextColor) * 0.5f;
-
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 0) = color;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 1) = centerColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 2) = color;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 3) = nextColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 4) = centerColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 5) = color;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 6) = color;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 7) = centerColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 8) = nextColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 9) = nextColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 10) = centerColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 11) = nextColor;
-							buffer += stride * 12;
-						}
-						break;
-					default:
-						for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-							math::vector4<float> color(trail.color[p]);
-							math::vector4<float> nextColor(trail.color[p + 1]);
-							math::vector4<float> centerColor = (color + nextColor) * 0.5f;
-
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 0) = color;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 1) = color;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 2) = centerColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 3) = nextColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 4) = color;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 5) = centerColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 6) = color;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 7) = nextColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 8) = centerColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 9) = nextColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 10) = nextColor;
-							*reinterpret_cast<math::vector4<float>*>(buffer + stride * 11) = centerColor;
-							buffer += stride * 12;
-						}
-						break;
+		case VertexDataGenerationMode::element: {
+			for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+				if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+					continue;
 				}
 
-				break;
+				math::vector4<float> color = generatorColors[s];
+				math::vector4<float> nextColor = generatorColors[s + 1];
+
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 0) = color;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 1) = color;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 2) = nextColor;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 3) = nextColor;
+				*reinterpret_cast<math::vector4<float>*>(buffer + stride * 4) = (color + nextColor) * 0.5f;
+				buffer += stride * 5;
 			}
 
-			case VertexDataGenerationMode::element: {
-				for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-					math::vector4<float> color(trail.color[p]);
-					math::vector4<float> nextColor(trail.color[p + 1]);
+			break;
+		}
 
-					*reinterpret_cast<math::vector4<float>*>(buffer + stride * 0) = color;
-					*reinterpret_cast<math::vector4<float>*>(buffer + stride * 1) = color;
-					*reinterpret_cast<math::vector4<float>*>(buffer + stride * 2) = nextColor;
-					*reinterpret_cast<math::vector4<float>*>(buffer + stride * 3) = nextColor;
-					*reinterpret_cast<math::vector4<float>*>(buffer + stride * 4) = (color + nextColor) * 0.5f;
-					buffer += stride * 5;
-				}
-
-				break;
-			}
-
-			default: {
-				break;
-			}
+		default: {
+			break;
 		}
 	}
 }
@@ -839,82 +904,87 @@ void TrailVertexGenerator::generateColorByte(std::uint8_t* buffer, const VertexA
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
-	for(const auto& trailEntry : generatorTrails) {
-		const Trail& trail = trailEntry.second;
-		if(trail.color.size() < 2) {
-			continue;
+	switch(attribute.dataGenerationMode) {
+		case VertexDataGenerationMode::vertex: {
+			switch(generatorVertexFormat.windingOrder()) {
+				case VertexWindingOrder::cw:
+					for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+						if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+							continue;
+						}
+
+						ColorUByte color(generatorColors[s]);
+						ColorUByte nextColor(generatorColors[s + 1]);
+						ColorUByte centerColor((generatorColors[s] + generatorColors[s + 1]) * 0.5f);
+
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 0) = color;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 1) = centerColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 2) = color;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 3) = nextColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 4) = centerColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 5) = color;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 6) = color;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 7) = centerColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 8) = nextColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 9) = nextColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 10) = centerColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 11) = nextColor;
+						buffer += stride * 12;
+					}
+					break;
+				default:
+					for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+						if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+							continue;
+						}
+
+						ColorUByte color(generatorColors[s]);
+						ColorUByte nextColor(generatorColors[s + 1]);
+						ColorUByte centerColor((generatorColors[s] + generatorColors[s + 1]) * 0.5f);
+
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 0) = color;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 1) = color;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 2) = centerColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 3) = nextColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 4) = color;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 5) = centerColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 6) = color;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 7) = nextColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 8) = centerColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 9) = nextColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 10) = nextColor;
+						*reinterpret_cast<ColorUByte*>(buffer + stride * 11) = centerColor;
+						buffer += stride * 12;
+					}
+					break;
+			}
+
+			break;
 		}
 
-		switch(attribute.dataGenerationMode) {
-			case VertexDataGenerationMode::vertex: {
-				switch(generatorVertexFormat.windingOrder()) {
-					case VertexWindingOrder::cw:
-						for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-							ColorUByte color(trail.color[p]);
-							ColorUByte nextColor(trail.color[p + 1]);
-							ColorUByte centerColor((trail.color[p] + trail.color[p + 1]) * 0.5);
-
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 0) = color;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 1) = centerColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 2) = color;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 3) = nextColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 4) = centerColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 5) = color;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 6) = color;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 7) = centerColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 8) = nextColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 9) = nextColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 10) = centerColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 11) = nextColor;
-							buffer += stride * 12;
-						}
-						break;
-					default:
-						for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-							ColorUByte color(trail.color[p]);
-							ColorUByte nextColor(trail.color[p + 1]);
-							ColorUByte centerColor((trail.color[p] + trail.color[p + 1]) * 0.5);
-
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 0) = color;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 1) = color;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 2) = centerColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 3) = nextColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 4) = color;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 5) = centerColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 6) = color;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 7) = nextColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 8) = centerColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 9) = nextColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 10) = nextColor;
-							*reinterpret_cast<ColorUByte*>(buffer + stride * 11) = centerColor;
-							buffer += stride * 12;
-						}
-						break;
+		case VertexDataGenerationMode::element: {
+			for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+				if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+					continue;
 				}
 
-				break;
+				ColorUByte color(generatorColors[s]);
+				ColorUByte nextColor(generatorColors[s + 1]);
+				ColorUByte centerColor((generatorColors[s] + generatorColors[s + 1]) * 0.5f);
+
+				*reinterpret_cast<ColorUByte*>(buffer + stride * 0) = color;
+				*reinterpret_cast<ColorUByte*>(buffer + stride * 1) = color;
+				*reinterpret_cast<ColorUByte*>(buffer + stride * 2) = nextColor;
+				*reinterpret_cast<ColorUByte*>(buffer + stride * 3) = nextColor;
+				*reinterpret_cast<ColorUByte*>(buffer + stride * 4) = centerColor;
+				buffer += stride * 5;
 			}
 
-			case VertexDataGenerationMode::element: {
-				for(std::uint32_t p = 0; p < trail.color.size() - 1; p++) {
-					ColorUByte color(trail.color[p]);
-					ColorUByte nextColor(trail.color[p + 1]);
-					ColorUByte centerColor((trail.color[p] + trail.color[p + 1]) * 0.5);
+			break;
+		}
 
-					*reinterpret_cast<ColorUByte*>(buffer + stride * 0) = color;
-					*reinterpret_cast<ColorUByte*>(buffer + stride * 1) = color;
-					*reinterpret_cast<ColorUByte*>(buffer + stride * 2) = nextColor;
-					*reinterpret_cast<ColorUByte*>(buffer + stride * 3) = nextColor;
-					*reinterpret_cast<ColorUByte*>(buffer + stride * 4) = centerColor;
-					buffer += stride * 5;
-				}
-
-				break;
-			}
-
-			default: {
-				break;
-			}
+		default: {
+			break;
 		}
 	}
 }
@@ -923,81 +993,86 @@ void TrailVertexGenerator::generateLife(std::uint8_t* buffer, const VertexAttrib
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
-	for(const auto& trailEntry : generatorTrails) {
-		const Trail& trail = trailEntry.second;
-		if(trail.life.size() < 2) {
-			continue;
+	switch(attribute.dataGenerationMode) {
+		case VertexDataGenerationMode::vertex: {
+			switch(generatorVertexFormat.windingOrder()) {
+				case VertexWindingOrder::cw:
+					for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+						if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+							continue;
+						}
+
+						float life = generatorLives[s];
+						float nextLife = generatorLives[s + 1];
+						float centerLife = (life + nextLife) * 0.5f;
+
+						*reinterpret_cast<float*>(buffer + stride * 0) = life;
+						*reinterpret_cast<float*>(buffer + stride * 1) = centerLife;
+						*reinterpret_cast<float*>(buffer + stride * 2) = life;
+						*reinterpret_cast<float*>(buffer + stride * 3) = nextLife;
+						*reinterpret_cast<float*>(buffer + stride * 4) = centerLife;
+						*reinterpret_cast<float*>(buffer + stride * 5) = life;
+						*reinterpret_cast<float*>(buffer + stride * 6) = life;
+						*reinterpret_cast<float*>(buffer + stride * 7) = centerLife;
+						*reinterpret_cast<float*>(buffer + stride * 8) = nextLife;
+						*reinterpret_cast<float*>(buffer + stride * 9) = nextLife;
+						*reinterpret_cast<float*>(buffer + stride * 10) = centerLife;
+						*reinterpret_cast<float*>(buffer + stride * 11) = nextLife;
+						buffer += stride * 12;
+					}
+					break;
+				default:
+					for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+						if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+							continue;
+						}
+
+						float life = generatorLives[s];
+						float nextLife = generatorLives[s + 1];
+						float centerLife = (life + nextLife) * 0.5f;
+
+						*reinterpret_cast<float*>(buffer + stride * 0) = life;
+						*reinterpret_cast<float*>(buffer + stride * 1) = life;
+						*reinterpret_cast<float*>(buffer + stride * 2) = centerLife;
+						*reinterpret_cast<float*>(buffer + stride * 3) = nextLife;
+						*reinterpret_cast<float*>(buffer + stride * 4) = life;
+						*reinterpret_cast<float*>(buffer + stride * 5) = centerLife;
+						*reinterpret_cast<float*>(buffer + stride * 6) = life;
+						*reinterpret_cast<float*>(buffer + stride * 7) = nextLife;
+						*reinterpret_cast<float*>(buffer + stride * 8) = centerLife;
+						*reinterpret_cast<float*>(buffer + stride * 9) = nextLife;
+						*reinterpret_cast<float*>(buffer + stride * 10) = nextLife;
+						*reinterpret_cast<float*>(buffer + stride * 11) = centerLife;
+						buffer += stride * 12;
+					}
+					break;
+			}
+
+			break;
 		}
 
-		switch(attribute.dataGenerationMode) {
-			case VertexDataGenerationMode::vertex: {
-				switch(generatorVertexFormat.windingOrder()) {
-					case VertexWindingOrder::cw:
-						for(std::uint32_t p = 0; p < trail.life.size() - 1; p++) {
-							float life = static_cast<float>(trail.life[p]);
-							float nextLife = static_cast<float>(trail.life[p + 1]);
-							float centerLife = (life + nextLife) * 0.5f;
-
-							*reinterpret_cast<float*>(buffer + stride * 0) = life;
-							*reinterpret_cast<float*>(buffer + stride * 1) = centerLife;
-							*reinterpret_cast<float*>(buffer + stride * 2) = life;
-							*reinterpret_cast<float*>(buffer + stride * 3) = nextLife;
-							*reinterpret_cast<float*>(buffer + stride * 4) = centerLife;
-							*reinterpret_cast<float*>(buffer + stride * 5) = life;
-							*reinterpret_cast<float*>(buffer + stride * 6) = life;
-							*reinterpret_cast<float*>(buffer + stride * 7) = centerLife;
-							*reinterpret_cast<float*>(buffer + stride * 8) = nextLife;
-							*reinterpret_cast<float*>(buffer + stride * 9) = nextLife;
-							*reinterpret_cast<float*>(buffer + stride * 10) = centerLife;
-							*reinterpret_cast<float*>(buffer + stride * 11) = nextLife;
-							buffer += stride * 12;
-						}
-						break;
-					default:
-						for(std::uint32_t p = 0; p < trail.life.size() - 1; p++) {
-							float life = static_cast<float>(trail.life[p]);
-							float nextLife = static_cast<float>(trail.life[p + 1]);
-							float centerLife = (life + nextLife) * 0.5f;
-
-							*reinterpret_cast<float*>(buffer + stride * 0) = life;
-							*reinterpret_cast<float*>(buffer + stride * 1) = life;
-							*reinterpret_cast<float*>(buffer + stride * 2) = centerLife;
-							*reinterpret_cast<float*>(buffer + stride * 3) = nextLife;
-							*reinterpret_cast<float*>(buffer + stride * 4) = life;
-							*reinterpret_cast<float*>(buffer + stride * 5) = centerLife;
-							*reinterpret_cast<float*>(buffer + stride * 6) = life;
-							*reinterpret_cast<float*>(buffer + stride * 7) = nextLife;
-							*reinterpret_cast<float*>(buffer + stride * 8) = centerLife;
-							*reinterpret_cast<float*>(buffer + stride * 9) = nextLife;
-							*reinterpret_cast<float*>(buffer + stride * 10) = nextLife;
-							*reinterpret_cast<float*>(buffer + stride * 11) = centerLife;
-							buffer += stride * 12;
-						}
-						break;
+		case VertexDataGenerationMode::element: {
+			for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+				if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+					continue;
 				}
 
-				break;
+				float life = generatorLives[s];
+				float nextLife = generatorLives[s + 1];
+
+				*reinterpret_cast<float*>(buffer + stride * 0) = life;
+				*reinterpret_cast<float*>(buffer + stride * 1) = life;
+				*reinterpret_cast<float*>(buffer + stride * 2) = nextLife;
+				*reinterpret_cast<float*>(buffer + stride * 3) = nextLife;
+				*reinterpret_cast<float*>(buffer + stride * 4) = (life + nextLife) * 0.5f;
+				buffer += stride * 5;
 			}
 
-			case VertexDataGenerationMode::element: {
-				for(std::uint32_t p = 0; p < trail.life.size() - 1; p++) {
-					float life = static_cast<float>(trail.life[p]);
-					float nextLife = static_cast<float>(trail.life[p + 1]);
+			break;
+		}
 
-					*reinterpret_cast<float*>(buffer + stride * 0) = life;
-					*reinterpret_cast<float*>(buffer + stride * 1) = life;
-					*reinterpret_cast<float*>(buffer + stride * 2) = nextLife;
-					*reinterpret_cast<float*>(buffer + stride * 3) = nextLife;
-					*reinterpret_cast<float*>(buffer + stride * 4) = (life + nextLife) * 0.5f;
-					buffer += stride * 5;
-				}
-
-				break;
-			}
-
-			default: {
-				break;
-			}
+		default: {
+			break;
 		}
 	}
 }
@@ -1006,81 +1081,86 @@ void TrailVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const Vertex
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
-	for(const auto& trailEntry : generatorTrails) {
-		const Trail& trail = trailEntry.second;
-		if(trail.velocity.size() < 2) {
-			continue;
+	switch(attribute.dataGenerationMode) {
+		case VertexDataGenerationMode::vertex: {
+			switch(generatorVertexFormat.windingOrder()) {
+				case VertexWindingOrder::cw:
+					for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+						if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+							continue;
+						}
+
+						math::vector2<float> velocity(generatorVelocities[s]);
+						math::vector2<float> nextVelocity(generatorVelocities[s + 1]);
+						math::vector2<float> centerVelocity = (velocity + nextVelocity) * 0.5f;
+
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = velocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = centerVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = velocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = nextVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = centerVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = velocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = velocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = centerVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = nextVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = nextVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = centerVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = nextVelocity;
+						buffer += stride * 12;
+					}
+					break;
+				default:
+					for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+						if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+							continue;
+						}
+
+						math::vector2<float> velocity(generatorVelocities[s]);
+						math::vector2<float> nextVelocity(generatorVelocities[s + 1]);
+						math::vector2<float> centerVelocity = (velocity + nextVelocity) * 0.5f;
+
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = velocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = velocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = centerVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = nextVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = velocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = centerVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = velocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = nextVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = centerVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = nextVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = nextVelocity;
+						*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = centerVelocity;
+						buffer += stride * 12;
+					}
+					break;
+			}
+
+			break;
 		}
 
-		switch(attribute.dataGenerationMode) {
-			case VertexDataGenerationMode::vertex: {
-				switch(generatorVertexFormat.windingOrder()) {
-					case VertexWindingOrder::cw:
-						for(std::uint32_t p = 0; p < trail.velocity.size() - 1; p++) {
-							math::vector2<float> velocity(trail.velocity[p]);
-							math::vector2<float> nextVelocity(trail.velocity[p + 1]);
-							math::vector2<float> centerVelocity = (velocity + nextVelocity) * 0.5f;
-
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = velocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = centerVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = velocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = nextVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = centerVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = velocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = velocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = centerVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = nextVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = nextVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = centerVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = nextVelocity;
-							buffer += stride * 12;
-						}
-						break;
-					default:
-						for(std::uint32_t p = 0; p < trail.velocity.size() - 1; p++) {
-							math::vector2<float> velocity(trail.velocity[p]);
-							math::vector2<float> nextVelocity(trail.velocity[p + 1]);
-							math::vector2<float> centerVelocity = (velocity + nextVelocity) * 0.5f;
-
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = velocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = velocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = centerVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = nextVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = velocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 5) = centerVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 6) = velocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 7) = nextVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 8) = centerVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 9) = nextVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 10) = nextVelocity;
-							*reinterpret_cast<math::vector2<float>*>(buffer + stride * 11) = centerVelocity;
-							buffer += stride * 12;
-						}
-						break;
+		case VertexDataGenerationMode::element: {
+			for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+				if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+					continue;
 				}
 
-				break;
+				math::vector2<float> velocity(generatorVelocities[s]);
+				math::vector2<float> nextVelocity(generatorVelocities[s + 1]);
+
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = velocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = velocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = nextVelocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = nextVelocity;
+				*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = (velocity + nextVelocity) * 0.5f;
+				buffer += stride * 5;
 			}
 
-			case VertexDataGenerationMode::element: {
-				for(std::uint32_t p = 0; p < trail.velocity.size() - 1; p++) {
-					math::vector2<float> velocity(trail.velocity[p]);
-					math::vector2<float> nextVelocity(trail.velocity[p + 1]);
+			break;
+		}
 
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 0) = velocity;
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 1) = velocity;
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 2) = nextVelocity;
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 3) = nextVelocity;
-					*reinterpret_cast<math::vector2<float>*>(buffer + stride * 4) = (velocity + nextVelocity) * 0.5f;
-					buffer += stride * 5;
-				}
-
-				break;
-			}
-
-			default: {
-				break;
-			}
+		default: {
+			break;
 		}
 	}
 }
@@ -1089,81 +1169,86 @@ void TrailVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const Vertex
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
 
-	for(const auto& trailEntry : generatorTrails) {
-		const Trail& trail = trailEntry.second;
-		if(trail.velocity.size() < 2) {
-			continue;
+	switch(attribute.dataGenerationMode) {
+		case VertexDataGenerationMode::vertex: {
+			switch(generatorVertexFormat.windingOrder()) {
+				case VertexWindingOrder::cw:
+					for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+						if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+							continue;
+						}
+
+						math::vector3<float> velocity = generatorVelocities[s];
+						math::vector3<float> nextVelocity = generatorVelocities[s + 1];
+						math::vector3<float> centerVelocity = (velocity + nextVelocity) * 0.5f;
+
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = velocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = centerVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = velocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = centerVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = velocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = velocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = centerVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = nextVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = nextVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = centerVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = nextVelocity;
+						buffer += stride * 12;
+					}
+					break;
+				default:
+					for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+						if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+							continue;
+						}
+
+						math::vector3<float> velocity = generatorVelocities[s];
+						math::vector3<float> nextVelocity = generatorVelocities[s + 1];
+						math::vector3<float> centerVelocity = (velocity + nextVelocity) * 0.5f;
+
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = velocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = velocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = centerVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = velocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = centerVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = velocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = nextVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = centerVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = nextVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = nextVelocity;
+						*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = centerVelocity;
+						buffer += stride * 12;
+					}
+					break;
+			}
+
+			break;
 		}
 
-		switch(attribute.dataGenerationMode) {
-			case VertexDataGenerationMode::vertex: {
-				switch(generatorVertexFormat.windingOrder()) {
-					case VertexWindingOrder::cw:
-						for(std::uint32_t p = 0; p < trail.velocity.size() - 1; p++) {
-							math::vector3<float> velocity(trail.velocity[p]);
-							math::vector3<float> nextVelocity(trail.velocity[p + 1]);
-							math::vector3<float> centerVelocity = (velocity + nextVelocity) * 0.5f;
-
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = velocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = centerVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = velocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = centerVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = velocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = velocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = centerVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = nextVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = nextVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = centerVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = nextVelocity;
-							buffer += stride * 12;
-						}
-						break;
-					default:
-						for(std::uint32_t p = 0; p < trail.velocity.size() - 1; p++) {
-							math::vector3<float> velocity(trail.velocity[p]);
-							math::vector3<float> nextVelocity(trail.velocity[p + 1]);
-							math::vector3<float> centerVelocity = (velocity + nextVelocity) * 0.5f;
-
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = velocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = velocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = centerVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = velocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 5) = centerVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 6) = velocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 7) = nextVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 8) = centerVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 9) = nextVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 10) = nextVelocity;
-							*reinterpret_cast<math::vector3<float>*>(buffer + stride * 11) = centerVelocity;
-							buffer += stride * 12;
-						}
-						break;
+		case VertexDataGenerationMode::element: {
+			for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+				if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+					continue;
 				}
 
-				break;
+				math::vector3<float> velocity = generatorVelocities[s];
+				math::vector3<float> nextVelocity = generatorVelocities[s + 1];
+
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = velocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = velocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = nextVelocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextVelocity;
+				*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = (velocity + nextVelocity) * 0.5f;
+				buffer += stride * 5;
 			}
 
-			case VertexDataGenerationMode::element: {
-				for(std::uint32_t p = 0; p < trail.velocity.size() - 1; p++) {
-					math::vector3<float> velocity(trail.velocity[p]);
-					math::vector3<float> nextVelocity(trail.velocity[p + 1]);
+			break;
+		}
 
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 0) = velocity;
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 1) = velocity;
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 2) = nextVelocity;
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 3) = nextVelocity;
-					*reinterpret_cast<math::vector3<float>*>(buffer + stride * 4) = (velocity + nextVelocity) * 0.5f;
-					buffer += stride * 5;
-				}
-
-				break;
-			}
-
-			default: {
-				break;
-			}
+		default: {
+			break;
 		}
 	}
 }
