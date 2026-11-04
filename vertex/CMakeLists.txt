@@ -1,5 +1,6 @@
 target_sources(pixelpart-runtime PRIVATE
 	MeshVertexGenerator.cpp
+	ParticleAlignment.cpp
 	ParticleSorting.cpp
 	ParticleVertexGenerator.cpp
 	SpriteVertexGenerator.cpp

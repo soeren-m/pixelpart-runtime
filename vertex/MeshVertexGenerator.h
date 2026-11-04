@@ -76,11 +76,8 @@ private:
 		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const;
 
 	static matrix4_t particleTransformationMatrix(AlignmentMode alignmentMode, const float3_t& pivot,
-		const matrix3_t& simulationSpaceToGlobalMatrix,
-		const float3_t& emitterPosition, const matrix3_t& emitterRotation,
+		const matrix3_t& simulationSpaceToGlobalMatrix, const matrix4_t& emitterTransformMatrix,
 		ParticleCollection::ReadPtr particles, std::uint32_t particleIndex);
-
-	static matrix3_t rotationMatrix3d(const float3_t& rollYawPitch);
 
 	const Effect& generatorEffect;
 	id_t generatorParticleEmitterId;
