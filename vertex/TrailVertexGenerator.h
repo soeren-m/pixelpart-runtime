@@ -28,75 +28,69 @@ public:
 		const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const override;
 
 private:
-	struct Trail {
-		std::uint32_t particleCount = 0;
-		float_t length = 0.0;
-
-		std::vector<float3_t> position;
-		std::vector<float3_t> size;
-		std::vector<float4_t> color;
-		std::vector<float3_t> velocity;
-		std::vector<float_t> life;
-		std::vector<float3_t> direction;
-		std::vector<float3_t> directionToEdge;
-		std::vector<float_t> index;
-	};
-
 	void validateVertexFormat() const;
+
+	void buildDefaultTrails(pixelpart::ParticleCollection::ReadPtr particles, std::uint32_t particleCount);
+	void buildSmoothTrails(pixelpart::ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
+		std::uint32_t segmentCountPerTrail);
 
 	template <typename T>
 	void generateIndex(std::uint8_t* buffer, const VertexAttribute& attribute) const {
 		std::size_t stride = attribute.byteStride;
 		buffer += attribute.byteOffset;
 
-		std::uint32_t startIndex = 0;
+		switch(generatorVertexFormat.windingOrder()) {
+			case VertexWindingOrder::cw: {
+				for(std::uint32_t s = 0, v = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+					if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+						continue;
+					}
 
-		for(const auto& trailEntry : generatorTrails) {
-			const Trail& trail = trailEntry.second;
-			if(trail.position.size() < 2) {
-				continue;
+					*reinterpret_cast<T*>(buffer + stride * 0) = static_cast<T>(v * 5 + 0);
+					*reinterpret_cast<T*>(buffer + stride * 1) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 2) = static_cast<T>(v * 5 + 1);
+					*reinterpret_cast<T*>(buffer + stride * 3) = static_cast<T>(v * 5 + 2);
+					*reinterpret_cast<T*>(buffer + stride * 4) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 5) = static_cast<T>(v * 5 + 0);
+					*reinterpret_cast<T*>(buffer + stride * 6) = static_cast<T>(v * 5 + 1);
+					*reinterpret_cast<T*>(buffer + stride * 7) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 8) = static_cast<T>(v * 5 + 3);
+					*reinterpret_cast<T*>(buffer + stride * 9) = static_cast<T>(v * 5 + 3);
+					*reinterpret_cast<T*>(buffer + stride * 10) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 11) = static_cast<T>(v * 5 + 2);
+					buffer += stride * 12;
+
+					v++;
+				}
+
+				break;
 			}
 
-			std::uint32_t segmentCount = static_cast<std::uint32_t>(trail.position.size() - 1);
+			default: {
+				for(std::uint32_t s = 0, v = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+					if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+						continue;
+					}
 
-			switch(generatorVertexFormat.windingOrder()) {
-				case VertexWindingOrder::cw:
-					for(std::uint32_t p = 0; p < segmentCount; p++) {
-						*reinterpret_cast<T*>(buffer + stride * 0) = static_cast<T>(startIndex + p * 5 + 0);
-						*reinterpret_cast<T*>(buffer + stride * 1) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 2) = static_cast<T>(startIndex + p * 5 + 1);
-						*reinterpret_cast<T*>(buffer + stride * 3) = static_cast<T>(startIndex + p * 5 + 2);
-						*reinterpret_cast<T*>(buffer + stride * 4) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 5) = static_cast<T>(startIndex + p * 5 + 0);
-						*reinterpret_cast<T*>(buffer + stride * 6) = static_cast<T>(startIndex + p * 5 + 1);
-						*reinterpret_cast<T*>(buffer + stride * 7) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 8) = static_cast<T>(startIndex + p * 5 + 3);
-						*reinterpret_cast<T*>(buffer + stride * 9) = static_cast<T>(startIndex + p * 5 + 3);
-						*reinterpret_cast<T*>(buffer + stride * 10) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 11) = static_cast<T>(startIndex + p * 5 + 2);
-						buffer += stride * 12;
-					}
-					break;
-				default:
-					for(std::uint32_t p = 0; p < segmentCount; p++) {
-						*reinterpret_cast<T*>(buffer + stride * 0) = static_cast<T>(startIndex + p * 5 + 0);
-						*reinterpret_cast<T*>(buffer + stride * 1) = static_cast<T>(startIndex + p * 5 + 1);
-						*reinterpret_cast<T*>(buffer + stride * 2) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 3) = static_cast<T>(startIndex + p * 5 + 2);
-						*reinterpret_cast<T*>(buffer + stride * 4) = static_cast<T>(startIndex + p * 5 + 0);
-						*reinterpret_cast<T*>(buffer + stride * 5) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 6) = static_cast<T>(startIndex + p * 5 + 1);
-						*reinterpret_cast<T*>(buffer + stride * 7) = static_cast<T>(startIndex + p * 5 + 3);
-						*reinterpret_cast<T*>(buffer + stride * 8) = static_cast<T>(startIndex + p * 5 + 4);
-						*reinterpret_cast<T*>(buffer + stride * 9) = static_cast<T>(startIndex + p * 5 + 3);
-						*reinterpret_cast<T*>(buffer + stride * 10) = static_cast<T>(startIndex + p * 5 + 2);
-						*reinterpret_cast<T*>(buffer + stride * 11) = static_cast<T>(startIndex + p * 5 + 4);
-						buffer += stride * 12;
-					}
-					break;
+					*reinterpret_cast<T*>(buffer + stride * 0) = static_cast<T>(v * 5 + 0);
+					*reinterpret_cast<T*>(buffer + stride * 1) = static_cast<T>(v * 5 + 1);
+					*reinterpret_cast<T*>(buffer + stride * 2) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 3) = static_cast<T>(v * 5 + 2);
+					*reinterpret_cast<T*>(buffer + stride * 4) = static_cast<T>(v * 5 + 0);
+					*reinterpret_cast<T*>(buffer + stride * 5) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 6) = static_cast<T>(v * 5 + 1);
+					*reinterpret_cast<T*>(buffer + stride * 7) = static_cast<T>(v * 5 + 3);
+					*reinterpret_cast<T*>(buffer + stride * 8) = static_cast<T>(v * 5 + 4);
+					*reinterpret_cast<T*>(buffer + stride * 9) = static_cast<T>(v * 5 + 3);
+					*reinterpret_cast<T*>(buffer + stride * 10) = static_cast<T>(v * 5 + 2);
+					*reinterpret_cast<T*>(buffer + stride * 11) = static_cast<T>(v * 5 + 4);
+					buffer += stride * 12;
+
+					v++;
+				}
+
+				break;
 			}
-
-			startIndex += segmentCount * 5;
 		}
 	}
 
@@ -106,51 +100,54 @@ private:
 		std::size_t stride = attribute.byteStride;
 		buffer += attribute.byteOffset;
 
-		for(const auto& trailEntry : generatorTrails) {
-			const Trail& trail = trailEntry.second;
-			if(trail.position.size() < 2) {
-				continue;
+		switch(attribute.dataGenerationMode) {
+			case VertexDataGenerationMode::vertex: {
+				for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+					if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+						continue;
+					}
+
+					T trailId = static_cast<T>(generatorTrailIds[s]);
+
+					*reinterpret_cast<T*>(buffer + stride * 0) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 1) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 2) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 3) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 4) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 5) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 6) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 7) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 8) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 9) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 10) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 11) = trailId;
+					buffer += stride * 12;
+				}
+
+				break;
 			}
 
-			T trailId = static_cast<T>(trailEntry.first);
-
-			switch(attribute.dataGenerationMode) {
-				case VertexDataGenerationMode::vertex: {
-					for(std::uint32_t p = 0; p < trail.position.size() - 1; p++) {
-						*reinterpret_cast<T*>(buffer + stride * 0) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 1) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 2) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 3) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 4) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 5) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 6) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 7) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 8) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 9) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 10) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 11) = trailId;
-						buffer += stride * 12;
+			case VertexDataGenerationMode::element: {
+				for(std::uint32_t s = 0; s < generatorTotalSegmentVertexCount - 1; s++) {
+					if(generatorTrailIds[s] != generatorTrailIds[s + 1]) {
+						continue;
 					}
 
-					break;
+					T trailId = static_cast<T>(generatorTrailIds[s]);
+
+					*reinterpret_cast<T*>(buffer + stride * 0) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 1) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 2) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 3) = trailId;
+					*reinterpret_cast<T*>(buffer + stride * 4) = trailId;
+					buffer += stride * 5;
 				}
 
-				case VertexDataGenerationMode::element: {
-					for(std::uint32_t p = 0; p < trail.position.size() - 1; p++) {
-						*reinterpret_cast<T*>(buffer + stride * 0) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 1) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 2) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 3) = trailId;
-						*reinterpret_cast<T*>(buffer + stride * 4) = trailId;
-						buffer += stride * 5;
-					}
+				break;
+			}
 
-					break;
-				}
-
-				default: {
-					break;
-				}
+			default: {
+				break;
 			}
 		}
 	}
@@ -196,6 +193,17 @@ private:
 
 	std::shared_ptr<ThreadPool> generatorThreadPool;
 
-	std::unordered_map<std::uint32_t, Trail> generatorTrails;
+	std::uint32_t generatorTotalSegmentVertexCount = 0;
+	std::vector<std::uint32_t> generatorSortKeys;
+	std::vector<std::uint32_t> generatorTrailIds;
+	std::vector<float> generatorTrailIndices;
+	std::vector<float> generatorTrailLengths;
+	std::vector<float> generatorLives;
+	std::vector<math::vector3<float>> generatorPositions;
+	std::vector<float> generatorWidths;
+	std::vector<math::vector4<float>> generatorColors;
+	std::vector<math::vector3<float>> generatorVelocities;
+	std::vector<math::vector3<float>> generatorTangents;
+	std::vector<math::vector3<float>> generatorSideDirections;
 };
 }
