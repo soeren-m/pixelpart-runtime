@@ -8,7 +8,7 @@ ImageResource::ImageResource(const std::string& name, std::uint32_t w, std::uint
 	Resource(name), imageWidth(w), imageHeight(h), imageChannels(ch), imageColorSpace(cs) {
 	imageData.resize(imageWidth * imageHeight * imageChannels);
 }
-ImageResource::ImageResource(const std::string& name, std::uint32_t w, std::uint32_t h, std::uint32_t ch, ColorSpace cs, const std::uint8_t* source) :
+ImageResource::ImageResource(const std::string& name, std::uint32_t w, std::uint32_t h, std::uint32_t ch, ColorSpace cs, const unsigned char* source) :
 	ImageResource(name, w, h, ch, cs) {
 	copy(source, imageData.size());
 }
@@ -18,16 +18,16 @@ void ImageResource::resize(std::uint32_t w, std::uint32_t h) {
 	imageHeight = h;
 	imageData.resize(imageWidth * imageHeight * imageChannels, 0);
 }
-void ImageResource::assign(std::uint32_t w, std::uint32_t h, std::uint8_t value) {
+void ImageResource::assign(std::uint32_t w, std::uint32_t h, unsigned char value) {
 	imageWidth = w;
 	imageHeight = h;
 	imageData.assign(imageWidth * imageHeight * imageChannels, value);
 }
-void ImageResource::clear(std::uint8_t value) {
+void ImageResource::clear(unsigned char value) {
 	imageData.assign(imageWidth * imageHeight * imageChannels, value);
 }
 
-void ImageResource::copy(const std::uint8_t* source, std::size_t size) {
+void ImageResource::copy(const unsigned char* source, std::size_t size) {
 	std::memcpy(&imageData.front(), source, std::min(size, imageData.size()));
 }
 
@@ -48,10 +48,10 @@ std::size_t ImageResource::dataSize() const {
 	return imageData.size();
 }
 
-std::vector<std::uint8_t>& ImageResource::data() {
+std::vector<unsigned char>& ImageResource::data() {
 	return imageData;
 }
-const std::vector<std::uint8_t>& ImageResource::data() const {
+const std::vector<unsigned char>& ImageResource::data() const {
 	return imageData;
 }
 

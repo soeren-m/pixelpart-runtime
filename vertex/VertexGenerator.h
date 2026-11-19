@@ -10,7 +10,6 @@
 #include "../effect/EffectRuntimeContext.h"
 #include "../engine/ParticleCollection.h"
 #include <cstdint>
-#include <algorithm>
 
 namespace pixelpart {
 class VertexGenerator {

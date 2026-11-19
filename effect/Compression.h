@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CompressionMethod.h"
-#include <cstdint>
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -20,6 +19,6 @@ public:
 	DecompressionException(const std::string& msg);
 };
 
-std::string compressToString(const std::uint8_t* data, std::size_t size, CompressionMethod method);
-std::vector<std::uint8_t> decompressFromString(const std::string& data, std::size_t uncompressedSize, CompressionMethod method);
+std::string compressToString(const unsigned char* data, std::size_t size, CompressionMethod method);
+std::vector<unsigned char> decompressFromString(const std::string& data, std::size_t uncompressedSize, CompressionMethod method);
 }

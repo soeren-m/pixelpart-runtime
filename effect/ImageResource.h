@@ -13,13 +13,13 @@ class ImageResource : public Resource {
 public:
 	ImageResource() = default;
 	ImageResource(const std::string& name, std::uint32_t w, std::uint32_t h, std::uint32_t ch, ColorSpace cs);
-	ImageResource(const std::string& name, std::uint32_t w, std::uint32_t h, std::uint32_t ch, ColorSpace cs, const std::uint8_t* source);
+	ImageResource(const std::string& name, std::uint32_t w, std::uint32_t h, std::uint32_t ch, ColorSpace cs, const unsigned char* source);
 
 	void resize(std::uint32_t w, std::uint32_t h);
-	void assign(std::uint32_t w, std::uint32_t h, std::uint8_t value);
-	void clear(std::uint8_t value);
+	void assign(std::uint32_t w, std::uint32_t h, unsigned char value);
+	void clear(unsigned char value);
 
-	void copy(const std::uint8_t* source, std::size_t size);
+	void copy(const unsigned char* source, std::size_t size);
 
 	std::uint32_t width() const;
 	std::uint32_t height() const;
@@ -28,8 +28,8 @@ public:
 
 	std::size_t dataSize() const;
 
-	std::vector<std::uint8_t>& data();
-	const std::vector<std::uint8_t>& data() const;
+	std::vector<unsigned char>& data();
+	const std::vector<unsigned char>& data() const;
 
 private:
 	std::uint32_t imageWidth = 0;
@@ -37,7 +37,7 @@ private:
 	std::uint32_t imageChannels = 0;
 	ColorSpace imageColorSpace = ColorSpace::linear;
 
-	std::vector<std::uint8_t> imageData;
+	std::vector<unsigned char> imageData;
 };
 
 void to_json(nlohmann::ordered_json& j, const ImageResource& resource);

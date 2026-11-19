@@ -50,7 +50,7 @@ std::pair<std::string, std::size_t> serializeIntegerData(const std::vector<std::
 	}
 
 	return std::make_pair(
-		compressToString(reinterpret_cast<const std::uint8_t*>(stringData.data()), stringData.size(), CompressionMethod::zlib),
+		compressToString(reinterpret_cast<const unsigned char*>(stringData.data()), stringData.size(), CompressionMethod::zlib),
 		stringData.size());
 }
 std::pair<std::string, std::size_t> serializeVectorData(const std::vector<math::vector2<float>>& data) {
@@ -66,7 +66,7 @@ std::pair<std::string, std::size_t> serializeVectorData(const std::vector<math::
 	}
 
 	return std::make_pair(
-		compressToString(reinterpret_cast<const std::uint8_t*>(stringData.data()), stringData.size(), CompressionMethod::zlib),
+		compressToString(reinterpret_cast<const unsigned char*>(stringData.data()), stringData.size(), CompressionMethod::zlib),
 		stringData.size());
 }
 std::pair<std::string, std::size_t> serializeVectorData(const std::vector<math::vector3<float>>& data) {
@@ -85,12 +85,12 @@ std::pair<std::string, std::size_t> serializeVectorData(const std::vector<math::
 	}
 
 	return std::make_pair(
-		compressToString(reinterpret_cast<const std::uint8_t*>(stringData.data()), stringData.size(), CompressionMethod::zlib),
+		compressToString(reinterpret_cast<const unsigned char*>(stringData.data()), stringData.size(), CompressionMethod::zlib),
 		stringData.size());
 }
 
 void deserializeIntegerData(std::vector<std::uint32_t>& integerData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
-	std::vector<std::uint8_t> uncompressedData = decompressFromString(compressedData, uncompressedSize, compressionMethod);
+	std::vector<unsigned char> uncompressedData = decompressFromString(compressedData, uncompressedSize, compressionMethod);
 	std::istringstream dataStream(std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
 	while(!dataStream.eof()) {
@@ -101,7 +101,7 @@ void deserializeIntegerData(std::vector<std::uint32_t>& integerData, const std::
 	}
 }
 void deserializeVectorData(std::vector<math::vector2<float>>& vectorData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
-	std::vector<std::uint8_t> uncompressedData = decompressFromString(compressedData, uncompressedSize, compressionMethod);
+	std::vector<unsigned char> uncompressedData = decompressFromString(compressedData, uncompressedSize, compressionMethod);
 	std::istringstream dataStream(std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
 	while(!dataStream.eof()) {
@@ -118,7 +118,7 @@ void deserializeVectorData(std::vector<math::vector2<float>>& vectorData, const 
 	}
 }
 void deserializeVectorData(std::vector<math::vector3<float>>& vectorData, const std::string& compressedData, std::size_t uncompressedSize, CompressionMethod compressionMethod) {
-	std::vector<std::uint8_t> uncompressedData = decompressFromString(compressedData, uncompressedSize, compressionMethod);
+	std::vector<unsigned char> uncompressedData = decompressFromString(compressedData, uncompressedSize, compressionMethod);
 	std::istringstream dataStream(std::string(reinterpret_cast<const char*>(uncompressedData.data()), uncompressedData.size()));
 
 	while(!dataStream.eof()) {

@@ -86,7 +86,7 @@ void SpriteVertexGenerator::generateVertexData(const VertexDataBufferCollection&
 			continue;
 		}
 
-		std::uint8_t* buffer = dataBuffers[attribute.bufferIndex];
+		unsigned char* buffer = dataBuffers[attribute.bufferIndex];
 
 		switch(attribute.usage) {
 			case VertexAttributeUsage::index:
@@ -225,7 +225,7 @@ void SpriteVertexGenerator::validateVertexFormat() const {
 	}
 }
 
-void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const VertexAttribute& attribute,
+void SpriteVertexGenerator::generatePosition2d(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
@@ -310,7 +310,7 @@ void SpriteVertexGenerator::generatePosition2d(std::uint8_t* buffer, const Verte
 		}
 	}
 }
-void SpriteVertexGenerator::generatePosition3d(std::uint8_t* buffer, const VertexAttribute& attribute,
+void SpriteVertexGenerator::generatePosition3d(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
@@ -399,7 +399,7 @@ void SpriteVertexGenerator::generatePosition3d(std::uint8_t* buffer, const Verte
 		}
 	}
 }
-void SpriteVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAttribute& attribute,
+void SpriteVertexGenerator::generateNormal(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount,
 	const EffectRuntimeContext& runtimeContext, const SceneContext& sceneContext) const {
 	const ParticleType& particleType = generatorEffect.particleTypes().at(generatorParticleTypeId);
@@ -464,7 +464,7 @@ void SpriteVertexGenerator::generateNormal(std::uint8_t* buffer, const VertexAtt
 		}
 	}
 }
-void SpriteVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const VertexAttribute& attribute,
+void SpriteVertexGenerator::generateTextureCoord(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	const math::vector2<float> uv[] {
 		math::vector2<float>(0.0f, 0.0f),
@@ -523,7 +523,7 @@ void SpriteVertexGenerator::generateTextureCoord(std::uint8_t* buffer, const Ver
 		}
 	}
 }
-void SpriteVertexGenerator::generateColorFloat(std::uint8_t* buffer, const VertexAttribute& attribute,
+void SpriteVertexGenerator::generateColorFloat(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -573,7 +573,7 @@ void SpriteVertexGenerator::generateColorFloat(std::uint8_t* buffer, const Verte
 		}
 	}
 }
-void SpriteVertexGenerator::generateColorByte(std::uint8_t* buffer, const VertexAttribute& attribute,
+void SpriteVertexGenerator::generateColorByte(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -630,7 +630,7 @@ void SpriteVertexGenerator::generateColorByte(std::uint8_t* buffer, const Vertex
 		}
 	}
 }
-void SpriteVertexGenerator::generateLife(std::uint8_t* buffer, const VertexAttribute& attribute,
+void SpriteVertexGenerator::generateLife(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -680,7 +680,7 @@ void SpriteVertexGenerator::generateLife(std::uint8_t* buffer, const VertexAttri
 		}
 	}
 }
-void SpriteVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const VertexAttribute& attribute,
+void SpriteVertexGenerator::generateVelocity2d(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;
@@ -730,7 +730,7 @@ void SpriteVertexGenerator::generateVelocity2d(std::uint8_t* buffer, const Verte
 		}
 	}
 }
-void SpriteVertexGenerator::generateVelocity3d(std::uint8_t* buffer, const VertexAttribute& attribute,
+void SpriteVertexGenerator::generateVelocity3d(unsigned char* buffer, const VertexAttribute& attribute,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleCount) const {
 	std::size_t stride = attribute.byteStride;
 	buffer += attribute.byteOffset;

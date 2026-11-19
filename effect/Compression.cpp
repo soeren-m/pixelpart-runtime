@@ -17,7 +17,7 @@ DecompressionException::DecompressionException(const std::string& msg) : std::ru
 
 }
 
-std::string compressToString(const std::uint8_t* data, std::size_t size, CompressionMethod method) {
+std::string compressToString(const unsigned char* data, std::size_t size, CompressionMethod method) {
 	if(!data || size == 0) {
 		throw CompressionException("No data available");
 	}
@@ -36,20 +36,20 @@ std::string compressToString(const std::uint8_t* data, std::size_t size, Compres
 			throw CompressionException("zlib compression error: " + std::to_string(result));
 		}
 
-		return encodeBase64(static_cast<const std::uint8_t*>(compressedData.data()), static_cast<std::size_t>(compressedSize));
+		return encodeBase64(static_cast<const unsigned char*>(compressedData.data()), static_cast<std::size_t>(compressedSize));
 	}
 
 	return encodeBase64(data, size);
 }
 
-std::vector<std::uint8_t> decompressFromString(const std::string& data, std::size_t uncompressedSize, CompressionMethod method) {
+std::vector<unsigned char> decompressFromString(const std::string& data, std::size_t uncompressedSize, CompressionMethod method) {
 	std::string compressedData = decodeBase64(data);
 	if(compressedData.empty()) {
 		throw DecompressionException("Compressed data is empty");
 	}
 
 	if(method == CompressionMethod::zlib) {
-		std::vector<std::uint8_t> uncompressedData(uncompressedSize);
+		std::vector<unsigned char> uncompressedData(uncompressedSize);
 
 		uLong uncompressedSizeValue = static_cast<uLong>(uncompressedSize);
 		int result = uncompress(
@@ -65,6 +65,6 @@ std::vector<std::uint8_t> decompressFromString(const std::string& data, std::siz
 		return uncompressedData;
 	}
 
-	return std::vector<std::uint8_t>(compressedData.begin(), compressedData.end());
+	return std::vector<unsigned char>(compressedData.begin(), compressedData.end());
 }
 }
