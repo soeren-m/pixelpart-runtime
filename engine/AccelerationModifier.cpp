@@ -9,7 +9,7 @@ void AccelerationModifier::apply(ParticleCollection::WritePtr particles, std::ui
 	const Effect* effect, id_t particleEmitterId, id_t particleTypeId, EffectRuntimeContext runtimeContext) const {
 	const ParticleType& particleType = effect->particleTypes().at(particleTypeId);
 
-	const Curve<float_t>& particleAccelerationCurve = particleType.acceleration().resultCurve();
+	const Curve<float_t>& particleLinearAccelerationCurve = particleType.linearAcceleration().resultCurve();
 	const Curve<float_t>& particleRadialAccelerationCurve = particleType.radialAcceleration().resultCurve();
 	float3_t emitterPosition = particleType.simulationSpace() == ParticleSimulationSpace::global
 		? effect->sceneGraph().globalTransform(particleEmitterId, runtimeContext).position()
@@ -19,7 +19,7 @@ void AccelerationModifier::apply(ParticleCollection::WritePtr particles, std::ui
 		float3_t forwardDirection = math::safeNormalize(particles.velocity[p]);
 		float3_t radialDirection = math::safeNormalize(emitterPosition - particles.position[p]);
 
-		particles.force[p] = forwardDirection * particleAccelerationCurve.at(particles.life[p]);
+		particles.force[p] = forwardDirection * particleLinearAccelerationCurve.at(particles.life[p]);
 		particles.force[p] += radialDirection * particleRadialAccelerationCurve.at(particles.life[p]);
 	}
 }

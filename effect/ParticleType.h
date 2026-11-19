@@ -119,8 +119,8 @@ public:
 	AnimatedProperty<float3_t>& rotationBySpeed();
 	const AnimatedProperty<float3_t>& rotationBySpeed() const;
 
-	AnimatedProperty<float_t>& acceleration();
-	const AnimatedProperty<float_t>& acceleration() const;
+	AnimatedProperty<float_t>& linearAcceleration();
+	const AnimatedProperty<float_t>& linearAcceleration() const;
 
 	AnimatedProperty<float_t>& radialAcceleration();
 	const AnimatedProperty<float_t>& radialAcceleration() const;
@@ -197,7 +197,7 @@ private:
 	AnimatedProperty<float_t> particleLifetimePhysicalSize = AnimatedProperty<float_t>(1.0);
 	AnimatedProperty<float3_t> particleLifetimeRotation = AnimatedProperty<float3_t>(float3_t(0.0));
 	AnimatedProperty<float3_t> particleLifetimeRotationBySpeed = AnimatedProperty<float3_t>(float3_t(0.0));
-	AnimatedProperty<float_t> particleLifetimeAcceleration = AnimatedProperty<float_t>(0.0);
+	AnimatedProperty<float_t> particleLifetimeLinearAcceleration = AnimatedProperty<float_t>(0.0);
 	AnimatedProperty<float_t> particleLifetimeRadialAcceleration = AnimatedProperty<float_t>(0.0);
 	AnimatedProperty<float_t> particleLifetimeWeight = AnimatedProperty<float_t>(1.0);
 	AnimatedProperty<float_t> particleLifetimeBounce = AnimatedProperty<float_t>(1.0);

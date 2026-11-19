@@ -23,7 +23,7 @@ void ParticleType::applyInputs(const ComputeGraph::InputSet& inputs) {
 	particleLifetimePhysicalSize.applyInputs(inputs);
 	particleLifetimeRotation.applyInputs(inputs);
 	particleLifetimeRotationBySpeed.applyInputs(inputs);
-	particleLifetimeAcceleration.applyInputs(inputs);
+	particleLifetimeLinearAcceleration.applyInputs(inputs);
 	particleLifetimeRadialAcceleration.applyInputs(inputs);
 	particleLifetimeWeight.applyInputs(inputs);
 	particleLifetimeBounce.applyInputs(inputs);
@@ -279,11 +279,11 @@ const AnimatedProperty<float3_t>& ParticleType::rotationBySpeed() const {
 	return particleLifetimeRotationBySpeed;
 }
 
-AnimatedProperty<float_t>& ParticleType::acceleration() {
-	return particleLifetimeAcceleration;
+AnimatedProperty<float_t>& ParticleType::linearAcceleration() {
+	return particleLifetimeLinearAcceleration;
 }
-const AnimatedProperty<float_t>& ParticleType::acceleration() const {
-	return particleLifetimeAcceleration;
+const AnimatedProperty<float_t>& ParticleType::linearAcceleration() const {
+	return particleLifetimeLinearAcceleration;
 }
 
 AnimatedProperty<float_t>& ParticleType::radialAcceleration() {
@@ -414,7 +414,7 @@ void to_json(nlohmann::ordered_json& j, const ParticleType& particleType) {
 		{ "physical_size", particleType.physicalSize() },
 		{ "rotation", particleType.rotation() },
 		{ "rotation_by_speed", particleType.rotationBySpeed() },
-		{ "acceleration", particleType.acceleration() },
+		{ "linear_acceleration", particleType.linearAcceleration() },
 		{ "radial_acceleration", particleType.radialAcceleration() },
 		{ "weight", particleType.weight() },
 		{ "bounce", particleType.bounce() },
@@ -467,7 +467,7 @@ void from_json(const nlohmann::ordered_json& j, ParticleType& particleType) {
 	particleType.physicalSize() = j.value("physical_size", AnimatedProperty<float_t>(1.0));
 	particleType.rotation() = j.value("rotation", AnimatedProperty<float3_t>(float3_t(0.0)));
 	particleType.rotationBySpeed() = j.value("rotation_by_speed", AnimatedProperty<float3_t>(float3_t(0.0)));
-	particleType.acceleration() = j.value("acceleration", AnimatedProperty<float_t>(0.0));
+	particleType.linearAcceleration() = j.value("linear_acceleration", AnimatedProperty<float_t>(0.0));
 	particleType.radialAcceleration() = j.value("radial_acceleration", AnimatedProperty<float_t>(0.0));
 	particleType.weight() = j.value("weight", AnimatedProperty<float_t>(1.0));
 	particleType.bounce() = j.value("bounce", AnimatedProperty<float_t>(1.0));
