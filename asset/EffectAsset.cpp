@@ -1018,6 +1018,19 @@ void migrateEffectAssetJson(nlohmann::ordered_json& jsonData) {
 		for(nlohmann::ordered_json& jParticleType : jsonData["effect"]["particles"]) {
 			jParticleType["linear_acceleration"] = jParticleType["acceleration"];
 			jParticleType.erase("acceleration");
+
+			bool builtInMaterial = jParticleType["material_instance"]["builtin_material"];
+			if(builtInMaterial) {
+				std::string materialId = jParticleType["material_instance"]["material_id"];
+
+				// TODO
+				if(materialId == "MeshUnlit") {
+					jParticleType["material_instance"]["material_id"] = "MeshUnlitOpaque";
+				}
+				else if(materialId == "MeshLit") {
+					jParticleType["material_instance"]["material_id"] = "MeshLitOpaque";
+				}
+			}
 		}
 
 		version = 12;

@@ -1,8 +1,18 @@
 #include "BuiltInMaterialRepository.h"
 
 namespace pixelpart {
+template<typename T, typename... Vectors>
+std::vector<T> concat(const std::vector<T>& first, const Vectors&... rest) {
+	std::vector<T> result;
+	result.reserve(first.size() + (rest.size() + ...));
+	result.insert(result.end(), first.begin(), first.end());
+	(result.insert(result.end(), rest.begin(), rest.end()), ...);
+
+	return result;
+}
+
 BuiltInMaterialRepository::BuiltInMaterialRepository() {
-	const std::vector<std::string> spriteUnlitParameterNames = std::vector<std::string>{
+	const std::vector<std::string> spriteParameters = std::vector<std::string>{
 		"MainTexture",
 		"Emission",
 		"ColorBlendMode",
@@ -12,85 +22,38 @@ BuiltInMaterialRepository::BuiltInMaterialRepository() {
 		"SpriteAnimationNumFrames",
 		"SpriteAnimationStartFrame",
 		"SpriteAnimationDuration",
-		"SpriteAnimationLoop",
-		"SoftParticles",
-		"SoftParticleTransition",
-		"DistanceFade",
-		"DistanceFadeTransition"
+		"SpriteAnimationLoop"
 	};
-	const std::vector<std::string> spriteLitParameterNames = std::vector<std::string>{
-		"MainTexture",
-		"Emission",
-		"Roughness",
-		"Metallic",
-		"ColorBlendMode",
-		"SpriteSheetRowNumber",
-		"SpriteSheetColumnNumber",
-		"SpriteSheetOrigin",
-		"SpriteAnimationNumFrames",
-		"SpriteAnimationStartFrame",
-		"SpriteAnimationDuration",
-		"SpriteAnimationLoop",
-		"SoftParticles",
-		"SoftParticleTransition",
-		"DistanceFade",
-		"DistanceFadeTransition"
-	};
-	const std::vector<std::string> trailUnlitParameterNames = std::vector<std::string>{
-		"MainTexture",
-		"Emission",
-		"ColorBlendMode",
-		"SoftParticles",
-		"SoftParticleTransition",
-		"DistanceFade",
-		"DistanceFadeTransition"
-	};
-	const std::vector<std::string> trailLitParameterNames = std::vector<std::string>{
-		"MainTexture",
-		"Emission",
-		"Roughness",
-		"Metallic",
-		"ColorBlendMode",
-		"SoftParticles",
-		"SoftParticleTransition",
-		"DistanceFade",
-		"DistanceFadeTransition"
-	};
-	const std::vector<std::string> meshUnlitParameterNames = std::vector<std::string>{
+	const std::vector<std::string> trailParameters = std::vector<std::string>{
 		"MainTexture",
 		"Emission",
 		"ColorBlendMode"
 	};
-	const std::vector<std::string> meshUnlitAlphaParameterNames = std::vector<std::string>{
+	const std::vector<std::string> meshParameters = std::vector<std::string>{
 		"MainTexture",
 		"Emission",
-		"ColorBlendMode",
-		"SoftParticles",
-		"SoftParticleTransition",
-		"DistanceFade",
-		"DistanceFadeTransition"
-	};
-	const std::vector<std::string> meshLitParameterNames = std::vector<std::string>{
-		"MainTexture",
-		"Emission",
-		"Roughness",
-		"Metallic",
 		"ColorBlendMode"
 	};
-	const std::vector<std::string> meshLitAlphaParameterNames = std::vector<std::string>{
-		"MainTexture",
-		"Emission",
-		"Roughness",
-		"Metallic",
-		"ColorBlendMode",
+
+	const std::vector<std::string> opaqueParameters = std::vector<std::string>{
+		"AlphaThreshold"
+	};
+	const std::vector<std::string> transparentParameters = std::vector<std::string>{
 		"SoftParticles",
 		"SoftParticleTransition",
 		"DistanceFade",
 		"DistanceFadeTransition"
 	};
+
+	const std::vector<std::string> litParameters = std::vector<std::string>{
+		"Roughness",
+		"Metallic"
+	};
+
 	const std::unordered_map<std::string, id_t> materialParameterIds = std::unordered_map<std::string, id_t> {
 		{ "MainTexture", 0 },
 		{ "ColorBlendMode", 10 },
+		{ "AlphaThreshold", 11 },
 		{ "Emission", 20 },
 		{ "Roughness", 21 },
 		{ "Metallic", 22 },
@@ -106,7 +69,8 @@ BuiltInMaterialRepository::BuiltInMaterialRepository() {
 		{ "DistanceFade", 42 },
 		{ "DistanceFadeTransition", 43 }
 	};
-	const std::unordered_map<std::string, VariantParameter> materialParameters = std::unordered_map<std::string, VariantParameter>{
+
+	const std::unordered_map<std::string, VariantParameter> materialParameterInfo = std::unordered_map<std::string, VariantParameter>{
 		{ "MainTexture", VariantParameter::ImageResourceParameter("MainTexture") },
 		{ "ColorBlendMode", VariantParameter::EnumParameter("ColorBlendMode", 0, {
 			"blend_multiply",
@@ -119,6 +83,7 @@ BuiltInMaterialRepository::BuiltInMaterialRepository() {
 			"blend_darken",
 			"blend_coloronly"
 		}) },
+		{ "AlphaThreshold", VariantParameter::FloatParameter("AlphaThreshold", 0.5, 0.0, 1.0) },
 		{ "Emission", VariantParameter::Float3Parameter("Emission", float3_t(0.0), float3_t(0.0), float3_t(1000.0)) },
 		{ "Roughness", VariantParameter::FloatParameter("Roughness", 0.5, 0.0, 1.0) },
 		{ "Metallic", VariantParameter::FloatParameter("Metallic", 0.0, 0.0, 1.0) },
@@ -140,18 +105,24 @@ BuiltInMaterialRepository::BuiltInMaterialRepository() {
 		{ "DistanceFadeTransition", VariantParameter::FloatParameter("DistanceFadeTransition", 0.1, 0.0, 10.0) }
 	};
 
-	addMaterial("SpriteUnlitAlpha", ParticleRendererType::sprite, BlendMode::alpha, LightingMode::unlit, spriteUnlitParameterNames, materialParameterIds, materialParameters);
-	addMaterial("SpriteUnlitAdditive", ParticleRendererType::sprite, BlendMode::additive, LightingMode::unlit, spriteUnlitParameterNames, materialParameterIds, materialParameters);
-	addMaterial("TrailUnlitAlpha", ParticleRendererType::trail, BlendMode::alpha, LightingMode::unlit, trailUnlitParameterNames, materialParameterIds, materialParameters);
-	addMaterial("TrailUnlitAdditive", ParticleRendererType::trail, BlendMode::additive, LightingMode::unlit, trailUnlitParameterNames, materialParameterIds, materialParameters);
-	addMaterial("MeshUnlit", ParticleRendererType::mesh, BlendMode::off, LightingMode::unlit, meshUnlitParameterNames, materialParameterIds, materialParameters);
-	addMaterial("MeshUnlitAlpha", ParticleRendererType::mesh, BlendMode::alpha, LightingMode::unlit, meshUnlitAlphaParameterNames, materialParameterIds, materialParameters);
-	addMaterial("SpriteLitAlpha", ParticleRendererType::sprite, BlendMode::alpha, LightingMode::lit, spriteLitParameterNames, materialParameterIds, materialParameters);
-	addMaterial("SpriteLitAdditive", ParticleRendererType::sprite, BlendMode::additive, LightingMode::lit, spriteLitParameterNames, materialParameterIds, materialParameters);
-	addMaterial("TrailLitAlpha", ParticleRendererType::trail, BlendMode::alpha, LightingMode::lit, trailLitParameterNames, materialParameterIds, materialParameters);
-	addMaterial("TrailLitAdditive", ParticleRendererType::trail, BlendMode::additive, LightingMode::lit, trailLitParameterNames, materialParameterIds, materialParameters);
-	addMaterial("MeshLit", ParticleRendererType::mesh, BlendMode::off, LightingMode::lit, meshLitParameterNames, materialParameterIds, materialParameters);
-	addMaterial("MeshLitAlpha", ParticleRendererType::mesh, BlendMode::alpha, LightingMode::lit, meshLitAlphaParameterNames, materialParameterIds, materialParameters);
+	addMaterial("SpriteUnlitOpaque", ParticleRendererType::sprite, BlendMode::off, LightingMode::unlit, concat(spriteParameters, opaqueParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("SpriteUnlitAlpha", ParticleRendererType::sprite, BlendMode::alpha, LightingMode::unlit, concat(spriteParameters, transparentParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("SpriteUnlitAdditive", ParticleRendererType::sprite, BlendMode::additive, LightingMode::unlit, concat(spriteParameters, transparentParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("SpriteLitOpaque", ParticleRendererType::sprite, BlendMode::off, LightingMode::lit, concat(spriteParameters, opaqueParameters, litParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("SpriteLitAlpha", ParticleRendererType::sprite, BlendMode::alpha, LightingMode::lit, concat(spriteParameters, transparentParameters, litParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("SpriteLitAdditive", ParticleRendererType::sprite, BlendMode::additive, LightingMode::lit, concat(spriteParameters, transparentParameters, litParameters), materialParameterIds, materialParameterInfo);
+
+	addMaterial("TrailUnlitOpaque", ParticleRendererType::trail, BlendMode::off, LightingMode::unlit, concat(trailParameters, opaqueParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("TrailUnlitAlpha", ParticleRendererType::trail, BlendMode::alpha, LightingMode::unlit, concat(trailParameters, transparentParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("TrailUnlitAdditive", ParticleRendererType::trail, BlendMode::additive, LightingMode::unlit, concat(trailParameters, transparentParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("TrailLitOpaque", ParticleRendererType::trail, BlendMode::off, LightingMode::lit, concat(trailParameters, opaqueParameters, litParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("TrailLitAlpha", ParticleRendererType::trail, BlendMode::alpha, LightingMode::lit, concat(trailParameters, transparentParameters, litParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("TrailLitAdditive", ParticleRendererType::trail, BlendMode::additive, LightingMode::lit, concat(trailParameters, transparentParameters, litParameters), materialParameterIds, materialParameterInfo);
+
+	addMaterial("MeshUnlitOpaque", ParticleRendererType::mesh, BlendMode::off, LightingMode::unlit, concat(meshParameters, opaqueParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("MeshUnlitAlpha", ParticleRendererType::mesh, BlendMode::alpha, LightingMode::unlit, concat(meshParameters, transparentParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("MeshLitOpaque", ParticleRendererType::mesh, BlendMode::off, LightingMode::lit, concat(meshParameters, opaqueParameters, litParameters), materialParameterIds, materialParameterInfo);
+	addMaterial("MeshLitAlpha", ParticleRendererType::mesh, BlendMode::alpha, LightingMode::lit, concat(meshParameters, transparentParameters, litParameters), materialParameterIds, materialParameterInfo);
 }
 
 const BuiltInMaterialMetadata* BuiltInMaterialRepository::material(const std::string& name) const {
