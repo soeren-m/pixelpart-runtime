@@ -14,11 +14,10 @@
 #include "PointLightSource.h"
 #include "SpotLightSource.h"
 #include <utility>
-#include <algorithm>
 
 namespace pixelpart {
 SceneGraph::SceneGraph(const SceneGraph& other) {
-	for(const std::unique_ptr<Node>& node : other.sceneNodes) {
+	for(const auto& node : other.sceneNodes) {
 		sceneNodes.emplace_back(std::move(node->clone()));
 	}
 
@@ -26,13 +25,29 @@ SceneGraph::SceneGraph(const SceneGraph& other) {
 }
 SceneGraph::SceneGraph(SceneGraph&& other) :
 	sceneNodes(std::move(other.sceneNodes)),
-	indexMap(std::move(other.indexMap)) {
+	sceneIndexMap(std::move(other.sceneIndexMap)) {
 
+}
+SceneGraph::SceneGraph(std::vector<std::unique_ptr<Node>>&& nodeList) : sceneNodes(std::move(nodeList)) {
+	for(auto& node : sceneNodes) {
+		if(node->nodeId) {
+			continue;
+		}
+
+		id_t id = 0;
+		while(contains(id)) {
+			id++;
+		}
+
+		node->nodeId = id;
+	}
+
+	rebuildIndex();
 }
 
 SceneGraph& SceneGraph::operator=(const SceneGraph& other) {
 	sceneNodes.clear();
-	for(const std::unique_ptr<Node>& node : other.sceneNodes) {
+	for(const auto& node : other.sceneNodes) {
 		sceneNodes.emplace_back(std::move(node->clone()));
 	}
 
@@ -42,47 +57,48 @@ SceneGraph& SceneGraph::operator=(const SceneGraph& other) {
 }
 SceneGraph& SceneGraph::operator=(SceneGraph&& other) {
 	sceneNodes = std::move(other.sceneNodes);
-	indexMap = std::move(other.indexMap);
+	sceneIndexMap = std::move(other.sceneIndexMap);
 
 	return *this;
 }
 
 SceneGraph::iterator SceneGraph::begin() {
-	return sceneNodes.begin();
+	return iterator(sceneNodes.begin());
 }
 SceneGraph::iterator SceneGraph::end() {
-	return sceneNodes.end();
+	return iterator(sceneNodes.end());
 }
+
 SceneGraph::const_iterator SceneGraph::begin() const {
-	return sceneNodes.begin();
+	return const_iterator(sceneNodes.begin());
 }
 SceneGraph::const_iterator SceneGraph::end() const {
-	return sceneNodes.end();
+	return const_iterator(sceneNodes.end());
 }
 
 Node& SceneGraph::add(const Node& node, id_t baseId) {
-	id_t nodeId = node.nodeId
+	id_t id = node.nodeId
 		? id_t(baseId.value() + node.nodeId.value())
 		: baseId;
 	id_t parentId = node.nodeParentId
 		? id_t(baseId.value() + node.nodeParentId.value())
 		: id_t();
 
-	while(contains(nodeId)) {
-		nodeId++;
+	while(contains(id)) {
+		id++;
 	}
 
 	sceneNodes.emplace_back(node.clone());
 
-	std::unique_ptr<Node>& insertedNode = sceneNodes.back();
-	insertedNode->nodeId = nodeId;
+	auto& insertedNode = sceneNodes.back();
+	insertedNode->nodeId = id;
 	insertedNode->nodeParentId = parentId;
 	rebuildIndex();
 
 	return *insertedNode;
 }
-Node& SceneGraph::duplicate(id_t nodeId) {
-	Node& node = at(nodeId);
+Node& SceneGraph::duplicate(id_t id) {
+	Node& node = at(id);
 
 	id_t insertedNodeId = 0;
 	while(contains(insertedNodeId)) {
@@ -91,54 +107,27 @@ Node& SceneGraph::duplicate(id_t nodeId) {
 
 	sceneNodes.emplace_back(node.clone());
 
-	std::unique_ptr<Node>& insertedNode = sceneNodes.back();
+	auto& insertedNode = sceneNodes.back();
 	insertedNode->nodeId = insertedNodeId;
 
 	rebuildIndex();
 
 	return *sceneNodes.back();
 }
-
-void SceneGraph::set(std::vector<std::unique_ptr<Node>>&& nodeList) {
-	sceneNodes = std::move(nodeList);
-
-	for(std::unique_ptr<Node>& node : sceneNodes) {
-		if(node->id()) {
-			continue;
-		}
-
-		id_t nodeId = 0;
-		while(contains(nodeId)) {
-			nodeId++;
-		}
-
-		node->nodeId = nodeId;
-	}
-
-	rebuildIndex();
-}
-
-void SceneGraph::remove(id_t nodeId) {
-	std::optional<std::uint32_t> index = indexOf(nodeId);
+void SceneGraph::remove(id_t id) {
+	std::optional<std::size_t> index = indexOf(id);
 	if(!index) {
 		return;
 	}
 
-	removeIndex(index.value());
-}
-void SceneGraph::removeIndex(std::uint32_t index) {
-	if(index >= sceneNodes.size()) {
-		return;
-	}
-
-	const std::unique_ptr<Node>& node = sceneNodes[index];
-	for(std::unique_ptr<Node>& otherNode : sceneNodes) {
-		if(otherNode->parentId() == node->id()) {
-			otherNode->parent(node->parentId());
+	const auto& node = sceneNodes[index.value()];
+	for(auto& otherNode : sceneNodes) {
+		if(otherNode->nodeParentId == node->nodeId) {
+			otherNode->parent(node->nodeParentId);
 		}
 	}
 
-	sceneNodes.erase(sceneNodes.begin() + index);
+	sceneNodes.erase(sceneNodes.begin() + index.value());
 	rebuildIndex();
 }
 void SceneGraph::clear() {
@@ -146,48 +135,59 @@ void SceneGraph::clear() {
 	rebuildIndex();
 }
 
-void SceneGraph::parent(id_t nodeId, id_t parentId) {
-	if(parentId == nodeId) {
+bool SceneGraph::contains(id_t id) const {
+	return indexOf(id).has_value();
+}
+
+Node& SceneGraph::at(id_t id) {
+	return *sceneNodes.at(indexOf(id).value());
+}
+const Node& SceneGraph::at(id_t id) const {
+	return *sceneNodes.at(indexOf(id).value());
+}
+
+void SceneGraph::parent(id_t id, id_t parentId) {
+	if(parentId == id) {
 		return;
 	}
 
-	Node& node = at(nodeId);
+	Node& node = at(id);
 
-	if(isDescendantOf(nodeId, parentId)) {
-		for(const std::unique_ptr<Node>& otherNode : sceneNodes) {
-			if(otherNode->parentId() == nodeId) {
-				otherNode->parent(node.parentId());
+	if(isDescendantOf(id, parentId)) {
+		for(const auto& otherNode : sceneNodes) {
+			if(otherNode->nodeParentId == id) {
+				otherNode->parent(node.nodeParentId);
 			}
 		}
 	}
 
 	node.parent(parentId);
 }
-id_t SceneGraph::parentId(id_t nodeId) const {
-	return at(nodeId).parentId();
+id_t SceneGraph::parentId(id_t id) const {
+	return at(id).nodeParentId;
 }
-std::vector<id_t> SceneGraph::childIds(id_t nodeId) const {
+std::vector<id_t> SceneGraph::childIds(id_t id) const {
 	std::vector<id_t> result;
-	for(const std::unique_ptr<Node>& otherNode : sceneNodes) {
-		if(otherNode->parentId() == nodeId) {
-			result.push_back(otherNode->id());
+	for(const auto& otherNode : sceneNodes) {
+		if(otherNode->nodeParentId == id) {
+			result.push_back(otherNode->nodeId);
 		}
 	}
 
 	return result;
 }
-std::vector<id_t> SceneGraph::siblingIds(id_t nodeId) const {
+std::vector<id_t> SceneGraph::siblingIds(id_t id) const {
 	std::vector<id_t> result;
-	std::optional<std::uint32_t> index = indexOf(nodeId);
+	std::optional<std::size_t> index = indexOf(id);
 	if(!index) {
 		return result;
 	}
 
-	const std::unique_ptr<Node>& node = sceneNodes[index.value()];
+	const auto& node = sceneNodes[index.value()];
 
-	for(const std::unique_ptr<Node>& otherNode : sceneNodes) {
-		if(otherNode->id() != nodeId && otherNode->parentId() == node->parentId()) {
-			result.push_back(otherNode->id());
+	for(const auto& otherNode : sceneNodes) {
+		if(otherNode->nodeId != id && otherNode->nodeParentId == node->nodeParentId) {
+			result.push_back(otherNode->nodeId);
 		}
 	}
 
@@ -195,110 +195,77 @@ std::vector<id_t> SceneGraph::siblingIds(id_t nodeId) const {
 }
 std::vector<id_t> SceneGraph::rootIds() const {
 	std::vector<id_t> result;
-	for(const std::unique_ptr<Node>& node : sceneNodes) {
-		if(!node->parentId()) {
-			result.push_back(node->id());
+	for(const auto& node : sceneNodes) {
+		if(!node->nodeParentId) {
+			result.push_back(node->nodeId);
 		}
 	}
 
 	return result;
 }
 
-std::optional<std::uint32_t> SceneGraph::indexOf(id_t nodeId) const {
-	if(nodeId.value() < indexMap.size() && indexMap[nodeId.value()] != id_t::nullValue) {
-		return indexMap[nodeId.value()];
-	}
-
-	return std::nullopt;
+Transform SceneGraph::localTransform(id_t id, const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
+	return at(id).transform(runtimeContext, useTriggers);
 }
-
-bool SceneGraph::contains(id_t nodeId) const {
-	return indexOf(nodeId).has_value();
+Transform SceneGraph::localBaseTransform(id_t id, const EffectRuntimeContext& runtimeContext) const {
+	return at(id).baseTransform(runtimeContext);
 }
-bool SceneGraph::containsIndex(std::uint32_t index) const {
-	return index < sceneNodes.size();
-}
-
-Node& SceneGraph::at(id_t nodeId) {
-	return *sceneNodes.at(indexOf(nodeId).value());
-}
-Node& SceneGraph::atIndex(std::uint32_t index) {
-	return *sceneNodes.at(index);
-}
-const Node& SceneGraph::at(id_t nodeId) const {
-	return *sceneNodes.at(indexOf(nodeId).value());
-}
-const Node& SceneGraph::atIndex(std::uint32_t index) const {
-	return *sceneNodes.at(index);
-}
-
-Transform SceneGraph::localTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
-	return at(nodeId).transform(runtimeContext, useTriggers);
-}
-Transform SceneGraph::localBaseTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext) const {
-	return at(nodeId).baseTransform(runtimeContext);
-}
-Transform SceneGraph::parentTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
-	const Node& node = at(nodeId);
-	if(node.parentId()) {
-		return globalTransform(node.parentId(), runtimeContext, useTriggers);
+Transform SceneGraph::parentTransform(id_t id, const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
+	const Node& node = at(id);
+	if(node.nodeParentId) {
+		return globalTransform(node.nodeParentId, runtimeContext, useTriggers);
 	}
 
 	return Transform();
 }
-Transform SceneGraph::parentBaseTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext) const {
-	const Node& node = at(nodeId);
-	if(node.parentId()) {
-		return globalBaseTransform(node.parentId(), runtimeContext);
+Transform SceneGraph::parentBaseTransform(id_t id, const EffectRuntimeContext& runtimeContext) const {
+	const Node& node = at(id);
+	if(node.nodeParentId) {
+		return globalBaseTransform(node.nodeParentId, runtimeContext);
 	}
 
 	return Transform();
 }
-Transform SceneGraph::globalTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
-	const Node& node = at(nodeId);
-	if(node.parentId()) {
-		return globalTransform(node.parentId(), runtimeContext, useTriggers) * localTransform(nodeId, runtimeContext, useTriggers);
+Transform SceneGraph::globalTransform(id_t id, const EffectRuntimeContext& runtimeContext, bool useTriggers) const {
+	const Node& node = at(id);
+	if(node.nodeParentId) {
+		return globalTransform(node.nodeParentId, runtimeContext, useTriggers) * localTransform(id, runtimeContext, useTriggers);
 	}
 
-	return localTransform(nodeId, runtimeContext, useTriggers);
+	return localTransform(id, runtimeContext, useTriggers);
 }
-Transform SceneGraph::globalBaseTransform(id_t nodeId, const EffectRuntimeContext& runtimeContext) const {
-	const Node& node = at(nodeId);
-	if(node.parentId()) {
-		return globalBaseTransform(node.parentId(), runtimeContext) * localBaseTransform(nodeId, runtimeContext);
+Transform SceneGraph::globalBaseTransform(id_t id, const EffectRuntimeContext& runtimeContext) const {
+	const Node& node = at(id);
+	if(node.nodeParentId) {
+		return globalBaseTransform(node.nodeParentId, runtimeContext) * localBaseTransform(id, runtimeContext);
 	}
 
-	return localBaseTransform(nodeId, runtimeContext);
+	return localBaseTransform(id, runtimeContext);
 }
 
-std::uint32_t SceneGraph::count() const {
-	return static_cast<std::uint32_t>(sceneNodes.size());
-}
-id_t SceneGraph::maxId() const {
-	id_t maxId = 0;
-	for(const std::unique_ptr<Node>& node : sceneNodes) {
-		maxId = std::max(maxId, node->nodeId);
-	}
-
-	return maxId;
-}
-
-const std::vector<std::unique_ptr<Node>>& SceneGraph::nodes() const {
-	return sceneNodes;
+std::size_t SceneGraph::count() const {
+	return sceneNodes.size();
 }
 
 void SceneGraph::rebuildIndex() {
-	indexMap.clear();
-	indexMap.reserve(sceneNodes.size());
+	sceneIndexMap.clear();
+	sceneIndexMap.reserve(sceneNodes.size());
 
-	for(std::uint32_t nodeIndex = 0; nodeIndex < sceneNodes.size(); nodeIndex++) {
-		id_t nodeId = sceneNodes[nodeIndex]->nodeId;
-		if(nodeId.value() >= indexMap.size()) {
-			indexMap.resize(nodeId.value() + 1, id_t::nullValue);
+	for(std::size_t nodeIndex = 0; nodeIndex < sceneNodes.size(); nodeIndex++) {
+		id_t id = sceneNodes[nodeIndex]->nodeId;
+		if(id.value() >= sceneIndexMap.size()) {
+			sceneIndexMap.resize(id.value() + 1, id_t::nullValue);
 		}
 
-		indexMap[nodeId.value()] = nodeIndex;
+		sceneIndexMap[id.value()] = nodeIndex;
 	}
+}
+std::optional<std::size_t> SceneGraph::indexOf(id_t id) const {
+	if(id.value() < sceneIndexMap.size() && sceneIndexMap[id.value()] != id_t::nullValue) {
+		return sceneIndexMap[id.value()];
+	}
+
+	return std::nullopt;
 }
 
 bool SceneGraph::isDescendantOf(id_t parentId, id_t targetId) const {
@@ -322,20 +289,20 @@ bool SceneGraph::isDescendantOf(id_t parentId, id_t targetId) const {
 void to_json(nlohmann::ordered_json& j, const SceneGraph& sceneGraph) {
 	j = nlohmann::ordered_json::array();
 
-	for(const std::unique_ptr<Node>& node : sceneGraph.nodes()) {
-		const GroupNode* groupNode = dynamic_cast<const GroupNode*>(node.get());
-		const ParticleEmitter* particleEmitter = dynamic_cast<const ParticleEmitter*>(node.get());
-		const AttractionField* attractionField = dynamic_cast<const AttractionField*>(node.get());
-		const AccelerationField* accelerationField = dynamic_cast<const AccelerationField*>(node.get());
-		const VectorField* vectorField = dynamic_cast<const VectorField*>(node.get());
-		const NoiseField* noiseField = dynamic_cast<const NoiseField*>(node.get());
-		const DragField* dragField = dynamic_cast<const DragField*>(node.get());
-		const VortexField* vortexField = dynamic_cast<const VortexField*>(node.get());
-		const LineCollider* lineCollider = dynamic_cast<const LineCollider*>(node.get());
-		const PlaneCollider* planeCollider = dynamic_cast<const PlaneCollider*>(node.get());
-		const DirectionalLightSource* directionLightSource = dynamic_cast<const DirectionalLightSource*>(node.get());
-		const PointLightSource* pointLightSource = dynamic_cast<const PointLightSource*>(node.get());
-		const SpotLightSource* spotLightSource = dynamic_cast<const SpotLightSource*>(node.get());
+	for(const Node& node : sceneGraph) {
+		const GroupNode* groupNode = dynamic_cast<const GroupNode*>(&node);
+		const ParticleEmitter* particleEmitter = dynamic_cast<const ParticleEmitter*>(&node);
+		const AttractionField* attractionField = dynamic_cast<const AttractionField*>(&node);
+		const AccelerationField* accelerationField = dynamic_cast<const AccelerationField*>(&node);
+		const VectorField* vectorField = dynamic_cast<const VectorField*>(&node);
+		const NoiseField* noiseField = dynamic_cast<const NoiseField*>(&node);
+		const DragField* dragField = dynamic_cast<const DragField*>(&node);
+		const VortexField* vortexField = dynamic_cast<const VortexField*>(&node);
+		const LineCollider* lineCollider = dynamic_cast<const LineCollider*>(&node);
+		const PlaneCollider* planeCollider = dynamic_cast<const PlaneCollider*>(&node);
+		const DirectionalLightSource* directionLightSource = dynamic_cast<const DirectionalLightSource*>(&node);
+		const PointLightSource* pointLightSource = dynamic_cast<const PointLightSource*>(&node);
+		const SpotLightSource* spotLightSource = dynamic_cast<const SpotLightSource*>(&node);
 
 		if(groupNode) {
 			j.emplace_back(*groupNode);
@@ -464,6 +431,6 @@ void from_json(const nlohmann::ordered_json& j, SceneGraph& sceneGraph) {
 		}
 	}
 
-	sceneGraph.set(std::move(nodes));
+	sceneGraph = SceneGraph(std::move(nodes));
 }
 }

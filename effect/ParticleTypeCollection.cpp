@@ -2,9 +2,9 @@
 
 namespace pixelpart {
 ParticleTypeCollection::ParticleTypeCollection(const std::vector<ParticleType>& types) {
-	particleTypes = types;
+	collectionParticleTypes = types;
 
-	for(ParticleType& particleType : particleTypes) {
+	for(ParticleType& particleType : collectionParticleTypes) {
 		if(particleType.id()) {
 			continue;
 		}
@@ -16,7 +16,7 @@ ParticleTypeCollection::ParticleTypeCollection(const std::vector<ParticleType>& 
 			newId++;
 			used = false;
 
-			for(const ParticleType& otherParticleType : particleTypes) {
+			for(const ParticleType& otherParticleType : collectionParticleTypes) {
 				if(otherParticleType.particleTypeId == newId) {
 					used = true;
 					break;
@@ -31,16 +31,17 @@ ParticleTypeCollection::ParticleTypeCollection(const std::vector<ParticleType>& 
 }
 
 ParticleTypeCollection::iterator ParticleTypeCollection::begin() {
-	return particleTypes.begin();
+	return collectionParticleTypes.begin();
 }
 ParticleTypeCollection::iterator ParticleTypeCollection::end() {
-	return particleTypes.end();
+	return collectionParticleTypes.end();
 }
+
 ParticleTypeCollection::const_iterator ParticleTypeCollection::begin() const {
-	return particleTypes.begin();
+	return collectionParticleTypes.begin();
 }
 ParticleTypeCollection::const_iterator ParticleTypeCollection::end() const {
-	return particleTypes.end();
+	return collectionParticleTypes.end();
 }
 
 ParticleType& ParticleTypeCollection::add() {
@@ -49,10 +50,10 @@ ParticleType& ParticleTypeCollection::add() {
 		id++;
 	}
 
-	particleTypes.emplace_back(id);
+	collectionParticleTypes.emplace_back(id);
 	rebuildIndex();
 
-	return particleTypes.back();
+	return collectionParticleTypes.back();
 }
 ParticleType& ParticleTypeCollection::add(const ParticleType& particleType, id_t baseId) {
 	id_t id = particleType.id()
@@ -66,9 +67,9 @@ ParticleType& ParticleTypeCollection::add(const ParticleType& particleType, id_t
 		id++;
 	}
 
-	particleTypes.emplace_back(particleType);
+	collectionParticleTypes.emplace_back(particleType);
 
-	ParticleType& insertedParticleType = particleTypes.back();
+	ParticleType& insertedParticleType = collectionParticleTypes.back();
 	insertedParticleType.particleTypeId = id;
 	insertedParticleType.parentParticleTypeId = parentId;
 	rebuildIndex();
@@ -81,31 +82,35 @@ ParticleType& ParticleTypeCollection::duplicate(id_t id) {
 	return add(particleType);
 }
 void ParticleTypeCollection::remove(id_t id) {
-	std::optional<std::uint32_t> index = indexOf(id);
+	std::optional<std::size_t> index = indexOf(id);
 	if(!index) {
 		return;
 	}
 
-	removeIndex(index.value());
-}
-void ParticleTypeCollection::removeIndex(std::uint32_t index) {
-	if(index >= particleTypes.size()) {
-		return;
-	}
-
-	const ParticleType& particleType = particleTypes[index];
-	for(ParticleType& otherParticleType : particleTypes) {
+	const ParticleType& particleType = collectionParticleTypes[index.value()];
+	for(ParticleType& otherParticleType : collectionParticleTypes) {
 		if(otherParticleType.parentId() == particleType.id()) {
 			otherParticleType.parent(particleType.parentId());
 		}
 	}
 
-	particleTypes.erase(particleTypes.begin() + index);
+	collectionParticleTypes.erase(collectionParticleTypes.begin() + index.value());
 	rebuildIndex();
 }
 void ParticleTypeCollection::clear() {
-	particleTypes.clear();
+	collectionParticleTypes.clear();
 	rebuildIndex();
+}
+
+bool ParticleTypeCollection::contains(id_t id) const {
+	return indexOf(id).has_value();
+}
+
+ParticleType& ParticleTypeCollection::at(id_t id) {
+	return collectionParticleTypes.at(indexOf(id).value());
+}
+const ParticleType& ParticleTypeCollection::at(id_t id) const {
+	return collectionParticleTypes.at(indexOf(id).value());
 }
 
 void ParticleTypeCollection::parent(id_t id, id_t parentId) {
@@ -116,7 +121,7 @@ void ParticleTypeCollection::parent(id_t id, id_t parentId) {
 	ParticleType& particleType = at(id);
 
 	if(isDescendantOf(id, parentId)) {
-		for(ParticleType& otherParticleType : particleTypes) {
+		for(ParticleType& otherParticleType : collectionParticleTypes) {
 			if(otherParticleType.parentId() == id) {
 				otherParticleType.parent(particleType.parentId());
 			}
@@ -130,7 +135,7 @@ id_t ParticleTypeCollection::parentId(id_t id) const {
 }
 std::vector<id_t> ParticleTypeCollection::childIds(id_t id) const {
 	std::vector<id_t> result;
-	for(const ParticleType& otherParticleType : particleTypes) {
+	for(const ParticleType& otherParticleType : collectionParticleTypes) {
 		if(otherParticleType.parentId() == id) {
 			result.push_back(otherParticleType.id());
 		}
@@ -140,14 +145,14 @@ std::vector<id_t> ParticleTypeCollection::childIds(id_t id) const {
 }
 std::vector<id_t> ParticleTypeCollection::siblingIds(id_t id) const {
 	std::vector<id_t> result;
-	std::optional<std::uint32_t> index = indexOf(id);
+	std::optional<std::size_t> index = indexOf(id);
 	if(!index) {
 		return result;
 	}
 
-	const ParticleType& particleType = particleTypes[index.value()];
+	const ParticleType& particleType = collectionParticleTypes[index.value()];
 
-	for(const ParticleType& otherParticleType : particleTypes) {
+	for(const ParticleType& otherParticleType : collectionParticleTypes) {
 		if(otherParticleType.id() != id && otherParticleType.parentId() == particleType.parentId()) {
 			result.push_back(otherParticleType.id());
 		}
@@ -157,7 +162,7 @@ std::vector<id_t> ParticleTypeCollection::siblingIds(id_t id) const {
 }
 std::vector<id_t> ParticleTypeCollection::rootIds() const {
 	std::vector<id_t> result;
-	for(const ParticleType& particleType : particleTypes) {
+	for(const ParticleType& particleType : collectionParticleTypes) {
 		if(!particleType.parentId()) {
 			result.push_back(particleType.id());
 		}
@@ -166,52 +171,29 @@ std::vector<id_t> ParticleTypeCollection::rootIds() const {
 	return result;
 }
 
-
-std::uint32_t ParticleTypeCollection::count() const {
-	return static_cast<std::uint32_t>(particleTypes.size());
-}
-
-std::optional<std::uint32_t> ParticleTypeCollection::indexOf(id_t id) const {
-	if(id.value() < indexMap.size() && indexMap[id.value()] != id_t::nullValue) {
-		return indexMap[id.value()];
-	}
-
-	return std::nullopt;
-}
-
-bool ParticleTypeCollection::contains(id_t id) const {
-	return indexOf(id).has_value();
-}
-bool ParticleTypeCollection::containsIndex(std::uint32_t index) const {
-	return index < particleTypes.size();
-}
-
-ParticleType& ParticleTypeCollection::at(id_t id) {
-	return particleTypes.at(indexOf(id).value());
-}
-const ParticleType& ParticleTypeCollection::at(id_t id) const {
-	return particleTypes.at(indexOf(id).value());
-}
-
-ParticleType& ParticleTypeCollection::atIndex(std::uint32_t index) {
-	return particleTypes.at(index);
-}
-const ParticleType& ParticleTypeCollection::atIndex(std::uint32_t index) const {
-	return particleTypes.at(index);
+std::size_t ParticleTypeCollection::count() const {
+	return collectionParticleTypes.size();
 }
 
 void ParticleTypeCollection::rebuildIndex() {
-	indexMap.clear();
-	indexMap.reserve(particleTypes.size());
+	collectionIndexMap.clear();
+	collectionIndexMap.reserve(collectionParticleTypes.size());
 
-	for(std::uint32_t index = 0; index < particleTypes.size(); index++) {
-		id_t id = particleTypes[index].particleTypeId;
-		if(id.value() >= indexMap.size()) {
-			indexMap.resize(id.value() + 1, id_t::nullValue);
+	for(std::size_t index = 0; index < collectionParticleTypes.size(); index++) {
+		id_t id = collectionParticleTypes[index].particleTypeId;
+		if(id.value() >= collectionIndexMap.size()) {
+			collectionIndexMap.resize(id.value() + 1, id_t::nullValue);
 		}
 
-		indexMap[id.value()] = index;
+		collectionIndexMap[id.value()] = index;
 	}
+}
+std::optional<std::size_t> ParticleTypeCollection::indexOf(id_t id) const {
+	if(id.value() < collectionIndexMap.size() && collectionIndexMap[id.value()] != id_t::nullValue) {
+		return collectionIndexMap[id.value()];
+	}
+
+	return std::nullopt;
 }
 
 bool ParticleTypeCollection::isDescendantOf(id_t parentId, id_t targetId) const {
@@ -234,8 +216,8 @@ bool ParticleTypeCollection::isDescendantOf(id_t parentId, id_t targetId) const 
 
 void to_json(nlohmann::ordered_json& j, const ParticleTypeCollection& collection) {
 	j = nlohmann::ordered_json::array();
-	for(std::uint32_t index = 0; index < collection.count(); index++) {
-		j.emplace_back(collection.atIndex(index));
+	for(const ParticleType& particleType : collection) {
+		j.emplace_back(particleType);
 	}
 }
 void from_json(const nlohmann::ordered_json& j, ParticleTypeCollection& collection) {

@@ -1,4 +1,5 @@
 #include "EffectRuntimeQuery.h"
+#include "../effect/Node.h"
 #include "../effect/ParticleEmitter.h"
 #include "../math/Geometry.h"
 
@@ -27,9 +28,9 @@ bool isEffectSimulationFinished(const Effect& effect, const EffectRuntimeState& 
 
 std::uint32_t queryEffectLod(const Effect& effect, const EffectRuntimeContext& context, const float3_t& cameraPosition) {
 	float3_t effectPosition = float3_t(0.0);
-	for(const auto& node : effect.sceneGraph()) {
-		if(!node->parentId()) {
-			effectPosition = effect.sceneGraph().globalTransform(node->id(), context).position();
+	for(const Node& node : effect.sceneGraph()) {
+		if(!node.parentId()) {
+			effectPosition = effect.sceneGraph().globalTransform(node.id(), context).position();
 			break;
 		}
 	}

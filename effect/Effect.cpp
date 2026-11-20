@@ -94,8 +94,8 @@ void Effect::applyInputs() {
 		inputValues[entry.first] = entry.second.value();
 	}
 
-	for(std::unique_ptr<Node>& node : effectSceneGraph) {
-		node->applyInputs(inputValues);
+	for(Node& node : effectSceneGraph) {
+		node.applyInputs(inputValues);
 	}
 
 	for(ParticleType& particleType : effectParticleTypes) {

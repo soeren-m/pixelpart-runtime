@@ -17,6 +17,7 @@ public:
 
 	iterator begin();
 	iterator end();
+
 	const_iterator begin() const;
 	const_iterator end() const;
 
@@ -24,8 +25,12 @@ public:
 	ParticleType& add(const ParticleType& particleType, id_t baseId = id_t(0));
 	ParticleType& duplicate(id_t id);
 	void remove(id_t id);
-	void removeIndex(std::uint32_t index);
 	void clear();
+
+	bool contains(id_t id) const;
+
+	ParticleType& at(id_t id);
+	const ParticleType& at(id_t id) const;
 
 	void parent(id_t id, id_t parentId);
 	id_t parentId(id_t id) const;
@@ -33,26 +38,16 @@ public:
 	std::vector<id_t> siblingIds(id_t id) const;
 	std::vector<id_t> rootIds() const;
 
-	std::uint32_t count() const;
-
-	std::optional<std::uint32_t> indexOf(id_t id) const;
-
-	bool contains(id_t id) const;
-	bool containsIndex(std::uint32_t index) const;
-
-	ParticleType& at(id_t id);
-	const ParticleType& at(id_t id) const;
-
-	ParticleType& atIndex(std::uint32_t index);
-	const ParticleType& atIndex(std::uint32_t index) const;
+	std::size_t count() const;
 
 private:
 	void rebuildIndex();
+	std::optional<std::size_t> indexOf(id_t id) const;
 
 	bool isDescendantOf(id_t parentId, id_t targetId) const;
 
-	std::vector<ParticleType> particleTypes;
-	std::vector<std::uint32_t> indexMap;
+	std::vector<ParticleType> collectionParticleTypes;
+	std::vector<std::size_t> collectionIndexMap;
 };
 
 void to_json(nlohmann::ordered_json& j, const ParticleTypeCollection& collection);

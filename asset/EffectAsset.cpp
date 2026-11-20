@@ -1064,8 +1064,8 @@ const RenderSettings& EffectAsset::previewSettings() const {
 }
 
 bool EffectAsset::usesName(const std::string& name) const {
-	for(const std::unique_ptr<Node>& node : assetEffect.sceneGraph()) {
-		if(node->name() == name) {
+	for(const Node& node : assetEffect.sceneGraph()) {
+		if(node.name() == name) {
 			return true;
 		}
 	}
@@ -1079,8 +1079,8 @@ bool EffectAsset::usesName(const std::string& name) const {
 	return false;
 }
 bool EffectAsset::usesResource(const std::string& resourceId) const {
-	for(const std::unique_ptr<Node>& node : assetEffect.sceneGraph()) {
-		if(node->usesResource(resourceId)) {
+	for(const Node& node : assetEffect.sceneGraph()) {
+		if(node.usesResource(resourceId)) {
 			return true;
 		}
 	}
