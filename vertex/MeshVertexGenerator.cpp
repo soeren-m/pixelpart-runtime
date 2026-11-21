@@ -286,7 +286,9 @@ void MeshVertexGenerator::generateMatrix4x4ColumnMajor(unsigned char* buffer, co
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		math::matrix4x4<float> transformMatix(globalScaleMatrix *
-			particleTransformationMatrix(alignmentMode, pivot, simulationSpaceToGlobalMatrix, emitterTransformMatrix, particles, p));
+			particleTransformationMatrix(alignmentMode, pivot,
+				simulationSpaceToGlobalMatrix, emitterTransformMatrix, sceneContext,
+				particles, p));
 
 		*reinterpret_cast<math::matrix4x4<float>*>(buffer) = transformMatix;
 		buffer += stride;
@@ -314,7 +316,9 @@ void MeshVertexGenerator::generateMatrix4x3ColumnMajor(unsigned char* buffer, co
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		math::matrix4x4<float> transformMatix(globalScaleMatrix *
-			particleTransformationMatrix(alignmentMode, pivot, simulationSpaceToGlobalMatrix, emitterTransformMatrix, particles, p));
+			particleTransformationMatrix(alignmentMode, pivot,
+				simulationSpaceToGlobalMatrix, emitterTransformMatrix, sceneContext,
+				particles, p));
 
 		*reinterpret_cast<math::vector3<float>*>(buffer + vectorStride * 0) = math::vector3<float>(transformMatix[0]);
 		*reinterpret_cast<math::vector3<float>*>(buffer + vectorStride * 1) = math::vector3<float>(transformMatix[1]);
@@ -343,7 +347,9 @@ void MeshVertexGenerator::generateMatrix4x4RowMajor(unsigned char* buffer, const
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		math::matrix4x4<float> transformMatix(math::transpose(globalScaleMatrix *
-			particleTransformationMatrix(alignmentMode, pivot, simulationSpaceToGlobalMatrix, emitterTransformMatrix, particles, p)));
+			particleTransformationMatrix(alignmentMode, pivot,
+				simulationSpaceToGlobalMatrix, emitterTransformMatrix, sceneContext,
+				particles, p)));
 
 		*reinterpret_cast<math::matrix4x4<float>*>(buffer) = transformMatix;
 		buffer += stride;
@@ -371,7 +377,9 @@ void MeshVertexGenerator::generateMatrix4x3RowMajor(unsigned char* buffer, const
 
 	for(std::uint32_t p = 0; p < particleCount; p++) {
 		math::matrix4x4<float> transformMatix(math::transpose(globalScaleMatrix *
-			particleTransformationMatrix(alignmentMode, pivot, simulationSpaceToGlobalMatrix, emitterTransformMatrix, particles, p)));
+			particleTransformationMatrix(alignmentMode, pivot,
+				simulationSpaceToGlobalMatrix, emitterTransformMatrix, sceneContext,
+				particles, p)));
 
 		*reinterpret_cast<math::vector4<float>*>(buffer + vectorStride * 0) = transformMatix[0];
 		*reinterpret_cast<math::vector4<float>*>(buffer + vectorStride * 1) = transformMatix[1];
@@ -381,10 +389,13 @@ void MeshVertexGenerator::generateMatrix4x3RowMajor(unsigned char* buffer, const
 }
 
 matrix4_t MeshVertexGenerator::particleTransformationMatrix(AlignmentMode alignmentMode, const float3_t& pivot,
-	const matrix3_t& simulationSpaceToGlobalMatrix, const matrix4_t& emitterTransformMatrix,
+	const matrix3_t& simulationSpaceToGlobalMatrix, const matrix4_t& emitterTransformMatrix, const SceneContext& sceneContext,
 	ParticleCollection::ReadPtr particles, std::uint32_t particleIndex) {
 	matrix4_t alignmentMatrix(1.0);
 	switch(alignmentMode) {
+		case AlignmentMode::camera:
+			alignmentMatrix = matrix4_t(cameraAlignmentMatrix(sceneContext.cameraForward, sceneContext.cameraRight, sceneContext.cameraUp));
+			break;
 		case AlignmentMode::motion:
 			alignmentMatrix = matrix4_t(motionAlignmentMatrix(simulationSpaceToGlobalMatrix * particles.velocity[particleIndex]));
 			break;
